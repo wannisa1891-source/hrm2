@@ -1,34 +1,41 @@
-import mysql from 'mysql2/promise';
+import mysql from "mysql2/promise";
 
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'hrm_db',
-  port: 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+let pool: mysql.Pool | null = null;
 
-export async function getDb() {
-  try {
-    const conn = await pool.getConnection();
-    conn.release();
-    return pool;
-  } catch {
-    // Try port 3307 (XAMPP alternate port)
-    const pool2 = mysql.createPool({
-      host: 'localhost',
-      user: 'root',
-      password: '',
-      database: 'hrm_db',
-      port: 3307,
-      waitForConnections: true,
-      connectionLimit: 10,
-    });
-    return pool2;
+async function getPool(): Promise<mysql.Pool> {
+  if (pool) return pool;
+
+  const ports = [3307, 3306];
+
+  for (const port of ports) {
+    try {
+      const testPool = mysql.createPool({
+        host: process.env.DB_HOST || "localhost",
+        user: process.env.DB_USER || "root",
+        password: process.env.DB_PASSWORD || "",
+        database: process.env.DB_NAME || "hrm_db",
+        port: port,
+        waitForConnections: true,
+        connectionLimit: 10,
+      });
+
+      await testPool.query("SELECT 1");
+      console.log(`✅ Connected MySQL on port ${port}`);
+
+      pool = testPool;
+      return pool;
+
+    } catch {
+      console.log(`❌ Port ${port} not available`);
+    }
   }
+
+  throw new Error("Cannot connect to MySQL (3307 or 3306)");
 }
 
-export default pool;
+export default {
+  query: async (sql: string, values?: any[]) => {
+    const connection = await getPool();
+    return connection.query(sql, values);
+  }
+};
