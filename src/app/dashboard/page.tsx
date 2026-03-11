@@ -1,6 +1,6 @@
 /* หน้าจอ Dashboard */
 'use client';
-import AppLayout from '@/components/AppLayout';
+import AppLayout from '@/components/layout/AppLayout';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 export default function DashboardPage() {

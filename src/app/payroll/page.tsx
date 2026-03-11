@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AppLayout from '@/components/AppLayout';
+import AppLayout from '@/components/layout/AppLayout';
 
 interface Employee { emp_id: string; prefix: string; first_name_th: string; last_name_th: string; base_salary: number; emp_type: string; dept_id: string; }
 interface Department { dept_id: string; dept_name: string; }

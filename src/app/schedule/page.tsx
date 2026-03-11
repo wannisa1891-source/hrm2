@@ -1,6 +1,6 @@
 'use client';
 
-import AppLayout from '@/components/AppLayout';
+import AppLayout from '@/components/layout/AppLayout';
 
 const SHIFTS = [
   { id: 'A', name: 'เวรเช้า', time: '08:00 - 16:00', color: '#dbeafe', textColor: '#1d4ed8' },

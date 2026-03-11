@@ -1,3 +1,4 @@
+//หน้าแรกของเว็บ
 'use client';
 
 import { useEffect } from 'react';

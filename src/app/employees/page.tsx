@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AppLayout from '@/components/AppLayout';
+import AppLayout from '@/components/layout/AppLayout';
 
 interface Employee {
   emp_id: string; prefix: string; first_name_th: string; last_name_th: string;
@@ -170,7 +170,7 @@ export default function EmployeesPage() {
                 <div className="form-group"><label className="form-label">รหัสพนักงาน</label><input className="form-input" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} disabled={isEditing} /></div>
                 <div className="form-group"><label className="form-label">คำนำหน้า</label>
                   <select className="form-select" value={formData.prefix || 'นาย'} onChange={e => setField('prefix', e.target.value)}>
-                    {['นาย','นาง','นางสาว','ดร.','นพ.','พญ.'].map(p => <option key={p}>{p}</option>)}
+                    {['นาย', 'นาง', 'นางสาว', 'ดร.', 'นพ.', 'พญ.'].map(p => <option key={p}>{p}</option>)}
                   </select>
                 </div>
                 <div className="form-group"><label className="form-label">ชื่อ (ไทย)</label><input className="form-input" value={formData.first_name_th || ''} onChange={e => setField('first_name_th', e.target.value)} /></div>
@@ -199,7 +199,7 @@ export default function EmployeesPage() {
                 </div>
                 <div className="form-group"><label className="form-label">ประเภทพนักงาน</label>
                   <select className="form-select" value={formData.emp_type || 'พนักงานประจำ'} onChange={e => setField('emp_type', e.target.value)}>
-                    {['พนักงานประจำ','พนักงานสัญญาจ้าง','พนักงานชั่วคราว','ลูกจ้าง'].map(t => <option key={t}>{t}</option>)}
+                    {['พนักงานประจำ', 'พนักงานสัญญาจ้าง', 'พนักงานชั่วคราว', 'ลูกจ้าง'].map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div className="form-group"><label className="form-label">วันเริ่มงาน</label><input type="date" className="form-input" value={formData.start_date?.toString().split('T')[0] || ''} onChange={e => setField('start_date', e.target.value)} /></div>

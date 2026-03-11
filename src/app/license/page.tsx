@@ -1,6 +1,6 @@
 'use client';
 
-import AppLayout from '@/components/AppLayout';
+import AppLayout from '@/components/layout/AppLayout';
 
 const licenses = [
   { id: 'LC001', name: 'นพ.สมชาย รักษาคน', type: 'ใบประกอบวิชาชีพเวชกรรม', issued: '2021-05-01', expires: '2026-04-30', daysLeft: 51 },
