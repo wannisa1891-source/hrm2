@@ -1,17 +1,15 @@
+/* หน้าจอ Dashboard */
 'use client';
-
 import AppLayout from '@/components/AppLayout';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
 export default function DashboardPage() {
   const [empCount, setEmpCount] = useState(0);
-
   useEffect(() => {
     fetch('/api/employees')
       .then(r => r.json())
       .then(data => setEmpCount(Array.isArray(data) ? data.length : 0))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const today = new Date().toLocaleDateString('th-TH', {
@@ -24,7 +22,6 @@ export default function DashboardPage() {
       <div className="dashboard-wrapper" style={{ minHeight: '100vh', background: '#f0f2f5', fontFamily: "'Sarabun', sans-serif", color: '#1a1a1a', position: 'relative', overflow: 'hidden' }}>
         {/* BG decoration */}
         <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: 500, height: 500, background: 'radial-gradient(circle, rgba(74,86,68,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
         {/* Header */}
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
           <div>
@@ -47,7 +44,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </header>
-
         {/* Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 30 }}>
           {/* Left */}
@@ -70,7 +66,6 @@ export default function DashboardPage() {
                 trend="คงเหลือ" href="/org-structure"
               />
             </div>
-
             {/* Chart */}
             <div className="glass-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>

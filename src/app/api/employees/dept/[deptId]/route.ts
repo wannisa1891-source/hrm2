@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import pool from '@/lib/hrn_db';
 
 export async function GET(_req: NextRequest, { params }: { params: { deptId: string } }) {
   try {

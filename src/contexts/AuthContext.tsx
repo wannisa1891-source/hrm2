@@ -1,3 +1,4 @@
+// เช็ค login logout 
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -13,8 +14,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   user: null,
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
