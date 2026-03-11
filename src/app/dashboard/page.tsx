@@ -5,6 +5,7 @@ import StatCard from '@/components/dashboard/StatCard';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DonutChart from '@/components/dashboard/DonutChart';
 import PendingList from '@/components/dashboard/PendingList';
+import SystemAlert from '@/components/dashboard/SystemAlert';
 
 type DashboardData = {
   empCount: number
@@ -90,10 +91,16 @@ export default function DashboardPage() {
 
           </div>
 
-          <PendingList
-            transfersCount={dashboardData.pendingTransfers}
-            leavesCount={dashboardData.pendingLeaves}
-          />
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+
+            <PendingList
+              transfersCount={dashboardData.pendingTransfers}
+              leavesCount={dashboardData.pendingLeaves}
+            />
+
+            <SystemAlert />
+
+          </div>
 
         </div>
 
