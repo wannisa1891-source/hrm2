@@ -8,11 +8,21 @@ import DonutChart from '@/components/dashboard/DonutChart';
 import PendingList from '@/components/dashboard/PendingList';
 
 export default function DashboardPage() {
-  const [empCount, setEmpCount] = useState(0);
+  const [dashboardData, setDashboardData] = useState({
+    empCount: 0,
+    leaveTodayCount: 0,
+    vacantCount: 0,
+    professions: [] as any[],
+    pendingTransfers: 0,
+    pendingLeaves: 0,
+  });
+
   useEffect(() => {
-    fetch('/api/employees')
+    fetch('/api/dashboard')
       .then(r => r.json())
-      .then(data => setEmpCount(Array.isArray(data) ? data.length : 0))
+      .then(data => {
+        if (!data.error) setDashboardData(data);
+      })
       .catch(() => { });
   }, []);
   const today = new Date().toLocaleDateString('th-TH', {
@@ -57,7 +67,7 @@ export default function DashboardPage() {
                 icon="👥"
                 iconBg="#EBF0E9"
                 label="บุคลากรทั้งหมด"
-                value={empCount}
+                value={dashboardData.empCount}
                 unit="คน"
                 trend="↑ 2%"
                 trendUp
@@ -67,7 +77,7 @@ export default function DashboardPage() {
                 icon="📉"
                 iconBg="#FFF0F0"
                 label="ลางาน/พักร้อน"
-                value={0}
+                value={dashboardData.leaveTodayCount}
                 unit="คน"
                 trend="วันนี้"
                 href="/leave"
@@ -76,17 +86,17 @@ export default function DashboardPage() {
                 icon="📊"
                 iconBg="#FFF9EB"
                 label="อัตรากำลังว่าง"
-                value={0}
+                value={dashboardData.vacantCount}
                 unit="อัตรา"
                 trend="คงเหลือ"
                 href="/org-structure"
               />
             </div>
             {/* Chart */}
-            <DonutChart />
+            <DonutChart data={dashboardData.professions} />
           </div>
           {/* Right */}
-          <PendingList />
+          <PendingList transfersCount={dashboardData.pendingTransfers} leavesCount={dashboardData.pendingLeaves} />
         </div>
       </div>
     </AppLayout>

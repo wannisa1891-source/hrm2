@@ -1,7 +1,10 @@
 //รายการรออนุมัติ
 import Link from "next/link"
 
-export default function PendingList() {
+export default function PendingList({
+    transfersCount = 0,
+    leavesCount = 0
+}: { transfersCount?: number, leavesCount?: number }) {
     return (
         <div
             style={{
@@ -27,7 +30,7 @@ export default function PendingList() {
                 }}
             >
                 <span>📄 คำขอย้ายแผนก</span>
-                <span>3 รายการ</span>
+                <span>{transfersCount} รายการ</span>
             </Link>
 
             <Link
@@ -43,7 +46,7 @@ export default function PendingList() {
                 }}
             >
                 <span>🏖️ ใบลาพักร้อน</span>
-                <span>1 รายการ</span>
+                <span>{leavesCount} รายการ</span>
             </Link>
         </div>
     )

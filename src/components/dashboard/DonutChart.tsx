@@ -1,5 +1,8 @@
 //กราฟวงกลม
-export default function DonutChart() {
+export default function DonutChart({ data = [] }: { data?: any[] }) {
+    const total = data.reduce((acc, curr) => acc + curr.value, 0);
+    let currentOffset = 0;
+
     return (
         <div
             style={{
@@ -27,27 +30,27 @@ export default function DonutChart() {
                  a 15.9155 15.9155 0 0 1 0 -31.831"
                         />
 
-                        {/* nurse */}
-                        <path
-                            fill="none"
-                            stroke="#4A5644"
-                            strokeWidth="3.8"
-                            strokeDasharray="50,100"
-                            d="M18 2.0845
-                 a 15.9155 15.9155 0 0 1 0 31.831"
-                        />
+                        {data.map((item, index) => {
+                            if (total === 0 || item.value === 0) return null;
+                            const percentage = (item.value / total) * 100;
+                            const strokeDasharray = `${percentage},100`;
+                            const strokeDashoffset = -currentOffset;
+                            currentOffset += percentage;
 
-                        {/* doctor */}
-                        <path
-                            fill="none"
-                            stroke="#C5A073"
-                            strokeWidth="3.8"
-                            strokeDasharray="10,100"
-                            strokeDashoffset="-50"
-                            d="M18 2.0845
-                 a 15.9155 15.9155 0 0 1 0 31.831"
-                        />
-
+                            return (
+                                <path
+                                    key={index}
+                                    fill="none"
+                                    stroke={item.color}
+                                    strokeWidth="3.8"
+                                    strokeDasharray={strokeDasharray}
+                                    strokeDashoffset={strokeDashoffset}
+                                    d="M18 2.0845
+                         a 15.9155 15.9155 0 0 1 0 31.831
+                         a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                            );
+                        })}
                     </svg>
 
                     <div
@@ -60,15 +63,18 @@ export default function DonutChart() {
                             fontSize: 20
                         }}
                     >
-                        100%
+                        {total > 0 ? "100%" : "0%"}
                     </div>
                 </div>
 
                 {/* legend */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    <span>🟢 พยาบาล 50%</span>
-                    <span>🟡 แพทย์ 10%</span>
-                    <span>⚪ อื่นๆ 40%</span>
+                    {data.length > 0 ? data.map((item, index) => (
+                        <span key={index} style={{ fontSize: 14 }}>
+                            <span style={{ color: item.color, marginRight: 8, fontSize: 18 }}>●</span>
+                            {item.name} {total > 0 ? Math.round((item.value / total) * 100) : 0}%
+                        </span>
+                    )) : <span style={{ color: "#999" }}>ไม่มีข้อมูล</span>}
                 </div>
 
             </div>

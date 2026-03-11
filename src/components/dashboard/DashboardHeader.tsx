@@ -1,5 +1,5 @@
 //วันที่-ข้อความต้อนรับ-ช่องค้นหา-รูปโปรไฟล์
-export default function DashboardHeader({ today }: { today: string }) {
+export default function DashboardHeader({ today, userName = "Hospital HRM" }: { today: string, userName?: string }) {
   return (
     <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
 
@@ -17,7 +17,7 @@ export default function DashboardHeader({ today }: { today: string }) {
         </span>
 
         <h1 style={{ fontSize: 32, fontWeight: 700, margin: '10px 0 4px' }}>
-          สวัสดีครับ, <span style={{ color: '#4A5644' }}>Hospital HRM</span>
+          สวัสดีครับ, <span style={{ color: '#4A5644' }}>{userName}</span>
         </h1>
 
         <p style={{ color: '#666', margin: 0 }}>
@@ -66,7 +66,7 @@ export default function DashboardHeader({ today }: { today: string }) {
             justifyContent: 'center',
             fontWeight: 700
           }}>
-            W
+            {userName.charAt(0).toUpperCase()}
           </div>
 
           <div style={{
