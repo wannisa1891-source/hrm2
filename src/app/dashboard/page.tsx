@@ -11,7 +11,7 @@ export default function DashboardPage() {
       .then(data => setEmpCount(Array.isArray(data) ? data.length : 0))
       .catch(() => { });
   }, []);
-
+  //*123*//
   const today = new Date().toLocaleDateString('th-TH', {
     year: 'numeric', month: 'long', day: 'numeric',
     calendar: 'buddhist',
@@ -20,7 +20,7 @@ export default function DashboardPage() {
   return (
     <AppLayout>
       <div className="dashboard-wrapper" style={{ minHeight: '100vh', background: '#f0f2f5', fontFamily: "'Sarabun', sans-serif", color: '#1a1a1a', position: 'relative', overflow: 'hidden' }}>
-        {/* BG decoration */}
+        {/* BG decoration000000000 */}
         <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: 500, height: 500, background: 'radial-gradient(circle, rgba(74,86,68,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
         {/* Header */}
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
