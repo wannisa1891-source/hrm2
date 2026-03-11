@@ -31,9 +31,16 @@ export default function StatCard({
                         background: iconBg,
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center"
+                        justifyContent: "center",
+                        color: "#333"
                     }}>
-                        {icon}
+                        {icon.length > 10 ? (
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 24, height: 24 }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
+                            </svg>
+                        ) : (
+                            icon
+                        )}
                     </div>
 
                     <span style={{ fontSize: 12, color: trendUp ? "#27ae60" : "#999" }}>

@@ -261,7 +261,7 @@ body {
 
 .main-content {
   flex: 1;
-  padding: 30px;
+  padding: 20px 30px;
   margin-left: 280px;
   transition: margin-left 0.35s ease;
   background: #f0f2f5;

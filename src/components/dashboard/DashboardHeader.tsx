@@ -1,7 +1,7 @@
 //วันที่-ข้อความต้อนรับ-ช่องค้นหา-รูปโปรไฟล์
 export default function DashboardHeader({ today, userName = "Hospital HRM" }: { today: string, userName?: string }) {
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
 
       <div>
         <span style={{

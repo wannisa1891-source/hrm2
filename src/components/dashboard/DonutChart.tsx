@@ -8,7 +8,7 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
             style={{
                 background: "white",
                 borderRadius: 20,
-                padding: 24,
+                padding: "20px 24px",
                 boxShadow: "0 4px 20px rgba(0,0,0,0.05)"
             }}
         >
