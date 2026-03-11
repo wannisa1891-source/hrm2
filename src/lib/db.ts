@@ -5,7 +5,7 @@ const pool = mysql.createPool({
   user: 'root',
   password: '',
   database: 'hrm_db',
-  port: 3307,
+  port: 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
