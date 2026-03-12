@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/hrn_db';
+import pool from '@/lib/hrm_db';
 
 export async function GET() {
   try {
@@ -23,7 +23,7 @@ export async function GET() {
       WHERE e.status = 'Active'
       GROUP BY p.pos_name
     `);
-    
+
     const colors = ['#4A5644', '#C5A073', '#8884d8', '#82ca9d', '#ffc658'];
     const professions = (profRows as any[]).map((row, index) => ({
       name: row.name || 'ไม่ระบุ',
@@ -34,10 +34,10 @@ export async function GET() {
     // 5. Pending Transfers (Assume all in tbl_transfers are pending for now if no status column)
     let pendingTransfers = 0;
     try {
-        const [transferRows] = await pool.query("SELECT COUNT(*) as count FROM tbl_transfers");
-        pendingTransfers = (transferRows as any[])[0].count;
+      const [transferRows] = await pool.query("SELECT COUNT(*) as count FROM tbl_transfers");
+      pendingTransfers = (transferRows as any[])[0].count;
     } catch (e) {
-        // Fallback if table doesn't exist
+      // Fallback if table doesn't exist
     }
 
     // 6. Pending Leaves

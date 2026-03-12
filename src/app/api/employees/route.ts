@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/hrn_db';
+import pool from '@/lib/hrm_db';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
@@ -44,18 +44,18 @@ export async function POST(req: NextRequest) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?)`;
 
     const values = [
-      d.emp_id, d.prefix, d.first_name_th, d.last_name_th,
+      d.emp_id || '', d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
       d.first_name_en || '', d.last_name_en || '',
       d.birth_date || null, d.gender || 'ชาย', d.address || '',
       d.id_card || d.citizen_id || '0000000000000', d.phone || '',
-      d.emp_type, d.dept_id, d.pos_id, d.start_date || null,
+      d.emp_type || 'พนักงานประจำ', d.dept_id || null, d.pos_id || null, d.start_date || null,
       d.base_salary || 0, imageName,
     ];
 
     await pool.query(sql, values);
     return NextResponse.json({ message: '✅ บันทึกพนักงานใหม่สำเร็จ!' });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'DB Error';
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (err: any) {
+    console.error('Error creating employee:', err);
+    return NextResponse.json({ error: err.message || 'DB Error' }, { status: 500 });
   }
 }

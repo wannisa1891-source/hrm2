@@ -10,7 +10,7 @@ async function getPool(): Promise<mysql.Pool> {
   for (const port of ports) {
     try {
       const testPool = mysql.createPool({
-        host: process.env.DB_HOST || "localhost",
+        host: process.env.DB_HOST || "172.30.0.91",
         user: process.env.DB_USER || "root",
         password: process.env.DB_PASSWORD || "",
         database: process.env.DB_NAME || "hrm_db",
