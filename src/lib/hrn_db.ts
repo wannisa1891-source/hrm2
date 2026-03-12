@@ -5,7 +5,7 @@ let pool: mysql.Pool | null = null;
 async function getPool(): Promise<mysql.Pool> {
   if (pool) return pool;
 
-  const ports = [3307, 3306];
+  const ports = [3360, 3306];
 
   for (const port of ports) {
     try {
@@ -30,7 +30,7 @@ async function getPool(): Promise<mysql.Pool> {
     }
   }
 
-  throw new Error("Cannot connect to MySQL (3307 or 3306)");
+  throw new Error("Cannot connect to MySQL (3360 or 3306)");
 }
 
 export default {

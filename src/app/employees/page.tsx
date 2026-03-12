@@ -2,16 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-
-interface Employee {
-  emp_id: string; prefix: string; first_name_th: string; last_name_th: string;
-  first_name_en: string; last_name_en: string; birth_date: string; gender: string;
-  address: string; citizen_id: string; phone: string; emp_type: string;
-  dept_id: string; pos_id: string; start_date: string; base_salary: number;
-  status: string; image: string;
-}
-interface Department { dept_id: string; dept_name: string; }
-interface Position { pos_id: string; pos_name: string; }
+import { useEmployees } from '@/hooks/useEmployees';
+import { useDepartments } from '@/hooks/useDepartments';
+import { usePositions } from '@/hooks/usePositions';
+import type { Employee } from '@/services/apiService';
 
 const EMPTY_FORM: Partial<Employee> = {
   emp_id: '', prefix: 'นาย', first_name_th: '', last_name_th: '',
@@ -21,27 +15,23 @@ const EMPTY_FORM: Partial<Employee> = {
 };
 
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [positions, setPositions] = useState<Position[]>([]);
+  const { employees, loading, error, loadEmployees, addEmployee, editEmployee, removeEmployee } = useEmployees();
+  const { departments, loadDepartments } = useDepartments();
+  const { positions, loadPositions } = usePositions();
+
   const [search, setSearch] = useState('');
   const [filterDept, setFilterDept] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Employee>>({ ...EMPTY_FORM });
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchAll();
-    fetch('/api/departments').then(r => r.json()).then(setDepartments);
-    fetch('/api/positions').then(r => r.json()).then(setPositions);
-  }, []);
-
-  const fetchAll = async () => {
-    const res = await fetch('/api/employees');
-    const data = await res.json();
-    setEmployees(Array.isArray(data) ? data : []);
-  };
+    loadEmployees();
+    loadDepartments();
+    loadPositions();
+  }, [loadEmployees, loadDepartments, loadPositions]);
 
   const getDeptName = (id: string) => departments.find(d => d.dept_id === id)?.dept_name || id;
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
@@ -62,24 +52,24 @@ export default function EmployeesPage() {
     const fd = new FormData();
     Object.entries(formData).forEach(([k, v]) => { if (v !== null && v !== undefined) fd.append(k, String(v)); });
     if (imageFile) fd.append('image', imageFile);
-    try {
-      const url = isEditing ? `/api/employees/${formData.emp_id}` : '/api/employees';
-      const method = isEditing ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, body: fd });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      alert(isEditing ? 'แก้ไขสำเร็จ' : 'เพิ่มสำเร็จ');
-      setShowForm(false); fetchAll();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'เกิดข้อผิดพลาด';
-      alert('บันทึกไม่สำเร็จ: ' + message);
+    setSaving(true);
+    let ok: boolean;
+    if (isEditing) {
+      ok = await editEmployee(formData.emp_id!, fd);
+      if (ok) alert('แก้ไขสำเร็จ');
+      else alert('แก้ไขไม่สำเร็จ');
+    } else {
+      ok = await addEmployee(fd);
+      if (ok) alert('เพิ่มสำเร็จ');
+      else alert('เพิ่มไม่สำเร็จ');
     }
+    setSaving(false);
+    if (ok) setShowForm(false);
   };
 
   const handleDelete = async (emp_id: string) => {
     if (!confirm('ต้องการลบพนักงานนี้?')) return;
-    await fetch(`/api/employees/${emp_id}`, { method: 'DELETE' });
-    fetchAll();
+    await removeEmployee(emp_id);
   };
 
   const setField = (key: string, value: unknown) => setFormData(f => ({ ...f, [key]: value }));
@@ -96,6 +86,13 @@ export default function EmployeesPage() {
           <button className="btn-primary" onClick={openAdd}>+ เพิ่มพนักงานใหม่</button>
         </div>
 
+        {/* Error Banner */}
+        {error && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#dc2626', fontSize: 14 }}>
+            ⚠️ {error}
+          </div>
+        )}
+
         {/* Filter */}
         <div className="filter-bar">
           <div className="search-input-wrap">
@@ -108,55 +105,64 @@ export default function EmployeesPage() {
           </select>
         </div>
 
+        {/* Loading */}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b', fontSize: 15 }}>
+            ⏳ กำลังโหลดข้อมูล...
+          </div>
+        )}
+
         {/* Table */}
-        <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>รหัส</th>
-                <th>ชื่อ-นามสกุล</th>
-                <th>ตำแหน่ง</th>
-                <th>แผนก</th>
-                <th>ประเภท</th>
-                <th>สถานะ</th>
-                <th>จัดการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: '#888' }}>ไม่พบข้อมูล</td></tr>
-              ) : filtered.map(emp => (
-                <tr key={emp.emp_id}>
-                  <td><span style={{ background: '#f0f4ff', color: '#2563eb', padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>{emp.emp_id}</span></td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
-                        {emp.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={`/uploads/${emp.image}`} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
-                        ) : emp.first_name_th[0]}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 14 }}>{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
-                        <div style={{ fontSize: 12, color: '#888' }}>{emp.first_name_en} {emp.last_name_en}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ fontSize: 14 }}>{getPosName(emp.pos_id)}</td>
-                  <td style={{ fontSize: 14 }}>{getDeptName(emp.dept_id)}</td>
-                  <td><span className="badge badge-blue">{emp.emp_type}</span></td>
-                  <td><span className={`badge ${emp.status === 'Active' ? 'badge-green' : 'badge-gray'}`}>{emp.status}</span></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button className="btn-outline" onClick={() => openEdit(emp)}>✏️ แก้ไข</button>
-                      <button className="btn-danger" onClick={() => handleDelete(emp.emp_id)}>🗑️</button>
-                    </div>
-                  </td>
+        {!loading && (
+          <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>รหัส</th>
+                  <th>ชื่อ-นามสกุล</th>
+                  <th>ตำแหน่ง</th>
+                  <th>แผนก</th>
+                  <th>ประเภท</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: '#888' }}>ไม่พบข้อมูล</td></tr>
+                ) : filtered.map(emp => (
+                  <tr key={emp.emp_id}>
+                    <td><span style={{ background: '#f0f4ff', color: '#2563eb', padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>{emp.emp_id}</span></td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
+                          {emp.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={`/uploads/${emp.image}`} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                          ) : emp.first_name_th[0]}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 14 }}>{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
+                          <div style={{ fontSize: 12, color: '#888' }}>{emp.first_name_en} {emp.last_name_en}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ fontSize: 14 }}>{getPosName(emp.pos_id)}</td>
+                    <td style={{ fontSize: 14 }}>{getDeptName(emp.dept_id)}</td>
+                    <td><span className="badge badge-blue">{emp.emp_type}</span></td>
+                    <td><span className={`badge ${emp.status === 'Active' ? 'badge-green' : 'badge-gray'}`}>{emp.status}</span></td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button className="btn-outline" onClick={() => openEdit(emp)}>✏️ แก้ไข</button>
+                        <button className="btn-danger" onClick={() => handleDelete(emp.emp_id)}>🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Modal */}
         {showForm && (
@@ -209,7 +215,9 @@ export default function EmployeesPage() {
               </div>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
                 <button className="btn-outline" onClick={() => setShowForm(false)}>ยกเลิก</button>
-                <button className="btn-primary" onClick={handleSave}>💾 บันทึก</button>
+                <button className="btn-primary" onClick={handleSave} disabled={saving}>
+                  {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึก'}
+                </button>
               </div>
             </div>
           </div>

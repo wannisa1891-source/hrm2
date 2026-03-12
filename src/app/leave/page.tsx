@@ -2,13 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-
-interface Leave {
-  leave_id: string; emp_id: string; leave_type_id: string;
-  start_date: string; end_date: string; reason: string; status: string;
-  first_name_th: string; last_name_th: string; dept_name: string;
-}
-interface Employee { emp_id: string; prefix: string; first_name_th: string; last_name_th: string; }
+import { useLeaves } from '@/hooks/useLeaves';
+import { useEmployees } from '@/hooks/useEmployees';
 
 const LEAVE_TYPES = [
   { id: 'LT01', name: 'ลากิจ' }, { id: 'LT02', name: 'ลาพักร้อน' },
@@ -16,31 +11,33 @@ const LEAVE_TYPES = [
 ];
 
 export default function LeavePage() {
-  const [leaves, setLeaves] = useState<Leave[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const { leaves, loading, error, loadLeaves, addLeave, changeLeaveStatus } = useLeaves();
+  const { employees, loadEmployees } = useEmployees();
+
   const [filterStatus, setFilterStatus] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ emp_id: '', leave_type_id: 'LT01', start_date: '', end_date: '', reason: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchLeaves();
-    fetch('/api/employees').then(r => r.json()).then(data => setEmployees(Array.isArray(data) ? data : []));
-  }, []);
-
-  const fetchLeaves = () => fetch('/api/leaves').then(r => r.json()).then(data => setLeaves(Array.isArray(data) ? data : []));
+    loadLeaves();
+    loadEmployees();
+  }, [loadLeaves, loadEmployees]);
 
   const filtered = filterStatus ? leaves.filter(l => l.status === filterStatus) : leaves;
 
   const handleSubmit = async () => {
-    if (!form.emp_id || !form.start_date || !form.end_date) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
-    const res = await fetch('/api/leaves', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-    const data = await res.json();
-    if (data.success) { setShowForm(false); setForm({ emp_id: '', leave_type_id: 'LT01', start_date: '', end_date: '', reason: '' }); fetchLeaves(); }
-  };
-
-  const updateStatus = async (id: string, status: string) => {
-    await fetch(`/api/leaves/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
-    fetchLeaves();
+    if (!form.emp_id || !form.start_date || !form.end_date) {
+      alert('กรุณากรอกข้อมูลให้ครบ');
+      return;
+    }
+    setSaving(true);
+    const ok = await addLeave(form);
+    setSaving(false);
+    if (ok) {
+      setShowForm(false);
+      setForm({ emp_id: '', leave_type_id: 'LT01', start_date: '', end_date: '', reason: '' });
+    }
   };
 
   const statusBadge = (s: string) => {
@@ -59,6 +56,13 @@ export default function LeavePage() {
         <button className="btn-primary" onClick={() => setShowForm(true)}>+ บันทึกใบลาใหม่</button>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#dc2626', fontSize: 14 }}>
+          ⚠️ {error}
+        </div>
+      )}
+
       <div className="filter-bar">
         {['', 'Pending', 'Approved', 'Rejected'].map(s => (
           <button key={s} onClick={() => setFilterStatus(s)}
@@ -69,38 +73,48 @@ export default function LeavePage() {
         ))}
       </div>
 
-      <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>รหัสใบลา</th><th>พนักงาน</th><th>แผนก</th>
-              <th>ระหว่างวันที่</th><th>เหตุผล</th><th>สถานะ</th><th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: '#888' }}>ไม่พบข้อมูล</td></tr>
-            ) : filtered.map(l => (
-              <tr key={l.leave_id}>
-                <td><span style={{ fontFamily: 'monospace', fontSize: 12 }}>{l.leave_id}</span></td>
-                <td>{l.first_name_th} {l.last_name_th}</td>
-                <td style={{ fontSize: 13, color: '#888' }}>{l.dept_name}</td>
-                <td style={{ fontSize: 13 }}>{l.start_date?.split('T')[0]} — {l.end_date?.split('T')[0]}</td>
-                <td style={{ fontSize: 13, maxWidth: 200 }}>{l.reason}</td>
-                <td>{statusBadge(l.status)}</td>
-                <td>
-                  {l.status === 'Pending' && (
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn-outline" style={{ background: '#dcfce7', color: '#16a34a', borderColor: '#bbf7d0' }} onClick={() => updateStatus(l.leave_id, 'Approved')}>✓ อนุมัติ</button>
-                      <button className="btn-danger" onClick={() => updateStatus(l.leave_id, 'Rejected')}>✗ ไม่อนุมัติ</button>
-                    </div>
-                  )}
-                </td>
+      {/* Loading */}
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b', fontSize: 15 }}>
+          ⏳ กำลังโหลดข้อมูล...
+        </div>
+      )}
+
+      {!loading && (
+        <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>รหัสใบลา</th><th>พนักงาน</th><th>แผนก</th>
+                <th>ระหว่างวันที่</th><th>เหตุผล</th><th>สถานะ</th><th>จัดการ</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: '#888' }}>ไม่พบข้อมูล</td></tr>
+              ) : filtered.map(l => (
+                <tr key={l.leave_id}>
+                  <td><span style={{ fontFamily: 'monospace', fontSize: 12 }}>{l.leave_id}</span></td>
+                  <td>{l.first_name_th} {l.last_name_th}</td>
+                  <td style={{ fontSize: 13, color: '#888' }}>{l.dept_name}</td>
+                  <td style={{ fontSize: 13 }}>{l.start_date?.split('T')[0]} — {l.end_date?.split('T')[0]}</td>
+                  <td style={{ fontSize: 13, maxWidth: 200 }}>{l.reason}</td>
+                  <td>{statusBadge(l.status)}</td>
+                  <td>
+                    {l.status === 'Pending' && (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="btn-outline" style={{ background: '#dcfce7', color: '#16a34a', borderColor: '#bbf7d0' }}
+                          onClick={() => changeLeaveStatus(l.leave_id, 'Approved')}>✓ อนุมัติ</button>
+                        <button className="btn-danger" onClick={() => changeLeaveStatus(l.leave_id, 'Rejected')}>✗ ไม่อนุมัติ</button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {showForm && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowForm(false)}>
@@ -129,7 +143,9 @@ export default function LeavePage() {
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
               <button className="btn-outline" onClick={() => setShowForm(false)}>ยกเลิก</button>
-              <button className="btn-primary" onClick={handleSubmit}>💾 บันทึก</button>
+              <button className="btn-primary" onClick={handleSubmit} disabled={saving}>
+                {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึก'}
+              </button>
             </div>
           </div>
         </div>
