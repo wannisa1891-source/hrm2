@@ -7,7 +7,7 @@ async function getPool(): Promise<mysql.Pool> {
     const config = {
       host: process.env.DB_HOST || "192.168.13.123",
       user: process.env.DB_USER || "HRM",
-      password: process.env.DB_PASSWORD || "111111",
+      password: process.env.DB_PASSWORD || "11111",
       database: process.env.DB_NAME || "hrm_db",
       port: port,
       waitForConnections: true,
