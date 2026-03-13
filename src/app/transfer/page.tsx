@@ -5,6 +5,19 @@ import AppLayout from '@/components/layout/AppLayout';
 
 interface Department { dept_id: string; dept_name: string; }
 interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; }
+interface TransferRecord {
+  transfer_id: string;
+  order_no: string;
+  order_date: string;
+  effective_date: string;
+  subject: string;
+  transfer_type: string;
+  emp_name: string;
+  old_dept_name: string;
+  new_dept_name: string;
+  old_position: string;
+  new_position: string;
+}
 
 const TRANSFER_TYPES = [
   { id: '01', label: '01 - บรรจุ/แต่งตั้ง' },
@@ -16,6 +29,9 @@ const TRANSFER_TYPES = [
 
 export default function TransferPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [transfers, setTransfers] = useState<TransferRecord[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
+  const [listSearch, setListSearch] = useState('');
   const [searchQ, setSearchQ] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [selected, setSelected] = useState<SearchResult | null>(null);
@@ -33,8 +49,19 @@ export default function TransferPage() {
     remark: '',
   });
 
+  const loadTransfers = async () => {
+    setLoadingList(true);
+    try {
+      const res = await fetch('/api/transfers');
+      const data = await res.json();
+      setTransfers(Array.isArray(data) ? data : []);
+    } catch { setTransfers([]); }
+    setLoadingList(false);
+  };
+
   useEffect(() => {
     fetch('/api/departments').then(r => r.json()).then(setDepartments);
+    loadTransfers();
   }, []);
 
   const search = async () => {
@@ -64,6 +91,7 @@ export default function TransferPage() {
       setShowForm(false);
       setSelected(null); setSearchQ('');
       setForm({ orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
+      loadTransfers(); // ✅ โหลดรายการใหม่หลังบันทึก
     } else alert('เกิดข้อผิดพลาด');
   };
 
@@ -191,7 +219,7 @@ export default function TransferPage() {
             <div className="tr-stat tr-stat-blue">
               <div className="tr-stat-icon">📋</div>
               <div>
-                <div className="tr-stat-count">—</div>
+                <div className="tr-stat-count">{transfers.length}</div>
                 <div className="tr-stat-label">คำสั่งทั้งหมด</div>
               </div>
               <div className="tr-stat-tag">รายการ</div>
@@ -199,7 +227,7 @@ export default function TransferPage() {
             <div className="tr-stat tr-stat-purple">
               <div className="tr-stat-icon">🔄</div>
               <div>
-                <div className="tr-stat-count">—</div>
+                <div className="tr-stat-count">{transfers.filter(t => t.order_date?.startsWith(new Date().getFullYear().toString())).length}</div>
                 <div className="tr-stat-label">โยกย้ายปีนี้</div>
               </div>
               <div className="tr-stat-tag">ปีนี้</div>
@@ -207,7 +235,7 @@ export default function TransferPage() {
             <div className="tr-stat tr-stat-teal">
               <div className="tr-stat-icon">⬆️</div>
               <div>
-                <div className="tr-stat-count">—</div>
+                <div className="tr-stat-count">{transfers.filter(t => t.transfer_type?.includes('เลื่อน') && t.order_date?.startsWith(new Date().getFullYear().toString())).length}</div>
                 <div className="tr-stat-label">เลื่อนตำแหน่งปีนี้</div>
               </div>
               <div className="tr-stat-tag">ปีนี้</div>
@@ -221,7 +249,12 @@ export default function TransferPage() {
             <div className="tr-card-header">
               <span className="tr-card-title">ประวัติการย้าย</span>
               <div className="tr-search-bar">
-                <input className="tr-search-input" placeholder="ค้นหา ชื่อ / เลขที่คำสั่ง..." />
+                <input
+                  className="tr-search-input"
+                  placeholder="ค้นหา ชื่อ / เลขที่คำสั่ง..."
+                  value={listSearch}
+                  onChange={e => setListSearch(e.target.value)}
+                />
               </div>
             </div>
             <table className="tr-table">
@@ -236,9 +269,33 @@ export default function TransferPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="tr-empty">
-                  <td colSpan={6}>ยังไม่มีประวัติการย้าย — กด <strong>สร้างคำสั่งย้ายใหม่</strong> เพื่อเริ่มต้น</td>
-                </tr>
+                {loadingList ? (
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>⏳ กำลังโหลด...</td></tr>
+                ) : (() => {
+                  const q = listSearch.toLowerCase();
+                  const filtered = q
+                    ? transfers.filter(t =>
+                        t.order_no?.toLowerCase().includes(q) ||
+                        t.emp_name?.toLowerCase().includes(q) ||
+                        t.new_dept_name?.toLowerCase().includes(q)
+                      )
+                    : transfers;
+                  return filtered.length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8', fontSize: 14 }}>ยังไม่มีประวัติการย้าย — กด <strong>สร้างคำสั่งย้ายใหม่</strong> เพื่อเริ่มต้น</td></tr>
+                  ) : filtered.map(t => (
+                    <tr key={t.transfer_id}>
+                      <td><span style={{ fontFamily: 'monospace', fontSize: 12, background: '#f1f5f9', padding: '2px 8px', borderRadius: 6, color: '#64748b' }}>{t.order_no}</span></td>
+                      <td style={{ fontSize: 13, color: '#64748b' }}>{t.effective_date?.split('T')[0] || '—'}</td>
+                      <td>
+                        <div style={{ fontWeight: 600, color: '#1e293b' }}>{t.emp_name || '—'}</div>
+                        <div style={{ fontSize: 12, color: '#94a3b8' }}>{t.old_position} → {t.new_position}</div>
+                      </td>
+                      <td style={{ fontSize: 13, color: '#475569' }}>{t.transfer_type || '—'}</td>
+                      <td style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>{t.new_dept_name || '—'}</td>
+                      <td><span style={{ padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: 'rgba(20,184,166,0.12)', color: '#0f766e', border: '1px solid rgba(20,184,166,0.3)' }}>บันทึกแล้ว</span></td>
+                    </tr>
+                  ));
+                })()}
               </tbody>
             </table>
           </div>
