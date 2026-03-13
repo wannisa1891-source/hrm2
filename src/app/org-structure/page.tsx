@@ -12,7 +12,11 @@ export default function OrgStructurePage() {
   const [openDept, setOpenDept] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/departments').then(r => r.json()).then(setDepartments);
+    fetch('/api/departments')
+      .then(r => r.json())
+      .then(data => {
+        setDepartments(data);
+      });
   }, []);
 
   const loadDept = async (deptId: string) => {
@@ -21,7 +25,7 @@ export default function OrgStructurePage() {
     if (!empsByDept[deptId]) {
       const res = await fetch(`/api/employees/dept/${deptId}`);
       const data = await res.json();
-      setEmpsByDept(p => ({ ...p, [deptId]: data }));
+      setEmpsByDept(p => ({ ...p, [deptId]: data.data || data }));
     }
   };
 
