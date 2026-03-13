@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/hrn_db';
+import pool from '@/lib/hrm_db';
 
 // GET /api/schedules?month=2026-03
 export async function GET(req: NextRequest) {

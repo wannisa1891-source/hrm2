@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/hrn_db';
+import pool from '@/lib/hrm_db';
 
 // PUT /api/schedules/[id]
 export async function PUT(
