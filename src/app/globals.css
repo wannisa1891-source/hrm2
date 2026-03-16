@@ -256,7 +256,8 @@ body {
 /* ========== MAIN LAYOUT ========== */
 .main-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .main-content {
@@ -265,7 +266,10 @@ body {
   margin-left: 280px;
   transition: margin-left 0.35s ease;
   background: #f0f2f5;
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content.expanded {

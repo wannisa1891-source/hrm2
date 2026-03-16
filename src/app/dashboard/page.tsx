@@ -23,7 +23,7 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="dashboard-wrapper">
+      <div className="dashboard-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
 
         <DashboardHeader today={today} />
 
@@ -42,7 +42,7 @@ export default function DashboardPage() {
         )}
 
         {!loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 24, flex: 1, minHeight: 0 }}>
 
             {/* Left Column (8/12) */}
             <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 24 }}>
