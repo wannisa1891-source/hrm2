@@ -104,34 +104,33 @@ export default function DashboardPage() {
                 leavesCount={dashboardData.pendingLeaves}
               />
 
-              {/* Quick Actions (New Section) */}
+              {/* Announcements / Upcoming Events */}
               <div className="glass-card hover-glow" style={{ background: "white", borderRadius: 20, padding: "16px 20px", display: "flex", flexDirection: "column", boxShadow: "0 10px 30px rgba(0,0,0,0.04)" }}>
                  <div style={{ marginBottom: 10 }}>
-                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e293b" }}>🔧 เมนูลัด</h3>
-                    <span style={{ fontSize: 12, color: "#64748b" }}>Quick Actions</span>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e293b" }}>📣 ประกาศ / ข่าวสาร</h3>
+                    <span style={{ fontSize: 12, color: "#64748b" }}>Announcements</span>
                  </div>
                  
                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <button onClick={() => window.location.href='/leave'} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '8px 12px', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 10 }} className="quick-btn">
-                       <div style={{ width: 28, height: 28, borderRadius: 8, background: '#ffedd5', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 14, height: 14 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 12px', display: 'flex', gap: 10 }}>
+                       <div style={{ width: 28, height: 28, borderRadius: 8, background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 14, height: 14 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H14" /></svg>
                        </div>
-                       <div style={{ fontWeight: 600, fontSize: 13, color: '#334155' }}>อนุมัติใบลา</div>
-                    </button>
+                       <div>
+                           <div style={{ fontWeight: 600, fontSize: 13, color: '#334155' }}>นโยบายการเบิกจ่ายสวัสดิการใหม่</div>
+                           <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>เริ่มใช้งาน 1 เม.ย. นี้เป็นต้นไป</div>
+                       </div>
+                    </div>
 
-                    <button onClick={() => window.location.href='/employees'} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '8px 12px', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 10 }} className="quick-btn">
-                       <div style={{ width: 28, height: 28, borderRadius: 8, background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 14, height: 14 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 12px', display: 'flex', gap: 10 }}>
+                       <div style={{ width: 28, height: 28, borderRadius: 8, background: '#fce7f3', color: '#db2777', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 14, height: 14 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                        </div>
-                       <div style={{ fontWeight: 600, fontSize: 13, color: '#334155' }}>เพิ่มพนักงานใหม่</div>
-                    </button>
-
-                    <button onClick={() => window.location.href='/transfer'} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '8px 12px', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 10 }} className="quick-btn">
-                       <div style={{ width: 28, height: 28, borderRadius: 8, background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 14, height: 14 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                       <div>
+                           <div style={{ fontWeight: 600, fontSize: 13, color: '#334155' }}>โครงการตรวจสุขภาพประจำปี</div>
+                           <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>ลงชื่อได้ถึงวันที่ 15 พ.ค. 2569</div>
                        </div>
-                       <div style={{ fontWeight: 600, fontSize: 13, color: '#334155' }}>ทำเรื่องย้ายแผนก</div>
-                    </button>
+                    </div>
                  </div>
               </div>
 
