@@ -3,6 +3,26 @@ import pool from '@/lib/hrm_db';
 import fs from 'fs';
 import path from 'path';
 
+export async function GET() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT t.*,
+        CONCAT(e.prefix, e.first_name_th, ' ', e.last_name_th) AS emp_name,
+        od.dept_name AS old_dept_name,
+        nd.dept_name AS new_dept_name
+      FROM tbl_transfers t
+      LEFT JOIN tbl_employees e ON t.emp_id = e.emp_id
+      LEFT JOIN tbl_departments od ON t.old_dept_id = od.dept_id
+      LEFT JOIN tbl_departments nd ON t.new_dept_id = nd.dept_id
+      ORDER BY t.order_date DESC
+    `) as any[];
+    return NextResponse.json(rows);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'DB Error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
