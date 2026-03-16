@@ -42,12 +42,12 @@ export default function DashboardPage() {
         )}
 
         {!loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, flex: 1, minHeight: 0 }} className="dashboard-grid">
 
             {/* Left Column (8/12) */}
-            <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 24 }} className="dashboard-left">
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }} className="stat-cards-grid">
 
                 <StatCard
                   icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
@@ -85,14 +85,50 @@ export default function DashboardPage() {
 
               </div>
 
-              <div style={{ flex: 1, display: 'flex' }}>
-                <DonutChart data={dashboardData.professions} />
+              <div style={{ flex: 1, display: 'flex', gap: 24 }} className="middle-section">
+                
+                {/* Quick Actions (New Section) */}
+                <div className="glass-card hover-glow" style={{ flex: '0 0 240px', background: "white", borderRadius: 20, padding: "28px 24px", display: "flex", flexDirection: "column", boxShadow: "0 10px 30px rgba(0,0,0,0.04)" }}>
+                   <div style={{ marginBottom: 20 }}>
+                      <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1e293b" }}>🔧 เมนูลัด</h3>
+                      <span style={{ fontSize: 13, color: "#64748b" }}>Quick Actions</span>
+                   </div>
+                   
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <button onClick={() => window.location.href='/leave'} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '14px', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 12 }} className="quick-btn">
+                         <div style={{ width: 36, height: 36, borderRadius: 10, background: '#ffedd5', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 18, height: 18 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                         </div>
+                         <div style={{ fontWeight: 600, fontSize: 14, color: '#334155' }}>อนุมัติใบลา</div>
+                      </button>
+
+                      <button onClick={() => window.location.href='/employees'} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '14px', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 12 }} className="quick-btn">
+                         <div style={{ width: 36, height: 36, borderRadius: 10, background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 18, height: 18 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                         </div>
+                         <div style={{ fontWeight: 600, fontSize: 14, color: '#334155' }}>เพิ่มพนักงานใหม่</div>
+                      </button>
+
+                      <button onClick={() => window.location.href='/transfer'} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '14px', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 12 }} className="quick-btn">
+                         <div style={{ width: 36, height: 36, borderRadius: 10, background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 18, height: 18 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                         </div>
+                         <div style={{ fontWeight: 600, fontSize: 14, color: '#334155' }}>ทำเรื่องย้ายแผนก</div>
+                      </button>
+                   </div>
+                </div>
+
+                {/* Donut Chart */}
+                <div style={{ flex: 1, display: 'flex' }}>
+                   <DonutChart data={dashboardData.professions} />
+                </div>
+                
               </div>
 
             </div>
 
             {/* Right Column (4/12) */}
-            <div style={{ gridColumn: 'span 4', display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ gridColumn: 'span 4', display: "flex", flexDirection: "column", gap: 24 }} className="dashboard-right">
 
               <PendingList
                 transfersCount={dashboardData.pendingTransfers}

@@ -266,6 +266,7 @@ export default function TransferPage() {
                   <th>ประเภท</th>
                   <th>หน่วยงานใหม่</th>
                   <th>สถานะ</th>
+                  <th style={{ textAlign: 'center' }}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>
@@ -293,6 +294,12 @@ export default function TransferPage() {
                       <td style={{ fontSize: 13, color: '#475569' }}>{t.transfer_type || '—'}</td>
                       <td style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>{t.new_dept_name || '—'}</td>
                       <td><span style={{ padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: 'rgba(20,184,166,0.12)', color: '#0f766e', border: '1px solid rgba(20,184,166,0.3)' }}>บันทึกแล้ว</span></td>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                          <button className="btn-tr-cancel" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => alert('แสดงรายละเอียดคำสั่ง ' + t.order_no)}>👁️ รายละเอียด</button>
+                          <button className="btn-tr-save" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => alert('ดาวน์โหลด PDF คำสั่ง ' + t.order_no)}>📥 PDF</button>
+                        </div>
+                      </td>
                     </tr>
                   ));
                 })()}
@@ -306,7 +313,9 @@ export default function TransferPage() {
           <div className="tr-form-panel">
 
             {/* ─── SECTION 1: ข้อมูลคำสั่ง ─── */}
-            <div className="tr-section-header tr-section-1">1. ข้อมูลคำสั่ง</div>
+            <div className="tr-section-header tr-section-1" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>📝</span> 1. ข้อมูลคำสั่ง
+            </div>
             <div className="tr-section-body">
               <div className="tr-form-row tri">
                 <div className="tr-fg">
@@ -339,7 +348,9 @@ export default function TransferPage() {
             </div>
 
             {/* ─── SECTION 2: รายละเอียดการเปลี่ยนแปลง ─── */}
-            <div className="tr-section-header tr-section-2">2. รายละเอียดการเปลี่ยนแปลง</div>
+            <div className="tr-section-header tr-section-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>🔄</span> 2. รายละเอียดการเปลี่ยนแปลง
+            </div>
             <div className="tr-section-body">
 
               {/* Employee search */}
@@ -422,7 +433,9 @@ export default function TransferPage() {
             </div>
 
             {/* ─── SECTION 3: เอกสารแนบ ─── */}
-            <div className="tr-section-header tr-section-3">3. เอกสารแนบ</div>
+            <div className="tr-section-header tr-section-3" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>📎</span> 3. เอกสารแนบ
+            </div>
             <div className="tr-section-body">
               <div className="tr-form-row single">
                 <div className="tr-fg">

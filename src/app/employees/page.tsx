@@ -26,6 +26,10 @@ export default function EmployeesPage() {
   const [formData, setFormData] = useState<Partial<Employee>>({ ...EMPTY_FORM });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [activeTab, setActiveTab] = useState<'personal' | 'job' | 'other'>('personal');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadEmployees();
@@ -42,10 +46,51 @@ export default function EmployeesPage() {
     return matchSearch && matchDept;
   });
 
-  const openAdd = () => { setFormData({ ...EMPTY_FORM }); setImageFile(null); setIsEditing(false); setShowForm(true); };
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedEmployees = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const exportCSV = () => {
+    const headers = ['รหัส', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'แผนก', 'ตำแหน่ง', 'ประเภท', 'สถานะ'];
+    const rows = filtered.map(e => [
+      e.emp_id, e.prefix, e.first_name_th, e.last_name_th,
+      getDeptName(e.dept_id), getPosName(e.pos_id), e.emp_type, e.status
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `employees_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const openAdd = () => { 
+    setFormData({ ...EMPTY_FORM }); 
+    setImageFile(null); 
+    setPreviewUrl(null);
+    setIsEditing(false); 
+    setShowForm(true); 
+    setActiveTab('personal');
+  };
   const openEdit = (emp: Employee) => {
     setFormData({ ...emp, citizen_id: emp.citizen_id || '' });
-    setImageFile(null); setIsEditing(true); setShowForm(true);
+    setImageFile(null); 
+    setPreviewUrl(emp.image ? `/uploads/${emp.image}` : null);
+    setIsEditing(true); 
+    setShowForm(true);
+    setActiveTab('personal');
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setImageFile(null);
+      setPreviewUrl(null);
+    }
   };
 
   const handleSave = async () => {
@@ -93,16 +138,21 @@ export default function EmployeesPage() {
           </div>
         )}
 
-        {/* Filter */}
-        <div className="filter-bar">
-          <div className="search-input-wrap">
-            <span className="search-icon">🔍</span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อ, รหัสพนักงาน..." />
+        {/* Filter & Export */}
+        <div className="filter-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 12, flex: 1 }}>
+            <div className="search-input-wrap">
+              <span className="search-icon">🔍</span>
+              <input value={search} onChange={e => {setSearch(e.target.value); setCurrentPage(1);}} placeholder="ค้นหาชื่อ, รหัสพนักงาน..." />
+            </div>
+            <select className="form-select" style={{ width: 200 }} value={filterDept} onChange={e => {setFilterDept(e.target.value); setCurrentPage(1);}}>
+              <option value="">ทุกแผนก</option>
+              {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
+            </select>
           </div>
-          <select className="form-select" style={{ width: 200 }} value={filterDept} onChange={e => setFilterDept(e.target.value)}>
-            <option value="">ทุกแผนก</option>
-            {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
-          </select>
+          <button className="btn-outline" onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>📥</span> Export CSV
+          </button>
         </div>
 
         {/* Loading */}
@@ -128,9 +178,9 @@ export default function EmployeesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {paginatedEmployees.length === 0 ? (
                   <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: '#888' }}>ไม่พบข้อมูล</td></tr>
-                ) : filtered.map(emp => (
+                ) : paginatedEmployees.map(emp => (
                   <tr key={emp.emp_id}>
                     <td><span style={{ background: '#f0f4ff', color: '#2563eb', padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>{emp.emp_id}</span></td>
                     <td>
@@ -161,57 +211,144 @@ export default function EmployeesPage() {
                 ))}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, padding: '16px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                  disabled={currentPage === 1}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: currentPage === 1 ? '#f1f5f9' : 'white', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', color: currentPage === 1 ? '#94a3b8' : '#334155' }}
+                >
+                  ก่อนหน้า
+                </button>
+                <span style={{ fontSize: 14, color: '#475569', fontWeight: 500 }}>
+                  หน้า {currentPage} / {totalPages}
+                </span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                  disabled={currentPage === totalPages}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: currentPage === totalPages ? '#f1f5f9' : 'white', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', color: currentPage === totalPages ? '#94a3b8' : '#334155' }}
+                >
+                  ถัดไป
+                </button>
+              </div>
+            )}
+            
           </div>
         )}
 
         {/* Modal */}
         {showForm && (
           <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowForm(false)}>
-            <div className="modal-box">
+            <div className="modal-box" style={{ maxWidth: 800 }}>
               <div className="modal-header">
                 <h3>{isEditing ? '✏️ แก้ไขข้อมูลพนักงาน' : '➕ เพิ่มพนักงานใหม่'}</h3>
                 <button className="modal-close" onClick={() => setShowForm(false)}>✕</button>
               </div>
+
+              {/* Tabs */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 24, borderBottom: '1px solid #e2e8f0' }}>
+                <button 
+                  onClick={() => setActiveTab('personal')} 
+                  style={{ padding: '10px 20px', background: 'none', border: 'none', borderBottom: activeTab === 'personal' ? '3px solid #00695c' : '3px solid transparent', color: activeTab === 'personal' ? '#00695c' : '#64748b', fontWeight: activeTab === 'personal' ? 700 : 500, cursor: 'pointer', transition: '0.2s', fontSize: 15 }}
+                >
+                  👤 ข้อมูลส่วนตัว
+                </button>
+                <button 
+                  onClick={() => setActiveTab('job')} 
+                  style={{ padding: '10px 20px', background: 'none', border: 'none', borderBottom: activeTab === 'job' ? '3px solid #00695c' : '3px solid transparent', color: activeTab === 'job' ? '#00695c' : '#64748b', fontWeight: activeTab === 'job' ? 700 : 500, cursor: 'pointer', transition: '0.2s', fontSize: 15 }}
+                >
+                  💼 ข้อมูลการทำงาน
+                </button>
+                <button 
+                  onClick={() => setActiveTab('other')} 
+                  style={{ padding: '10px 20px', background: 'none', border: 'none', borderBottom: activeTab === 'other' ? '3px solid #00695c' : '3px solid transparent', color: activeTab === 'other' ? '#00695c' : '#64748b', fontWeight: activeTab === 'other' ? 700 : 500, cursor: 'pointer', transition: '0.2s', fontSize: 15 }}
+                >
+                  📞 ข้อมูลติดต่อ & รูปถ่าย
+                </button>
+              </div>
+
               <div className="form-grid">
-                <div className="form-group"><label className="form-label">รหัสพนักงาน</label><input className="form-input" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} disabled={isEditing} /></div>
-                <div className="form-group"><label className="form-label">คำนำหน้า</label>
-                  <select className="form-select" value={formData.prefix || 'นาย'} onChange={e => setField('prefix', e.target.value)}>
-                    {['นาย', 'นาง', 'นางสาว', 'ดร.', 'นพ.', 'พญ.'].map(p => <option key={p}>{p}</option>)}
-                  </select>
-                </div>
-                <div className="form-group"><label className="form-label">ชื่อ (ไทย)</label><input className="form-input" value={formData.first_name_th || ''} onChange={e => setField('first_name_th', e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">นามสกุล (ไทย)</label><input className="form-input" value={formData.last_name_th || ''} onChange={e => setField('last_name_th', e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">ชื่อ (English)</label><input className="form-input" value={formData.first_name_en || ''} onChange={e => setField('first_name_en', e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">นามสกุล (English)</label><input className="form-input" value={formData.last_name_en || ''} onChange={e => setField('last_name_en', e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">วันเกิด</label><input type="date" className="form-input" value={formData.birth_date?.toString().split('T')[0] || ''} onChange={e => setField('birth_date', e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">เพศ</label>
-                  <select className="form-select" value={formData.gender || 'ชาย'} onChange={e => setField('gender', e.target.value)}>
-                    <option>ชาย</option><option>หญิง</option>
-                  </select>
-                </div>
-                <div className="form-group"><label className="form-label">เลขบัตรประชาชน</label><input className="form-input" value={formData.citizen_id || ''} onChange={e => setField('citizen_id', e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">เบอร์โทร</label><input className="form-input" value={formData.phone || ''} onChange={e => setField('phone', e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">แผนก</label>
-                  <select className="form-select" value={formData.dept_id || ''} onChange={e => setField('dept_id', e.target.value)}>
-                    <option value="">-- เลือกแผนก --</option>
-                    {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
-                  </select>
-                </div>
-                <div className="form-group"><label className="form-label">ตำแหน่ง</label>
-                  <select className="form-select" value={formData.pos_id || ''} onChange={e => setField('pos_id', e.target.value)}>
-                    <option value="">-- เลือกตำแหน่ง --</option>
-                    {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
-                  </select>
-                </div>
-                <div className="form-group"><label className="form-label">ประเภทพนักงาน</label>
-                  <select className="form-select" value={formData.emp_type || 'พนักงานประจำ'} onChange={e => setField('emp_type', e.target.value)}>
-                    {['พนักงานประจำ', 'พนักงานสัญญาจ้าง', 'พนักงานชั่วคราว', 'ลูกจ้าง'].map(t => <option key={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div className="form-group"><label className="form-label">วันเริ่มงาน</label><input type="date" className="form-input" value={formData.start_date?.toString().split('T')[0] || ''} onChange={e => setField('start_date', e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">เงินเดือนพื้นฐาน</label><input type="number" className="form-input" value={formData.base_salary || 0} onChange={e => setField('base_salary', Number(e.target.value))} /></div>
-                <div className="form-group full"><label className="form-label">ที่อยู่</label><textarea className="form-input" rows={2} value={formData.address || ''} onChange={e => setField('address', e.target.value)} /></div>
-                <div className="form-group full"><label className="form-label">รูปภาพ</label><input type="file" className="form-input" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} /></div>
+                
+                {/* Tab: Personal */}
+                {activeTab === 'personal' && (
+                  <>
+                    <div className="form-group"><label className="form-label">คำนำหน้า</label>
+                      <select className="form-select" value={formData.prefix || 'นาย'} onChange={e => setField('prefix', e.target.value)}>
+                        {['นาย', 'นาง', 'นางสาว', 'ดร.', 'นพ.', 'พญ.'].map(p => <option key={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <div></div> {/* Empty column for alignment */}
+                    <div className="form-group"><label className="form-label">ชื่อ (ไทย) <span style={{color: 'red'}}>*</span></label><input className="form-input" value={formData.first_name_th || ''} onChange={e => setField('first_name_th', e.target.value)} required /></div>
+                    <div className="form-group"><label className="form-label">นามสกุล (ไทย) <span style={{color: 'red'}}>*</span></label><input className="form-input" value={formData.last_name_th || ''} onChange={e => setField('last_name_th', e.target.value)} required /></div>
+                    <div className="form-group"><label className="form-label">ชื่อ (English)</label><input className="form-input" value={formData.first_name_en || ''} onChange={e => setField('first_name_en', e.target.value)} /></div>
+                    <div className="form-group"><label className="form-label">นามสกุล (English)</label><input className="form-input" value={formData.last_name_en || ''} onChange={e => setField('last_name_en', e.target.value)} /></div>
+                    <div className="form-group"><label className="form-label">วันเกิด</label><input type="date" className="form-input" value={formData.birth_date?.toString().split('T')[0] || ''} onChange={e => setField('birth_date', e.target.value)} /></div>
+                    <div className="form-group"><label className="form-label">เพศ</label>
+                      <select className="form-select" value={formData.gender || 'ชาย'} onChange={e => setField('gender', e.target.value)}>
+                        <option>ชาย</option><option>หญิง</option>
+                      </select>
+                    </div>
+                    <div className="form-group"><label className="form-label">เลขบัตรประชาชน</label><input className="form-input" value={formData.citizen_id || ''} onChange={e => setField('citizen_id', e.target.value)} maxLength={13} /></div>
+                  </>
+                )}
+
+                {/* Tab: Job */}
+                {activeTab === 'job' && (
+                  <>
+                    <div className="form-group"><label className="form-label">รหัสพนักงาน <span style={{color: 'red'}}>*</span></label><input className="form-input" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} disabled={isEditing} placeholder="เช่น EMP001" /></div>
+                    <div className="form-group"><label className="form-label">แผนก <span style={{color: 'red'}}>*</span></label>
+                      <select className="form-select" value={formData.dept_id || ''} onChange={e => setField('dept_id', e.target.value)}>
+                        <option value="">-- เลือกแผนก --</option>
+                        {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group"><label className="form-label">ตำแหน่ง <span style={{color: 'red'}}>*</span></label>
+                      <select className="form-select" value={formData.pos_id || ''} onChange={e => setField('pos_id', e.target.value)}>
+                        <option value="">-- เลือกตำแหน่ง --</option>
+                        {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group"><label className="form-label">ประเภทพนักงาน</label>
+                      <select className="form-select" value={formData.emp_type || 'พนักงานประจำ'} onChange={e => setField('emp_type', e.target.value)}>
+                        {['พนักงานประจำ', 'พนักงานสัญญาจ้าง', 'พนักงานชั่วคราว', 'ลูกจ้าง'].map(t => <option key={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group"><label className="form-label">วันเริ่มงาน</label><input type="date" className="form-input" value={formData.start_date?.toString().split('T')[0] || ''} onChange={e => setField('start_date', e.target.value)} /></div>
+                    <div className="form-group"><label className="form-label">เงินเดือนพื้นฐาน (บาท)</label><input type="number" className="form-input" value={formData.base_salary || 0} onChange={e => setField('base_salary', Number(e.target.value))} min={0} /></div>
+                  </>
+                )}
+
+                {/* Tab: Other/Contact */}
+                {activeTab === 'other' && (
+                  <>
+                    <div className="form-group"><label className="form-label">เบอร์โทรศัพท์ติดต่อ</label><input className="form-input" value={formData.phone || ''} onChange={e => setField('phone', e.target.value)} /></div>
+                    <div className="form-group full"><label className="form-label">ที่อยู่ปัจจุบัน</label><textarea className="form-input" rows={3} value={formData.address || ''} onChange={e => setField('address', e.target.value)} placeholder="บ้านเลขที่, ถนน, ซอย, จังหวัด..." /></div>
+                    
+                    <div className="form-group full" style={{ marginTop: 12 }}>
+                      <label className="form-label">รูปถ่ายพนักงาน (Preview)</label>
+                      <div style={{ display: 'flex', gap: 20, alignItems: 'center', background: '#f8fafc', padding: 16, borderRadius: 12, border: '1px dashed #cbd5e1' }}>
+                        
+                        <div style={{ width: 100, height: 100, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '4px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+                           {previewUrl ? (
+                             // eslint-disable-next-line @next/next/no-img-element
+                             <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                           ) : (
+                             <span style={{ fontSize: 32, color: '#94a3b8' }}>👤</span>
+                           )}
+                        </div>
+
+                        <div style={{ flex: 1 }}>
+                          <input type="file" className="form-input" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} style={{ background: 'white' }} />
+                          <p style={{ fontSize: 12, color: '#64748b', marginTop: 8, marginBottom: 0 }}>* รองรับไฟล์ JPG, PNG, WEBP ขนาดไม่เกิน 5MB แนะนำรูปถ่ายหน้าตรงสุภาพ</p>
+                        </div>
+
+                      </div>
+                    </div>
+                  </>
+                )}
+
               </div>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
                 <button className="btn-outline" onClick={() => setShowForm(false)}>ยกเลิก</button>

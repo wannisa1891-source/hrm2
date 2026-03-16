@@ -31,7 +31,25 @@ export default function LeavePage() {
     end_date: '',
     reason: ''
   });
+  const [certFile, setCertFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  
+  // Simulated Quota Logic
+  const calculateDuration = (start: string, end: string) => {
+    if (!start || !end) return 0;
+    const d1 = new Date(start);
+    const d2 = new Date(end);
+    const diffTime = Math.abs(d2.getTime() - d1.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  const getQuota = (empId: string, typeId: string) => {
+    if (!empId) return { used: 0, total: 0 };
+    // Mock quota logic
+    if (typeId === 'L01') return { used: 5, total: 30 }; // ลาป่วย
+    if (typeId === 'L03') return { used: 2, total: 10 }; // พักร้อน
+    return { used: 0, total: 15 };
+  };
 
   useEffect(() => {
     loadLeaves();
@@ -49,16 +67,29 @@ export default function LeavePage() {
 
   const handleSubmit = async () => {
     if (!form.emp_id || !form.start_date || !form.end_date) {
-      alert('กรุณากรอกข้อมูลให้ครบ');
+      alert('กรุณากรอกข้อมูลวันที่และพนักงานให้ครบ');
       return;
     }
+    if (form.start_date > form.end_date) {
+      alert('วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม');
+      return;
+    }
+    
+    // Check if sick leave > 2 days needs certificate
+    const duration = calculateDuration(form.start_date, form.end_date);
+    if (form.leave_type_id === 'L01' && duration > 2 && !certFile) {
+      alert('การลาป่วยเกิน 2 วัน ต้องแนบใบรับรองแพทย์');
+      return;
+    }
+
     setSaving(true);
+    // Note: If using a real API, `form` should be converted to FormData to include `certFile`
     const ok = await addLeave(form);
     setSaving(false);
     if (ok) {
       setShowForm(false);
-      // ✅ รีเซ็ตค่าเป็น 'L01' หลังบันทึกสำเร็จ
       setForm({ emp_id: '', leave_type_id: 'L01', start_date: '', end_date: '', reason: '' });
+      setCertFile(null);
     }
   };
 
@@ -159,6 +190,12 @@ export default function LeavePage() {
         .btn-save-lv { padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; border: none; box-shadow: 0 4px 14px rgba(99,102,241,0.4); transition: all .15s; }
         .btn-save-lv:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(99,102,241,0.5); }
         .btn-save-lv:disabled { opacity: .6; cursor: not-allowed; }
+        
+        .date-range-container { display: flex; align-items: center; gap: 8px; }
+        .date-range-separator { color: #94a3b8; font-weight: 700; }
+        .quota-box { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .quota-text { font-size: 13px; color: #475569; }
+        .quota-highlight { font-weight: 700; color: #6366f1; font-size: 15px; }
       `}</style>
 
       <div className="leave-page">
@@ -287,6 +324,19 @@ export default function LeavePage() {
               <button className="lv-modal-close" onClick={() => setShowForm(false)}>✕</button>
             </div>
             <div className="lv-modal-body">
+              {form.emp_id && form.leave_type_id && (
+                <div className="quota-box">
+                  <div className="quota-text">
+                    โควตา <b>{LEAVE_TYPES.find(t => t.id === form.leave_type_id)?.name}</b>: ใช้ไปแล้ว <span className="quota-highlight">{getQuota(form.emp_id, form.leave_type_id).used}</span> / {getQuota(form.emp_id, form.leave_type_id).total} วัน
+                  </div>
+                  {calculateDuration(form.start_date, form.end_date) > 0 && (
+                    <div style={{ fontSize: 13, color: '#059669', fontWeight: 600, background: '#d1fae5', padding: '4px 10px', borderRadius: 8 }}>
+                      ลาครั้งนี้: {calculateDuration(form.start_date, form.end_date)} วัน
+                    </div>
+                  )}
+                </div>
+              )}
+            
               <div className="lv-form-row">
                 <div className="lv-form-group full">
                   <label className="lv-label">พนักงาน</label>
@@ -301,14 +351,23 @@ export default function LeavePage() {
                     {LEAVE_TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                 </div>
-                <div className="lv-form-group">
-                  <label className="lv-label">วันที่เริ่ม</label>
-                  <input type="date" className="lv-input" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} />
+                
+                <div className="lv-form-group full">
+                  <label className="lv-label">ช่วงวันที่ลา</label>
+                  <div className="date-range-container">
+                    <input type="date" className="lv-input" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} style={{ flex: 1 }} />
+                    <span className="date-range-separator">→</span>
+                    <input type="date" className="lv-input" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} style={{ flex: 1 }} min={form.start_date} />
+                  </div>
                 </div>
-                <div className="lv-form-group">
-                  <label className="lv-label">วันที่สิ้นสุด</label>
-                  <input type="date" className="lv-input" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} />
-                </div>
+
+                {form.leave_type_id === 'L01' && calculateDuration(form.start_date, form.end_date) > 2 && (
+                  <div className="lv-form-group full" style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: 12, borderRadius: 10 }}>
+                    <label className="lv-label" style={{ color: '#d97706' }}>แนบใบรับรองแพทย์ (ลาป่วยเกิน 2 วัน)</label>
+                    <input type="file" className="lv-input" style={{ background: '#fff' }} onChange={e => setCertFile(e.target.files?.[0] || null)} />
+                  </div>
+                )}
+
                 <div className="lv-form-group full">
                   <label className="lv-label">เหตุผล</label>
                   <textarea className="lv-textarea" rows={3} value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} placeholder="ระบุเหตุผลการลา..." />
