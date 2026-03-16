@@ -43,3 +43,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Failed to create announcement' }, { status: 500 });
   }
 }
+
+// PUT: Update an existing announcement
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, title, content, image } = body;
+
+    if (!id || !title || !content) {
+      return NextResponse.json({ success: false, error: 'ID, title and content are required' }, { status: 400 });
+    }
+
+    const sql = `
+      UPDATE tbl_announcements 
+      SET title = ?, content = ?, image = ?
+      WHERE id = ?
+    `;
+    const values = [title, content, image || null, id];
+
+    const [result] = await db.query(sql, values);
+    
+    return NextResponse.json({ success: true, message: 'Announcement updated successfully', data: result });
+  } catch (error) {
+    console.error('Error updating announcement:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update announcement' }, { status: 500 });
+  }
+}
