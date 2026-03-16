@@ -10,8 +10,8 @@ html,
 body {
   height: 100%;
   font-family: 'Sarabun', sans-serif;
-  /* เปลี่ยนจากสีพื้นเรียบ เป็น Gradient */
-  background: linear-gradient(135deg, #004d40 0%, #002d55 100%);
+  /* ใช้สีพื้นหลังที่สว่างขึ้นเพื่อให้เข้ากับ Sidebar ขอบโค้ง */
+  background: #f0f2f5;
   background-attachment: fixed;
   color: #1a1a1a;
 }
