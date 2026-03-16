@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 
 interface Department { dept_id: string; dept_name: string; }
-interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; }
+interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; dept_id: string; pos_id: string; }
 interface TransferRecord {
   transfer_id: string;
   order_no: string;
@@ -41,8 +41,8 @@ export default function TransferPage() {
   const [form, setForm] = useState({
     orderNo: '', orderDate: '', effectDate: '', title: '',
     transferType: '03', empId: '',
-    oldDept: '', newDeptId: '',
-    oldPos: '', newPos: '',
+    oldDept: '', oldDeptId: '', newDeptId: '',
+    oldPos: '', oldPosId: '', newPos: '',
     oldLevel: '', newLevel: '',
     oldPosNo: '', newPosNo: '',
     oldSalary: 0, newSalary: 0,
@@ -72,13 +72,13 @@ export default function TransferPage() {
 
   const selectEmployee = (emp: SearchResult) => {
     setSelected(emp);
-    setForm(f => ({ ...f, empId: emp.id, oldPos: emp.pos, oldDept: emp.dept, oldSalary: emp.salary }));
+    setForm(f => ({ ...f, empId: emp.id, oldPos: emp.pos, oldDept: emp.dept, oldSalary: emp.salary, oldDeptId: emp.dept_id, oldPosId: emp.pos_id }));
     setSearchResults([]);
     setSearchQ(emp.name);
   };
 
   const handleSave = async () => {
-    if (!selected || !form.orderNo || !form.newDeptId) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
+    if (!selected || !form.orderNo || !form.newDeptId || !form.effectDate) { alert('กรุณากรอกข้อมูลให้ครบ (รวมถึงวันที่มีผล)'); return; }
     setSaving(true);
     const fd = new FormData();
     fd.append('data', JSON.stringify(form));
@@ -90,7 +90,7 @@ export default function TransferPage() {
       alert('✅ บันทึกคำสั่งย้ายสำเร็จ!');
       setShowForm(false);
       setSelected(null); setSearchQ('');
-      setForm({ orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
+      setForm({ orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDept: '', oldDeptId: '', newDeptId: '', oldPos: '', oldPosId: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
       loadTransfers(); // ✅ โหลดรายการใหม่หลังบันทึก
     } else alert('เกิดข้อผิดพลาด');
   };
@@ -290,7 +290,9 @@ export default function TransferPage() {
                         <div style={{ fontWeight: 600, color: '#1e293b' }}>{t.emp_name || '—'}</div>
                         <div style={{ fontSize: 12, color: '#94a3b8' }}>{t.old_position} → {t.new_position}</div>
                       </td>
-                      <td style={{ fontSize: 13, color: '#475569' }}>{t.transfer_type || '—'}</td>
+                      <td style={{ fontSize: 13, color: '#475569' }}>
+                        {TRANSFER_TYPES.find(type => type.id === t.transfer_type)?.label || t.transfer_type || '—'}
+                      </td>
                       <td style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>{t.new_dept_name || '—'}</td>
                       <td><span style={{ padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: 'rgba(20,184,166,0.12)', color: '#0f766e', border: '1px solid rgba(20,184,166,0.3)' }}>บันทึกแล้ว</span></td>
                     </tr>

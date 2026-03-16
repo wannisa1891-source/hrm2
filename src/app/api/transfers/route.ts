@@ -49,10 +49,18 @@ export async function POST(req: NextRequest) {
 
     await pool.query(sql, [
       transfer_id, data.orderNo, data.orderDate, data.title,
-      'แต่งตั้งโยกย้าย', data.orderDate, data.empId,
-      data.oldDeptId, data.newDeptId, data.oldPos, data.newPos,
-      fileName, data.oldSalary, data.newSalary,
+      data.transferType, data.effectDate, data.empId,
+      data.oldDeptId || null, data.newDeptId || null, data.oldPos || '', data.newPos || '',
+      fileName, data.oldSalary || 0, data.newSalary || 0,
     ]);
+
+    // Update the employee record in tbl_employees
+    if (data.empId) {
+      const updateSql = `UPDATE tbl_employees 
+        SET dept_id = ?, base_salary = ?
+        WHERE emp_id = ?`;
+      await pool.query(updateSql, [data.newDeptId || data.oldDeptId, data.newSalary || data.oldSalary, data.empId]);
+    }
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
