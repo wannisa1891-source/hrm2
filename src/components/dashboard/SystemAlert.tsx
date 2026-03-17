@@ -7,15 +7,15 @@ export default function SystemAlert() {
             style={{
                 background: "linear-gradient(135deg,#3F4B3B,#2c3330)",
                 color: "white",
-                borderRadius: 24,
-                padding: "32px 28px",
+                borderRadius: 20,
+                padding: "24px",
                 position: "relative",
                 overflow: "hidden",
                 width: "100%",
                 display: "flex",
                 flexDirection: "column",
                 border: "1px solid rgba(255,255,255,0.1)",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.2)"
+                boxShadow: "0 10px 30px rgba(0,0,0,0.15)"
             }}
         >
             <div className="animate-pulse-bg" style={{
@@ -29,7 +29,7 @@ export default function SystemAlert() {
                 filter: "blur(20px)"
             }}></div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                 <span
                     style={{
                         fontSize: 11,
@@ -50,10 +50,10 @@ export default function SystemAlert() {
                 </span>
             </div>
 
-            <h3 style={{ margin: 0, fontSize: 24, fontWeight: 800, zIndex: 1, letterSpacing: "-0.5px" }}>ใบประกอบวิชาชีพ</h3>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, zIndex: 1, letterSpacing: "-0.5px" }}>ใบประกอบวิชาชีพ</h3>
 
-            <p style={{ opacity: 0.85, fontSize: 15, zIndex: 1, marginTop: 8, marginBottom: 24, lineHeight: 1.5, color: "#cbd5e1" }}>
-                พบข้อมูลผู้ปฏิบัติงานที่มีใบประกอบวิชาชีพกำลังจะหมดอายุภายใน <strong style={{ color: "#d2a679" }}>30 วัน</strong>
+            <p style={{ opacity: 0.85, fontSize: 13, zIndex: 1, marginTop: 4, marginBottom: 16, lineHeight: 1.4, color: "#cbd5e1" }}>
+                ผู้ปฏิบัติงานที่ใบประกอบวิชาชีพกำลังจะหมดอายุใน <strong style={{ color: "#d2a679" }}>30 วัน</strong>
             </p>
 
             <Link href="/license" style={{ zIndex: 1, textDecoration: 'none', display: 'block', marginTop: 'auto' }}>
@@ -64,11 +64,11 @@ export default function SystemAlert() {
                         background: "linear-gradient(135deg, #d2a679, #b98a58)",
                         color: "white",
                         border: "none",
-                        padding: "14px 20px",
-                        borderRadius: 14,
+                        padding: "10px 16px",
+                        borderRadius: 12,
                         cursor: "pointer",
                         fontWeight: 700,
-                        fontSize: 15,
+                        fontSize: 14,
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",

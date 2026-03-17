@@ -7,7 +7,7 @@ export default function BackButton() {
   const pathname = usePathname();
 
   // Don't show back button on login or dashboard pages
-  if (pathname === '/login' || pathname === '/dashboard') return null;
+  if (pathname === '/login' || pathname === '/dashboard' || pathname === '/') return null;
 
   return (
     <button 

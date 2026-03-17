@@ -10,8 +10,8 @@ html,
 body {
   height: 100%;
   font-family: 'Sarabun', sans-serif;
-  /* เปลี่ยนจากสีพื้นเรียบ เป็น Gradient */
-  background: linear-gradient(135deg, #004d40 0%, #002d55 100%);
+  /* ใช้สีพื้นหลังที่สว่างขึ้นเพื่อให้เข้ากับ Sidebar ขอบโค้ง */
+  background: #f0f2f5;
   background-attachment: fixed;
   color: #1a1a1a;
 }
@@ -256,8 +256,7 @@ body {
 /* ========== MAIN LAYOUT ========== */
 .main-layout {
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 .main-content {
@@ -266,10 +265,7 @@ body {
   margin-left: 280px;
   transition: margin-left 0.35s ease;
   background: #f0f2f5;
-  height: 100vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh;
 }
 
 .main-content.expanded {
@@ -545,15 +541,31 @@ body {
 /* ========== CUSTOM DASHBOARD ANIMATIONS ========== */
 
 @keyframes pulseBorder {
-  0% { box-shadow: 0 0 0 0 rgba(210, 166, 121, 0.6); }
-  70% { box-shadow: 0 0 0 12px rgba(210, 166, 121, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(210, 166, 121, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(210, 166, 121, 0.6);
+  }
+
+  70% {
+    box-shadow: 0 0 0 12px rgba(210, 166, 121, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(210, 166, 121, 0);
+  }
 }
 
 @keyframes pulseBg {
-  0% { background-color: rgba(255, 255, 255, 0.1); }
-  50% { background-color: rgba(255, 255, 255, 0.25); }
-  100% { background-color: rgba(255, 255, 255, 0.1); }
+  0% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  50% {
+    background-color: rgba(255, 255, 255, 0.25);
+  }
+
+  100% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
 }
 
 .animate-pulse-btn {
@@ -570,7 +582,7 @@ body {
 
 .hover-lift:hover {
   transform: translateY(-6px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
 }
 
 .hover-glow {
@@ -579,7 +591,7 @@ body {
 
 .hover-glow:hover {
   background: #fff;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
   transform: scale(1.02);
 }
 
@@ -618,4 +630,54 @@ body {
   border-color: #bae6fd;
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(14, 165, 233, 0.15);
-}
+}
+
+/* ========== QUICK ACTIONS ========== */
+.quick-btn:hover {
+  background: white !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* ========== DASHBOARD LAYOUT CLASS ========== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+/* Custom Scrollbar for overflow containers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ========== RESPONSIVE DASHBOARD ========== */
+@media (max-width: 1200px) {
+  .dashboard-grid { grid-template-columns: 1fr !important; height: auto !important; overflow: visible !important; }
+  .dashboard-left { grid-column: span 1 !important; }
+  .dashboard-right { grid-column: span 1 !important; }
+  .dashboard-wrapper { height: auto !important; overflow: visible !important; min-height: 100vh; }
+  .main-content { height: auto !important; overflow: visible !important; }
+}
+@media (max-width: 900px) {
+  .stat-cards-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .middle-section { flex-direction: column !important; }
+}
+@media (max-width: 600px) {
+  .stat-cards-grid { grid-template-columns: 1fr !important; }
+  .main-content { margin-left: 0 !important; padding: 16px !important; }
+  .sidebar-hybrid { transform: translateX(-100%); }
+  .filter-bar { flex-direction: column; align-items: stretch; }
+}

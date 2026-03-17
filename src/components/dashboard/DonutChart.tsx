@@ -11,9 +11,11 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
                 borderRadius: 20,
                 padding: "28px 32px",
                 width: "100%",
+                height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.04)"
+                boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+                justifyContent: "center"
             }}
         >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
@@ -24,7 +26,7 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", gap: 20, flex: 1, flexWrap: 'wrap' }}>
 
                 {/* Donut */}
-                <div style={{ position: "relative", width: 220, height: 220, filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.06))" }}>
+                <div style={{ position: "relative", width: 220, height: 220, filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.06))", transition: "transform 0.3s ease", cursor: "pointer" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
                     <svg viewBox="0 0 36 36" style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
 
                         {/* background */}

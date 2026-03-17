@@ -1,19 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useEmployees } from '@/hooks/useEmployees';
+import { Leave } from '@/services/apiService';
 
-// ✅ แก้ไข ID ให้ตรงกับฐานข้อมูล (เอาตัว T ออก)
 const LEAVE_TYPES = [
-  { id: 'L01', name: 'ลาป่วย' },
-  { id: 'L02', name: 'ลากิจ (รับค่าจ้าง)' },
-  { id: 'L03', name: 'ลาพักผ่อน (พักร้อน)' },
-  { id: 'L04', name: 'ลาคลอด' },
-  { id: 'L05', name: 'ลาไปช่วยเหลือภริยาที่คลอดบุตร' },
-  { id: 'L06', name: 'ลาอุปสมบท / ลาไปประกอบพิธีฮัจญ์' },
-  { id: 'L07', name: 'ลาไปศึกษา ฝึกอบรม' },
+  { id: 'L01', name: 'ลาป่วย', color: '#f59e0b' },
+  { id: 'L02', name: 'ลากิจ (รับค่าจ้าง)', color: '#6366f1' },
+  { id: 'L03', name: 'ลาพักผ่อน (พักร้อน)', color: '#10b981' },
+  { id: 'L04', name: 'ลาคลอด', color: '#ec4899' },
+  { id: 'L05', name: 'ลาไปช่วยเหลือภริยาที่คลอดบุตร', color: '#8b5cf6' },
+  { id: 'L06', name: 'ลาอุปสมบท / ลาไปประกอบพิธีฮัจญ์', color: '#f97316' },
 ];
 
 export default function LeavePage() {
@@ -22,30 +21,33 @@ export default function LeavePage() {
 
   const [filterStatus, setFilterStatus] = useState('');
   const [showForm, setShowForm] = useState(false);
-
-  // ✅ แก้ไข leave_type_id เริ่มต้นเป็น 'L01'
-  const [form, setForm] = useState({
-    emp_id: '',
-    leave_type_id: 'L01',
-    start_date: '',
-    end_date: '',
-    reason: ''
-  });
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
+  const [form, setForm] = useState({ emp_id: '', leave_type_id: 'L01', start_date: '', end_date: '', reason: '' });
   const [saving, setSaving] = useState(false);
+
+  // Helper function to calculate working days between two dates
+  const calculateDays = (start: string, end: string) => {
+    if (!start || !end) return 0;
+    const d1 = new Date(start);
+    const d2 = new Date(end);
+    const timeDiff = d2.getTime() - d1.getTime();
+    return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include both start and end days
+  };
 
   useEffect(() => {
     loadLeaves();
     loadEmployees();
   }, [loadLeaves, loadEmployees]);
 
-  const pending = leaves.filter(l => l.status === 'Pending');
-  const approved = leaves.filter(l => l.status === 'Approved');
-  const sickToday = leaves.filter(l => {
-    const today = new Date().toISOString().split('T')[0];
-    return l.status === 'Approved' && l.start_date?.split('T')[0] <= today && l.end_date?.split('T')[0] >= today;
-  });
-
   const filtered = filterStatus ? leaves.filter(l => l.status === filterStatus) : leaves;
+
+  // คำนวณ Stats สำหรับโชว์เป็น Card
+  const stats = useMemo(() => ({
+    total: leaves.length,
+    pending: leaves.filter(l => l.status === 'Pending').length,
+    approved: leaves.filter(l => l.status === 'Approved').length,
+  }), [leaves]);
 
   const handleSubmit = async () => {
     if (!form.emp_id || !form.start_date || !form.end_date) {
@@ -57,273 +59,338 @@ export default function LeavePage() {
     setSaving(false);
     if (ok) {
       setShowForm(false);
-      // ✅ รีเซ็ตค่าเป็น 'L01' หลังบันทึกสำเร็จ
       setForm({ emp_id: '', leave_type_id: 'L01', start_date: '', end_date: '', reason: '' });
     }
   };
 
   const statusBadge = (s: string) => {
-    const styles: Record<string, React.CSSProperties> = {
-      Pending: { background: 'rgba(251,191,36,0.15)', color: '#d97706', border: '1px solid rgba(251,191,36,0.4)' },
-      Approved: { background: 'rgba(34,197,94,0.15)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.4)' },
-      Rejected: { background: 'rgba(239,68,68,0.15)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.4)' },
+    const config: Record<string, { bg: string, text: string, label: string }> = {
+      Pending: { bg: '#fffbeb', text: '#b45309', label: 'รออนุมัติ' },
+      Approved: { bg: '#f0fdf4', text: '#15803d', label: 'อนุมัติแล้ว' },
+      Rejected: { bg: '#fef2f2', text: '#b91c1c', label: 'ไม่อนุมัติ' }
     };
-    const labels: Record<string, string> = { Pending: 'รออนุมัติ', Approved: 'อนุมัติแล้ว', Rejected: 'ไม่อนุมัติ' };
+    const style = config[s] || { bg: '#f8fafc', text: '#64748b', label: s };
+
     return (
-      <span style={{ padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, ...styles[s] }}>
-        {labels[s] || s}
+      <span style={{
+        backgroundColor: style.bg,
+        color: style.text,
+        padding: '6px 12px',
+        borderRadius: '20px',
+        fontSize: '12px',
+        fontWeight: 600,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px'
+      }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: style.text }} />
+        {style.label}
       </span>
     );
   };
 
   return (
     <AppLayout>
-      <style>{`
-        .leave-page { display: flex; flex-direction: column; gap: 24px; }
-        .leave-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-        .leave-header-title { font-size: 26px; font-weight: 700; color: #1e293b; margin: 0; }
-        .leave-header-sub { font-size: 14px; color: #64748b; margin: 4px 0 0; }
-        .btn-new-leave {
-          display: flex; align-items: center; gap: 8px;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: #fff; border: none; border-radius: 12px;
-          padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
-          box-shadow: 0 4px 14px rgba(99,102,241,0.4);
-          transition: transform .15s, box-shadow .15s;
-        }
-        .btn-new-leave:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.5); }
-        .leave-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-        .stat-card {
-          border-radius: 18px; padding: 24px 22px;
-          display: flex; align-items: center; gap: 18px;
-          position: relative; overflow: hidden;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-          cursor: pointer; transition: transform .15s, box-shadow .15s;
-        }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.1); }
-        .stat-card.active { outline: 2px solid rgba(255,255,255,0.6); outline-offset: -2px; }
-        .stat-card-sick { background: linear-gradient(135deg, #f472b6, #ec4899); color: #fff; }
-        .stat-card-pending { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; }
-        .stat-card-approved { background: linear-gradient(135deg, #34d399, #10b981); color: #fff; }
-        .stat-card-icon { width: 54px; height: 54px; border-radius: 14px; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
-        .stat-card-body { flex: 1; }
-        .stat-card-count { font-size: 32px; font-weight: 800; line-height: 1; }
-        .stat-card-label { font-size: 13px; opacity: .88; margin-top: 4px; font-weight: 500; }
-        .stat-card-sub { position: absolute; bottom: 12px; right: 16px; font-size: 11px; opacity: .7; font-weight: 500; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 20px; }
-        .leave-filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .filter-label { font-size: 13px; color: #64748b; font-weight: 600; margin-right: 4px; }
-        .filter-chip { padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid #e2e8f0; background: #f8fafc; color: #64748b; transition: all .15s; }
-        .filter-chip:hover { border-color: #6366f1; color: #6366f1; }
-        .filter-chip.active-all { background: #1e293b; color: #fff; border-color: #1e293b; }
-        .filter-chip.active-pending { background: #f59e0b; color: #fff; border-color: #f59e0b; }
-        .filter-chip.active-approved { background: #10b981; color: #fff; border-color: #10b981; }
-        .filter-chip.active-rejected { background: #ef4444; color: #fff; border-color: #ef4444; }
-        .leave-table-card { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
-        .leave-table-card-header { padding: 18px 24px 14px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
-        .leave-table-card-title { font-size: 15px; font-weight: 700; color: #1e293b; }
-        .leave-table-card-count { font-size: 13px; color: #94a3b8; }
-        .leave-table { width: 100%; border-collapse: collapse; }
-        .leave-table thead tr { background: #f8fafc; }
-        .leave-table th { padding: 12px 16px; font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; text-align: left; white-space: nowrap; }
-        .leave-table tbody tr { border-top: 1px solid #f1f5f9; transition: background .1s; }
-        .leave-table tbody tr:hover { background: #fafbff; }
-        .leave-table td { padding: 14px 16px; font-size: 14px; color: #334155; vertical-align: middle; }
-        .leave-emp-name { font-weight: 600; color: #1e293b; }
-        .leave-emp-dept { font-size: 12px; color: #94a3b8; margin-top: 2px; }
-        .leave-date-range { font-size: 13px; color: #64748b; }
-        .leave-reason { font-size: 13px; color: #64748b; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .leave-actions { display: flex; gap: 6px; }
-        .btn-approve { padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.3); transition: all .15s; }
-        .btn-approve:hover { background: #10b981; color: #fff; }
-        .btn-reject { padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); transition: all .15s; }
-        .btn-reject:hover { background: #ef4444; color: #fff; }
-        .leave-id-chip { font-family: monospace; font-size: 11px; color: #94a3b8; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; }
-        .empty-row td { text-align: center; padding: 48px !important; color: #94a3b8; font-size: 14px; }
-        .lv-modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
-        .lv-modal { background: #fff; border-radius: 20px; width: 100%; max-width: 520px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); overflow: hidden; }
-        .lv-modal-header { background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; }
-        .lv-modal-header h3 { color: #fff; font-size: 17px; font-weight: 700; margin: 0; }
-        .lv-modal-close { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background .15s; }
-        .lv-modal-close:hover { background: rgba(255,255,255,0.35); }
-        .lv-modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
-        .lv-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .lv-form-group { display: flex; flex-direction: column; gap: 6px; }
-        .lv-form-group.full { grid-column: 1/-1; }
-        .lv-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; }
-        .lv-input, .lv-select, .lv-textarea { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; font-size: 14px; color: #1e293b; outline: none; transition: border-color .15s; background: #f8fafc; width: 100%; box-sizing: border-box; }
-        .lv-input:focus, .lv-select:focus, .lv-textarea:focus { border-color: #6366f1; background: #fff; }
-        .lv-textarea { resize: vertical; min-height: 80px; }
-        .lv-modal-footer { padding: 16px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; }
-        .btn-cancel-lv { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; border: none; transition: background .15s; }
-        .btn-cancel-lv:hover { background: #e2e8f0; }
-        .btn-save-lv { padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; border: none; box-shadow: 0 4px 14px rgba(99,102,241,0.4); transition: all .15s; }
-        .btn-save-lv:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(99,102,241,0.5); }
-        .btn-save-lv:disabled { opacity: .6; cursor: not-allowed; }
-      `}</style>
-
-      <div className="leave-page">
-        <div className="leave-header">
-          <div>
-            <h1 className="leave-header-title">ระบบการลา</h1>
-            <p className="leave-header-sub">จัดการใบลาพนักงานทั้งหมด {leaves.length} รายการ</p>
-          </div>
-          <button className="btn-new-leave" onClick={() => setShowForm(true)}>
-            <span style={{ fontSize: 18 }}>+</span> บันทึกใบลาใหม่
+      {/* Header Section */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => window.history.back()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#475569', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            <span>←</span> ย้อนกลับ
           </button>
-        </div>
-
-        {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '12px 18px', color: '#dc2626', fontSize: 14 }}>
-            ⚠️ {error}
-          </div>
-        )}
-
-        <div className="leave-stats">
-          <div className={`stat-card stat-card-sick`} onClick={() => setFilterStatus('')}>
-            <div className="stat-card-icon">🤒</div>
-            <div className="stat-card-body">
-              <div className="stat-card-count">{sickToday.length}</div>
-              <div className="stat-card-label">ลาวันนี้</div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 32, height: 32, background: '#e0e7ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', margin: 0 }}>ระบบจัดการการลา</h1>
             </div>
-            <div className="stat-card-sub">วันนี้</div>
-          </div>
-
-          <div className={`stat-card stat-card-pending ${filterStatus === 'Pending' ? 'active' : ''}`} onClick={() => setFilterStatus(filterStatus === 'Pending' ? '' : 'Pending')}>
-            <div className="stat-card-icon">⏳</div>
-            <div className="stat-card-body">
-              <div className="stat-card-count">{pending.length}</div>
-              <div className="stat-card-label">รออนุมัติ</div>
-            </div>
-            <div className="stat-card-sub">รายการ</div>
-          </div>
-
-          <div className={`stat-card stat-card-approved ${filterStatus === 'Approved' ? 'active' : ''}`} onClick={() => setFilterStatus(filterStatus === 'Approved' ? '' : 'Approved')}>
-            <div className="stat-card-icon">✅</div>
-            <div className="stat-card-body">
-              <div className="stat-card-count">{approved.length}</div>
-              <div className="stat-card-label">อนุมัติแล้ว</div>
-            </div>
-            <div className="stat-card-sub">เดือนนี้</div>
+            <p style={{ color: '#64748b', margin: '4px 0 0 44px', fontSize: 14 }}>ติดตามและตรวจสอบคำขอลาของพนักงาน</p>
           </div>
         </div>
-
-        <div className="leave-filter-bar">
-          <span className="filter-label">กรอง:</span>
-          {[
-            { val: '', label: 'ทั้งหมด', cls: 'active-all' },
-            { val: 'Pending', label: 'รออนุมัติ', cls: 'active-pending' },
-            { val: 'Approved', label: 'อนุมัติแล้ว', cls: 'active-approved' },
-            { val: 'Rejected', label: 'ไม่อนุมัติ', cls: 'active-rejected' },
-          ].map(({ val, label, cls }) => (
-            <button key={val} className={`filter-chip ${filterStatus === val ? cls : ''}`} onClick={() => setFilterStatus(val)}>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div className="leave-table-card">
-          <div className="leave-table-card-header">
-            <span className="leave-table-card-title">รายการใบลา</span>
-            <span className="leave-table-card-count">{filtered.length} รายการ</span>
-          </div>
-
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', color: '#94a3b8', fontSize: 15 }}>⏳ กำลังโหลดข้อมูล...</div>
-          ) : (
-            <table className="leave-table">
-              <thead>
-                <tr>
-                  <th>รหัส</th>
-                  <th>พนักงาน</th>
-                  <th>ประเภท</th>
-                  <th>ช่วงวันที่</th>
-                  <th>เหตุผล</th>
-                  <th>สถานะ</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr className="empty-row"><td colSpan={7}>ไม่พบรายการใบลา</td></tr>
-                ) : filtered.map(l => (
-                  <tr key={l.leave_id}>
-                    <td><span className="leave-id-chip">{l.leave_id}</span></td>
-                    <td>
-                      <div className="leave-emp-name">{l.first_name_th} {l.last_name_th}</div>
-                      <div className="leave-emp-dept">{l.dept_name}</div>
-                    </td>
-                    <td style={{ fontSize: 13, color: '#475569', fontWeight: 500 }}>
-                      {LEAVE_TYPES.find(t => t.id === l.leave_type_id)?.name || l.leave_type_id}
-                    </td>
-                    <td>
-                      <div className="leave-date-range">{l.start_date?.split('T')[0]}</div>
-                      <div className="leave-date-range">↓ {l.end_date?.split('T')[0]}</div>
-                    </td>
-                    <td><span className="leave-reason">{l.reason || '—'}</span></td>
-                    <td>{statusBadge(l.status)}</td>
-                    <td>
-                      {l.status === 'Pending' ? (
-                        <div className="leave-actions">
-                          <button className="btn-approve" onClick={() => changeLeaveStatus(l.leave_id, 'Approved')}>✓ อนุมัติ</button>
-                          <button className="btn-reject" onClick={() => changeLeaveStatus(l.leave_id, 'Rejected')}>✗ ปฏิเสธ</button>
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: 12, color: '#cbd5e1' }}>—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <button onClick={() => setShowForm(true)}
+          style={{
+            background: '#042f2e', color: 'white', border: 'none',
+            padding: '10px 20px', borderRadius: '8px',
+            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 8,
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+          }}>
+          + สร้างใบลาใหม่
+        </button>
       </div>
 
-      {showForm && (
-        <div className="lv-modal-overlay" onClick={e => e.target === e.currentTarget && setShowForm(false)}>
-          <div className="lv-modal">
-            <div className="lv-modal-header">
-              <h3>บันทึกใบลาใหม่</h3>
-              <button className="lv-modal-close" onClick={() => setShowForm(false)}>✕</button>
+      {/* Stats Overview */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+        {[
+          { label: 'รายการทั้งหมด', value: stats.total, color: '#cbd5e1', icon: <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
+          { label: 'รออนุมัติ', value: stats.pending, color: '#f59e0b', icon: <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+          { label: 'อนุมัติแล้ว', value: stats.approved, color: '#10b981', icon: <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+        ].map((item, i) => (
+          <div key={i} style={{ padding: '24px', backgroundColor: 'white', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ color: '#64748b', fontSize: 14, fontWeight: 500 }}>{item.label}</span>
+              <span style={{ color: item.color }}>{item.icon}</span>
             </div>
-            <div className="lv-modal-body">
-              <div className="lv-form-row">
-                <div className="lv-form-group full">
-                  <label className="lv-label">พนักงาน</label>
-                  <select className="lv-select" value={form.emp_id} onChange={e => setForm(f => ({ ...f, emp_id: e.target.value }))}>
-                    <option value="">— เลือกพนักงาน —</option>
-                    {employees.map(e => <option key={e.emp_id} value={e.emp_id}>{e.prefix}{e.first_name_th} {e.last_name_th}</option>)}
-                  </select>
+            <div style={{ fontSize: 32, fontWeight: 700, marginTop: 12, color: '#0f172a' }}>{item.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter Tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'transparent' }}>
+        {['', 'Pending', 'Approved', 'Rejected'].map(s => (
+          <button key={s} onClick={() => setFilterStatus(s)}
+            style={{
+              padding: '8px 20px',
+              borderRadius: 20,
+              border: filterStatus === s ? 'none' : 'none',
+              cursor: 'pointer',
+              fontSize: 14,
+              fontWeight: 600,
+              backgroundColor: filterStatus === s ? 'white' : 'transparent',
+              color: filterStatus === s ? '#2563eb' : '#64748b',
+              boxShadow: filterStatus === s ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+              transition: 'all 0.2s'
+            }}>
+            {s === '' ? 'ทั้งหมด' : s === 'Pending' ? 'รออนุมัติ' : s === 'Approved' ? 'อนุมัติแล้ว' : 'ไม่อนุมัติ'}
+          </button>
+        ))}
+      </div>
+
+      {/* Main Table */}
+      <div className="glass-card" style={{ padding: 0, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+        <table className="data-table">
+          <thead style={{ background: '#f8fafc' }}>
+            <tr>
+              <th style={{ padding: '16px 20px', color: '#64748b', fontWeight: 600 }}>พนักงาน</th>
+              <th style={{ color: '#64748b', fontWeight: 600 }}>ประเภท</th>
+              <th style={{ color: '#64748b', fontWeight: 600 }}>วันที่ลา</th>
+              <th style={{ color: '#64748b', fontWeight: 600 }}>เหตุผล</th>
+              <th style={{ color: '#64748b', fontWeight: 600 }}>สถานะ</th>
+              <th style={{ textAlign: 'center', color: '#64748b', fontWeight: 600 }}>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>กำลังโหลดข้อมูล...</td></tr>
+            ) : filtered.length === 0 ? (
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>ไม่พบข้อมูลรายการลา</td></tr>
+            ) : filtered.map(l => (
+              <tr key={l.leave_id} className="table-row-hover">
+                <td style={{ padding: '16px 20px' }}>
+                  <div style={{ fontWeight: 600, color: '#1e293b' }}>{l.first_name_th} {l.last_name_th}</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8' }}>{l.dept_name}</div>
+                </td>
+                <td>
+                  <span style={{ fontSize: 13, color: '#475569', background: '#f1f5f9', padding: '4px 8px', borderRadius: 6 }}>
+                    {LEAVE_TYPES.find(t => t.id === l.leave_type_id)?.name || 'ลาอื่นๆ'}
+                  </span>
+                </td>
+                <td style={{ fontSize: 13, color: '#475569' }}>
+                  <div style={{ fontWeight: 500 }}>{l.start_date?.split('T')[0]}</div>
+                  <div style={{ fontSize: 11, color: '#cbd5e1' }}>ถึง {l.end_date?.split('T')[0]}</div>
+                </td>
+                <td style={{ fontSize: 13, color: '#64748b', maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {l.reason}
+                </td>
+                <td>{statusBadge(l.status)}</td>
+                <td style={{ textAlign: 'center' }}>
+                  {l.status === 'Pending' && (
+                    <button onClick={() => { setSelectedLeave(l); setShowReviewModal(true); }}
+                      style={{
+                        padding: '6px 14px', borderRadius: 20, border: '1px solid #cbd5e1',
+                        background: 'transparent', color: '#334155', cursor: 'pointer',
+                        fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        fontSize: 13, transition: 'all 0.2s'
+                      }}
+                      className="hover-btn-outline"
+                    >
+                      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      ตรวจสอบคำขอ
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ปรับปรุง CSS เล็กน้อยในหัวข้อ Style tag หรือ Global CSS */}
+      <style jsx>{`
+        .table-row-hover:hover {
+          background-color: #f8fafc;
+          transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+          filter: brightness(1.1);
+          transform: translateY(-1px);
+        }
+      `}</style>
+
+      {showForm && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowForm(false)}>
+          <div className="modal-box" style={{ borderRadius: 20, padding: 32 }}>
+            <h2 style={{ marginTop: 0, marginBottom: 24, fontSize: 20, color: '#1e293b' }}>สร้างคำขอใบลาใหม่</h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>พนักงานที่ต้องการลา</label>
+                <select
+                  value={form.emp_id}
+                  onChange={e => setForm({ ...form, emp_id: e.target.value })}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
+                >
+                  <option value="">-- เลือกพนักงาน --</option>
+                  {employees.map(emp => (
+                    <option key={emp.emp_id} value={emp.emp_id}>
+                      {emp.first_name_th} {emp.last_name_th} ({emp.emp_id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>ประเภท</label>
+                <select
+                  value={form.leave_type_id}
+                  onChange={e => setForm({ ...form, leave_type_id: e.target.value })}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
+                >
+                  {LEAVE_TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>วันเริ่มต้น</label>
+                  <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} />
                 </div>
-                <div className="lv-form-group full">
-                  <label className="lv-label">ประเภทการลา</label>
-                  <select className="lv-select" value={form.leave_type_id} onChange={e => setForm(f => ({ ...f, leave_type_id: e.target.value }))}>
-                    {LEAVE_TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
-                </div>
-                <div className="lv-form-group">
-                  <label className="lv-label">วันที่เริ่ม</label>
-                  <input type="date" className="lv-input" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} />
-                </div>
-                <div className="lv-form-group">
-                  <label className="lv-label">วันที่สิ้นสุด</label>
-                  <input type="date" className="lv-input" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} />
-                </div>
-                <div className="lv-form-group full">
-                  <label className="lv-label">เหตุผล</label>
-                  <textarea className="lv-textarea" rows={3} value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} placeholder="ระบุเหตุผลการลา..." />
+                <div>
+                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>ถึงวันที่</label>
+                  <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} />
                 </div>
               </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>เหตุผลการลา</label>
+                <textarea rows={3} value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} placeholder="ระบุเหตุผล..." style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical' }} />
+              </div>
             </div>
-            <div className="lv-modal-footer">
-              <button className="btn-cancel-lv" onClick={() => setShowForm(false)}>ยกเลิก</button>
-              <button className="btn-save-lv" onClick={handleSubmit} disabled={saving}>
-                {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึกใบลา'}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+              <button onClick={() => setShowForm(false)} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer', fontWeight: 500 }}>ยกเลิก</button>
+              <button
+                onClick={handleSubmit}
+                className="btn-primary"
+                disabled={saving}
+                style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 500, opacity: saving ? 0.7 : 1 }}
+              >
+                {saving ? 'กำลังบันทึก...' : 'บันทึกใบลา'}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Leave Approval Review Modal */}
+      {showReviewModal && selectedLeave && (() => {
+        const daysRequested = calculateDays(selectedLeave.start_date, selectedLeave.end_date);
+        let quotaTotal = 0;
+        let quotaLabel = "";
+
+        // Map leave type to quota
+        if (selectedLeave.leave_type_id === 'L02') { quotaTotal = selectedLeave.quota_personal ?? 45; quotaLabel = "สิทธิ์ลากิจ (รับค่าจ้าง)"; }
+        else if (selectedLeave.leave_type_id === 'L03') { quotaTotal = selectedLeave.quota_vacation ?? 10; quotaLabel = "สิทธิ์ลาพักผ่อน (พักร้อน)"; }
+        else if (selectedLeave.leave_type_id === 'L01') { quotaTotal = selectedLeave.quota_sick ?? 30; quotaLabel = "สิทธิ์ลาป่วย"; }
+        else if (selectedLeave.leave_type_id === 'L04') { quotaTotal = 90; quotaLabel = "สิทธิ์ลาคลอด"; }
+        else if (selectedLeave.leave_type_id === 'L05') { quotaTotal = 15; quotaLabel = "ลาไปช่วยเหลือภริยาที่คลอดบุตร"; }
+        else if (selectedLeave.leave_type_id === 'L06') { quotaTotal = 120; quotaLabel = "ลาอุปสมบท / ลาไปประกอบพิธีฮัจญ์"; }
+        else { quotaTotal = 0; quotaLabel = "อื่นๆ"; }
+
+        // Mocking "used leaves" - in real app this requires another DB sum per employee. For demo, we assume 0 used initially.
+        const usedSoFar = 0;
+        const remaining = quotaTotal - usedSoFar;
+        const remainingAfter = remaining - daysRequested;
+        const isOverQuota = remainingAfter < 0;
+
+        return (
+          <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowReviewModal(false)}>
+            <div className="modal-box" style={{ borderRadius: 20, padding: 32, maxWidth: 500 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h2 style={{ margin: 0, fontSize: 20, color: '#1e293b' }}>ฟอร์มอนุมัติการลา (Leave Approval)</h2>
+                <button onClick={() => setShowReviewModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94a3b8' }}>✕</button>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: 16, borderRadius: 12, marginBottom: 20, border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>ผู้ขอลางาน</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th} ({selectedLeave.dept_name})</div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>ประเภท</div>
+                    <div style={{ fontWeight: 500, color: '#1e293b' }}>{LEAVE_TYPES.find(t => t.id === selectedLeave.leave_type_id)?.name || 'อื่นๆ'}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>จำนวนวัน</div>
+                    <div style={{ fontWeight: 600, color: '#2563eb' }}>{daysRequested} วัน</div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>ระยะเวลา</div>
+                  <div style={{ fontSize: 14, color: '#1e293b' }}>{selectedLeave.start_date?.split('T')[0]} <span style={{ color: '#94a3b8' }}>ถึง</span> {selectedLeave.end_date?.split('T')[0]}</div>
+                </div>
+
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>เหตุผล</div>
+                  <div style={{ fontSize: 14, color: '#1e293b', background: 'white', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}>{selectedLeave.reason || '-'}</div>
+                </div>
+              </div>
+
+              {/* Quota Check Area */}
+              {quotaTotal > 0 && (
+                <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: isOverQuota ? '1px solid #fecaca' : '1px solid #bbf7d0', background: isOverQuota ? '#fef2f2' : '#f0fdf4' }}>
+                  <h3 style={{ margin: '0 0 12px 0', fontSize: 14, color: isOverQuota ? '#b91c1c' : '#15803d', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {isOverQuota ? '⚠️ แจ้งเตือน: ใช้วันลาเกินโควตา' : '✅ ตรวจสอบโควตาวันลา'}
+                  </h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
+                    <span style={{ color: '#475569' }}>{quotaLabel} ทั้งหมด:</span>
+                    <span style={{ fontWeight: 600 }}>{quotaTotal} วัน</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
+                    <span style={{ color: '#475569' }}>ใช้ไปแล้ว:</span>
+                    <span style={{ fontWeight: 600 }}>{usedSoFar} วัน</span>
+                  </div>
+                  <div style={{ height: 1, background: isOverQuota ? '#fca5a5' : '#86efac', margin: '8px 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                    <span style={{ fontWeight: 500, color: '#1e293b' }}>คงเหลือสุทธิ (ถ้ายอมรับ):</span>
+                    <span style={{ fontWeight: 700, color: isOverQuota ? '#ef4444' : '#16a34a' }}>{remainingAfter} วัน</span>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Rejected'); setShowReviewModal(false); }}
+                  style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 15, transition: 'all 0.2s' }}
+                >
+                  ❌ ไม่อนุมัติ (Reject)
+                </button>
+                <button
+                  onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Approved'); setShowReviewModal(false); }}
+                  style={{ flex: 1, padding: '12px', borderRadius: 10, border: 'none', background: '#10b981', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: 15, transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
+                >
+                  ✅ อนุมัติการลา (Approve)
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
     </AppLayout>
   );
 }

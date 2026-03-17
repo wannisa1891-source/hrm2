@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { loginUser } from '@/services/authService';
 
 const SLIDES = [
   'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=1600&q=80',
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [slide, setSlide] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { login } = useAuth();
   const router = useRouter();
 
@@ -28,26 +30,32 @@ export default function LoginPage() {
   }, []);
 
   const handleLogin = async () => {
+    setErrorMessage('');
     if (!username || !password) {
-      alert('กรุณากรอก Username และ Password');
+      setErrorMessage('กรุณากรอก Username และ Password');
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        login(data.username);
+      const result = await loginUser(username, password);
+      
+      if (result.success) {
+        // เก็บ token ใน localStorage ตามเงื่อนไข
+        if (result.token) {
+          localStorage.setItem('token', result.token);
+        }
+        
+        // ถ้าใช้ context
+        login(result.username || username);
+        
+        // redirect ไปหน้า dashboard
         router.push('/dashboard');
       } else {
-        alert('Username หรือ Password ไม่ถูกต้อง');
+        // แสดง error message บนหน้า login ถ้าไม่สำเร็จ
+        setErrorMessage(result.message || 'Username หรือ Password ไม่ถูกต้อง');
       }
     } catch {
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+      setErrorMessage('เกิดข้อผิดพลาด กรุณาลองใหม่');
     } finally {
       setLoading(false);
     }
@@ -123,6 +131,21 @@ export default function LoginPage() {
           />
         </div>
 
+        {/* แสดง Error Message ถ้ามี */}
+        {errorMessage && (
+          <div style={{
+            background: 'rgba(220, 38, 38, 0.15)',
+            color: '#ff8080',
+            fontSize: 13,
+            padding: 10,
+            borderRadius: 8,
+            marginBottom: 15,
+            border: '1px solid rgba(220, 38, 38, 0.3)'
+          }}>
+            {errorMessage}
+          </div>
+        )}
+
         {/* Button */}
         <button
           onClick={handleLogin}
@@ -143,6 +166,63 @@ export default function LoginPage() {
         >
           {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
         </button>
+
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', margin: '18px 0', gap: 12 }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.25)' }} />
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>หรือ</span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.25)' }} />
+        </div>
+
+        {/* Sign In / สมัครสมาชิก Button */}
+        <button
+          onClick={() => router.push('/register')}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.18)';
+            e.currentTarget.style.borderColor = 'rgba(96,165,250,0.5)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 20px rgba(96,165,250,0.2)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          style={{
+            width: '100%',
+            padding: '13px',
+            border: '2px solid rgba(255,255,255,0.25)',
+            borderRadius: 12,
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(6px)',
+            color: 'white',
+            fontWeight: 600,
+            fontSize: 15,
+            cursor: 'pointer',
+            fontFamily: 'Sarabun, sans-serif',
+            transition: 'all 0.3s ease',
+            letterSpacing: 0.5,
+          }}
+        >
+          ✨ Sign In / สมัครสมาชิก
+        </button>
+
+        {/* Register Link */}
+        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
+          <p style={{ margin: 0 }}>
+            ยังไม่มีบัญชี?{' '}
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); router.push('/register'); }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#93c5fd'; e.currentTarget.style.textDecoration = 'underline'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#60a5fa'; e.currentTarget.style.textDecoration = 'none'; }}
+              style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}
+            >
+              สมัครสมาชิกที่นี่
+            </a>
+          </p>
+        </div>
 
         <p style={{ marginTop: 20, fontSize: 12, opacity: 0.7 }}>Hospital Management Platform</p>
       </div>

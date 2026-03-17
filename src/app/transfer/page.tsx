@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 
 interface Department { dept_id: string; dept_name: string; }
-interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; dept_id: string; pos_id: string; }
+interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; }
 interface TransferRecord {
   transfer_id: string;
   order_no: string;
@@ -41,8 +41,8 @@ export default function TransferPage() {
   const [form, setForm] = useState({
     orderNo: '', orderDate: '', effectDate: '', title: '',
     transferType: '03', empId: '',
-    oldDept: '', oldDeptId: '', newDeptId: '',
-    oldPos: '', oldPosId: '', newPos: '',
+    oldDept: '', newDeptId: '',
+    oldPos: '', newPos: '',
     oldLevel: '', newLevel: '',
     oldPosNo: '', newPosNo: '',
     oldSalary: 0, newSalary: 0,
@@ -72,13 +72,13 @@ export default function TransferPage() {
 
   const selectEmployee = (emp: SearchResult) => {
     setSelected(emp);
-    setForm(f => ({ ...f, empId: emp.id, oldPos: emp.pos, oldDept: emp.dept, oldSalary: emp.salary, oldDeptId: emp.dept_id, oldPosId: emp.pos_id }));
+    setForm(f => ({ ...f, empId: emp.id, oldPos: emp.pos, oldDept: emp.dept, oldSalary: emp.salary }));
     setSearchResults([]);
     setSearchQ(emp.name);
   };
 
   const handleSave = async () => {
-    if (!selected || !form.orderNo || !form.newDeptId || !form.effectDate) { alert('กรุณากรอกข้อมูลให้ครบ (รวมถึงวันที่มีผล)'); return; }
+    if (!selected || !form.orderNo || !form.newDeptId) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
     setSaving(true);
     const fd = new FormData();
     fd.append('data', JSON.stringify(form));
@@ -90,7 +90,7 @@ export default function TransferPage() {
       alert('✅ บันทึกคำสั่งย้ายสำเร็จ!');
       setShowForm(false);
       setSelected(null); setSearchQ('');
-      setForm({ orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDept: '', oldDeptId: '', newDeptId: '', oldPos: '', oldPosId: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
+      setForm({ orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
       loadTransfers(); // ✅ โหลดรายการใหม่หลังบันทึก
     } else alert('เกิดข้อผิดพลาด');
   };
@@ -266,6 +266,7 @@ export default function TransferPage() {
                   <th>ประเภท</th>
                   <th>หน่วยงานใหม่</th>
                   <th>สถานะ</th>
+                  <th style={{ textAlign: 'center' }}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>
@@ -290,11 +291,15 @@ export default function TransferPage() {
                         <div style={{ fontWeight: 600, color: '#1e293b' }}>{t.emp_name || '—'}</div>
                         <div style={{ fontSize: 12, color: '#94a3b8' }}>{t.old_position} → {t.new_position}</div>
                       </td>
-                      <td style={{ fontSize: 13, color: '#475569' }}>
-                        {TRANSFER_TYPES.find(type => type.id === t.transfer_type)?.label || t.transfer_type || '—'}
-                      </td>
+                      <td style={{ fontSize: 13, color: '#475569' }}>{t.transfer_type || '—'}</td>
                       <td style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>{t.new_dept_name || '—'}</td>
                       <td><span style={{ padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: 'rgba(20,184,166,0.12)', color: '#0f766e', border: '1px solid rgba(20,184,166,0.3)' }}>บันทึกแล้ว</span></td>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                          <button className="btn-tr-cancel" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => alert('แสดงรายละเอียดคำสั่ง ' + t.order_no)}>👁️ รายละเอียด</button>
+                          <button className="btn-tr-save" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => alert('ดาวน์โหลด PDF คำสั่ง ' + t.order_no)}>📥 PDF</button>
+                        </div>
+                      </td>
                     </tr>
                   ));
                 })()}
@@ -308,7 +313,9 @@ export default function TransferPage() {
           <div className="tr-form-panel">
 
             {/* ─── SECTION 1: ข้อมูลคำสั่ง ─── */}
-            <div className="tr-section-header tr-section-1">1. ข้อมูลคำสั่ง</div>
+            <div className="tr-section-header tr-section-1" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>📝</span> 1. ข้อมูลคำสั่ง
+            </div>
             <div className="tr-section-body">
               <div className="tr-form-row tri">
                 <div className="tr-fg">
@@ -341,7 +348,9 @@ export default function TransferPage() {
             </div>
 
             {/* ─── SECTION 2: รายละเอียดการเปลี่ยนแปลง ─── */}
-            <div className="tr-section-header tr-section-2">2. รายละเอียดการเปลี่ยนแปลง</div>
+            <div className="tr-section-header tr-section-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>🔄</span> 2. รายละเอียดการเปลี่ยนแปลง
+            </div>
             <div className="tr-section-body">
 
               {/* Employee search */}
@@ -424,7 +433,9 @@ export default function TransferPage() {
             </div>
 
             {/* ─── SECTION 3: เอกสารแนบ ─── */}
-            <div className="tr-section-header tr-section-3">3. เอกสารแนบ</div>
+            <div className="tr-section-header tr-section-3" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>📎</span> 3. เอกสารแนบ
+            </div>
             <div className="tr-section-body">
               <div className="tr-form-row single">
                 <div className="tr-fg">
