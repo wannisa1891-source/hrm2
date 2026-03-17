@@ -75,6 +75,9 @@ export interface Leave {
   first_name_th: string
   last_name_th: string
   dept_name: string
+  quota_personal?: number
+  quota_vacation?: number
+  quota_sick?: number
 }
 
 export interface DashboardData {

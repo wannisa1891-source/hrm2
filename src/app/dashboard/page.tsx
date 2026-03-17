@@ -162,6 +162,7 @@ export default function DashboardPage() {
                 iconColor="#16a34a"
                 trend="↑ 2%"
                 trendUp={true}
+                href="/employees"
               />
 
               <StatCard
@@ -172,6 +173,7 @@ export default function DashboardPage() {
                 iconBg="#fee2e2"
                 iconColor="#ef4444"
                 trend="วันนี้"
+                href="/leave"
               />
 
               <StatCard
@@ -182,6 +184,7 @@ export default function DashboardPage() {
                 iconBg="#fef9c3"
                 iconColor="#ca8a04"
                 trend="คงเหลือ"
+                href="/org-structure"
               />
 
             </div>
