@@ -116,12 +116,12 @@ export default function LoginPage() {
 
         {/* Email */}
         <div style={{ display: 'flex', alignItems: 'center', background: '#f5f7fb', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
-          <span style={{ marginRight: 8, fontSize: 18 }}>✉️</span>
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" style={{ marginRight: 8, flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
           <input
             value={email}
             onChange={e => setEmail(e.target.value)}
-            type="email"
-            placeholder="Email"
+            type="text"
+            placeholder="Username"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             style={{ border: 'none', background: 'none', width: '100%', fontSize: 15, color: '#333', outline: 'none', fontFamily: 'Sarabun, sans-serif' }}
           />
@@ -129,7 +129,7 @@ export default function LoginPage() {
 
         {/* Password */}
         <div style={{ display: 'flex', alignItems: 'center', background: '#f5f7fb', borderRadius: 12, padding: '10px 14px', marginBottom: 24 }}>
-          <span style={{ marginRight: 8, fontSize: 18 }}>🔒</span>
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" style={{ marginRight: 8, flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           <input
             value={password}
             onChange={e => setPassword(e.target.value)}
@@ -214,7 +214,7 @@ export default function LoginPage() {
             letterSpacing: 0.5,
           }}
         >
-          ✨ Sign Up / สมัครสมาชิก
+          Sign Up / สมัครสมาชิก
         </button>
 
         {/* Register Link */}

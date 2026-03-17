@@ -6,27 +6,27 @@ export async function POST(req: NextRequest) {
     const { email, password } = await req.json();
 
     if (!email || !password) {
-      return NextResponse.json({ success: false, message: 'กรุณากรอก Email และ Password' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'กรุณากรอก Username และ Password' }, { status: 400 });
     }
 
+    // tbl_users schema: user_id, emp_id, username, password_hash, role, status
     const [users]: any = await pool.query(
-      'SELECT id, name, email, role FROM tbl_users WHERE email = ? AND password = ?',
+      'SELECT user_id, username, role, emp_id FROM tbl_users WHERE username = ? AND password_hash = ? AND (status = "Active" OR status IS NULL)',
       [email, password]
     );
 
     if (users.length > 0) {
       const user = users[0];
-      // Generate a mock token for frontend to use in localStorage
-      const mockToken = `token_${user.id}_${Date.now()}`;
+      const mockToken = `token_${user.user_id}_${Date.now()}`;
       
       return NextResponse.json({ 
         success: true, 
         token: mockToken,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role }
+        user: { id: user.user_id, name: user.username, email: user.username, role: user.role }
       });
     }
 
-    return NextResponse.json({ success: false, message: 'Email หรือ Password ไม่ถูกต้อง' }, { status: 401 });
+    return NextResponse.json({ success: false, message: 'Username หรือ Password ไม่ถูกต้อง' }, { status: 401 });
   } catch (error) {
     console.error('Login API Error:', error);
     return NextResponse.json({ success: false, message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' }, { status: 500 });
