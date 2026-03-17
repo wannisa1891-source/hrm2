@@ -38,9 +38,16 @@ export interface Employee {
   addr_subdistrict?: string
   addr_zipcode?: string
   
-  has_license?: boolean
+  has_license?: boolean | number
+  license_name?: string
+  license_type?: string
+  license_institution?: string
+  license_issue_date?: string
   license_no?: string
   license_expire?: string
+  license_status?: string
+  license_file?: string
+  cneu_cme_points?: number
   
   email?: string
   password?: string
@@ -68,6 +75,9 @@ export interface Leave {
   first_name_th: string
   last_name_th: string
   dept_name: string
+  quota_personal?: number
+  quota_vacation?: number
+  quota_sick?: number
 }
 
 export interface DashboardData {
