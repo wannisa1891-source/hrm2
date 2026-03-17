@@ -110,7 +110,7 @@ export default function LeavePage() {
           </div>
         </div>
         <button onClick={() => setShowForm(true)}
-          style={{ 
+          style={{
             background: '#042f2e', color: 'white', border: 'none',
             padding: '10px 20px', borderRadius: '8px',
             fontSize: 14, fontWeight: 600, cursor: 'pointer',
@@ -199,9 +199,9 @@ export default function LeavePage() {
                 <td style={{ textAlign: 'center' }}>
                   {l.status === 'Pending' && (
                     <button onClick={() => { setSelectedLeave(l); setShowReviewModal(true); }}
-                      style={{ 
-                        padding: '6px 14px', borderRadius: 20, border: '1px solid #cbd5e1', 
-                        background: 'transparent', color: '#334155', cursor: 'pointer', 
+                      style={{
+                        padding: '6px 14px', borderRadius: 20, border: '1px solid #cbd5e1',
+                        background: 'transparent', color: '#334155', cursor: 'pointer',
                         fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px',
                         fontSize: 13, transition: 'all 0.2s'
                       }}
@@ -234,13 +234,13 @@ export default function LeavePage() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowForm(false)}>
           <div className="modal-box" style={{ borderRadius: 20, padding: 32 }}>
             <h2 style={{ marginTop: 0, marginBottom: 24, fontSize: 20, color: '#1e293b' }}>สร้างคำขอใบลาใหม่</h2>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>พนักงานที่ต้องการลา</label>
-                <select 
-                  value={form.emp_id} 
-                  onChange={e => setForm({...form, emp_id: e.target.value})}
+                <select
+                  value={form.emp_id}
+                  onChange={e => setForm({ ...form, emp_id: e.target.value })}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
                 >
                   <option value="">-- เลือกพนักงาน --</option>
@@ -254,9 +254,9 @@ export default function LeavePage() {
 
               <div>
                 <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>ประเภท</label>
-                <select 
-                  value={form.leave_type_id} 
-                  onChange={e => setForm({...form, leave_type_id: e.target.value})}
+                <select
+                  value={form.leave_type_id}
+                  onChange={e => setForm({ ...form, leave_type_id: e.target.value })}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
                 >
                   {LEAVE_TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -266,24 +266,24 @@ export default function LeavePage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>วันเริ่มต้น</label>
-                  <input type="date" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} />
+                  <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>ถึงวันที่</label>
-                  <input type="date" value={form.end_date} onChange={e => setForm({...form, end_date: e.target.value})} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} />
+                  <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} />
                 </div>
               </div>
 
-               <div>
-                 <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>เหตุผลการลา</label>
-                 <textarea rows={3} value={form.reason} onChange={e => setForm({...form, reason: e.target.value})} placeholder="ระบุเหตุผล..." style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical' }} />
-               </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>เหตุผลการลา</label>
+                <textarea rows={3} value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} placeholder="ระบุเหตุผล..." style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical' }} />
+              </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer', fontWeight: 500 }}>ยกเลิก</button>
-              <button 
-                onClick={handleSubmit} 
+              <button
+                onClick={handleSubmit}
                 className="btn-primary"
                 disabled={saving}
                 style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 500, opacity: saving ? 0.7 : 1 }}
@@ -300,7 +300,7 @@ export default function LeavePage() {
         const daysRequested = calculateDays(selectedLeave.start_date, selectedLeave.end_date);
         let quotaTotal = 0;
         let quotaLabel = "";
-        
+
         // Map leave type to quota
         if (selectedLeave.leave_type_id === 'L02') { quotaTotal = selectedLeave.quota_personal ?? 45; quotaLabel = "สิทธิ์ลากิจ (รับค่าจ้าง)"; }
         else if (selectedLeave.leave_type_id === 'L03') { quotaTotal = selectedLeave.quota_vacation ?? 10; quotaLabel = "สิทธิ์ลาพักผ่อน (พักร้อน)"; }
@@ -309,9 +309,9 @@ export default function LeavePage() {
         else if (selectedLeave.leave_type_id === 'L05') { quotaTotal = 15; quotaLabel = "ลาไปช่วยเหลือภริยาที่คลอดบุตร"; }
         else if (selectedLeave.leave_type_id === 'L06') { quotaTotal = 120; quotaLabel = "ลาอุปสมบท / ลาไปประกอบพิธีฮัจญ์"; }
         else { quotaTotal = 0; quotaLabel = "อื่นๆ"; }
-        
+
         // Mocking "used leaves" - in real app this requires another DB sum per employee. For demo, we assume 0 used initially.
-        const usedSoFar = 0; 
+        const usedSoFar = 0;
         const remaining = quotaTotal - usedSoFar;
         const remainingAfter = remaining - daysRequested;
         const isOverQuota = remainingAfter < 0;
@@ -327,7 +327,7 @@ export default function LeavePage() {
               <div style={{ background: '#f8fafc', padding: 16, borderRadius: 12, marginBottom: 20, border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>ผู้ขอลางาน</div>
                 <div style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th} ({selectedLeave.dept_name})</div>
-                
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
                   <div>
                     <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>ประเภท</div>
@@ -373,13 +373,13 @@ export default function LeavePage() {
               )}
 
               <div style={{ display: 'flex', gap: 12 }}>
-                <button 
+                <button
                   onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Rejected'); setShowReviewModal(false); }}
                   style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 15, transition: 'all 0.2s' }}
                 >
                   ❌ ไม่อนุมัติ (Reject)
                 </button>
-                <button 
+                <button
                   onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Approved'); setShowReviewModal(false); }}
                   style={{ flex: 1, padding: '12px', borderRadius: 10, border: 'none', background: '#10b981', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: 15, transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
                 >
