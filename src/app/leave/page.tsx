@@ -20,19 +20,19 @@ export default function LeavePage() {
   const { employees, loadEmployees } = useEmployees();
 
   const [filterStatus, setFilterStatus] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
   const [form, setForm] = useState({ emp_id: '', leave_type_id: 'L01', start_date: '', end_date: '', reason: '' });
   const [saving, setSaving] = useState(false);
 
-  // Helper function to calculate working days between two dates
   const calculateDays = (start: string, end: string) => {
     if (!start || !end) return 0;
     const d1 = new Date(start);
     const d2 = new Date(end);
     const timeDiff = d2.getTime() - d1.getTime();
-    return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include both start and end days
+    return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
   };
 
   useEffect(() => {
@@ -40,13 +40,24 @@ export default function LeavePage() {
     loadEmployees();
   }, [loadLeaves, loadEmployees]);
 
-  const filtered = filterStatus ? leaves.filter(l => l.status === filterStatus) : leaves;
+  const filtered = useMemo(() => {
+    let result = leaves;
+    if (filterStatus) result = result.filter(l => l.status === filterStatus);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(l =>
+        `${l.first_name_th} ${l.last_name_th}`.toLowerCase().includes(q) ||
+        (l.dept_name && l.dept_name.toLowerCase().includes(q))
+      );
+    }
+    return result;
+  }, [leaves, filterStatus, searchQuery]);
 
-  // คำนวณ Stats สำหรับโชว์เป็น Card
   const stats = useMemo(() => ({
     total: leaves.length,
     pending: leaves.filter(l => l.status === 'Pending').length,
     approved: leaves.filter(l => l.status === 'Approved').length,
+    rejected: leaves.filter(l => l.status === 'Rejected').length,
   }), [leaves]);
 
   const handleSubmit = async () => {
@@ -70,18 +81,11 @@ export default function LeavePage() {
       Rejected: { bg: '#fef2f2', text: '#b91c1c', label: 'ไม่อนุมัติ' }
     };
     const style = config[s] || { bg: '#f8fafc', text: '#64748b', label: s };
-
     return (
       <span style={{
-        backgroundColor: style.bg,
-        color: style.text,
-        padding: '6px 12px',
-        borderRadius: '20px',
-        fontSize: '12px',
-        fontWeight: 600,
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px'
+        backgroundColor: style.bg, color: style.text,
+        padding: '4px 10px', borderRadius: '20px', fontSize: '12px',
+        fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '5px'
       }}>
         <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: style.text }} />
         {style.label}
@@ -89,125 +93,153 @@ export default function LeavePage() {
     );
   };
 
+  // Shared label style
+  const labelStyle: React.CSSProperties = { display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#475569' };
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', fontSize: 14 };
+
   return (
     <AppLayout>
-      {/* Header Section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => window.history.back()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#475569', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-            <span>←</span> ย้อนกลับ
-          </button>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, background: '#e0e7ff', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 32, height: 32, background: '#e0e7ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', margin: 0 }}>ระบบจัดการการลา</h1>
-            </div>
-            <p style={{ color: '#64748b', margin: '4px 0 0 44px', fontSize: 14 }}>ติดตามและตรวจสอบคำขอลาของพนักงาน</p>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1e293b', margin: 0 }}>ระบบจัดการการลา</h1>
+            <p style={{ color: '#94a3b8', margin: 0, fontSize: 13 }}>ติดตามและตรวจสอบคำขอลาของพนักงาน</p>
           </div>
         </div>
-        <button onClick={() => setShowForm(true)}
-          style={{
-            background: '#042f2e', color: 'white', border: 'none',
-            padding: '10px 20px', borderRadius: '8px',
-            fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 8,
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-          }}>
-          + สร้างใบลาใหม่
+        <button onClick={() => setShowForm(true)} style={{
+          background: '#0f766e', color: 'white', border: 'none',
+          padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
+        }}>
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+          สร้างใบลาใหม่
         </button>
       </div>
 
-      {/* Stats Overview */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+      {/* Stats Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
         {[
-          { label: 'รายการทั้งหมด', value: stats.total, color: '#cbd5e1', icon: <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
-          { label: 'รออนุมัติ', value: stats.pending, color: '#f59e0b', icon: <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-          { label: 'อนุมัติแล้ว', value: stats.approved, color: '#10b981', icon: <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+          { label: 'รายการทั้งหมด', value: stats.total, color: '#64748b', bg: '#f8fafc', iconPath: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+          { label: 'รออนุมัติ', value: stats.pending, color: '#d97706', bg: '#fffbeb', iconPath: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+          { label: 'อนุมัติแล้ว', value: stats.approved, color: '#059669', bg: '#ecfdf5', iconPath: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+          { label: 'ไม่อนุมัติ', value: stats.rejected, color: '#dc2626', bg: '#fef2f2', iconPath: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' },
         ].map((item, i) => (
-          <div key={i} style={{ padding: '24px', backgroundColor: 'white', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <span style={{ color: '#64748b', fontSize: 14, fontWeight: 500 }}>{item.label}</span>
-              <span style={{ color: item.color }}>{item.icon}</span>
+          <div key={i} style={{
+            padding: '16px 20px', backgroundColor: 'white', borderRadius: 14,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#64748b', fontSize: 13, fontWeight: 500 }}>{item.label}</span>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color }}>
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.iconPath} /></svg>
+              </div>
             </div>
-            <div style={{ fontSize: 32, fontWeight: 700, marginTop: 12, color: '#0f172a' }}>{item.value}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, marginTop: 6, color: '#0f172a' }}>{item.value}</div>
           </div>
         ))}
       </div>
 
-      {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'transparent' }}>
-        {['', 'Pending', 'Approved', 'Rejected'].map(s => (
-          <button key={s} onClick={() => setFilterStatus(s)}
-            style={{
-              padding: '8px 20px',
-              borderRadius: 20,
-              border: filterStatus === s ? 'none' : 'none',
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: 600,
-              backgroundColor: filterStatus === s ? 'white' : 'transparent',
-              color: filterStatus === s ? '#2563eb' : '#64748b',
-              boxShadow: filterStatus === s ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
-              transition: 'all 0.2s'
+      {/* Filters + Search Row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', padding: 3, borderRadius: 10 }}>
+          {[
+            { key: '', label: 'ทั้งหมด' },
+            { key: 'Pending', label: 'รออนุมัติ' },
+            { key: 'Approved', label: 'อนุมัติแล้ว' },
+            { key: 'Rejected', label: 'ไม่อนุมัติ' },
+          ].map(tab => (
+            <button key={tab.key} onClick={() => setFilterStatus(tab.key)} style={{
+              padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600,
+              backgroundColor: filterStatus === tab.key ? 'white' : 'transparent',
+              color: filterStatus === tab.key ? '#0f172a' : '#64748b',
+              boxShadow: filterStatus === tab.key ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+              transition: 'all 0.15s'
             }}>
-            {s === '' ? 'ทั้งหมด' : s === 'Pending' ? 'รออนุมัติ' : s === 'Approved' ? 'อนุมัติแล้ว' : 'ไม่อนุมัติ'}
-          </button>
-        ))}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ position: 'relative' }}>
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="ค้นหาพนักงาน..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{
+              padding: '7px 12px 7px 32px', borderRadius: 8, border: '1px solid #e2e8f0',
+              fontSize: 13, outline: 'none', width: 220, background: 'white'
+            }}
+          />
+        </div>
       </div>
 
-      {/* Main Table */}
-      <div className="glass-card" style={{ padding: 0, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-        <table className="data-table">
+      {/* Table */}
+      <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <table className="data-table" style={{ width: '100%' }}>
           <thead style={{ background: '#f8fafc' }}>
             <tr>
-              <th style={{ padding: '16px 20px', color: '#64748b', fontWeight: 600 }}>พนักงาน</th>
-              <th style={{ color: '#64748b', fontWeight: 600 }}>ประเภท</th>
-              <th style={{ color: '#64748b', fontWeight: 600 }}>วันที่ลา</th>
-              <th style={{ color: '#64748b', fontWeight: 600 }}>เหตุผล</th>
-              <th style={{ color: '#64748b', fontWeight: 600 }}>สถานะ</th>
-              <th style={{ textAlign: 'center', color: '#64748b', fontWeight: 600 }}>จัดการ</th>
+              <th style={{ padding: '12px 16px', color: '#64748b', fontWeight: 600, fontSize: 13, textAlign: 'left' }}>พนักงาน</th>
+              <th style={{ color: '#64748b', fontWeight: 600, fontSize: 13, textAlign: 'left' }}>ประเภท</th>
+              <th style={{ color: '#64748b', fontWeight: 600, fontSize: 13, textAlign: 'left' }}>วันที่ลา</th>
+              <th style={{ color: '#64748b', fontWeight: 600, fontSize: 13, textAlign: 'center' }}>จำนวนวัน</th>
+              <th style={{ color: '#64748b', fontWeight: 600, fontSize: 13, textAlign: 'left' }}>เหตุผล</th>
+              <th style={{ color: '#64748b', fontWeight: 600, fontSize: 13, textAlign: 'center' }}>สถานะ</th>
+              <th style={{ color: '#64748b', fontWeight: 600, fontSize: 13, textAlign: 'center' }}>จัดการ</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>กำลังโหลดข้อมูล...</td></tr>
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: '#94a3b8', fontSize: 14 }}>กำลังโหลดข้อมูล...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>ไม่พบข้อมูลรายการลา</td></tr>
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: '#94a3b8', fontSize: 14 }}>ไม่พบข้อมูลรายการลา</td></tr>
             ) : filtered.map(l => (
-              <tr key={l.leave_id} className="table-row-hover">
-                <td style={{ padding: '16px 20px' }}>
-                  <div style={{ fontWeight: 600, color: '#1e293b' }}>{l.first_name_th} {l.last_name_th}</div>
+              <tr key={l.leave_id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#fafbfc')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                <td style={{ padding: '12px 16px' }}>
+                  <div style={{ fontWeight: 600, color: '#1e293b', fontSize: 14 }}>{l.first_name_th} {l.last_name_th}</div>
                   <div style={{ fontSize: 12, color: '#94a3b8' }}>{l.dept_name}</div>
                 </td>
                 <td>
-                  <span style={{ fontSize: 13, color: '#475569', background: '#f1f5f9', padding: '4px 8px', borderRadius: 6 }}>
+                  <span style={{ fontSize: 12, color: '#475569', background: '#f1f5f9', padding: '3px 8px', borderRadius: 6, fontWeight: 500 }}>
                     {LEAVE_TYPES.find(t => t.id === l.leave_type_id)?.name || 'ลาอื่นๆ'}
                   </span>
                 </td>
                 <td style={{ fontSize: 13, color: '#475569' }}>
-                  <div style={{ fontWeight: 500 }}>{l.start_date?.split('T')[0]}</div>
+                  <div>{l.start_date?.split('T')[0]}</div>
                   <div style={{ fontSize: 11, color: '#cbd5e1' }}>ถึง {l.end_date?.split('T')[0]}</div>
                 </td>
-                <td style={{ fontSize: 13, color: '#64748b', maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {l.reason}
+                <td style={{ textAlign: 'center' }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>
+                    {calculateDays(l.start_date, l.end_date)}
+                  </span>
+                  <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 2 }}>วัน</span>
                 </td>
-                <td>{statusBadge(l.status)}</td>
+                <td style={{ fontSize: 13, color: '#64748b', maxWidth: 160, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {l.reason || '-'}
+                </td>
+                <td style={{ textAlign: 'center' }}>{statusBadge(l.status)}</td>
                 <td style={{ textAlign: 'center' }}>
                   {l.status === 'Pending' && (
                     <button onClick={() => { setSelectedLeave(l); setShowReviewModal(true); }}
                       style={{
-                        padding: '6px 14px', borderRadius: 20, border: '1px solid #cbd5e1',
-                        background: 'transparent', color: '#334155', cursor: 'pointer',
-                        fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px',
-                        fontSize: 13, transition: 'all 0.2s'
+                        padding: '5px 12px', borderRadius: 6, border: '1px solid #e2e8f0',
+                        background: 'white', color: '#334155', cursor: 'pointer',
+                        fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5,
+                        fontSize: 12, transition: 'all 0.15s'
                       }}
-                      className="hover-btn-outline"
+                      onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
                     >
-                      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                       ตรวจสอบคำขอ
                     </button>
                   )}
@@ -218,76 +250,56 @@ export default function LeavePage() {
         </table>
       </div>
 
-      {/* ปรับปรุง CSS เล็กน้อยในหัวข้อ Style tag หรือ Global CSS */}
-      <style jsx>{`
-        .table-row-hover:hover {
-          background-color: #f8fafc;
-          transition: background-color 0.2s;
-        }
-        .btn-primary:hover {
-          filter: brightness(1.1);
-          transform: translateY(-1px);
-        }
-      `}</style>
-
+      {/* Create Leave Modal */}
       {showForm && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowForm(false)}>
-          <div className="modal-box" style={{ borderRadius: 20, padding: 32 }}>
-            <h2 style={{ marginTop: 0, marginBottom: 24, fontSize: 20, color: '#1e293b' }}>สร้างคำขอใบลาใหม่</h2>
+          <div className="modal-box" style={{ borderRadius: 16, padding: 28, maxWidth: 480 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1e293b' }}>สร้างคำขอใบลาใหม่</h2>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#94a3b8', padding: 4 }}>✕</button>
+            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>พนักงานที่ต้องการลา</label>
-                <select
-                  value={form.emp_id}
-                  onChange={e => setForm({ ...form, emp_id: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
-                >
+                <label style={labelStyle}>พนักงาน</label>
+                <select value={form.emp_id} onChange={e => setForm({ ...form, emp_id: e.target.value })} style={inputStyle}>
                   <option value="">-- เลือกพนักงาน --</option>
                   {employees.map(emp => (
-                    <option key={emp.emp_id} value={emp.emp_id}>
-                      {emp.first_name_th} {emp.last_name_th} ({emp.emp_id})
-                    </option>
+                    <option key={emp.emp_id} value={emp.emp_id}>{emp.first_name_th} {emp.last_name_th} ({emp.emp_id})</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>ประเภท</label>
-                <select
-                  value={form.leave_type_id}
-                  onChange={e => setForm({ ...form, leave_type_id: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
-                >
+                <label style={labelStyle}>ประเภทการลา</label>
+                <select value={form.leave_type_id} onChange={e => setForm({ ...form, leave_type_id: e.target.value })} style={inputStyle}>
                   {LEAVE_TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>วันเริ่มต้น</label>
-                  <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} />
+                  <label style={labelStyle}>วันเริ่มต้น</label>
+                  <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>ถึงวันที่</label>
-                  <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} />
+                  <label style={labelStyle}>ถึงวันที่</label>
+                  <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} style={inputStyle} />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#475569' }}>เหตุผลการลา</label>
-                <textarea rows={3} value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} placeholder="ระบุเหตุผล..." style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical' }} />
+                <label style={labelStyle}>เหตุผลการลา</label>
+                <textarea rows={3} value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} placeholder="ระบุเหตุผล..." style={{ ...inputStyle, resize: 'vertical' }} />
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-              <button onClick={() => setShowForm(false)} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer', fontWeight: 500 }}>ยกเลิก</button>
-              <button
-                onClick={handleSubmit}
-                className="btn-primary"
-                disabled={saving}
-                style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 500, opacity: saving ? 0.7 : 1 }}
-              >
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+              <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontWeight: 500, fontSize: 13, color: '#475569' }}>ยกเลิก</button>
+              <button onClick={handleSubmit} disabled={saving} style={{
+                padding: '8px 16px', borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
+                fontWeight: 600, fontSize: 13, opacity: saving ? 0.7 : 1, background: '#0f766e', color: 'white'
+              }}>
                 {saving ? 'กำลังบันทึก...' : 'บันทึกใบลา'}
               </button>
             </div>
@@ -301,7 +313,6 @@ export default function LeavePage() {
         let quotaTotal = 0;
         let quotaLabel = "";
 
-        // Map leave type to quota
         if (selectedLeave.leave_type_id === 'L02') { quotaTotal = selectedLeave.quota_personal ?? 45; quotaLabel = "สิทธิ์ลากิจ (รับค่าจ้าง)"; }
         else if (selectedLeave.leave_type_id === 'L03') { quotaTotal = selectedLeave.quota_vacation ?? 10; quotaLabel = "สิทธิ์ลาพักผ่อน (พักร้อน)"; }
         else if (selectedLeave.leave_type_id === 'L01') { quotaTotal = selectedLeave.quota_sick ?? 30; quotaLabel = "สิทธิ์ลาป่วย"; }
@@ -310,7 +321,6 @@ export default function LeavePage() {
         else if (selectedLeave.leave_type_id === 'L06') { quotaTotal = 120; quotaLabel = "ลาอุปสมบท / ลาไปประกอบพิธีฮัจญ์"; }
         else { quotaTotal = 0; quotaLabel = "อื่นๆ"; }
 
-        // Mocking "used leaves" - in real app this requires another DB sum per employee. For demo, we assume 0 used initially.
         const usedSoFar = 0;
         const remaining = quotaTotal - usedSoFar;
         const remainingAfter = remaining - daysRequested;
@@ -318,75 +328,78 @@ export default function LeavePage() {
 
         return (
           <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowReviewModal(false)}>
-            <div className="modal-box" style={{ borderRadius: 20, padding: 32, maxWidth: 500 }}>
+            <div className="modal-box" style={{ borderRadius: 16, padding: 28, maxWidth: 480 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h2 style={{ margin: 0, fontSize: 20, color: '#1e293b' }}>ฟอร์มอนุมัติการลา (Leave Approval)</h2>
-                <button onClick={() => setShowReviewModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94a3b8' }}>✕</button>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1e293b' }}>ตรวจสอบคำขออนุมัติลา</h2>
+                <button onClick={() => setShowReviewModal(false)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#94a3b8', padding: 4 }}>✕</button>
               </div>
 
-              <div style={{ background: '#f8fafc', padding: 16, borderRadius: 12, marginBottom: 20, border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>ผู้ขอลางาน</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th} ({selectedLeave.dept_name})</div>
+              {/* Employee Info */}
+              <div style={{ background: '#f8fafc', padding: 14, borderRadius: 10, marginBottom: 16, border: '1px solid #f1f5f9' }}>
+                <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 2 }}>ผู้ขอลางาน</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th}</div>
+                <div style={{ fontSize: 12, color: '#64748b' }}>{selectedLeave.dept_name}</div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 14 }}>
                   <div>
-                    <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>ประเภท</div>
-                    <div style={{ fontWeight: 500, color: '#1e293b' }}>{LEAVE_TYPES.find(t => t.id === selectedLeave.leave_type_id)?.name || 'อื่นๆ'}</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>ประเภท</div>
+                    <div style={{ fontWeight: 500, color: '#1e293b', fontSize: 13 }}>{LEAVE_TYPES.find(t => t.id === selectedLeave.leave_type_id)?.name || 'อื่นๆ'}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>จำนวนวัน</div>
-                    <div style={{ fontWeight: 600, color: '#2563eb' }}>{daysRequested} วัน</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>จำนวนวัน</div>
+                    <div style={{ fontWeight: 600, color: '#2563eb', fontSize: 13 }}>{daysRequested} วัน</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>ระยะเวลา</div>
+                    <div style={{ fontSize: 12, color: '#1e293b' }}>{selectedLeave.start_date?.split('T')[0]} - {selectedLeave.end_date?.split('T')[0]}</div>
                   </div>
                 </div>
 
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>ระยะเวลา</div>
-                  <div style={{ fontSize: 14, color: '#1e293b' }}>{selectedLeave.start_date?.split('T')[0]} <span style={{ color: '#94a3b8' }}>ถึง</span> {selectedLeave.end_date?.split('T')[0]}</div>
-                </div>
-
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>เหตุผล</div>
-                  <div style={{ fontSize: 14, color: '#1e293b', background: 'white', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}>{selectedLeave.reason || '-'}</div>
-                </div>
+                {selectedLeave.reason && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>เหตุผล</div>
+                    <div style={{ fontSize: 13, color: '#334155', background: 'white', padding: '6px 10px', borderRadius: 6, border: '1px solid #e2e8f0' }}>{selectedLeave.reason}</div>
+                  </div>
+                )}
               </div>
 
-              {/* Quota Check Area */}
+              {/* Quota Check */}
               {quotaTotal > 0 && (
-                <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: isOverQuota ? '1px solid #fecaca' : '1px solid #bbf7d0', background: isOverQuota ? '#fef2f2' : '#f0fdf4' }}>
-                  <h3 style={{ margin: '0 0 12px 0', fontSize: 14, color: isOverQuota ? '#b91c1c' : '#15803d', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ marginBottom: 20, padding: 14, borderRadius: 10, border: isOverQuota ? '1px solid #fecaca' : '1px solid #bbf7d0', background: isOverQuota ? '#fef2f2' : '#f0fdf4' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: isOverQuota ? '#b91c1c' : '#15803d', marginBottom: 10 }}>
                     {isOverQuota ? 'แจ้งเตือน: ใช้วันลาเกินโควตา' : 'ตรวจสอบโควตาวันลา'}
-                  </h3>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
                     <span style={{ color: '#475569' }}>{quotaLabel} ทั้งหมด:</span>
                     <span style={{ fontWeight: 600 }}>{quotaTotal} วัน</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
                     <span style={{ color: '#475569' }}>ใช้ไปแล้ว:</span>
                     <span style={{ fontWeight: 600 }}>{usedSoFar} วัน</span>
                   </div>
-                  <div style={{ height: 1, background: isOverQuota ? '#fca5a5' : '#86efac', margin: '8px 0' }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                  <div style={{ height: 1, background: isOverQuota ? '#fca5a5' : '#86efac', margin: '6px 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                     <span style={{ fontWeight: 500, color: '#1e293b' }}>คงเหลือสุทธิ (ถ้ายอมรับ):</span>
                     <span style={{ fontWeight: 700, color: isOverQuota ? '#ef4444' : '#16a34a' }}>{remainingAfter} วัน</span>
                   </div>
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 12 }}>
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 10 }}>
                 <button
                   onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Rejected'); setShowReviewModal(false); }}
-                  style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 15, transition: 'all 0.2s' }}
+                  style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 14, transition: 'all 0.15s' }}
                 >
                   ไม่อนุมัติ
                 </button>
                 <button
                   onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Approved'); setShowReviewModal(false); }}
-                  style={{ flex: 1, padding: '12px', borderRadius: 10, border: 'none', background: '#10b981', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: 15, transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
+                  style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: 14, transition: 'all 0.15s' }}
                 >
                   อนุมัติการลา
                 </button>
               </div>
-
             </div>
           </div>
         );

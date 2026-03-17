@@ -1,15 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const USERS = [
-  { username: 'admin', password: '1234' },
-  { username: 'wanwisa', password: '1234' },
-];
+import pool from '@/lib/hrm_db';
 
 export async function POST(req: NextRequest) {
-  const { username, password } = await req.json();
-  const user = USERS.find(u => u.username === username && u.password === password);
-  if (user) {
-    return NextResponse.json({ success: true, username: user.username });
+  try {
+    const { email, password } = await req.json();
+
+    if (!email || !password) {
+      return NextResponse.json({ success: false, message: 'กรุณากรอก Username และ Password' }, { status: 400 });
+    }
+
+    // tbl_users schema: user_id, emp_id, username, password_hash, role, status
+    const [users]: any = await pool.query(
+      'SELECT user_id, username, role, emp_id FROM tbl_users WHERE username = ? AND password_hash = ? AND (status = "Active" OR status IS NULL)',
+      [email, password]
+    );
+
+    if (users.length > 0) {
+      const user = users[0];
+      const mockToken = `token_${user.user_id}_${Date.now()}`;
+      
+      return NextResponse.json({ 
+        success: true, 
+        token: mockToken,
+        user: { id: user.user_id, name: user.username, email: user.username, role: user.role }
+      });
+    }
+
+    return NextResponse.json({ success: false, message: 'Username หรือ Password ไม่ถูกต้อง' }, { status: 401 });
+  } catch (error) {
+    console.error('Login API Error:', error);
+    return NextResponse.json({ success: false, message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' }, { status: 500 });
   }
-  return NextResponse.json({ success: false }, { status: 401 });
 }
