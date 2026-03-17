@@ -14,7 +14,9 @@ export interface Employee {
   last_name_en: string
   birth_date: string
   gender: string
+  // DB Address
   address: string
+  // DB other fields
   citizen_id: string
   phone: string
   emp_type: string
@@ -24,6 +26,25 @@ export interface Employee {
   base_salary: number
   status: string
   image: string
+  
+  // -- UI Mock Fields (Not in DB yet) --
+  addr_no?: string
+  addr_moo?: string
+  addr_village?: string
+  addr_soi?: string
+  addr_road?: string
+  addr_province?: string
+  addr_district?: string
+  addr_subdistrict?: string
+  addr_zipcode?: string
+  
+  has_license?: boolean
+  license_no?: string
+  license_expire?: string
+  
+  email?: string
+  password?: string
+  role?: string
 }
 
 export interface Department {
