@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { loginUser } from '@/services/authService';
+import { registerUser } from '@/services/authService';
 
 const SLIDES = [
   'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=1600&q=80',
@@ -13,13 +12,13 @@ const SLIDES = [
   'https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=1600&q=80',
 ];
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [slide, setSlide] = useState(0);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const { login } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -29,38 +28,21 @@ export default function LoginPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     setErrorMessage('');
-    if (!email || !password) {
-      setErrorMessage('กรุณากรอก Email และ Password');
+    if (!name || !email || !password) {
+      setErrorMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
     setLoading(true);
     try {
-      const result = await loginUser(email, password);
+      const result = await registerUser(name, email, password);
       
       if (result.success) {
-        // เก็บ token ใน localStorage
-        if (result.token) {
-          localStorage.setItem('token', result.token);
-          // เก็บข้อมูล user เพิ่มเติมเพื่อใช้ใน dashboard
-          if (result.user) {
-             localStorage.setItem('mockUser', JSON.stringify(result.user));
-          }
-        }
-        
-        // ถ้าใช้ context
-        if (result.user) {
-           login(result.user.name);
-        } else {
-           login(email);
-        }
-        
-        // redirect ไปหน้า dashboard
-        router.push('/dashboard');
+        // redirect ไปหน้า login 
+        router.push('/login?registered=true');
       } else {
-        // แสดง error message บนหน้า login ถ้าไม่สำเร็จ
-        setErrorMessage(result.message || 'Email หรือ Password ไม่ถูกต้อง');
+        setErrorMessage(result.message || 'สมัครสมาชิกไม่สำเร็จ');
       }
     } catch {
       setErrorMessage('เกิดข้อผิดพลาด กรุณาลองใหม่');
@@ -92,7 +74,7 @@ export default function LoginPage() {
       {/* Panel */}
       <div style={{
         position: 'relative',
-        width: 340,
+        width: 360,
         padding: '44px 40px',
         borderRadius: 20,
         background: 'rgba(255,255,255,0.08)',
@@ -104,14 +86,25 @@ export default function LoginPage() {
       }}>
         {/* Logo */}
         <div style={{ marginBottom: 28 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://cdn-icons-png.flaticon.com/512/3063/3063176.png"
             alt="logo"
-            style={{ width: 72, display: 'block', margin: '0 auto 12px' }}
+            style={{ width: 64, display: 'block', margin: '0 auto 12px' }}
           />
-          <h2 style={{ fontWeight: 800, fontSize: 22, letterSpacing: 1, margin: 0 }}>HOSPITAL HRM</h2>
-          <p style={{ fontSize: 13, opacity: 0.85, margin: '6px 0 0' }}>Human Resource Management System</p>
+          <h2 style={{ fontWeight: 800, fontSize: 22, letterSpacing: 1, margin: 0 }}>สมัครสมาชิก</h2>
+          <p style={{ fontSize: 13, opacity: 0.85, margin: '6px 0 0' }}>HOSPITAL HRM</p>
+        </div>
+
+        {/* Name */}
+        <div style={{ display: 'flex', alignItems: 'center', background: '#f5f7fb', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
+          <span style={{ marginRight: 8, fontSize: 18 }}>📝</span>
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="ชื่อ - นามสกุล"
+            onKeyDown={e => e.key === 'Enter' && handleRegister()}
+            style={{ border: 'none', background: 'none', width: '100%', fontSize: 15, color: '#333', outline: 'none', fontFamily: 'Sarabun, sans-serif' }}
+          />
         </div>
 
         {/* Email */}
@@ -122,7 +115,7 @@ export default function LoginPage() {
             onChange={e => setEmail(e.target.value)}
             type="email"
             placeholder="Email"
-            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+            onKeyDown={e => e.key === 'Enter' && handleRegister()}
             style={{ border: 'none', background: 'none', width: '100%', fontSize: 15, color: '#333', outline: 'none', fontFamily: 'Sarabun, sans-serif' }}
           />
         </div>
@@ -135,12 +128,12 @@ export default function LoginPage() {
             onChange={e => setPassword(e.target.value)}
             type="password"
             placeholder="Password"
-            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+            onKeyDown={e => e.key === 'Enter' && handleRegister()}
             style={{ border: 'none', background: 'none', width: '100%', fontSize: 15, color: '#333', outline: 'none', fontFamily: 'Sarabun, sans-serif' }}
           />
         </div>
 
-        {/* แสดง Error Message ถ้ามี */}
+        {/* Error Message */}
         {errorMessage && (
           <div style={{
             background: 'rgba(220, 38, 38, 0.15)',
@@ -157,23 +150,30 @@ export default function LoginPage() {
 
         {/* Button */}
         <button
-          onClick={handleLogin}
+          onClick={handleRegister}
           disabled={loading}
           style={{
             width: '100%',
             padding: '13px',
             border: 'none',
             borderRadius: 12,
-            background: loading ? '#999' : 'linear-gradient(135deg, #002D55, #2563eb)',
+            background: loading ? '#999' : '#10b981',
             color: 'white',
             fontWeight: 700,
             fontSize: 16,
             cursor: loading ? 'not-allowed' : 'pointer',
             fontFamily: 'Sarabun, sans-serif',
             transition: '0.25s',
+            boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+          }}
+          onMouseEnter={e => {
+            if(!loading) e.currentTarget.style.transform = 'translateY(-2px)'
+          }}
+          onMouseLeave={e => {
+            if(!loading) e.currentTarget.style.transform = 'translateY(0)'
           }}
         >
-          {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+          {loading ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิกเลย'}
         </button>
 
         {/* Divider */}
@@ -183,57 +183,22 @@ export default function LoginPage() {
           <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.25)' }} />
         </div>
 
-        {/* Sign Up / สมัครสมาชิก Button */}
-        <button
-          onClick={() => router.push('/register')}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.18)';
-            e.currentTarget.style.borderColor = 'rgba(96,165,250,0.5)';
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 8px 20px rgba(96,165,250,0.2)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-          style={{
-            width: '100%',
-            padding: '13px',
-            border: '2px solid rgba(255,255,255,0.25)',
-            borderRadius: 12,
-            background: 'rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(6px)',
-            color: 'white',
-            fontWeight: 600,
-            fontSize: 15,
-            cursor: 'pointer',
-            fontFamily: 'Sarabun, sans-serif',
-            transition: 'all 0.3s ease',
-            letterSpacing: 0.5,
-          }}
-        >
-          ✨ Sign Up / สมัครสมาชิก
-        </button>
-
-        {/* Register Link */}
-        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
+        {/* Login Link */}
+        <div style={{ textAlign: 'center', fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>
           <p style={{ margin: 0 }}>
-            ยังไม่มีบัญชี?{' '}
+            มีบัญชีอยู่แล้ว?{' '}
             <a
               href="#"
-              onClick={(e) => { e.preventDefault(); router.push('/register'); }}
+              onClick={(e) => { e.preventDefault(); router.push('/login'); }}
               onMouseEnter={e => { e.currentTarget.style.color = '#93c5fd'; e.currentTarget.style.textDecoration = 'underline'; }}
               onMouseLeave={e => { e.currentTarget.style.color = '#60a5fa'; e.currentTarget.style.textDecoration = 'none'; }}
               style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}
             >
-              สมัครสมาชิกที่นี่
+              เข้าสู่ระบบ
             </a>
           </p>
         </div>
 
-        <p style={{ marginTop: 20, fontSize: 12, opacity: 0.7 }}>Hospital Management Platform</p>
       </div>
     </div>
   );

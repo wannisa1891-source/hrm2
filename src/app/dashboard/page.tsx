@@ -114,6 +114,13 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    
+    // หากไม่มี token ให้ทำการ redirect ไปหน้า login 
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
 
     loadDashboard()
 
@@ -124,7 +131,7 @@ export default function DashboardPage() {
     if (u) {
       setUser(JSON.parse(u))
     } else {
-      setUser({ role: 'admin' })
+      setUser({ role: 'user' })
     }
 
   }, [loadDashboard])

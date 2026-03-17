@@ -1,37 +1,62 @@
-export const loginUser = async (username: string, password: string) => {
+export const loginUser = async (email: string, password: string) => {
   try {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, password }),
     });
 
     if (res.ok) {
       const data = await res.json();
       if (data.success) {
-        // คืนค่า success พร้อม token (หาก backend ส่งมา) และข้อมูลอื่นๆ
         return { 
           success: true, 
-          token: data.token || 'mocked-token', 
-          username: data.username 
+          token: data.token, 
+          user: data.user 
         };
       } else {
         return { 
           success: false, 
-          message: data.message || 'Username หรือ Password ไม่ถูกต้อง' 
+          message: data.message || 'Email หรือ Password ไม่ถูกต้อง' 
         };
       }
     } else {
       const errorData = await res.json().catch(() => ({}));
       return { 
         success: false, 
-        message: errorData.message || 'Username หรือ Password ไม่ถูกต้อง' 
+        message: errorData.message || 'Email หรือ Password ไม่ถูกต้อง' 
       };
     }
   } catch (error) {
     console.error('Login Error:', error);
+    return { success: false, message: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้' };
+  }
+};
+
+export const registerUser = async (name: string, email: string, password: string) => {
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return { success: true, message: data.message };
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      return { 
+        success: false, 
+        message: errorData.message || 'การสมัครสมาชิกไม่สำเร็จ' 
+      };
+    }
+  } catch (error) {
+    console.error('Register Error:', error);
     return { success: false, message: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้' };
   }
 };
