@@ -3,7 +3,10 @@ import pool from '@/lib/hrm_db';
 
 export async function GET() {
   try {
-    const sql = `SELECT l.*, e.first_name_th, e.last_name_th, d.dept_name 
+    const sql = `SELECT l.*, 
+        e.first_name_th, e.last_name_th, 
+        e.quota_personal, e.quota_vacation, e.quota_sick,
+        d.dept_name 
       FROM tbl_leaves l 
       LEFT JOIN tbl_employees e ON l.emp_id = e.emp_id 
       LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id 

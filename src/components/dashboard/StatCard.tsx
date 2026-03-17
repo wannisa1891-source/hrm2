@@ -1,25 +1,25 @@
 //กล่องสถิติ
 import Link from "next/link";
 type Props = {
-    icon: string
-    iconBg: string
+    icon?: string
+    iconBg?: string
     label: string
     value: number
     unit: string
-    trend: string
+    trend?: string
     trendUp?: boolean
-    href: string
+    href?: string
     iconColor?: string
 }
 export default function StatCard({
-    icon,
-    iconBg,
+    icon = "",
+    iconBg = "#f1f5f9",
     label,
     value,
     unit,
-    trend,
+    trend = "-",
     trendUp,
-    href,
+    href = "#",
     iconColor = "#333"
 }: Props) {
     return (

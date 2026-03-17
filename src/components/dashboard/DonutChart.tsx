@@ -11,9 +11,11 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
                 borderRadius: 20,
                 padding: "28px 32px",
                 width: "100%",
+                height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.04)"
+                boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+                justifyContent: "center"
             }}
         >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>

@@ -14,7 +14,9 @@ export interface Employee {
   last_name_en: string
   birth_date: string
   gender: string
+  // DB Address
   address: string
+  // DB other fields
   citizen_id: string
   phone: string
   emp_type: string
@@ -24,6 +26,32 @@ export interface Employee {
   base_salary: number
   status: string
   image: string
+  
+  // -- UI Mock Fields (Not in DB yet) --
+  addr_no?: string
+  addr_moo?: string
+  addr_village?: string
+  addr_soi?: string
+  addr_road?: string
+  addr_province?: string
+  addr_district?: string
+  addr_subdistrict?: string
+  addr_zipcode?: string
+  
+  has_license?: boolean | number
+  license_name?: string
+  license_type?: string
+  license_institution?: string
+  license_issue_date?: string
+  license_no?: string
+  license_expire?: string
+  license_status?: string
+  license_file?: string
+  cneu_cme_points?: number
+  
+  email?: string
+  password?: string
+  role?: string
 }
 
 export interface Department {
@@ -47,6 +75,9 @@ export interface Leave {
   first_name_th: string
   last_name_th: string
   dept_name: string
+  quota_personal?: number
+  quota_vacation?: number
+  quota_sick?: number
 }
 
 export interface DashboardData {
