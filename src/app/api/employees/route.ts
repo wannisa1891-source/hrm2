@@ -33,6 +33,15 @@ export async function POST(req: NextRequest) {
       fs.writeFileSync(path.join(uploadDir, imageName), buffer);
     }
 
+    let licenseFileName: string | null = null;
+    const licenseFile = formData.get('license_file') as File | null;
+    if (licenseFile && licenseFile.size > 0) {
+      const ext = path.extname(licenseFile.name);
+      licenseFileName = `lic_${Date.now()}${ext}`;
+      const buffer = Buffer.from(await licenseFile.arrayBuffer());
+      fs.writeFileSync(path.join(uploadDir, licenseFileName), buffer);
+    }
+
     const d = Object.fromEntries(
       [...formData.entries()].filter(([, v]) => typeof v === 'string').map(([k, v]) => [k, v as string])
     );
@@ -43,8 +52,9 @@ export async function POST(req: NextRequest) {
        addr_province, addr_district, addr_subdistrict, addr_zipcode,
        citizen_id, phone, email, password, role,
        emp_type, dept_id, pos_id, start_date, base_salary, status, image,
-       has_license, license_no, license_expire) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?)`;
+       has_license, license_no, license_expire, license_name, license_type, license_institution,
+       license_issue_date, license_status, license_file, cneu_cme_points) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const values = [
       d.emp_id || '', d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
@@ -56,7 +66,10 @@ export async function POST(req: NextRequest) {
       d.email || null, d.password || null, d.role || 'User',
       d.emp_type || 'พนักงานประจำ', d.dept_id || null, d.pos_id || null, d.start_date || null,
       d.base_salary || 0, imageName,
-      d.has_license === 'true' ? 1 : 0, d.license_no || null, d.license_expire || null
+      d.has_license === 'true' ? 1 : 0, d.license_no || null, d.license_expire || null,
+      d.license_name || null, d.license_type || null, d.license_institution || null,
+      d.license_issue_date || null, d.license_status || null, licenseFileName,
+      d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0
     ];
 
     await pool.query(sql, values);

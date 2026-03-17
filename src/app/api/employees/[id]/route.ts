@@ -20,11 +20,21 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       fs.writeFileSync(path.join(uploadDir, imageName), buffer);
     }
 
+    let licenseFileName: string | undefined;
+    const licenseFile = formData.get('license_file') as File | null;
+    if (licenseFile && licenseFile.size > 0) {
+      const ext = path.extname(licenseFile.name);
+      licenseFileName = `lic_${Date.now()}${ext}`;
+      const buffer = Buffer.from(await licenseFile.arrayBuffer());
+      fs.writeFileSync(path.join(uploadDir, licenseFileName), buffer);
+    }
+
     const d = Object.fromEntries(
       [...formData.entries()].filter(([, v]) => typeof v === 'string').map(([k, v]) => [k, v as string])
     );
 
     const finalImage = imageName ?? (d.image || null);
+    const finalLicenseFile = licenseFileName ?? (d.license_file || null);
 
     const sql = `UPDATE tbl_employees SET 
       prefix=?, first_name_th=?, last_name_th=?, first_name_en=?, last_name_en=?,
@@ -33,7 +43,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       addr_province=?, addr_district=?, addr_subdistrict=?, addr_zipcode=?,
       citizen_id=?, phone=?, email=?, password=?, role=?,
       emp_type=?, dept_id=?, pos_id=?, start_date=?, base_salary=?, image=?,
-      has_license=?, license_no=?, license_expire=?
+      has_license=?, license_no=?, license_expire=?, license_name=?, license_type=?, 
+      license_institution=?, license_issue_date=?, license_status=?, license_file=?, cneu_cme_points=?
       WHERE emp_id=?`;
 
     const values = [
@@ -45,6 +56,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       d.email || null, d.password || null, d.role || 'User',
       d.emp_type || 'พนักงานประจำ', d.dept_id || null, d.pos_id || null, d.start_date || null, d.base_salary || 0, finalImage,
       d.has_license === 'true' ? 1 : 0, d.license_no || null, d.license_expire || null,
+      d.license_name || null, d.license_type || null, d.license_institution || null,
+      d.license_issue_date || null, d.license_status || null, finalLicenseFile,
+      d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0,
       empId,
     ];
 
