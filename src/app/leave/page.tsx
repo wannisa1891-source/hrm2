@@ -354,7 +354,7 @@ export default function LeavePage() {
               {quotaTotal > 0 && (
                 <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: isOverQuota ? '1px solid #fecaca' : '1px solid #bbf7d0', background: isOverQuota ? '#fef2f2' : '#f0fdf4' }}>
                   <h3 style={{ margin: '0 0 12px 0', fontSize: 14, color: isOverQuota ? '#b91c1c' : '#15803d', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {isOverQuota ? '⚠️ แจ้งเตือน: ใช้วันลาเกินโควตา' : '✅ ตรวจสอบโควตาวันลา'}
+                    {isOverQuota ? 'แจ้งเตือน: ใช้วันลาเกินโควตา' : 'ตรวจสอบโควตาวันลา'}
                   </h3>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
                     <span style={{ color: '#475569' }}>{quotaLabel} ทั้งหมด:</span>
@@ -377,13 +377,13 @@ export default function LeavePage() {
                   onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Rejected'); setShowReviewModal(false); }}
                   style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 15, transition: 'all 0.2s' }}
                 >
-                  ❌ ไม่อนุมัติ (Reject)
+                  ไม่อนุมัติ
                 </button>
                 <button
                   onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Approved'); setShowReviewModal(false); }}
                   style={{ flex: 1, padding: '12px', borderRadius: 10, border: 'none', background: '#10b981', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: 15, transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
                 >
-                  ✅ อนุมัติการลา (Approve)
+                  อนุมัติการลา
                 </button>
               </div>
 
