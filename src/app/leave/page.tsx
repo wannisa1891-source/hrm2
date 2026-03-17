@@ -175,18 +175,19 @@ export default function LeavePage() {
                 <div style={{ fontSize: 13 }}>ไม่พบข้อมูล</div>
               </td></tr>
             ) : paged.map(l => (
-              <tr key={l.leave_id} style={{ borderBottom: '1px solid #f3f4f6', transition: 'background 0.1s' }}
+              <tr key={l.leave_id} 
+                onClick={() => { setSelectedLeave(l); setShowReviewModal(true); }}
+                style={{ borderBottom: '1px solid #f3f4f6', transition: 'background 0.1s', cursor: 'pointer' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#fafbfc')}
                 onMouseLeave={e => (e.currentTarget.style.background = '')}>
                 <td style={{ padding: '10px 14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%', background: '#e5e7eb',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontWeight: 700, color: '#374151', flexShrink: 0
-                    }}>
-                      {l.first_name_th?.charAt(0)}
-                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={l.photo ? `/uploads/${l.photo}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(l.first_name_th || 'User')}&background=random&color=fff&size=128&bold=true`}
+                      alt={l.first_name_th}
+                      style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid #e5e7eb', flexShrink: 0, background: 'white' }}
+                    />
                     <div>
                       <div style={{ fontWeight: 600, color: '#111827', fontSize: 13 }}>{l.first_name_th} {l.last_name_th}</div>
                       <div style={{ fontSize: 11, color: '#9ca3af' }}>{l.dept_name}</div>
@@ -331,13 +332,12 @@ export default function LeavePage() {
 
               {/* Employee info with avatar */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12, background: '#e5e7eb',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 16, fontWeight: 700, color: '#374151'
-                }}>
-                  {selectedLeave.first_name_th?.charAt(0)}
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={selectedLeave.photo ? `/uploads/${selectedLeave.photo}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedLeave.first_name_th || 'User')}&background=random&color=fff&size=128&bold=true`}
+                  alt={selectedLeave.first_name_th}
+                  style={{ width: 44, height: 44, borderRadius: '12px', objectFit: 'cover', border: '1px solid #e5e7eb', flexShrink: 0, background: 'white' }}
+                />
                 <div>
                   <div style={{ fontWeight: 600, color: '#111827', fontSize: 15 }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th}</div>
                   <div style={{ fontSize: 12, color: '#9ca3af' }}>{selectedLeave.dept_name}</div>

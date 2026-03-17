@@ -4,7 +4,7 @@ import pool from '@/lib/hrm_db';
 export async function GET() {
   try {
     const sql = `SELECT l.*, 
-        e.first_name_th, e.last_name_th, 
+        e.first_name_th, e.last_name_th, e.photo,
         e.quota_personal, e.quota_vacation, e.quota_sick,
         d.dept_name 
       FROM tbl_leaves l 

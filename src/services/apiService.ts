@@ -65,19 +65,21 @@ export interface Position {
 }
 
 export interface Leave {
-  leave_id: string
-  emp_id: string
-  leave_type_id: string
-  start_date: string
-  end_date: string
-  reason: string
-  status: string
-  first_name_th: string
-  last_name_th: string
-  dept_name: string
-  quota_personal?: number
-  quota_vacation?: number
-  quota_sick?: number
+  leave_id: string;
+  emp_id: string;
+  leave_type_id: string;
+  start_date: string;
+  end_date: string;
+  reason?: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  created_at: string;
+  first_name_th?: string;
+  last_name_th?: string;
+  photo?: string | null;
+  dept_name?: string;
+  quota_personal?: number;
+  quota_vacation?: number;
+  quota_sick?: number;
 }
 
 export interface DashboardData {
