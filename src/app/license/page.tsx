@@ -43,6 +43,10 @@ export default function LicensePage() {
     expire_date: '',
     points: 0,
     emp_id: '',
+    license_name: '',
+    license_type: '',
+    institution: '',
+    issue_date: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -76,9 +80,13 @@ export default function LicensePage() {
         expire_date: license.expires !== '-' ? license.expires : '',
         points: license.points || 0,
         emp_id: license.emp_id,
+        license_name: '',
+        license_type: '',
+        institution: '',
+        issue_date: ''
       });
     } else {
-      setFormData({ license_no: '', expire_date: '', points: 0, emp_id: '' });
+      setFormData({ license_no: '', expire_date: '', points: 0, emp_id: '', license_name: '', license_type: '', institution: '', issue_date: '' });
     }
     setActiveModal(type);
   };
@@ -107,6 +115,10 @@ export default function LicensePage() {
             emp_id: activeModal === 'add' ? formData.emp_id : selectedLicense?.emp_id,
             expire_date: formData.expire_date,
             license_no: formData.license_no,
+            license_name: formData.license_name,
+            license_type: formData.license_type,
+            institution: formData.institution,
+            issue_date: formData.issue_date
           }),
         });
       } else if (activeModal === 'edit') {
@@ -210,24 +222,32 @@ export default function LicensePage() {
       {/* Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
         {[
-          { title: 'ทั้งหมด', count: total, color: '#3b82f6', bg: '#eff6ff', iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-          { title: 'ใกล้หมดอายุ', count: expiringCount, color: '#ca8a04', bg: '#fef9c3', iconPath: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-          { title: 'หมดอายุแล้ว', count: expiredCount, color: '#dc2626', bg: '#fef2f2', iconPath: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' }
+          { title: 'ทั้งหมด', count: total, color: '#3b82f6', bg: '#eff6ff', filter: 'all', iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+          { title: 'ใกล้หมดอายุ', count: expiringCount, color: '#ca8a04', bg: '#fef9c3', filter: 'expiring', iconPath: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+          { title: 'หมดอายุแล้ว', count: expiredCount, color: '#dc2626', bg: '#fef2f2', filter: 'expired', iconPath: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' }
         ].map((card, i) => (
-          <div key={i} style={{
-            background: 'white',
+          <div key={i} 
+          onClick={() => setStatusFilter(card.filter)}
+          style={{
+            background: statusFilter === card.filter ? '#f8fafc' : 'white',
             borderRadius: '20px',
             padding: '24px',
             display: 'flex',
             alignItems: 'center',
             gap: '20px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-            border: '1px solid #f1f5f9',
-            transition: 'transform 0.2s',
-            cursor: 'default'
+            boxShadow: statusFilter === card.filter ? `inset 0 0 0 2px ${card.color}, 0 4px 6px -1px rgba(0, 0, 0, 0.05)` : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+            border: statusFilter === card.filter ? '1px solid transparent' : '1px solid #f1f5f9',
+            transition: 'all 0.2s',
+            cursor: 'pointer'
           }}
-          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
-          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+          onMouseOver={(e) => {
+             e.currentTarget.style.transform = 'translateY(-4px)';
+             e.currentTarget.style.boxShadow = statusFilter === card.filter ? `inset 0 0 0 2px ${card.color}, 0 10px 15px -3px rgba(0, 0, 0, 0.1)` : '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+          }}
+          onMouseOut={(e) => {
+             e.currentTarget.style.transform = 'translateY(0)';
+             e.currentTarget.style.boxShadow = statusFilter === card.filter ? `inset 0 0 0 2px ${card.color}, 0 4px 6px -1px rgba(0, 0, 0, 0.05)` : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+          }}>
             <div style={{
               width: '64px', height: '64px', borderRadius: '16px', background: card.bg,
               display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color
@@ -466,6 +486,32 @@ export default function LicensePage() {
                       onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                       onBlur={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
                     />
+                  </div>
+                )}
+                
+                {activeModal === 'add' && (
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                      <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>ชื่อใบประกอบวิชาชีพ <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="text" required placeholder="เช่น ใบประกอบวิชาชีพเวชกรรม" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.license_name} onChange={e => setFormData({...formData, license_name: e.target.value})} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                      <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>ประเภท</label>
+                      <input type="text" placeholder="เช่น แพทยสภา" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.license_type} onChange={e => setFormData({...formData, license_type: e.target.value})} />
+                    </div>
+                  </div>
+                )}
+
+                {activeModal === 'add' && (
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                      <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>สถาบันที่ออกให้</label>
+                      <input type="text" placeholder="เช่น สภาการพยาบาล" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.institution} onChange={e => setFormData({...formData, institution: e.target.value})} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                      <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>วันที่ออกใบอนุญาต</label>
+                      <input type="date" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.issue_date} onChange={e => setFormData({...formData, issue_date: e.target.value})} />
+                    </div>
                   </div>
                 )}
                 
