@@ -96,9 +96,11 @@ export interface DashboardData {
   empCount: number
   leaveTodayCount: number
   vacantCount: number
-  professions: { name: string; value: number }[]
+  professions: { name: string; value: number; color?: string }[]
   pendingTransfers: number
   pendingLeaves: number
+  expiringLicenses: number
+  expiredLicenses: number
 }
 
 // ---------- Helpers ----------

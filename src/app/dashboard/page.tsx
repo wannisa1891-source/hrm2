@@ -117,21 +117,17 @@ export default function DashboardPage() {
     const token = localStorage.getItem('token');
     
     // หากไม่มี token ให้ทำการ redirect ไปหน้า login 
-    if (!token) {
-      window.location.href = '/login';
-      return;
-    }
-
-    loadDashboard()
-
     fetchAnnouncements()
 
     const u = localStorage.getItem('mockUser')
 
     if (u) {
-      setUser(JSON.parse(u))
+      const parsed = JSON.parse(u)
+      setUser(parsed)
+      loadDashboard(parsed.emp_id, parsed.role)
     } else {
       setUser({ role: 'user' })
+      loadDashboard()
     }
 
   }, [loadDashboard])
@@ -213,7 +209,11 @@ export default function DashboardPage() {
             <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                   <span style={{ fontSize: 20 }}>📣</span>
+                   <div style={{ color: '#3b82f6', display: 'flex' }}>
+                     <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                     </svg>
+                   </div>
                    <div>
                      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1e2433' }}>ข่าวสาร</h3>
                      <div style={{ fontSize: 12, color: '#94a3b8' }}>Announcements</div>
@@ -249,7 +249,10 @@ export default function DashboardPage() {
 
             </div>
 
-            <SystemAlert />
+            <SystemAlert 
+              expiringCount={dashboardData.expiringLicenses} 
+              expiredCount={dashboardData.expiredLicenses} 
+            />
 
           </div>
 
