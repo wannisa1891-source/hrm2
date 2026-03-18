@@ -37,18 +37,16 @@ export default function PayrollPage() {
   const [editingEmp, setEditingEmp] = useState<Employee | null>(null);
 
   useEffect(() => {
-    // Mock Data สำหรับทดสอบ Scroll
-    const mockDepts = Array.from({ length: 10 }, (_, i) => ({ dept_id: `D${i}`, dept_name: `แผนกทดสอบ ${i + 1}` }));
-    const mockEmps = Array.from({ length: 20 }, (_, i) => ({
-      emp_id: `${i + 100}`, prefix: 'น.', first_name_th: `พนักงาน`, last_name_th: `${i + 1}`, base_salary: 30000 + (i * 1000), dept_id: `D${i % 5}`
-    }));
-
     Promise.all([
-      fetch('/api/employees').then(r => r.json()).catch(() => mockEmps),
-      fetch('/api/departments').then(r => r.json()).catch(() => mockDepts)
+      fetch('/api/employees').then(r => r.json()),
+      fetch('/api/departments').then(r => r.json())
     ]).then(([empData, deptData]) => {
-      setEmployees(Array.isArray(empData) ? empData : mockEmps);
-      setDepartments(Array.isArray(deptData) ? deptData : mockDepts);
+      setEmployees(Array.isArray(empData) ? empData : []);
+      setDepartments(Array.isArray(deptData) ? deptData : []);
+    }).catch(err => {
+      console.error('Failed to fetch payroll data:', err);
+      setEmployees([]);
+      setDepartments([]);
     });
   }, []);
 
