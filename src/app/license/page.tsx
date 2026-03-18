@@ -193,7 +193,9 @@ export default function LicensePage() {
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            position: 'relative',
+            zIndex: 50
           }}
           onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
           onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -365,8 +367,8 @@ export default function LicensePage() {
                           {status.label}
                         </span>
                       </td>
-                      <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      <td style={{ padding: '16px 24px', textAlign: 'right', position: 'relative', zIndex: 50 }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', position: 'relative', zIndex: 50 }}>
                           <button 
                             onClick={() => handleOpenModal('renew', l)}
                             style={{
@@ -389,7 +391,7 @@ export default function LicensePage() {
                           
                           <button 
                             onClick={() => handleOpenModal('edit', l)}
-                            style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                            style={{ position: 'relative', zIndex: 50, width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
                             onMouseOver={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.color = '#3b82f6'; }}
                             onMouseOut={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; }}
                           >
@@ -398,7 +400,7 @@ export default function LicensePage() {
                           
                           <button 
                             onClick={() => handleDelete(l)}
-                            style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                            style={{ position: 'relative', zIndex: 50, width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
                             onMouseOver={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.borderColor = '#fca5a5'; }}
                             onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
                           >
