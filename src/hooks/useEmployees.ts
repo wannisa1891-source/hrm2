@@ -27,36 +27,36 @@ export function useEmployees() {
   }, [])
 
   const addEmployee = useCallback(
-    async (formData: FormData): Promise<boolean> => {
+    async (formData: FormData): Promise<{ success: boolean; message?: string }> => {
       try {
-        setError(null)
-        await createEmployee(formData)
-        await loadEmployees()
-        return true
-      } catch (err) {
-        console.error('useEmployees - addEmployee:', err)
-        setError(err instanceof Error ? err.message : 'เพิ่มพนักงานไม่สำเร็จ')
-        return false
+        setError(null);
+        const res = await createEmployee(formData);
+        await loadEmployees();
+        return { success: true, message: res.message };
+      } catch (err: any) {
+        console.error('useEmployees - addEmployee:', err);
+        setError(err instanceof Error ? err.message : 'เพิ่มพนักงานไม่สำเร็จ');
+        return { success: false, message: err.message || 'เพิ่มพนักงานไม่สำเร็จ' };
       }
     },
     [loadEmployees]
-  )
+  );
 
   const editEmployee = useCallback(
-    async (emp_id: string, formData: FormData): Promise<boolean> => {
+    async (emp_id: string, formData: FormData): Promise<{ success: boolean; message?: string }> => {
       try {
-        setError(null)
-        await updateEmployee(emp_id, formData)
-        await loadEmployees()
-        return true
-      } catch (err) {
-        console.error('useEmployees - editEmployee:', err)
-        setError(err instanceof Error ? err.message : 'แก้ไขข้อมูลไม่สำเร็จ')
-        return false
+        setError(null);
+        const res = await updateEmployee(emp_id, formData);
+        await loadEmployees();
+        return { success: true, message: res.message };
+      } catch (err: any) {
+        console.error('useEmployees - editEmployee:', err);
+        setError(err instanceof Error ? err.message : 'แก้ไขข้อมูลไม่สำเร็จ');
+        return { success: false, message: err.message || 'แก้ไขข้อมูลไม่สำเร็จ' };
       }
     },
     [loadEmployees]
-  )
+  );
 
   const removeEmployee = useCallback(
     async (emp_id: string): Promise<boolean> => {

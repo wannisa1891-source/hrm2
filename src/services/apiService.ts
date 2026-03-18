@@ -39,19 +39,29 @@ export interface Employee {
   addr_zipcode?: string
   
   has_license?: boolean | number
-  license_name?: string
-  license_type?: string
-  license_institution?: string
-  license_issue_date?: string
-  license_no?: string
-  license_expire?: string
-  license_status?: string
-  license_file?: string
+  licenses?: ProfessionalLicense[]
   cneu_cme_points?: number
   
   email?: string
   password?: string
   role?: string
+}
+
+export interface ProfessionalLicense {
+  id?: number | string
+  emp_id?: string
+  license_name?: string
+  license_type?: string
+  license_no?: string
+  institution?: string
+  issue_date?: string
+  expire_date?: string
+  status?: string
+  file_path?: string
+  
+  // UI-only properties for tracking files before upload
+  file?: File | null
+  previewUrl?: string | null
 }
 
 export interface Department {
