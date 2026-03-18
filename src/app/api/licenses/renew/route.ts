@@ -12,17 +12,17 @@ export async function POST(req: NextRequest) {
     if (license_id) {
       // Update existing license
       const query = `
-        UPDATE tbl_licenses 
-        SET expire_date = ?, license_no = COALESCE(?, license_no)
-        WHERE license_id = ?
+        UPDATE tbl_employee_licenses 
+        SET expire_date = ?, license_no = COALESCE(?, license_no), status = 'Active'
+        WHERE id = ?
       `;
       await pool.query(query, [expire_date, license_no || null, license_id]);
       return NextResponse.json({ message: 'License renewed successfully' });
     } else if (emp_id) {
       // Create new license entry if they only existed in tbl_employees
       const query = `
-        INSERT INTO tbl_licenses (emp_id, license_no, expire_date)
-        VALUES (?, ?, ?)
+        INSERT INTO tbl_employee_licenses (emp_id, license_no, expire_date, status)
+        VALUES (?, ?, ?, 'Active')
       `;
       await pool.query(query, [emp_id, license_no || null, expire_date]);
       return NextResponse.json({ message: 'License created and renewed successfully' });

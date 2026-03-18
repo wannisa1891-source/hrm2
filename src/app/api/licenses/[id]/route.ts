@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
 
+export const dynamic = 'force-dynamic';
+
 // PUT /api/licenses/[id] - Update a license
 export async function PUT(
   req: NextRequest,
@@ -14,29 +16,66 @@ export async function PUT(
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-    // Determine if it's a tbl_licenses ID (starts with L) or tbl_employees (starts with EMP)
     if (id.startsWith('L')) {
       const licenseId = id.substring(1);
-      const query = `
-        UPDATE tbl_licenses 
-        SET 
-          license_no = COALESCE(?, license_no), 
-          expire_date = COALESCE(?, expire_date),
-          cneu_cme_points = COALESCE(?, cneu_cme_points)
-        WHERE license_id = ?
-      `;
-      await pool.query(query, [license_no || null, expire_date || null, cneu_cme_points || null, licenseId]);
-      return NextResponse.json({ message: 'License updated successfully' });
+
+      // Get emp_id to update points
+      let empId = null;
+      if (cneu_cme_points !== undefined) {
+        const [rows]: any = await pool.query('SELECT emp_id FROM tbl_employee_licenses WHERE id = ?', [licenseId]);
+        if (rows.length > 0) {
+          empId = rows[0].emp_id;
+        }
+      }
+
+      const connection = await pool.getConnection();
+      try {
+        await connection.beginTransaction();
+
+        const query = `
+          UPDATE tbl_employee_licenses 
+          SET 
+            license_no = COALESCE(?, license_no), 
+            expire_date = COALESCE(?, expire_date)
+          WHERE id = ?
+        `;
+        await connection.query(query, [license_no || null, expire_date || null, licenseId]);
+
+        if (empId && cneu_cme_points !== undefined) {
+          await connection.query('UPDATE tbl_employees SET cneu_cme_points = ? WHERE emp_id = ?', [cneu_cme_points, empId]);
+        }
+
+        await connection.commit();
+        connection.release();
+        return NextResponse.json({ message: 'License updated successfully' });
+      } catch (err: any) {
+        await connection.rollback();
+        connection.release();
+        throw err;
+      }
     } else if (id.startsWith('EMP-')) {
-      // If it only exists in tbl_employees, we should probably create a record in tbl_licenses
-      // or update tbl_employees. For consistency with the renew flow, let's create a record.
+      // Create new license in tbl_employee_licenses
       const empId = id.substring(4);
-      const query = `
-        INSERT INTO tbl_licenses (emp_id, license_no, expire_date, cneu_cme_points)
-        VALUES (?, ?, ?, ?)
-      `;
-      await pool.query(query, [empId, license_no || null, expire_date || null, cneu_cme_points || 0]);
-      return NextResponse.json({ message: 'License record created and updated' });
+      const connection = await pool.getConnection();
+      try {
+        await connection.beginTransaction();
+        const query = `
+          INSERT INTO tbl_employee_licenses (emp_id, license_no, expire_date, status)
+          VALUES (?, ?, ?, 'Active')
+        `;
+        await connection.query(query, [empId, license_no || null, expire_date || null]);
+
+        if (cneu_cme_points !== undefined) {
+           await connection.query('UPDATE tbl_employees SET cneu_cme_points = ? WHERE emp_id = ?', [cneu_cme_points, empId]);
+        }
+        await connection.commit();
+        connection.release();
+        return NextResponse.json({ message: 'License record created and updated' });
+      } catch(err) {
+        await connection.rollback();
+        connection.release();
+        throw err;
+      }
     }
 
     return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
@@ -54,11 +93,11 @@ export async function DELETE(
   try {
     const id = params.id;
     if (!id || !id.startsWith('L')) {
-      return NextResponse.json({ error: 'Only records in tbl_licenses can be deleted' }, { status: 400 });
+      return NextResponse.json({ error: 'Only records in tbl_employee_licenses can be deleted' }, { status: 400 });
     }
 
     const licenseId = id.substring(1);
-    await pool.query('DELETE FROM tbl_licenses WHERE license_id = ?', [licenseId]);
+    await pool.query('DELETE FROM tbl_employee_licenses WHERE id = ?', [licenseId]);
     
     return NextResponse.json({ message: 'License record deleted successfully' });
   } catch (err: any) {
