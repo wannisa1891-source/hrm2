@@ -12,11 +12,15 @@ interface TransferRecord {
   effective_date: string;
   subject: string;
   transfer_type: string;
+  emp_id: string;
   emp_name: string;
   old_dept_name: string;
   new_dept_name: string;
   old_position: string;
   new_position: string;
+  old_salary: number;
+  new_salary: number;
+  order_file: string | null;
 }
 
 const TRANSFER_TYPES = [
@@ -38,6 +42,7 @@ export default function TransferPage() {
   const [orderFile, setOrderFile] = useState<File | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [detailTransfer, setDetailTransfer] = useState<TransferRecord | null>(null);
   const [form, setForm] = useState({
     orderNo: '', orderDate: '', effectDate: '', title: '',
     transferType: '03', empId: '',
@@ -81,18 +86,18 @@ export default function TransferPage() {
     if (!selected || !form.orderNo || !form.newDeptId) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
     setSaving(true);
     const fd = new FormData();
-    fd.append('data', JSON.stringify(form));
+    fd.append('data', JSON.stringify({ ...form, oldDeptId: '' }));
     if (orderFile) fd.append('order_file', orderFile);
     const res = await fetch('/api/transfers', { method: 'POST', body: fd });
     const data = await res.json();
     setSaving(false);
     if (data.success) {
-      alert('บันทึกคำสั่งย้ายสำเร็จ!');
+      alert('บันทึกคำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว');
       setShowForm(false);
       setSelected(null); setSearchQ('');
       setForm({ orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
-      loadTransfers(); // ✅ โหลดรายการใหม่หลังบันทึก
-    } else alert('เกิดข้อผิดพลาด');
+      loadTransfers();
+    } else alert('เกิดข้อผิดพลาด: ' + (data.error || ''));
   };
 
   const setF = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));

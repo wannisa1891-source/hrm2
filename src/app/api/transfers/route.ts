@@ -3,6 +3,8 @@ import pool from '@/lib/hrm_db';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const [rows] = await pool.query(`
@@ -24,6 +26,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const connection = await pool.getConnection();
   try {
     const formData = await req.formData();
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
@@ -42,21 +45,72 @@ export async function POST(req: NextRequest) {
     const data = JSON.parse(dataStr);
     const transfer_id = 'TRF' + Date.now().toString().slice(-8);
 
+    await connection.beginTransaction();
+
+    // 1. Insert complete transfer record
+    const transferTypeName = {
+      '01': 'บรรจุ/แต่งตั้ง',
+      '02': 'เลื่อนตำแหน่ง',
+      '03': 'ย้าย/สับเปลี่ยนตำแหน่ง',
+      '04': 'โอน',
+      '05': 'ช่วยราชการ',
+    }[data.transferType as string] || data.transferType;
+
+    // Check if tbl_transfers has the extra columns; use a safe INSERT
     const sql = `INSERT INTO tbl_transfers 
       (transfer_id, order_no, order_date, subject, transfer_type, effective_date, emp_id, 
        old_dept_id, new_dept_id, old_position, new_position, order_file, old_salary, new_salary) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    await pool.query(sql, [
-      transfer_id, data.orderNo, data.orderDate, data.title,
-      'แต่งตั้งโยกย้าย', data.orderDate, data.empId,
-      data.oldDeptId, data.newDeptId, data.oldPos, data.newPos,
-      fileName, data.oldSalary, data.newSalary,
+    await connection.query(sql, [
+      transfer_id,
+      data.orderNo,
+      data.orderDate || null,
+      data.title,
+      transferTypeName,
+      data.effectDate || data.orderDate || null,
+      data.empId,
+      data.oldDeptId || null,
+      data.newDeptId,
+      data.oldPos,
+      data.newPos,
+      fileName,
+      data.oldSalary,
+      data.newSalary,
     ]);
 
-    return NextResponse.json({ success: true });
+    // 2. Auto-update employee record with new data
+    const updateFields: string[] = [];
+    const updateValues: unknown[] = [];
+
+    if (data.newDeptId) {
+      updateFields.push('dept_id = ?');
+      updateValues.push(data.newDeptId);
+    }
+    if (data.newPos) {
+      updateFields.push('position = ?');
+      updateValues.push(data.newPos);
+    }
+    if (data.newSalary && Number(data.newSalary) > 0) {
+      updateFields.push('salary = ?');
+      updateValues.push(data.newSalary);
+    }
+
+    if (updateFields.length > 0) {
+      updateValues.push(data.empId);
+      await connection.query(
+        `UPDATE tbl_employees SET ${updateFields.join(', ')} WHERE emp_id = ?`,
+        updateValues
+      );
+    }
+
+    await connection.commit();
+    return NextResponse.json({ success: true, transfer_id });
   } catch (err: unknown) {
+    await connection.rollback();
     const message = err instanceof Error ? err.message : 'DB Error';
     return NextResponse.json({ error: message }, { status: 500 });
+  } finally {
+    connection.release();
   }
 }
