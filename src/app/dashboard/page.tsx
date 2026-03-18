@@ -117,6 +117,11 @@ export default function DashboardPage() {
     const token = localStorage.getItem('token');
     
     // หากไม่มี token ให้ทำการ redirect ไปหน้า login 
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+
     fetchAnnouncements()
 
     const u = localStorage.getItem('mockUser')

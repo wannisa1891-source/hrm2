@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const empId = searchParams.get('emp_id');
+    const role = searchParams.get('role');
     // 1. Employee Count
     const [empRows] = await pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status = 'Active'");
     const empCount = (empRows as any[])[0].count;
@@ -45,11 +48,18 @@ export async function GET() {
     const pendingLeaves = (pendingLeavesRows as any[])[0].count;
 
     // 7. Expiring and Expired Licenses
-    const [licenseRows] = await pool.query(`
+    let licenseQuery = `
       SELECT expire_date 
       FROM tbl_employee_licenses 
       WHERE status != 'Expired' AND status != 'Suspended'
-    `);
+    `;
+    const queryParams: any[] = [];
+    if (role !== 'admin' && empId) {
+      licenseQuery += ` AND emp_id = ?`;
+      queryParams.push(empId);
+    }
+
+    const [licenseRows] = await pool.query(licenseQuery, queryParams);
     
     let expiringLicenses = 0;
     let expiredLicenses = 0;

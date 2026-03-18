@@ -181,8 +181,13 @@ export const updateLeaveStatus = (
 //  DASHBOARD
 // ============================================================
 
-export const fetchDashboard = (): Promise<DashboardData> =>
-  apiFetch<DashboardData>('/api/dashboard')
+export const fetchDashboard = (empId?: string, role?: string): Promise<DashboardData> => {
+  const params = new URLSearchParams()
+  if (empId) params.append('emp_id', empId)
+  if (role) params.append('role', role)
+  const qs = params.toString()
+  return apiFetch<DashboardData>(`/api/dashboard${qs ? `?${qs}` : ''}`)
+}
 
 // ============================================================
 //  SCHEDULES
