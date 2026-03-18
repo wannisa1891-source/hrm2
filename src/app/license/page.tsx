@@ -17,6 +17,10 @@ interface License {
   image: string | null;
   gender: string;
   status: string;
+  license_name?: string;
+  license_type?: string;
+  institution?: string;
+  issue_date?: string;
 }
 
 function getStatus(days: number) {
@@ -80,10 +84,10 @@ export default function LicensePage() {
         expire_date: license.expires !== '-' ? license.expires : '',
         points: license.points || 0,
         emp_id: license.emp_id,
-        license_name: '',
-        license_type: '',
-        institution: '',
-        issue_date: ''
+        license_name: license.license_name || '',
+        license_type: license.license_type || '',
+        institution: license.institution || '',
+        issue_date: license.issue_date || ''
       });
     } else {
       setFormData({ license_no: '', expire_date: '', points: 0, emp_id: '', license_name: '', license_type: '', institution: '', issue_date: '' });
@@ -129,6 +133,10 @@ export default function LicensePage() {
             license_no: formData.license_no,
             expire_date: formData.expire_date,
             cneu_cme_points: formData.points,
+            license_name: formData.license_name,
+            license_type: formData.license_type,
+            institution: formData.institution,
+            issue_date: formData.issue_date
           }),
         });
       }
@@ -490,30 +498,42 @@ export default function LicensePage() {
                 )}
                 
                 {activeModal === 'add' && (
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                      <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>ชื่อใบประกอบวิชาชีพ <span style={{ color: '#ef4444' }}>*</span></label>
-                      <input type="text" required placeholder="เช่น ใบประกอบวิชาชีพเวชกรรม" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.license_name} onChange={e => setFormData({...formData, license_name: e.target.value})} />
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                      <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>ประเภท</label>
-                      <input type="text" placeholder="เช่น แพทยสภา" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.license_type} onChange={e => setFormData({...formData, license_type: e.target.value})} />
-                    </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>รหัสพนักงาน (EMP-ID) <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="เช่น EMP001"
+                      style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }}
+                      value={formData.emp_id} 
+                      onChange={e => setFormData({...formData, emp_id: e.target.value})}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
+                    />
                   </div>
                 )}
+                
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>ชื่อใบประกอบวิชาชีพ <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input type="text" required placeholder="เช่น ใบประกอบวิชาชีพเวชกรรม" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.license_name} onChange={e => setFormData({...formData, license_name: e.target.value})} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>ประเภท</label>
+                    <input type="text" placeholder="เช่น แพทยสภา" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.license_type} onChange={e => setFormData({...formData, license_type: e.target.value})} />
+                  </div>
+                </div>
 
-                {activeModal === 'add' && (
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                      <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>สถาบันที่ออกให้</label>
-                      <input type="text" placeholder="เช่น สภาการพยาบาล" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.institution} onChange={e => setFormData({...formData, institution: e.target.value})} />
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                      <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>วันที่ออกใบอนุญาต</label>
-                      <input type="date" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.issue_date} onChange={e => setFormData({...formData, issue_date: e.target.value})} />
-                    </div>
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>สถาบันที่ออกให้</label>
+                    <input type="text" placeholder="เช่น สภาการพยาบาล" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.institution} onChange={e => setFormData({...formData, institution: e.target.value})} />
                   </div>
-                )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>วันที่ออกใบอนุญาต</label>
+                    <input type="date" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.issue_date} onChange={e => setFormData({...formData, issue_date: e.target.value})} />
+                  </div>
+                </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>เลขที่ใบอนุญาต</label>

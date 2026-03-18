@@ -69,7 +69,11 @@ export async function GET(req: NextRequest) {
         expires: row.expire_date ? new Date(row.expire_date).toLocaleDateString('en-CA') : '-',
         daysLeft: daysLeft ?? 9999,
         points: row.cneu_cme_points || 0,
-        status: row.license_status || 'Active'
+        status: row.license_status || 'Active',
+        license_name: row.license_name || '',
+        license_type: row.license_type || '',
+        institution: row.institution || '',
+        issue_date: row.issue_date ? new Date(row.issue_date).toLocaleDateString('en-CA') : ''
       };
     });
 
