@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 
 interface Department { dept_id: string; dept_name: string; }
-interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; }
+interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; level: string; pos_no: string; }
 interface TransferRecord {
   transfer_id: string;
   order_no: string;
@@ -14,12 +14,19 @@ interface TransferRecord {
   transfer_type: string;
   emp_id: string;
   emp_name: string;
+  old_dept_id: string;
   old_dept_name: string;
+  new_dept_id: string;
   new_dept_name: string;
   old_position: string;
   new_position: string;
+  old_level: string;
+  new_level: string;
+  old_pos_no: string;
+  new_pos_no: string;
   old_salary: number;
   new_salary: number;
+  remark: string;
   order_file: string | null;
 }
 
@@ -43,10 +50,12 @@ export default function TransferPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [detailTransfer, setDetailTransfer] = useState<TransferRecord | null>(null);
+  const [viewingTransfer, setViewingTransfer] = useState<TransferRecord | null>(null);
   const [form, setForm] = useState({
+    transfer_id: '',
     orderNo: '', orderDate: '', effectDate: '', title: '',
     transferType: '03', empId: '',
-    oldDept: '', newDeptId: '',
+    oldDeptId: '', oldDept: '', newDeptId: '',
     oldPos: '', newPos: '',
     oldLevel: '', newLevel: '',
     oldPosNo: '', newPosNo: '',
@@ -77,25 +86,70 @@ export default function TransferPage() {
 
   const selectEmployee = (emp: SearchResult) => {
     setSelected(emp);
-    setForm(f => ({ ...f, empId: emp.id, oldPos: emp.pos, oldDept: emp.dept, oldSalary: emp.salary }));
+    setForm(f => ({ 
+      ...f, 
+      empId: emp.id, 
+      oldPos: emp.pos, 
+      oldDept: emp.dept, 
+      oldSalary: emp.salary,
+      oldLevel: emp.level || '',
+      oldPosNo: emp.pos_no || ''
+    }));
     setSearchResults([]);
     setSearchQ(emp.name);
+  };
+
+  const handleEdit = (t: TransferRecord) => {
+    setForm({
+      transfer_id: t.transfer_id,
+      orderNo: t.order_no,
+      orderDate: t.order_date?.split('T')[0] || '',
+      effectDate: t.effective_date?.split('T')[0] || '',
+      title: t.subject,
+      transferType: t.transfer_type === 'บรรจุ/แต่งตั้ง' ? '01' : t.transfer_type === 'เลื่อนตำแหน่ง' ? '02' : '03',
+      empId: t.emp_id,
+      oldDeptId: t.old_dept_id,
+      oldDept: t.old_dept_name,
+      newDeptId: t.new_dept_id,
+      oldPos: t.old_position,
+      newPos: t.new_position,
+      oldLevel: t.old_level,
+      newLevel: t.new_level,
+      oldPosNo: t.old_pos_no,
+      newPosNo: t.new_pos_no,
+      oldSalary: t.old_salary || 0,
+      newSalary: t.new_salary || 0,
+      remark: t.remark || '',
+    });
+    setSelected({ id: t.emp_id, name: t.emp_name, pos: t.old_position, dept: t.old_dept_name, salary: t.old_salary, level: t.old_level, pos_no: t.old_pos_no });
+    setSearchQ(t.emp_name);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('ยืนยันการลบคำสั่งย้ายนี้?')) return;
+    const res = await fetch(`/api/transfers?id=${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) { loadTransfers(); }
+    else alert('เกิดข้อผิดพลาด: ' + data.error);
   };
 
   const handleSave = async () => {
     if (!selected || !form.orderNo || !form.newDeptId) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
     setSaving(true);
     const fd = new FormData();
-    fd.append('data', JSON.stringify({ ...form, oldDeptId: '' }));
+    fd.append('data', JSON.stringify(form));
     if (orderFile) fd.append('order_file', orderFile);
-    const res = await fetch('/api/transfers', { method: 'POST', body: fd });
+    
+    const method = form.transfer_id ? 'PUT' : 'POST';
+    const res = await fetch('/api/transfers', { method, body: fd });
     const data = await res.json();
     setSaving(false);
     if (data.success) {
-      alert('บันทึกคำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว');
+      alert(`✅ ${form.transfer_id ? 'แก้ไข' : 'บันทึก'}คำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว`);
       setShowForm(false);
       setSelected(null); setSearchQ('');
-      setForm({ orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
+      setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
       loadTransfers();
     } else alert('เกิดข้อผิดพลาด: ' + (data.error || ''));
   };
@@ -190,7 +244,23 @@ export default function TransferPage() {
         .tr-file-label { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border: 2px dashed #cbd5e1; border-radius: 12px; cursor: pointer; background: #f8fafc; transition: all .2s; font-size: 14px; color: #64748b; font-weight: 500; }
         .tr-file-label:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
 
-        @media(max-width:640px){ .tr-stats { grid-template-columns:1fr; } .tr-form-row, .tr-form-row.tri { grid-template-columns:1fr; } }
+        /* Modal */
+        .tr-modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:100; backdrop-filter:blur(4px); }
+        .tr-modal { background:#fff; border-radius:24px; width:90%; max-width:700px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1); }
+        .tr-modal-header { padding:20px 24px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; }
+        .tr-modal-title { font-size:20px; font-weight:700; color:#1e293b; }
+        .tr-modal-body { padding:24px; }
+        .tr-modal-footer { padding:16px 24px; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; }
+        
+        .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+        .detail-item { display:flex; flex-direction:column; gap:4px; }
+        .detail-label { font-size:12px; font-weight:700; color:#94a3b8; text-transform:uppercase; }
+        .detail-value { font-size:15px; color:#1e293b; font-weight:500; }
+        .detail-compare { background:#f8fafc; border-radius:16px; padding:20px; margin-top:10px; }
+        .compare-row { display:grid; grid-template-columns:1fr 1.2fr 1.2fr; gap:12px; padding:8px 0; border-bottom:1px solid #e2e8f0; }
+        .compare-row:last-child { border:none; }
+
+        @media(max-width:640px){ .tr-stats { grid-template-columns:1fr; } .tr-form-row, .tr-form-row.tri { grid-template-columns:1fr; } .detail-grid { grid-template-columns:1fr; } }
       `}</style>
 
       <div className="tr-page">
@@ -297,11 +367,14 @@ export default function TransferPage() {
                       <td><span style={{ padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: 'rgba(20,184,166,0.12)', color: '#0f766e', border: '1px solid rgba(20,184,166,0.3)' }}>บันทึกแล้ว</span></td>
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                          <button className="btn-tr-cancel" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => alert('แสดงรายละเอียดคำสั่ง ' + t.order_no)}>รายละเอียด</button>
-                          <button className="btn-tr-save" style={{ padding: '6px 12px', fontSize: 12, display: 'flex', alignItems: 'center', gap: '4px' }} onClick={() => alert('ดาวน์โหลด PDF คำสั่ง ' + t.order_no)}>
-                            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                            PDF
-                          </button>
+                          <button className="btn-tr-cancel" style={{ padding: '6px 12px', fontSize: 12, background: '#f0f9ff', color: '#0369a1' }} onClick={() => setViewingTransfer(t)}>👁️ ดู</button>
+                          <button className="btn-tr-cancel" style={{ padding: '6px 12px', fontSize: 12, background: '#fef2f2', color: '#991b1b' }} onClick={() => handleEdit(t)}>✏️ แก้ไข</button>
+                          {t.order_file && (
+                            <a href={`/uploads/${t.order_file}`} target="_blank" rel="noreferrer" className="btn-tr-save" style={{ padding: '6px 15px', fontSize: 12, textDecoration: 'none', background: '#ecfdf5', color: '#059669', boxShadow: 'none', border: '1px solid #10b981' }}>
+                              📄 ไฟล์
+                            </a>
+                          )}
+                          <button className="btn-tr-cancel" style={{ padding: '6px 10px', fontSize: 12 }} onClick={() => handleDelete(t.transfer_id)}>🗑️</button>
                         </div>
                       </td>
                     </tr>
@@ -465,6 +538,95 @@ export default function TransferPage() {
               <button className="btn-tr-save" onClick={handleSave} disabled={saving}>
                 {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Modal: รายละเอียดคำสั่ง ── */}
+        {viewingTransfer && (
+          <div className="tr-modal-overlay" onClick={() => setViewingTransfer(null)}>
+            <div className="tr-modal" onClick={e => e.stopPropagation()}>
+              <div className="tr-modal-header">
+                <span className="tr-modal-title">รายละเอียดคำสั่งย้าย</span>
+                <button onClick={() => setViewingTransfer(null)} style={{ background:'none', border:'none', fontSize:24, cursor:'pointer', color:'#94a3b8' }}>&times;</button>
+              </div>
+              <div className="tr-modal-body">
+                <div className="detail-grid" style={{ marginBottom: 24 }}>
+                  <div className="detail-item">
+                    <span className="detail-label">เลขที่คำสั่ง</span>
+                    <span className="detail-value">{viewingTransfer.order_no}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">วันที่มีผล</span>
+                    <span className="detail-value">{viewingTransfer.effective_date?.split('T')[0] || '—'}</span>
+                  </div>
+                  <div className="detail-item" style={{ gridColumn: 'span 2' }}>
+                    <span className="detail-label">เรื่อง</span>
+                    <span className="detail-value">{viewingTransfer.subject}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">ชื่อผู้ถูกคำสั่ง</span>
+                    <span className="detail-value" style={{ color: '#3b82f6', fontWeight: 700 }}>{viewingTransfer.emp_name}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">ประเภทคำสั่ง</span>
+                    <span className="detail-value">{viewingTransfer.transfer_type}</span>
+                  </div>
+                </div>
+
+                <div className="detail-compare">
+                  <div className="compare-row" style={{ borderBottom: '2px solid #cbd5e1', paddingBottom: 12 }}>
+                    <span style={{ fontWeight: 800, fontSize: 13 }}>รายการ</span>
+                    <span style={{ fontWeight: 800, fontSize: 13, color: '#64748b' }}>เดิม</span>
+                    <span style={{ fontWeight: 800, fontSize: 13, color: '#3b82f6' }}>ใหม่</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">สังกัด</span>
+                    <span className="detail-value">{viewingTransfer.old_dept_name || '—'}</span>
+                    <span className="detail-value">{viewingTransfer.new_dept_name || '—'}</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">ตำแหน่ง</span>
+                    <span className="detail-value">{viewingTransfer.old_position || '—'}</span>
+                    <span className="detail-value">{viewingTransfer.new_position || '—'}</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">ระดับ</span>
+                    <span className="detail-value">{viewingTransfer.old_level || '—'}</span>
+                    <span className="detail-value">{viewingTransfer.new_level || '—'}</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">เลขที่ตำแหน่ง</span>
+                    <span className="detail-value">{viewingTransfer.old_pos_no || '—'}</span>
+                    <span className="detail-value">{viewingTransfer.new_pos_no || '—'}</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">เงินเดือน</span>
+                    <span className="detail-value">{viewingTransfer.old_salary?.toLocaleString() || '0'}</span>
+                    <span className="detail-value">{viewingTransfer.new_salary?.toLocaleString() || '0'}</span>
+                  </div>
+                </div>
+
+                {viewingTransfer.remark && (
+                  <div style={{ marginTop: 20 }}>
+                    <span className="detail-label">หมายเหตุ</span>
+                    <p style={{ margin: '4px 0', fontSize: 14 }}>{viewingTransfer.remark}</p>
+                  </div>
+                )}
+
+                {viewingTransfer.order_file && (
+                  <div style={{ marginTop: 16 }}>
+                    <a href={`/uploads/${viewingTransfer.order_file}`} target="_blank" rel="noreferrer" 
+                      style={{ color: '#3b82f6', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      เปิดไฟล์เอกสารแนบ (PDF)
+                    </a>
+                  </div>
+                )}
+              </div>
+              <div className="tr-modal-footer">
+                <button className="btn-tr-cancel" style={{ padding: '8px 24px' }} onClick={() => setViewingTransfer(null)}>ปิด</button>
+              </div>
             </div>
           </div>
         )}
