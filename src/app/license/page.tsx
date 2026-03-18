@@ -178,30 +178,27 @@ export default function LicensePage() {
 
   return (
     <AppLayout>
-      {/* Header Section with Gradient Background */}
-      <div className="premium-header-banner" style={{
-        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-        borderRadius: '24px',
-        padding: '32px 40px',
-        color: '#fff',
-        marginBottom: '32px',
+      {/* Header Section */}
+      <div style={{
+        background: 'transparent',
+        padding: '0 0 24px 0',
+        marginBottom: '16px',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.5)'
+        alignItems: 'flex-end',
       }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 800, letterSpacing: '-0.02em', color: '#f8fafc' }}>
+          <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 800, color: '#1e2433' }}>
             ใบประกอบวิชาชีพ
           </h1>
-          <p style={{ margin: '8px 0 0 0', fontSize: '15px', color: '#94a3b8', maxWidth: '500px' }}>
+          <p style={{ margin: '8px 0 0 0', fontSize: '15px', color: '#64748b', maxWidth: '500px' }}>
             จัดการและติดตามวันหมดอายุใบอนุญาตประกอบวิชาชีพของบุคลากรภายในองค์กร
           </p>
         </div>
         <button 
           onClick={() => handleOpenModal('add')}
           style={{
-            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            background: '#3b82f6',
             color: 'white',
             border: 'none',
             padding: '12px 24px',
@@ -209,16 +206,15 @@ export default function LicensePage() {
             fontWeight: 600,
             fontSize: '15px',
             cursor: 'pointer',
-            boxShadow: '0 10px 20px -10px rgba(37, 99, 235, 0.6)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.2s',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             position: 'relative',
             zIndex: 50
           }}
-          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          onMouseOver={(e) => { e.currentTarget.style.background = '#2563eb'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+          onMouseOut={(e) => { e.currentTarget.style.background = '#3b82f6'; e.currentTarget.style.transform = 'translateY(0)' }}
         >
           <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -266,19 +262,18 @@ export default function LicensePage() {
             </div>
             <div>
               <div style={{ color: '#64748b', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>{card.title}</div>
-              <div style={{ color: '#0f172a', fontSize: '32px', fontWeight: 800, lineHeight: 1 }}>{card.count} <span style={{fontSize: '14px', color: '#94a3b8', fontWeight: 500}}>รายการ</span></div>
+              <div style={{ color: '#1e2433', fontSize: '32px', fontWeight: 800, lineHeight: 1 }}>{card.count} <span style={{fontSize: '14px', color: '#94a3b8', fontWeight: 500}}>รายการ</span></div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Main Glass Panel */}
+      {/* Main Panel */}
       <div style={{
-        background: 'rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(12px)',
-        borderRadius: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.5)',
-        boxShadow: '0 10px 40px -10px rgba(0,0,0,0.05)',
+        background: '#ffffff',
+        borderRadius: '20px',
+        border: '1px solid #f1f5f9',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
         overflow: 'hidden'
       }}>
         {/* Filter Bar */}
@@ -359,7 +354,7 @@ export default function LicensePage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                           <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#e2e8f0', backgroundImage: `url(${l.image ? `/uploads/${l.image}` : (l.gender === 'หญิง' ? '/avatar2.jpg' : '/avatar1.jpg')})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
                           <div>
-                            <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '15px' }}>{l.name}</div>
+                            <div style={{ fontWeight: 600, color: '#1e2433', fontSize: '15px' }}>{l.name}</div>
                             <div style={{ color: '#64748b', fontSize: '13px', marginTop: '2px' }}>รหัส: {l.emp_id}</div>
                           </div>
                         </div>
@@ -377,7 +372,7 @@ export default function LicensePage() {
                           display: 'inline-block',
                           fontWeight: 700, 
                           fontSize: '15px',
-                          color: l.points >= 50 ? '#16a34a' : '#1e293b',
+                          color: l.points >= 50 ? '#16a34a' : '#1e2433',
                           background: l.points >= 50 ? '#dcfce7' : '#f1f5f9',
                           padding: '4px 12px',
                           borderRadius: '20px'
@@ -451,7 +446,7 @@ export default function LicensePage() {
           <div style={{ background: '#fff', borderRadius: '24px', width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', overflow: 'hidden', animation: 'fadeIn 0.2s ease-out' }}>
             
             <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1e2433', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: activeModal === 'renew' ? '#bfdbfe' : activeModal === 'edit' ? '#fef3c7' : '#dcfce7', color: activeModal === 'renew' ? '#2563eb' : activeModal === 'edit' ? '#d97706' : '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {activeModal === 'renew' ? <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> : 
                    activeModal === 'edit' ? <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg> : 
@@ -462,7 +457,7 @@ export default function LicensePage() {
               <button 
                 onClick={closeModal} 
                 style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}
-                onMouseOver={(e) => { e.currentTarget.style.color = '#0f172a'; e.currentTarget.style.background = '#e2e8f0'; }}
+                onMouseOver={(e) => { e.currentTarget.style.color = '#1e2433'; e.currentTarget.style.background = '#e2e8f0'; }}
                 onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'transparent'; }}
               >
                 <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -585,8 +580,8 @@ export default function LicensePage() {
                     ยกเลิก
                   </button>
                   <button type="submit" disabled={submitting} style={{
-                    padding: '12px 28px', borderRadius: '12px', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff', fontWeight: 600, fontSize: '15px', border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
-                  }} onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(59, 130, 246, 0.4)'} onMouseOut={(e) => e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)'}>
+                    padding: '12px 28px', borderRadius: '12px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '15px', border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
+                  }} onMouseOver={(e) => { e.currentTarget.style.background = '#2563eb'; e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(59, 130, 246, 0.4)' }} onMouseOut={(e) => { e.currentTarget.style.background = '#3b82f6'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)' }}>
                     {submitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
                   </button>
                 </div>
