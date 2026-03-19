@@ -15,11 +15,15 @@ export async function GET(req: NextRequest) {
         SELECT t.*,
           CONCAT(e.prefix, e.first_name_th, ' ', e.last_name_th) AS emp_name,
           od.dept_name AS old_dept_name,
-          nd.dept_name AS new_dept_name
+          nd.dept_name AS new_dept_name,
+          COALESCE(op.pos_name, t.old_position) AS old_pos_name,
+          COALESCE(np.pos_name, t.new_position) AS new_pos_name
         FROM tbl_transfers t
         LEFT JOIN tbl_employees e ON t.emp_id = e.emp_id
         LEFT JOIN tbl_departments od ON t.old_dept_id = od.dept_id
         LEFT JOIN tbl_departments nd ON t.new_dept_id = nd.dept_id
+        LEFT JOIN tbl_positions op ON t.old_position = op.pos_id
+        LEFT JOIN tbl_positions np ON t.new_position = np.pos_id
         WHERE t.transfer_id = ?
       `, [id]) as any[];
       return NextResponse.json(rows[0] || { error: 'Not found' });
@@ -29,11 +33,15 @@ export async function GET(req: NextRequest) {
       SELECT t.*,
         CONCAT(e.prefix, e.first_name_th, ' ', e.last_name_th) AS emp_name,
         od.dept_name AS old_dept_name,
-        nd.dept_name AS new_dept_name
+        nd.dept_name AS new_dept_name,
+        COALESCE(op.pos_name, t.old_position) AS old_pos_name,
+        COALESCE(np.pos_name, t.new_position) AS new_pos_name
       FROM tbl_transfers t
       LEFT JOIN tbl_employees e ON t.emp_id = e.emp_id
       LEFT JOIN tbl_departments od ON t.old_dept_id = od.dept_id
       LEFT JOIN tbl_departments nd ON t.new_dept_id = nd.dept_id
+      LEFT JOIN tbl_positions op ON t.old_position = op.pos_id
+      LEFT JOIN tbl_positions np ON t.new_position = np.pos_id
       ORDER BY t.order_date DESC
     `) as any[];
     return NextResponse.json(rows);
@@ -93,8 +101,8 @@ export async function POST(req: NextRequest) {
       const updateFields: string[] = [];
       const updateValues: unknown[] = [];
       if (data.newDeptId) { updateFields.push('dept_id = ?'); updateValues.push(data.newDeptId); }
-      if (data.newPos) { updateFields.push('position = ?'); updateValues.push(data.newPos); }
-      if (data.newSalary && Number(data.newSalary) > 0) { updateFields.push('salary = ?'); updateValues.push(data.newSalary); }
+      if (data.newPos) { updateFields.push('pos_id = ?'); updateValues.push(data.newPos); }
+      if (data.newSalary && Number(data.newSalary) > 0) { updateFields.push('base_salary = ?'); updateValues.push(data.newSalary); }
       
       if (updateFields.length > 0) {
         updateValues.push(data.empId);
@@ -158,8 +166,8 @@ export async function PUT(req: NextRequest) {
       const updateFields: string[] = [];
       const updateValues: unknown[] = [];
       if (data.newDeptId) { updateFields.push('dept_id = ?'); updateValues.push(data.newDeptId); }
-      if (data.newPos) { updateFields.push('position = ?'); updateValues.push(data.newPos); }
-      if (data.newSalary && Number(data.newSalary) > 0) { updateFields.push('salary = ?'); updateValues.push(data.newSalary); }
+      if (data.newPos) { updateFields.push('pos_id = ?'); updateValues.push(data.newPos); }
+      if (data.newSalary && Number(data.newSalary) > 0) { updateFields.push('base_salary = ?'); updateValues.push(data.newSalary); }
       
       if (updateFields.length > 0) {
         updateValues.push(data.empId);
