@@ -219,7 +219,7 @@ export default function TransferPage() {
 
   return (
     <AppLayout>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .tr-page { display: flex; flex-direction: column; gap: 28px; padding: 12px; }
 
         /* Header */
@@ -356,7 +356,7 @@ export default function TransferPage() {
         .cv-new { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
 
         @media(max-width:640px){ .tr-stats { grid-template-columns:1fr; } .tr-form-row, .tr-form-row.tri { grid-template-columns:1fr; } .detail-grid { grid-template-columns:1fr; } }
-      `}</style>
+      `}} />
 
       <div className="tr-page">
 
