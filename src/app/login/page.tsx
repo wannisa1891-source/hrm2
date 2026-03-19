@@ -51,9 +51,9 @@ export default function LoginPage() {
         
         // ถ้าใช้ context
         if (result.user) {
-           login(result.user.name);
+           login(result.user);
         } else {
-           login(email);
+           login({ username: email });
         }
         
         // redirect ไปหน้า dashboard
