@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import BackButton from '@/components/common/BackButton';
 import NotificationBell from './NotificationBell';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout({ children, hideScrollbar = false }: { children: React.ReactNode, hideScrollbar?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const { isLoggedIn } = useAuth();
   const router = useRouter();
@@ -24,8 +24,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="main-layout">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
-      <main className={`main-content${collapsed ? ' expanded' : ''}`}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <main className={`main-content${collapsed ? ' expanded' : ''}${hideScrollbar ? ' no-scrollbar' : ''}`}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
           <BackButton />
           <NotificationBell />
         </div>

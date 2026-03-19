@@ -7,7 +7,8 @@ import { useReactToPrint } from 'react-to-print';
 import OrderPdfTemplate from '@/components/Transfer/OrderPdfTemplate';
 
 interface Department { dept_id: string; dept_name: string; }
-interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; level: string; pos_no: string; }
+interface Position { pos_id: string; pos_name: string; }
+interface SearchResult { id: string; name: string; pos: string; pos_id?: string; dept: string; dept_id?: string; salary: number; level: string; pos_no: string; }
 interface TransferRecord {
   transfer_id: string;
   order_no: string;
@@ -22,7 +23,9 @@ interface TransferRecord {
   new_dept_id: string;
   new_dept_name: string;
   old_position: string;
+  old_pos_name?: string;
   new_position: string;
+  new_pos_name?: string;
   old_level: string;
   new_level: string;
   old_pos_no: string;
@@ -44,6 +47,7 @@ const TRANSFER_TYPES = [
 
 export default function TransferPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [transfers, setTransfers] = useState<TransferRecord[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [listSearch, setListSearch] = useState('');
@@ -75,7 +79,7 @@ export default function TransferPage() {
     orderNo: '', orderDate: '', effectDate: '', title: '',
     transferType: '03', empId: '',
     oldDeptId: '', oldDept: '', newDeptId: '',
-    oldPos: '', newPos: '',
+    oldPos: '', oldPosName: '', newPos: '',
     oldLevel: '', newLevel: '',
     oldPosNo: '', newPosNo: '',
     oldSalary: 0, newSalary: 0,
@@ -94,6 +98,7 @@ export default function TransferPage() {
 
   useEffect(() => {
     fetch('/api/departments').then(r => r.json()).then(setDepartments);
+    fetch('/api/positions').then(r => r.json()).then(setPositions);
     loadTransfers();
   }, []);
 
@@ -108,7 +113,9 @@ export default function TransferPage() {
     setForm(f => ({ 
       ...f, 
       empId: emp.id, 
-      oldPos: emp.pos, 
+      oldPos: emp.pos_id || '', 
+      oldPosName: emp.pos,
+      oldDeptId: emp.dept_id || '',
       oldDept: emp.dept, 
       oldSalary: emp.salary,
       oldLevel: emp.level || '',
@@ -131,6 +138,7 @@ export default function TransferPage() {
       oldDept: t.old_dept_name,
       newDeptId: t.new_dept_id,
       oldPos: t.old_position,
+      oldPosName: t.old_pos_name || t.old_position,
       newPos: t.new_position,
       oldLevel: t.old_level,
       newLevel: t.new_level,
@@ -208,7 +216,7 @@ export default function TransferPage() {
       alert(`✅ ${form.transfer_id ? 'แก้ไข' : 'บันทึก'}คำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว`);
       setShowForm(false);
       setSelected(null); setSearchQ('');
-      setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
+      setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', oldPosName: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
       loadTransfers();
     } else alert('เกิดข้อผิดพลาด: ' + (data.error || ''));
   };
@@ -252,9 +260,10 @@ export default function TransferPage() {
         .tr-card-title::before { content: ''; display: block; width: 6px; height: 24px; background: #3b82f6; border-radius: 4px; }
         .tr-search-bar { display: flex; gap: 8px; align-items: center; position: relative; }
         .tr-search-icon { position: absolute; left: 14px; color: #94a3b8; pointer-events: none; }
-        .tr-search-input { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px 12px 42px; font-size: 15px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: #f8fafc; width: 300px; color: #1e293b; }
+        .tr-search-input { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px 12px 42px; font-size: 15px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: #f8fafc; width: 300px; max-width: 100%; color: #1e293b; }
         .tr-search-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .tr-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .tr-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tr-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1000px; }
         .tr-table thead th { background: #f8fafc; padding: 16px 24px; font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; white-space: nowrap; border-bottom: 1px solid #e2e8f0; }
         .tr-table tbody tr { transition: all 0.2s; }
         .tr-table tbody tr:hover { background: #f8fafc; }
@@ -444,7 +453,8 @@ export default function TransferPage() {
                 />
               </div>
             </div>
-            <table className="tr-table">
+            <div className="tr-table-wrap custom-scroll">
+              <table className="tr-table">
               <thead>
                 <tr>
                   <th>เลขที่คำสั่ง</th>
@@ -476,7 +486,7 @@ export default function TransferPage() {
                       <td style={{ fontSize: 13, color: '#64748b' }}>{t.effective_date?.split('T')[0] || '—'}</td>
                       <td>
                         <div style={{ fontWeight: 600, color: '#1e293b' }}>{t.emp_name || '—'}</div>
-                        <div style={{ fontSize: 12, color: '#94a3b8' }}>{t.old_position} → {t.new_position}</div>
+                        <div style={{ fontSize: 12, color: '#94a3b8' }}>{t.old_pos_name || t.old_position || '—'} → {t.new_pos_name || t.new_position || '—'}</div>
                       </td>
                       <td style={{ fontSize: 13, color: '#475569' }}>{t.transfer_type || '—'}</td>
                       <td style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>{t.new_dept_name || '—'}</td>
@@ -529,6 +539,7 @@ export default function TransferPage() {
                 })()}
               </tbody>
             </table>
+          </div>
           </div>
         )}
 
@@ -626,9 +637,12 @@ export default function TransferPage() {
                   </tr>
                   <tr>
                     <td>ตำแหน่งสายงาน</td>
-                    <td className="old-val">{selected ? form.oldPos || '—' : '—'}</td>
+                    <td className="old-val">{selected ? form.oldPosName || form.oldPos || '—' : '—'}</td>
                     <td className="new-val">
-                      <input className="tr-input" style={{ padding: '6px 10px', fontSize: 13 }} placeholder="ตำแหน่งใหม่" value={form.newPos} onChange={e => setF('newPos', e.target.value)} />
+                      <select className="tr-select" style={{ padding: '6px 10px', fontSize: 13, width: '100%' }} value={form.newPos} onChange={e => setF('newPos', e.target.value)}>
+                        <option value="">— เลือกตำแหน่ง —</option>
+                        {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
+                      </select>
                     </td>
                   </tr>
                   <tr>

@@ -22,7 +22,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ 
         success: true, 
         token: mockToken,
-        user: { id: user.user_id, name: user.username, email: user.username, role: user.role }
+        user: { 
+          id: user.user_id, 
+          emp_id: user.emp_id, 
+          name: user.username, 
+          email: user.username, 
+          role: user.role 
+        }
       });
     }
 
