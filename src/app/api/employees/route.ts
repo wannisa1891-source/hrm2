@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
 import fs from 'fs';
 import path from 'path';
+import { logAudit } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic'; // Disable Next.js caching for this route
 import crypto from 'crypto';
@@ -130,6 +131,7 @@ export async function POST(req: NextRequest) {
       }
 
       await connection.commit();
+      await logAudit(req.headers.get('x-user-id'), `เพิ่มประวัติพนักงานใหม่: ${d.emp_id} (${d.first_name_th} ${d.last_name_th})`, connection);
       connection.release();
 
       return NextResponse.json({ message: '✅ บันทึกพนักงานใหม่สำเร็จ!' });

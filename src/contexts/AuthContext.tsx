@@ -29,6 +29,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(JSON.parse(stored));
       setIsLoggedIn(true);
     }
+    
+    // Global fetch interceptor for Audit Logs
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      let [resource, config] = args;
+      const currentUserStr = localStorage.getItem('hrm_user');
+      if (currentUserStr && typeof resource === 'string' && resource.startsWith('/api/')) {
+        try {
+          const u = JSON.parse(currentUserStr);
+          if (u?.username) {
+            config = config || {};
+            const headers = new Headers(config.headers || {});
+            headers.append('x-user-id', u.username);
+            config.headers = headers;
+          }
+        } catch(e) {}
+      }
+      return originalFetch(resource, config);
+    };
+
   }, []);
 
   const login = (username: string) => {

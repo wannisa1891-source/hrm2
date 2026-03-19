@@ -8,7 +8,7 @@ import OrderPdfTemplate from '@/components/Transfer/OrderPdfTemplate';
 
 interface Department { dept_id: string; dept_name: string; }
 interface Position { pos_id: string; pos_name: string; }
-interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; level: string; pos_no: string; }
+interface SearchResult { id: string; name: string; pos: string; pos_id?: string; dept: string; dept_id?: string; salary: number; level: string; pos_no: string; }
 interface TransferRecord {
   transfer_id: string;
   order_no: string;
@@ -79,7 +79,7 @@ export default function TransferPage() {
     orderNo: '', orderDate: '', effectDate: '', title: '',
     transferType: '03', empId: '',
     oldDeptId: '', oldDept: '', newDeptId: '',
-    oldPos: '', newPos: '',
+    oldPos: '', oldPosName: '', newPos: '',
     oldLevel: '', newLevel: '',
     oldPosNo: '', newPosNo: '',
     oldSalary: 0, newSalary: 0,
@@ -113,7 +113,9 @@ export default function TransferPage() {
     setForm(f => ({ 
       ...f, 
       empId: emp.id, 
-      oldPos: emp.pos, 
+      oldPos: emp.pos_id || '', 
+      oldPosName: emp.pos,
+      oldDeptId: emp.dept_id || '',
       oldDept: emp.dept, 
       oldSalary: emp.salary,
       oldLevel: emp.level || '',
@@ -136,6 +138,7 @@ export default function TransferPage() {
       oldDept: t.old_dept_name,
       newDeptId: t.new_dept_id,
       oldPos: t.old_position,
+      oldPosName: t.old_pos_name || t.old_position,
       newPos: t.new_position,
       oldLevel: t.old_level,
       newLevel: t.new_level,
@@ -213,7 +216,7 @@ export default function TransferPage() {
       alert(`✅ ${form.transfer_id ? 'แก้ไข' : 'บันทึก'}คำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว`);
       setShowForm(false);
       setSelected(null); setSearchQ('');
-      setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
+      setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', oldPosName: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
       loadTransfers();
     } else alert('เกิดข้อผิดพลาด: ' + (data.error || ''));
   };
@@ -634,7 +637,7 @@ export default function TransferPage() {
                   </tr>
                   <tr>
                     <td>ตำแหน่งสายงาน</td>
-                    <td className="old-val">{selected ? form.oldPos || '—' : '—'}</td>
+                    <td className="old-val">{selected ? form.oldPosName || form.oldPos || '—' : '—'}</td>
                     <td className="new-val">
                       <select className="tr-select" style={{ padding: '6px 10px', fontSize: 13, width: '100%' }} value={form.newPos} onChange={e => setF('newPos', e.target.value)}>
                         <option value="">— เลือกตำแหน่ง —</option>

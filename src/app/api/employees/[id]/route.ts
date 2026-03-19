@@ -3,6 +3,7 @@ import pool from '@/lib/hrm_db';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { logAudit } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       }
 
       await connection.commit();
+      await logAudit(req.headers.get('x-user-id'), `แก้ไขข้อมูลพนักงาน: ${empId}`, connection);
       connection.release();
       return NextResponse.json({ message: '✅ อัปเดตข้อมูลพนักงานสำเร็จ!' });
     } catch (e: any) {
@@ -119,6 +121,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       await connection.query('DELETE FROM tbl_employee_licenses WHERE emp_id = ?', [empId]);
       await connection.query('DELETE FROM tbl_employees WHERE emp_id = ?', [empId]);
       await connection.commit();
+      await logAudit(req.headers.get('x-user-id'), `ลบข้อมูลพนักงาน: ${empId}`, connection);
       connection.release();
       return NextResponse.json({ message: '✅ ลบข้อมูลพนักงานสำเร็จ!' });
     } catch(e: any) {
