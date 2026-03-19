@@ -3,7 +3,7 @@ import pool from '@/lib/hrm_db';
 
 export async function POST(req: NextRequest) {
   try {
-    const { license_id, emp_id, expire_date, license_no } = await req.json();
+    const { license_id, emp_id, expire_date, license_no, license_name, license_type, institution, issue_date } = await req.json();
 
     if (!expire_date) {
       return NextResponse.json({ error: 'Expiration date is required' }, { status: 400 });
@@ -12,20 +12,29 @@ export async function POST(req: NextRequest) {
     if (license_id) {
       // Update existing license
       const query = `
-        UPDATE tbl_licenses 
-        SET expire_date = ?, license_no = COALESCE(?, license_no)
-        WHERE license_id = ?
+        UPDATE tbl_employee_licenses 
+        SET expire_date = ?, license_no = COALESCE(?, license_no), status = 'Active'
+        WHERE id = ?
       `;
       await pool.query(query, [expire_date, license_no || null, license_id]);
       return NextResponse.json({ message: 'License renewed successfully' });
     } else if (emp_id) {
       // Create new license entry if they only existed in tbl_employees
       const query = `
-        INSERT INTO tbl_licenses (emp_id, license_no, expire_date)
-        VALUES (?, ?, ?)
+        INSERT INTO tbl_employee_licenses (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'Active')
       `;
-      await pool.query(query, [emp_id, license_no || null, expire_date]);
-      return NextResponse.json({ message: 'License created and renewed successfully' });
+      const values = [
+        emp_id, 
+        license_name || null, 
+        license_type || null, 
+        license_no || null, 
+        institution || null, 
+        issue_date || null, 
+        expire_date
+      ];
+      await pool.query(query, values);
+      return NextResponse.json({ message: 'License created successfully' });
     } else {
       return NextResponse.json({ error: 'Either license_id or emp_id is required' }, { status: 400 });
     }

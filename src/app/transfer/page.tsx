@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 
 interface Department { dept_id: string; dept_name: string; }
-interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; }
+interface SearchResult { id: string; name: string; pos: string; dept: string; salary: number; level: string; pos_no: string; }
 interface TransferRecord {
   transfer_id: string;
   order_no: string;
@@ -12,11 +12,22 @@ interface TransferRecord {
   effective_date: string;
   subject: string;
   transfer_type: string;
+  emp_id: string;
   emp_name: string;
+  old_dept_id: string;
   old_dept_name: string;
+  new_dept_id: string;
   new_dept_name: string;
   old_position: string;
   new_position: string;
+  old_level: string;
+  new_level: string;
+  old_pos_no: string;
+  new_pos_no: string;
+  old_salary: number;
+  new_salary: number;
+  remark: string;
+  order_file: string | null;
 }
 
 const TRANSFER_TYPES = [
@@ -38,10 +49,13 @@ export default function TransferPage() {
   const [orderFile, setOrderFile] = useState<File | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [detailTransfer, setDetailTransfer] = useState<TransferRecord | null>(null);
+  const [viewingTransfer, setViewingTransfer] = useState<TransferRecord | null>(null);
   const [form, setForm] = useState({
+    transfer_id: '',
     orderNo: '', orderDate: '', effectDate: '', title: '',
     transferType: '03', empId: '',
-    oldDept: '', newDeptId: '',
+    oldDeptId: '', oldDept: '', newDeptId: '',
     oldPos: '', newPos: '',
     oldLevel: '', newLevel: '',
     oldPosNo: '', newPosNo: '',
@@ -72,9 +86,52 @@ export default function TransferPage() {
 
   const selectEmployee = (emp: SearchResult) => {
     setSelected(emp);
-    setForm(f => ({ ...f, empId: emp.id, oldPos: emp.pos, oldDept: emp.dept, oldSalary: emp.salary }));
+    setForm(f => ({ 
+      ...f, 
+      empId: emp.id, 
+      oldPos: emp.pos, 
+      oldDept: emp.dept, 
+      oldSalary: emp.salary,
+      oldLevel: emp.level || '',
+      oldPosNo: emp.pos_no || ''
+    }));
     setSearchResults([]);
     setSearchQ(emp.name);
+  };
+
+  const handleEdit = (t: TransferRecord) => {
+    setForm({
+      transfer_id: t.transfer_id,
+      orderNo: t.order_no,
+      orderDate: t.order_date?.split('T')[0] || '',
+      effectDate: t.effective_date?.split('T')[0] || '',
+      title: t.subject,
+      transferType: t.transfer_type === 'บรรจุ/แต่งตั้ง' ? '01' : t.transfer_type === 'เลื่อนตำแหน่ง' ? '02' : '03',
+      empId: t.emp_id,
+      oldDeptId: t.old_dept_id,
+      oldDept: t.old_dept_name,
+      newDeptId: t.new_dept_id,
+      oldPos: t.old_position,
+      newPos: t.new_position,
+      oldLevel: t.old_level,
+      newLevel: t.new_level,
+      oldPosNo: t.old_pos_no,
+      newPosNo: t.new_pos_no,
+      oldSalary: t.old_salary || 0,
+      newSalary: t.new_salary || 0,
+      remark: t.remark || '',
+    });
+    setSelected({ id: t.emp_id, name: t.emp_name, pos: t.old_position, dept: t.old_dept_name, salary: t.old_salary, level: t.old_level, pos_no: t.old_pos_no });
+    setSearchQ(t.emp_name);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('ยืนยันการลบคำสั่งย้ายนี้?')) return;
+    const res = await fetch(`/api/transfers?id=${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) { loadTransfers(); }
+    else alert('เกิดข้อผิดพลาด: ' + data.error);
   };
 
   const handleSave = async () => {
@@ -83,16 +140,18 @@ export default function TransferPage() {
     const fd = new FormData();
     fd.append('data', JSON.stringify(form));
     if (orderFile) fd.append('order_file', orderFile);
-    const res = await fetch('/api/transfers', { method: 'POST', body: fd });
+    
+    const method = form.transfer_id ? 'PUT' : 'POST';
+    const res = await fetch('/api/transfers', { method, body: fd });
     const data = await res.json();
     setSaving(false);
     if (data.success) {
-      alert('✅ บันทึกคำสั่งย้ายสำเร็จ!');
+      alert(`✅ ${form.transfer_id ? 'แก้ไข' : 'บันทึก'}คำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว`);
       setShowForm(false);
       setSelected(null); setSearchQ('');
-      setForm({ orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
-      loadTransfers(); // ✅ โหลดรายการใหม่หลังบันทึก
-    } else alert('เกิดข้อผิดพลาด');
+      setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
+      loadTransfers();
+    } else alert('เกิดข้อผิดพลาด: ' + (data.error || ''));
   };
 
   const setF = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
@@ -105,97 +164,103 @@ export default function TransferPage() {
         .tr-page { display: flex; flex-direction: column; gap: 24px; }
 
         /* Header */
-        .tr-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-        .tr-header-title { font-size: 26px; font-weight: 700; color: #1e293b; margin: 0; }
-        .tr-header-sub { font-size: 14px; color: #64748b; margin: 4px 0 0; }
-        .btn-tr-new { display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg,#0ea5e9,#0284c7); color:#fff; border:none; border-radius:12px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 14px rgba(14,165,233,0.4); transition:transform .15s,box-shadow .15s; }
-        .btn-tr-new:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(14,165,233,0.5); }
+        .tr-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+        .tr-header-title { font-size: 32px; font-weight: 700; color: #1e2433; margin: 0; }
+        .tr-header-sub { font-size: 15px; color: #64748b; margin: 8px 0 0; }
+        .btn-tr-new { display: flex; align-items: center; gap: 8px; background: #3b82f6; color:#fff; border:none; border-radius:12px; padding:12px 24px; font-size:15px; font-weight:600; cursor:pointer; transition:all .2s; }
+        .btn-tr-new:hover { background: #2563eb; transform:translateY(-2px); }
 
         /* Stat cards */
-        .tr-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-        .tr-stat { border-radius: 18px; padding: 22px 20px; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
-        .tr-stat-blue   { background: linear-gradient(135deg,#38bdf8,#0ea5e9); color:#fff; }
-        .tr-stat-purple { background: linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; }
-        .tr-stat-teal   { background: linear-gradient(135deg,#2dd4bf,#0d9488); color:#fff; }
-        .tr-stat-icon { width:50px; height:50px; border-radius:13px; background:rgba(255,255,255,0.25); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
-        .tr-stat-count { font-size:30px; font-weight:800; line-height:1; }
-        .tr-stat-label { font-size:13px; opacity:.9; margin-top:4px; font-weight:500; }
-        .tr-stat-tag { position:absolute; bottom:10px; right:14px; font-size:11px; background:rgba(255,255,255,0.2); padding:2px 10px; border-radius:20px; opacity:.8; }
+        .tr-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .tr-stat { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 20px; padding: 24px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s; }
+        .tr-stat:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        .tr-stat-icon { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; }
+        .tr-stat-blue .tr-stat-icon { background: #eff6ff; color: #3b82f6; }
+        .tr-stat-purple .tr-stat-icon { background: #faf5ff; color: #a855f7; }
+        .tr-stat-teal .tr-stat-icon { background: #f0fdfa; color: #0d9488; }
+        .tr-stat-count { color: #1e2433; font-size: 32px; font-weight: 800; line-height: 1; }
+        .tr-stat-label { color: #64748b; font-size: 14px; margin-bottom: 4px; font-weight: 600; }
+        .tr-stat-tag { font-size: 14px; color: #94a3b8; font-weight: 500; margin-left: 6px; }
 
         /* Table card */
-        .tr-card { background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.06); }
-        .tr-card-header { padding:18px 24px 14px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-        .tr-card-title { font-size:15px; font-weight:700; color:#1e293b; }
-        .tr-search-bar { display:flex; gap:8px; align-items:center; }
-        .tr-search-input { border:1.5px solid #e2e8f0; border-radius:10px; padding:7px 14px; font-size:13px; outline:none; transition:border-color .15s; background:#f8fafc; width:220px; }
-        .tr-search-input:focus { border-color:#0ea5e9; background:#fff; }
-        .tr-table { width:100%; border-collapse:collapse; }
-        .tr-table thead tr { background:#f8fafc; }
-        .tr-table th { padding:11px 16px; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; text-align:left; white-space:nowrap; }
-        .tr-table tbody tr { border-top:1px solid #f1f5f9; transition:background .1s; }
-        .tr-table tbody tr:hover { background:#f0f9ff; }
-        .tr-table td { padding:13px 16px; font-size:14px; color:#334155; vertical-align:middle; }
-        .tr-emp-name { font-weight:600; color:#1e293b; }
-        .tr-emp-sub  { font-size:12px; color:#94a3b8; margin-top:2px; }
-        .tr-empty td { text-align:center; padding:48px !important; color:#94a3b8; font-size:14px; }
+        .tr-card { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .tr-card-header { padding: 24px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: #ffffff; }
+        .tr-card-title { font-size: 18px; font-weight: 700; color: #1e2433; }
+        .tr-search-bar { display: flex; gap: 8px; align-items: center; }
+        .tr-search-input { border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 16px; font-size: 14px; outline: none; transition: border-color .2s; background: #fff; width: 260px; }
+        .tr-search-input:focus { border-color: #3b82f6; }
+        .tr-table { width: 100%; border-collapse: collapse; }
+        .tr-table thead tr { background: #f8fafc; }
+        .tr-table th { padding: 12px 16px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; text-align: left; white-space: nowrap; }
+        .tr-table tbody tr { border-top: 1px solid #f1f5f9; transition: background .1s; }
+        .tr-table tbody tr:hover { background: #f8fafc; }
+        .tr-table td { padding: 14px 16px; font-size: 14px; color: #334155; vertical-align: middle; }
+        .tr-empty td { text-align: center; padding: 48px !important; color: #94a3b8; font-size: 14px; }
 
-        /* Status badge */
-        .tr-badge { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; }
-        .tr-badge-done { background:rgba(20,184,166,0.12); color:#0f766e; border:1px solid rgba(20,184,166,0.3); }
-        .tr-badge-pending { background:rgba(245,158,11,0.12); color:#b45309; border:1px solid rgba(245,158,11,0.3); }
+        /* Form Layout Panel */
+        .tr-form-panel { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
 
-        /* ===== FORM PANEL ===== */
-        .tr-form-panel { background:#fff; border-radius:18px; box-shadow:0 4px 24px rgba(0,0,0,0.07); overflow:hidden; }
+        /* Clean Section Headers */
+        .tr-section-header { padding: 20px 24px 10px; font-size: 18px; font-weight: 700; color: #1e2433; border-radius: 0; background: #fff; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; }
+        .tr-section-body { padding: 24px; }
 
-        /* Section header */
-        .tr-section-header { padding:14px 22px; font-size:14px; font-weight:700; color:#fff; border-radius: 0; }
-        .tr-section-1 { background: linear-gradient(90deg,#0ea5e9,#38bdf8); }
-        .tr-section-2 { background: linear-gradient(90deg,#7c3aed,#a78bfa); }
-        .tr-section-3 { background: linear-gradient(90deg,#0d9488,#2dd4bf); }
-        .tr-section-body { padding:20px 24px; }
-
-        /* Inline form grid */
-        .tr-form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
-        .tr-form-row.tri { grid-template-columns:1fr 1fr 1fr; }
-        .tr-form-row.single { grid-template-columns:1fr; }
-        .tr-fg { display:flex; flex-direction:column; gap:5px; }
+        /* Form Inputs */
+        .tr-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .tr-form-row.tri { grid-template-columns: 1fr 1fr 1fr; }
+        .tr-form-row.single { grid-template-columns: 1fr; }
+        .tr-fg { display: flex; flex-direction: column; gap: 6px; }
         .tr-fg.span2 { grid-column: span 2; }
-        .tr-label { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.05em; }
-        .tr-input, .tr-select { border:1.5px solid #e2e8f0; border-radius:10px; padding:9px 13px; font-size:14px; color:#1e293b; outline:none; transition:border-color .15s; background:#f8fafc; width:100%; box-sizing:border-box; }
-        .tr-input:focus, .tr-select:focus { border-color:#0ea5e9; background:#fff; }
-
-        /* Comparison table */
-        .tr-compare { width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden; }
-        .tr-compare thead tr { background:#f1f5f9; }
-        .tr-compare th { padding:10px 16px; font-size:12px; font-weight:700; color:#64748b; text-align:left; }
-        .tr-compare tbody tr { border-top:1px solid #f1f5f9; }
-        .tr-compare tbody tr:hover { background:#fafbff; }
-        .tr-compare td { padding:11px 16px; font-size:14px; color:#334155; }
-        .tr-compare td:first-child { font-weight:600; color:#475569; width:160px; }
-        .tr-compare td.old-val { color:#94a3b8; }
-        .tr-compare td.new-val { color:#0284c7; font-weight:600; }
+        .tr-label { font-size: 14px; font-weight: 600; color: #334155; }
+        .tr-input, .tr-select { border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; font-size: 15px; color: #1e293b; outline: none; transition: border-color .2s; background: #fff; width: 100%; box-sizing: border-box; }
+        .tr-input:focus, .tr-select:focus { border-color: #3b82f6; }
 
         /* Employee search dropdown */
-        .tr-emp-search-wrap { position:relative; }
-        .tr-emp-dropdown { position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.1); z-index:50; margin-top:4px; overflow:hidden; }
-        .tr-emp-opt { padding:12px 16px; cursor:pointer; border-bottom:1px solid #f1f5f9; transition:background .1s; }
-        .tr-emp-opt:hover { background:#f0f9ff; }
-        .tr-emp-opt-name { font-weight:600; color:#1e293b; font-size:14px; }
-        .tr-emp-opt-sub  { font-size:12px; color:#94a3b8; }
+        .tr-emp-search-wrap { position: relative; }
+        .tr-emp-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 50; margin-top: 6px; overflow: hidden; }
+        .tr-emp-opt { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background .1s; }
+        .tr-emp-opt:hover { background: #f8fafc; }
+        .tr-emp-opt-name { font-weight: 600; color: #1e2433; font-size: 15px; }
+        .tr-emp-opt-sub  { font-size: 13px; color: #64748b; margin-top: 2px; }
+
+        /* Comparison table */
+        .tr-compare { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .tr-compare thead tr { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        .tr-compare th { padding: 12px 16px; font-size: 13px; font-weight: 700; color: #475569; text-align: left; }
+        .tr-compare tbody tr { border-bottom: 1px solid #f1f5f9; }
+        .tr-compare tbody tr:hover { background: #f8fafc; }
+        .tr-compare td { padding: 12px 16px; font-size: 14px; color: #334155; vertical-align: middle; }
+        .tr-compare td:first-child { font-weight: 600; color: #1e293b; width: 180px; background: #fafbfc; }
+        .tr-compare td.old-val { color: #64748b; }
 
         /* Footer buttons */
-        .tr-form-footer { padding:16px 24px; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:10px; }
-        .btn-tr-cancel { padding:10px 22px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; background:#f1f5f9; color:#64748b; border:none; transition:background .15s; }
-        .btn-tr-cancel:hover { background:#e2e8f0; }
-        .btn-tr-save { padding:10px 28px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; background:linear-gradient(135deg,#0ea5e9,#0284c7); color:#fff; border:none; box-shadow:0 4px 14px rgba(14,165,233,0.4); transition:all .15s; }
-        .btn-tr-save:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 6px 18px rgba(14,165,233,0.5); }
-        .btn-tr-save:disabled { opacity:.6; cursor:not-allowed; }
+        .tr-form-footer { padding: 20px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 12px; background: #f8fafc; }
+        .btn-tr-cancel { padding: 12px 24px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; background: #e2e8f0; color: #475569; border: none; transition: background .2s; }
+        .btn-tr-cancel:hover { background: #cbd5e1; }
+        .btn-tr-save { padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; background: #3b82f6; color: #fff; border: none; transition: all .2s; }
+        .btn-tr-save:hover:not(:disabled) { background: #2563eb; }
+        .btn-tr-save:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* File upload */
-        .tr-file-label { display:flex; align-items:center; gap:10px; padding:10px 16px; border:1.5px dashed #cbd5e1; border-radius:10px; cursor:pointer; background:#f8fafc; transition:border-color .15s; font-size:13px; color:#64748b; }
-        .tr-file-label:hover { border-color:#0ea5e9; color:#0284c7; }
+        .tr-file-label { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border: 2px dashed #cbd5e1; border-radius: 12px; cursor: pointer; background: #f8fafc; transition: all .2s; font-size: 14px; color: #64748b; font-weight: 500; }
+        .tr-file-label:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
 
-        @media(max-width:640px){ .tr-stats { grid-template-columns:1fr; } .tr-form-row { grid-template-columns:1fr; } .tr-form-row.tri { grid-template-columns:1fr; } }
+        /* Modal */
+        .tr-modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:100; backdrop-filter:blur(4px); }
+        .tr-modal { background:#fff; border-radius:24px; width:90%; max-width:700px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1); }
+        .tr-modal-header { padding:20px 24px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; }
+        .tr-modal-title { font-size:20px; font-weight:700; color:#1e293b; }
+        .tr-modal-body { padding:24px; }
+        .tr-modal-footer { padding:16px 24px; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; }
+        
+        .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+        .detail-item { display:flex; flex-direction:column; gap:4px; }
+        .detail-label { font-size:12px; font-weight:700; color:#94a3b8; text-transform:uppercase; }
+        .detail-value { font-size:15px; color:#1e293b; font-weight:500; }
+        .detail-compare { background:#f8fafc; border-radius:16px; padding:20px; margin-top:10px; }
+        .compare-row { display:grid; grid-template-columns:1fr 1.2fr 1.2fr; gap:12px; padding:8px 0; border-bottom:1px solid #e2e8f0; }
+        .compare-row:last-child { border:none; }
+
+        @media(max-width:640px){ .tr-stats { grid-template-columns:1fr; } .tr-form-row, .tr-form-row.tri { grid-template-columns:1fr; } .detail-grid { grid-template-columns:1fr; } }
       `}</style>
 
       <div className="tr-page">
@@ -217,7 +282,9 @@ export default function TransferPage() {
         {!showForm && (
           <div className="tr-stats">
             <div className="tr-stat tr-stat-blue">
-              <div className="tr-stat-icon">📋</div>
+              <div className="tr-stat-icon">
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+              </div>
               <div>
                 <div className="tr-stat-count">{transfers.length}</div>
                 <div className="tr-stat-label">คำสั่งทั้งหมด</div>
@@ -225,7 +292,9 @@ export default function TransferPage() {
               <div className="tr-stat-tag">รายการ</div>
             </div>
             <div className="tr-stat tr-stat-purple">
-              <div className="tr-stat-icon">🔄</div>
+              <div className="tr-stat-icon">
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+              </div>
               <div>
                 <div className="tr-stat-count">{transfers.filter(t => t.order_date?.startsWith(new Date().getFullYear().toString())).length}</div>
                 <div className="tr-stat-label">โยกย้ายปีนี้</div>
@@ -233,7 +302,9 @@ export default function TransferPage() {
               <div className="tr-stat-tag">ปีนี้</div>
             </div>
             <div className="tr-stat tr-stat-teal">
-              <div className="tr-stat-icon">⬆️</div>
+              <div className="tr-stat-icon">
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+              </div>
               <div>
                 <div className="tr-stat-count">{transfers.filter(t => t.transfer_type?.includes('เลื่อน') && t.order_date?.startsWith(new Date().getFullYear().toString())).length}</div>
                 <div className="tr-stat-label">เลื่อนตำแหน่งปีนี้</div>
@@ -271,7 +342,7 @@ export default function TransferPage() {
               </thead>
               <tbody>
                 {loadingList ? (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>⏳ กำลังโหลด...</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>กำลังโหลด...</td></tr>
                 ) : (() => {
                   const q = listSearch.toLowerCase();
                   const filtered = q
@@ -296,8 +367,14 @@ export default function TransferPage() {
                       <td><span style={{ padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: 'rgba(20,184,166,0.12)', color: '#0f766e', border: '1px solid rgba(20,184,166,0.3)' }}>บันทึกแล้ว</span></td>
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                          <button className="btn-tr-cancel" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => alert('แสดงรายละเอียดคำสั่ง ' + t.order_no)}>👁️ รายละเอียด</button>
-                          <button className="btn-tr-save" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => alert('ดาวน์โหลด PDF คำสั่ง ' + t.order_no)}>📥 PDF</button>
+                          <button className="btn-tr-cancel" style={{ padding: '6px 12px', fontSize: 12, background: '#f0f9ff', color: '#0369a1' }} onClick={() => setViewingTransfer(t)}>👁️ ดู</button>
+                          <button className="btn-tr-cancel" style={{ padding: '6px 12px', fontSize: 12, background: '#fef2f2', color: '#991b1b' }} onClick={() => handleEdit(t)}>✏️ แก้ไข</button>
+                          {t.order_file && (
+                            <a href={`/uploads/${t.order_file}`} target="_blank" rel="noreferrer" className="btn-tr-save" style={{ padding: '6px 15px', fontSize: 12, textDecoration: 'none', background: '#ecfdf5', color: '#059669', boxShadow: 'none', border: '1px solid #10b981' }}>
+                              📄 ไฟล์
+                            </a>
+                          )}
+                          <button className="btn-tr-cancel" style={{ padding: '6px 10px', fontSize: 12 }} onClick={() => handleDelete(t.transfer_id)}>🗑️</button>
                         </div>
                       </td>
                     </tr>
@@ -313,8 +390,8 @@ export default function TransferPage() {
           <div className="tr-form-panel">
 
             {/* ─── SECTION 1: ข้อมูลคำสั่ง ─── */}
-            <div className="tr-section-header tr-section-1" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 18 }}>📝</span> 1. ข้อมูลคำสั่ง
+            <div className="tr-section-header tr-section-1">
+              1. ข้อมูลคำสั่ง
             </div>
             <div className="tr-section-body">
               <div className="tr-form-row tri">
@@ -348,8 +425,8 @@ export default function TransferPage() {
             </div>
 
             {/* ─── SECTION 2: รายละเอียดการเปลี่ยนแปลง ─── */}
-            <div className="tr-section-header tr-section-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 18 }}>🔄</span> 2. รายละเอียดการเปลี่ยนแปลง
+            <div className="tr-section-header tr-section-2">
+              2. รายละเอียดการเปลี่ยนแปลง
             </div>
             <div className="tr-section-body">
 
@@ -360,7 +437,7 @@ export default function TransferPage() {
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input
                       className="tr-input" style={{ flex: 1 }}
-                      placeholder="🔍 ค้นหาด้วยชื่อหรือรหัสพนักงาน..."
+                      placeholder="ค้นหาด้วยชื่อหรือรหัสพนักงาน..."
                       value={searchQ}
                       onChange={e => setSearchQ(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && search()}
@@ -433,8 +510,8 @@ export default function TransferPage() {
             </div>
 
             {/* ─── SECTION 3: เอกสารแนบ ─── */}
-            <div className="tr-section-header tr-section-3" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 18 }}>📎</span> 3. เอกสารแนบ
+            <div className="tr-section-header tr-section-3">
+              3. เอกสารแนบ
             </div>
             <div className="tr-section-body">
               <div className="tr-form-row single">
@@ -446,7 +523,9 @@ export default function TransferPage() {
               <div className="tr-fg">
                 <label className="tr-label">ไฟล์แนบ PDF</label>
                 <label className="tr-file-label">
-                  <span style={{ fontSize: 20 }}>📎</span>
+                  <span style={{ display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                  </span>
                   <span>{orderFile ? orderFile.name : 'อัปโหลดไฟล์คำสั่งฉบับจริง (Scan) .pdf'}</span>
                   <input type="file" accept=".pdf,.jpg,.png" style={{ display: 'none' }} onChange={e => setOrderFile(e.target.files?.[0] || null)} />
                 </label>
@@ -457,8 +536,97 @@ export default function TransferPage() {
             <div className="tr-form-footer">
               <button className="btn-tr-cancel" onClick={() => { setShowForm(false); setSelected(null); setSearchQ(''); }}>ยกเลิก</button>
               <button className="btn-tr-save" onClick={handleSave} disabled={saving}>
-                {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึก'}
+                {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Modal: รายละเอียดคำสั่ง ── */}
+        {viewingTransfer && (
+          <div className="tr-modal-overlay" onClick={() => setViewingTransfer(null)}>
+            <div className="tr-modal" onClick={e => e.stopPropagation()}>
+              <div className="tr-modal-header">
+                <span className="tr-modal-title">รายละเอียดคำสั่งย้าย</span>
+                <button onClick={() => setViewingTransfer(null)} style={{ background:'none', border:'none', fontSize:24, cursor:'pointer', color:'#94a3b8' }}>&times;</button>
+              </div>
+              <div className="tr-modal-body">
+                <div className="detail-grid" style={{ marginBottom: 24 }}>
+                  <div className="detail-item">
+                    <span className="detail-label">เลขที่คำสั่ง</span>
+                    <span className="detail-value">{viewingTransfer.order_no}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">วันที่มีผล</span>
+                    <span className="detail-value">{viewingTransfer.effective_date?.split('T')[0] || '—'}</span>
+                  </div>
+                  <div className="detail-item" style={{ gridColumn: 'span 2' }}>
+                    <span className="detail-label">เรื่อง</span>
+                    <span className="detail-value">{viewingTransfer.subject}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">ชื่อผู้ถูกคำสั่ง</span>
+                    <span className="detail-value" style={{ color: '#3b82f6', fontWeight: 700 }}>{viewingTransfer.emp_name}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">ประเภทคำสั่ง</span>
+                    <span className="detail-value">{viewingTransfer.transfer_type}</span>
+                  </div>
+                </div>
+
+                <div className="detail-compare">
+                  <div className="compare-row" style={{ borderBottom: '2px solid #cbd5e1', paddingBottom: 12 }}>
+                    <span style={{ fontWeight: 800, fontSize: 13 }}>รายการ</span>
+                    <span style={{ fontWeight: 800, fontSize: 13, color: '#64748b' }}>เดิม</span>
+                    <span style={{ fontWeight: 800, fontSize: 13, color: '#3b82f6' }}>ใหม่</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">สังกัด</span>
+                    <span className="detail-value">{viewingTransfer.old_dept_name || '—'}</span>
+                    <span className="detail-value">{viewingTransfer.new_dept_name || '—'}</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">ตำแหน่ง</span>
+                    <span className="detail-value">{viewingTransfer.old_position || '—'}</span>
+                    <span className="detail-value">{viewingTransfer.new_position || '—'}</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">ระดับ</span>
+                    <span className="detail-value">{viewingTransfer.old_level || '—'}</span>
+                    <span className="detail-value">{viewingTransfer.new_level || '—'}</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">เลขที่ตำแหน่ง</span>
+                    <span className="detail-value">{viewingTransfer.old_pos_no || '—'}</span>
+                    <span className="detail-value">{viewingTransfer.new_pos_no || '—'}</span>
+                  </div>
+                  <div className="compare-row">
+                    <span className="detail-label">เงินเดือน</span>
+                    <span className="detail-value">{viewingTransfer.old_salary?.toLocaleString() || '0'}</span>
+                    <span className="detail-value">{viewingTransfer.new_salary?.toLocaleString() || '0'}</span>
+                  </div>
+                </div>
+
+                {viewingTransfer.remark && (
+                  <div style={{ marginTop: 20 }}>
+                    <span className="detail-label">หมายเหตุ</span>
+                    <p style={{ margin: '4px 0', fontSize: 14 }}>{viewingTransfer.remark}</p>
+                  </div>
+                )}
+
+                {viewingTransfer.order_file && (
+                  <div style={{ marginTop: 16 }}>
+                    <a href={`/uploads/${viewingTransfer.order_file}`} target="_blank" rel="noreferrer" 
+                      style={{ color: '#3b82f6', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      เปิดไฟล์เอกสารแนบ (PDF)
+                    </a>
+                  </div>
+                )}
+              </div>
+              <div className="tr-modal-footer">
+                <button className="btn-tr-cancel" style={{ padding: '8px 24px' }} onClick={() => setViewingTransfer(null)}>ปิด</button>
+              </div>
             </div>
           </div>
         )}

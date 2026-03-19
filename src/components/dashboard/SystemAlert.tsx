@@ -1,6 +1,8 @@
 import Link from "next/link";
 
-export default function SystemAlert() {
+export default function SystemAlert({ expiringCount = 0, expiredCount = 0 }: { expiringCount?: number, expiredCount?: number }) {
+    if (expiringCount === 0 && expiredCount === 0) return null;
+
     return (
         <div
             className="animate-pulse-btn hover-glow shadow-md"
@@ -53,7 +55,8 @@ export default function SystemAlert() {
             <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, zIndex: 1, letterSpacing: "-0.5px" }}>ใบประกอบวิชาชีพ</h3>
 
             <p style={{ opacity: 0.85, fontSize: 13, zIndex: 1, marginTop: 4, marginBottom: 16, lineHeight: 1.4, color: "#cbd5e1" }}>
-                ผู้ปฏิบัติงานที่ใบประกอบวิชาชีพกำลังจะหมดอายุใน <strong style={{ color: "#d2a679" }}>30 วัน</strong>
+                พบใบประกอบหมดอายุ <strong style={{ color: "#ef4444" }}>{expiredCount}</strong> รายการ
+                <br />และใกล้หมดอายุใน 90 วัน <strong style={{ color: "#d2a679" }}>{expiringCount}</strong> รายการ
             </p>
 
             <Link href="/license" style={{ zIndex: 1, textDecoration: 'none', display: 'block', marginTop: 'auto' }}>

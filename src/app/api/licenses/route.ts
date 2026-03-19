@@ -1,33 +1,53 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
   try {
-    const query = `
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || ''; // 'expiring', 'expired', 'normal'
+
+    let query = `
       SELECT 
         e.emp_id, 
         e.prefix, 
         e.first_name_th, 
         e.last_name_th, 
-        e.license_name, 
-        e.license_type, 
-        e.license_issue_date,
-        l.license_id,
+        e.image,
+        e.gender,
+        e.cneu_cme_points,
+        l.id as license_id,
+        l.license_name,
+        l.license_type,
         l.license_no,
-        l.expire_date
+        l.institution,
+        l.issue_date,
+        l.expire_date,
+        l.status as license_status
       FROM tbl_employees e
-      LEFT JOIN tbl_licenses l ON e.emp_id = l.emp_id
-      WHERE e.license_name IS NOT NULL AND e.license_name != ''
-      ORDER BY l.expire_date ASC
+      JOIN tbl_employee_licenses l ON e.emp_id = l.emp_id
+      WHERE 1=1
     `;
+
+    const queryParams: any[] = [];
+
+    if (search) {
+      query += ` AND (e.first_name_th LIKE ? OR e.last_name_th LIKE ? OR e.emp_id LIKE ? OR l.license_no LIKE ? OR l.license_name LIKE ?)`;
+      const searchVal = `%${search}%`;
+      queryParams.push(searchVal, searchVal, searchVal, searchVal, searchVal);
+    }
+
+    query += ` ORDER BY l.expire_date ASC`;
     
-    const [rows]: any = await pool.query(query);
+    const [rows]: any = await pool.query(query, queryParams);
 
     // Calculate days left for each license
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const licenses = rows.map((row: any) => {
+    let licenses = rows.map((row: any) => {
       let daysLeft = null;
       if (row.expire_date) {
         const expireDate = new Date(row.expire_date);
@@ -37,17 +57,33 @@ export async function GET() {
       }
 
       return {
-        id: row.license_id ? `L${row.license_id}` : `EMP-${row.emp_id}`, // unique identifier for the list
+        id: `L${row.license_id}`, // UI uses this as unique key
         license_id: row.license_id,
         emp_id: row.emp_id,
         name: `${row.prefix || ''}${row.first_name_th || ''} ${row.last_name_th || ''}`.trim() || 'ไม่ระบุชื่อ',
+        image: row.image || null,
+        gender: row.gender || 'ไม่ระบุ',
         type: row.license_name || row.license_type || 'ใบประกอบวิชาชีพ',
         license_no: row.license_no,
-        issued: row.license_issue_date ? new Date(row.license_issue_date).toLocaleDateString('en-CA') : '-', // YYYY-MM-DD format
+        issued: row.issue_date ? new Date(row.issue_date).toLocaleDateString('en-CA') : '-',
         expires: row.expire_date ? new Date(row.expire_date).toLocaleDateString('en-CA') : '-',
-        daysLeft: daysLeft ?? 9999 // If no expiration date, treat as safe/infinite
+        daysLeft: daysLeft ?? 9999,
+        points: row.cneu_cme_points || 0,
+        status: row.license_status || 'Active',
+        license_name: row.license_name || '',
+        license_type: row.license_type || '',
+        institution: row.institution || '',
+        issue_date: row.issue_date ? new Date(row.issue_date).toLocaleDateString('en-CA') : ''
       };
     });
+
+    if (status === 'expiring') {
+      licenses = licenses.filter((l: any) => l.daysLeft >= 0 && l.daysLeft <= 90);
+    } else if (status === 'expired') {
+      licenses = licenses.filter((l: any) => l.daysLeft < 0);
+    } else if (status === 'normal') {
+      licenses = licenses.filter((l: any) => l.daysLeft > 90);
+    }
 
     return NextResponse.json(licenses);
   } catch (err: any) {

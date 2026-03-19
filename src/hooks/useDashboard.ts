@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import { fetchDashboard, type DashboardData } from '@/services/apiService'
 
+
+
 const DEFAULT_DATA: DashboardData = {
   empCount: 0,
   leaveTodayCount: 0,
@@ -8,6 +10,8 @@ const DEFAULT_DATA: DashboardData = {
   professions: [],
   pendingTransfers: 0,
   pendingLeaves: 0,
+  expiringLicenses: 0,
+  expiredLicenses: 0,
 }
 
 export function useDashboard() {
@@ -15,11 +19,11 @@ export function useDashboard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadDashboard = useCallback(async () => {
+  const loadDashboard = useCallback(async (empId?: string, role?: string) => {
     try {
       setLoading(true)
       setError(null)
-      const data = await fetchDashboard()
+      const data = await fetchDashboard(empId, role)
       setDashboardData(data)
     } catch (err) {
       console.error('useDashboard - loadDashboard:', err)
