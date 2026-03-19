@@ -1,5 +1,5 @@
 // Modal สำหรับเพิ่ม / แก้ไข / ลบเวร + Validation
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 export interface Schedule {
   id: string
@@ -17,6 +17,14 @@ export interface ShiftType {
   color: string
 }
 
+export interface Employee {
+  emp_id: string;
+  prefix: string;
+  first_name_th: string;
+  last_name_th: string;
+  dept_id?: string;
+}
+
 export interface ScheduleForm {
   nurseName: string
   shift: string
@@ -24,15 +32,15 @@ export interface ScheduleForm {
   note: string
 }
 
-// ประเภทเวร
+// ประเภทเวรเริ่มต้น (ใช้เผื่อดึง API ไม่ได้)
 export const SHIFT_TYPES: ShiftType[] = [
-  { value: 'Morning', label: '🟢 Morning (เช้า)', color: '#10b981' },
-  { value: 'Afternoon', label: '🟠 Afternoon (บ่าย)', color: '#f59e0b' },
-  { value: 'Night', label: '🟣 Night (ดึก)', color: '#8b5cf6' },
+  { value: 'Morning', label: 'Morning (เช้า)', color: '#10b981' },
+  { value: 'Afternoon', label: 'Afternoon (บ่าย)', color: '#f59e0b' },
+  { value: 'Night', label: 'Night (ดึก)', color: '#8b5cf6' },
 ]
 
-// แผนกที่มีในระบบ
-export const DEPARTMENTS = ['ICU', 'ER', 'OPD', 'IPD', 'OR', 'LR', 'NICU', 'Ward']
+// ดึงข้อมูลแผนกผ่าน hook (dynamic)
+import { useDepartments } from '@/hooks/useDepartments'
 
 const EMPTY_FORM: ScheduleForm = {
   nurseName: '',
@@ -55,10 +63,22 @@ export default function useScheduleModal(
   const [editingId, setEditingId] = useState<string | null>(null)
   const [errors, setErrors] = useState<string[]>([])
   const [form, setForm] = useState<ScheduleForm>({ ...EMPTY_FORM })
+  const [employees, setEmployees] = useState<Employee[]>([])
+  
+  const { departments: deptData } = useDepartments()
 
   const isEditing = useMemo(() => editingId !== null, [editingId])
 
-  // เปิด modal สำหรับเพิ่มเวรใหม่
+  // Fetch employees for dropdown
+  useEffect(() => {
+    fetch('/api/employees')
+      .then(res => res.json())
+      .then(data => {
+        if(Array.isArray(data)) setEmployees(data)
+      })
+      .catch(console.error)
+  }, [])
+
   function openModal(date: Date) {
     setSelectedDate(date)
     setEditingId(null)
@@ -67,7 +87,6 @@ export default function useScheduleModal(
     setShowModal(true)
   }
 
-  // เปิด modal สำหรับแก้ไขเวร
   function openEditModal(schedule: Schedule) {
     setSelectedDate(schedule.date)
     setEditingId(schedule.id)
@@ -81,7 +100,6 @@ export default function useScheduleModal(
     setShowModal(true)
   }
 
-  // ปิด modal
   function closeModal() {
     setShowModal(false)
     setErrors([])
@@ -91,23 +109,24 @@ export default function useScheduleModal(
   function validate(): boolean {
     const errs: string[] = []
     if (!selectedDate) errs.push('ต้องเลือกวันที่')
-    if (!form.nurseName.trim()) errs.push('ต้องกรอกชื่อพยาบาล')
+    if (!form.nurseName.trim()) errs.push('ต้องระบุพนักงาน')
     if (!form.shift) errs.push('ต้องเลือกประเภทเวร')
     if (!form.department) errs.push('ต้องเลือกแผนก')
 
-    // ตรวจสอบ: พยาบาล 1 คน ห้ามมีมากกว่า 1 เวร ในวันเดียวกัน
-    if (form.nurseName.trim() && selectedDate) {
+    // ตรวจสอบ: พยาบาล 1 คน ห้ามมีมากกว่า 1 เวร (ประเภทเดียวกัน) ในวันเดียวกัน
+    if (form.nurseName.trim() && selectedDate && form.shift) {
       const dateStr = new Date(selectedDate).toDateString()
       const nurseName = form.nurseName.trim().toLowerCase()
       const duplicate = schedules.find((s) => {
         if (editingId && s.id === editingId) return false
         return (
           new Date(s.date).toDateString() === dateStr &&
-          s.nurseName.trim().toLowerCase() === nurseName
+          s.nurseName.trim().toLowerCase() === nurseName &&
+          s.shift === form.shift
         )
       })
       if (duplicate) {
-        errs.push(`${form.nurseName} มีเวรในวันนี้แล้ว (${duplicate.shift})`)
+        errs.push(`พนักงานคนนี้มีเวร ${duplicate.shift} ในวันนี้แล้ว`)
       }
     }
 
@@ -115,12 +134,10 @@ export default function useScheduleModal(
     return errs.length === 0
   }
 
-  // บันทึกเวร (เพิ่ม / แก้ไข)
   function saveSchedule(): boolean {
     if (!validate()) return false
 
     if (editingId) {
-      // แก้ไข
       setSchedules((prev) =>
         prev.map((s) =>
           s.id === editingId
@@ -135,7 +152,6 @@ export default function useScheduleModal(
         )
       )
     } else {
-      // เพิ่มใหม่
       setSchedules((prev) => [
         ...prev,
         {
@@ -148,7 +164,6 @@ export default function useScheduleModal(
         },
       ])
     }
-    closeModal()
     return true
   }
 
@@ -158,14 +173,12 @@ export default function useScheduleModal(
     closeModal()
   }
 
-  // ดึงเวรของวันที่เฉพาะ
   function getSchedulesForDate(date: Date | null): Schedule[] {
     if (!date) return []
     const dateStr = new Date(date).toDateString()
     return schedules.filter((s) => new Date(s.date).toDateString() === dateStr)
   }
 
-  // ดึงสีเวร
   function getShiftColor(shift: string): string {
     const found = SHIFT_TYPES.find((s) => s.value === shift)
     return found ? found.color : '#64748b'
@@ -177,7 +190,8 @@ export default function useScheduleModal(
     editingId,
     errors,
     shiftTypes: SHIFT_TYPES,
-    departments: DEPARTMENTS,
+    departments: deptData.map(d => d.dept_name), // ส่งกลับเฉพาะชื่อแผนกเป็น array of strings
+    employees,
     form,
     setForm,
     isEditing,

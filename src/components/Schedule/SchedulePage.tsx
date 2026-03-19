@@ -25,11 +25,12 @@ function toSchedule(r: ScheduleRecord): Schedule {
   }
 }
 
+// Indicator จุดสีของเวร
 function getShiftDot(shift: string): string {
-  if (shift === 'Morning') return '🟢'
-  if (shift === 'Afternoon') return '🟠'
-  if (shift === 'Night') return '🟣'
-  return '⚪'
+  if (shift === 'Morning') return '●'
+  if (shift === 'Afternoon') return '●'
+  if (shift === 'Night') return '●'
+  return '○'
 }
 
 // ฟอร์แมต "YYYY-MM" จากวันที่
@@ -72,13 +73,14 @@ export default function SchedulePage() {
     errors,
     shiftTypes,
     departments,
+    employees,
     form,
     setForm,
     isEditing,
     openModal,
     openEditModal,
     closeModal,
-  } = useScheduleModal(schedules, () => {}) // ไม่ใช้ setSchedules แล้ว — API จัดการ
+  } = useScheduleModal(schedules, () => {})
 
   const { totalSchedules, todaySchedules, monthSchedules } = useScheduleSummary(schedules)
   const { departmentStatus } = useScheduleStatus(schedules)
@@ -108,27 +110,39 @@ export default function SchedulePage() {
   }
 
   // บันทึกเวร (เพิ่ม / แก้ไข) ผ่าน API
-  async function handleSave() {
+  async function handleSave(keepOpen: boolean = false) {
     if (!selectedDate) return
-    if (!form.nurseName.trim() || !form.shift || !form.department) return
-
-    if (isEditing && editingId) {
-      await editSchedule(editingId, {
-        nurseName: form.nurseName.trim(),
-        shift: form.shift,
-        department: form.department,
-        note: form.note || '',
-      }, toMonthKey(currentDate))
-    } else {
-      await addSchedule({
-        nurseName: form.nurseName.trim(),
-        shift: form.shift,
-        department: form.department,
-        date: toDateStr(selectedDate),
-        note: form.note || '',
-      }, toMonthKey(currentDate))
+    if (!form.nurseName.trim() || !form.shift || !form.department) {
+      alert('กรุณาระบุข้อมูลจำเป็นให้ครบถ้วน');
+      return;
     }
-    closeModal()
+
+    try {
+      if (isEditing && editingId) {
+        await editSchedule(editingId, {
+          nurseName: form.nurseName.trim(),
+          shift: form.shift,
+          department: form.department,
+          note: form.note || '',
+        }, toMonthKey(currentDate))
+      } else {
+        await addSchedule({
+          nurseName: form.nurseName.trim(),
+          shift: form.shift,
+          department: form.department,
+          date: toDateStr(selectedDate),
+          note: form.note || '',
+        }, toMonthKey(currentDate))
+      }
+
+      if (keepOpen) {
+        setForm({ ...form, nurseName: '', note: '' });
+      } else {
+        closeModal()
+      }
+    } catch(err: any) {
+      alert(err.message || 'Error saving schedule');
+    }
   }
 
   const daySchedules = selectedDate ? schedules.filter(s => {
@@ -144,102 +158,110 @@ export default function SchedulePage() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         /* ===========================
-           COLOR TOKENS
+           COLOR TOKENS & FORMAL THEME
            =========================== */
         .schedule-page {
-          --primary: #2563eb; --primary-lt: #dbeafe; --primary-dk: #1d4ed8;
-          --green: #10b981; --green-lt: #d1fae5;
-          --amber: #f59e0b; --amber-lt: #fef3c7;
-          --purple: #7c3aed; --purple-lt: #ede9fe;
-          --red: #ef4444;
+          --primary: #2563eb; --primary-lt: #eff6ff; --primary-dk: #1d4ed8;
+          --green: #059669; --green-lt: #ecfdf5;
+          --amber: #d97706; --amber-lt: #fffbeb;
+          --purple: #6d28d9; --purple-lt: #f5f3ff;
+          --red: #dc2626;
           --card: #ffffff; --bg: #f8fafc; --txt: #1e293b; --txt2: #64748b;
-          --bdr: #e2e8f0; --shd: 0 4px 20px rgba(0,0,0,.06); --shd2: 0 8px 32px rgba(0,0,0,.1);
-          --rad: 16px;
+          --bdr: #e2e8f0; --shd: 0 1px 3px rgba(0,0,0,.04); --shd2: 0 4px 12px rgba(0,0,0,.06);
+          --rad: 8px;
         }
-        .schedule-page { padding: 28px 32px; max-width: 1200px; margin: 0 auto; background: var(--bg); min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; }
-        .sp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
-        .sp-header-left { display: flex; align-items: center; gap: 16px; }
-        .sp-header-icon { font-size: 34px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: var(--primary-lt); border-radius: 14px; }
-        .sp-header h1 { margin: 0; font-size: 24px; font-weight: 800; color: var(--txt); }
-        .sp-header-sub { margin: 2px 0 0; font-size: 13px; color: var(--txt2); }
-        .sp-summary-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-bottom: 28px; }
-        .sp-sum-card { background: var(--card); border-radius: var(--rad); padding: 22px 24px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shd); border: 1px solid var(--bdr); transition: .3s; }
-        .sp-sum-card:hover { transform: translateY(-3px); box-shadow: var(--shd2); }
-        .sp-sum-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-        .sp-sum-icon-blue { background: linear-gradient(135deg,#dbeafe,#bfdbfe); }
-        .sp-sum-icon-green { background: linear-gradient(135deg,#d1fae5,#a7f3d0); }
-        .sp-sum-icon-amber { background: linear-gradient(135deg,#fef3c7,#fde68a); }
+        .schedule-page { padding: 24px 32px; max-width: 1440px; margin: 0 auto; min-height: 100vh; font-family: 'Inter', system-ui, sans-serif; }
+        .sp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--bdr); }
+        .sp-header-left { display: flex; align-items: center; gap: 12px; }
+        .sp-header-icon { color: var(--txt2); }
+        .sp-header h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--txt); }
+        .sp-header-sub { margin: 2px 0 0; font-size: 13px; color: var(--txt2); font-weight: 500; }
+        .sp-summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .sp-sum-card { background: var(--card); border-radius: var(--rad); padding: 16px 20px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shd); border: 1px solid var(--bdr); }
+        .sp-sum-icon { width: 44px; height: 44px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; }
+        .sp-sum-icon-blue { background: var(--primary); }
+        .sp-sum-icon-green { background: var(--green); }
+        .sp-sum-icon-amber { background: var(--amber); }
         .sp-sum-body { display: flex; flex-direction: column; }
-        .sp-sum-num { font-size: 28px; font-weight: 800; color: var(--txt); line-height: 1; }
-        .sp-sum-label { font-size: 13px; color: var(--txt2); margin-top: 4px; font-weight: 500; }
-        .sp-cal-card { background: var(--card); border-radius: 20px; padding: 28px; box-shadow: var(--shd); border: 1px solid var(--bdr); margin-bottom: 28px; }
-        .sp-cal-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; }
-        .sp-cal-nav { display: flex; align-items: center; gap: 10px; }
-        .sp-btn-nav { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--bdr); background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--txt); transition: .25s; }
-        .sp-btn-nav:hover { background: var(--primary); color: #fff; border-color: var(--primary); transform: scale(1.06); }
-        .sp-cal-month { font-size: 20px; font-weight: 700; color: var(--txt); min-width: 160px; text-align: center; margin: 0; }
-        .sp-btn-today { padding: 7px 16px; border-radius: 8px; border: 1px solid var(--primary); background: var(--primary-lt); color: var(--primary); font-weight: 600; font-size: 13px; cursor: pointer; transition: .25s; }
-        .sp-btn-today:hover { background: var(--primary); color: #fff; }
-        .sp-cal-views { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 10px; }
-        .sp-btn-view { padding: 7px 18px; border: none; border-radius: 8px; background: transparent; color: var(--txt2); font-size: 13px; font-weight: 600; cursor: pointer; transition: .25s; text-transform: capitalize; }
-        .sp-btn-view:hover { color: var(--primary); }
-        .sp-btn-view.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,.3); }
+        .sp-sum-num { font-size: 24px; font-weight: 700; color: var(--txt); line-height: 1.2; }
+        .sp-sum-label { font-size: 12px; color: var(--txt2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sp-cal-card { background: var(--card); border-radius: var(--rad); padding: 24px; box-shadow: var(--shd); border: 1px solid var(--bdr); margin-bottom: 24px; }
+        .sp-cal-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .sp-cal-nav { display: flex; align-items: center; gap: 8px; }
+        .sp-btn-nav { width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--bdr); background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--txt2); transition: .2s; }
+        .sp-btn-nav:hover { background: var(--bg); color: var(--txt); }
+        .sp-cal-month { font-size: 18px; font-weight: 700; color: var(--txt); min-width: 140px; text-align: center; margin: 0; }
+        .sp-btn-today { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--bdr); background: #fff; color: var(--txt); font-weight: 600; font-size: 13px; cursor: pointer; transition: .2s; }
+        .sp-btn-today:hover { background: var(--bg); }
+        .sp-cal-views { display: flex; border: 1px solid var(--bdr); border-radius: 6px; overflow: hidden; }
+        .sp-btn-view { padding: 6px 14px; border: none; background: #fff; color: var(--txt2); font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s; text-transform: capitalize; border-right: 1px solid var(--bdr); }
+        .sp-btn-view:last-child { border-right: none; }
+        .sp-btn-view:hover { background: var(--bg); }
+        .sp-btn-view.active { background: var(--primary-lt); color: var(--primary-dk); }
         .sp-shift-legend { display: flex; gap: 20px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--bdr); justify-content: center; }
-        .sp-legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--txt2); font-weight: 500; }
-        .sp-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .sp-dept-card { background: var(--card); border-radius: 20px; padding: 24px 28px; box-shadow: var(--shd); border: 1px solid var(--bdr); }
-        .sp-dept-title { font-size: 18px; font-weight: 700; color: var(--txt); margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
-        .sp-dept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 10px; }
-        .sp-dept-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border-radius: 10px; border: 1px solid var(--bdr); transition: .2s; }
-        .sp-dept-item:hover { background: #eff6ff; border-color: var(--primary); }
-        .sp-dept-name { font-weight: 600; color: var(--txt); font-size: 14px; }
-        .sp-dept-badge { font-size: 12px; color: var(--primary); font-weight: 700; background: var(--primary-lt); padding: 4px 10px; border-radius: 20px; }
-        .sp-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .sp-modal-box { background: var(--card); border-radius: 22px; padding: 30px; width: 520px; max-width: 92vw; max-height: 88vh; overflow-y: auto; box-shadow: var(--shd2); animation: mSlide .3s ease; }
-        @keyframes mSlide { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .sp-modal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-        .sp-modal-top h3 { margin: 0; font-size: 20px; font-weight: 700; color: var(--txt); }
-        .sp-modal-x { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--txt2); padding: 4px 8px; border-radius: 8px; }
-        .sp-modal-x:hover { background: #f1f5f9; }
-        .sp-modal-date { font-size: 14px; color: var(--txt2); margin-bottom: 16px; padding: 10px 14px; background: #f8fafc; border-radius: 10px; font-weight: 500; }
+        .sp-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--txt2); font-weight: 600; }
+        .sp-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .sp-dept-card { background: var(--card); border-radius: var(--rad); padding: 20px 24px; box-shadow: var(--shd); border: 1px solid var(--bdr); }
+        .sp-dept-title { font-size: 16px; font-weight: 700; color: var(--txt); margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
+        .sp-dept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 14px; }
+        .sp-dept-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: linear-gradient(to bottom right, #ffffff, #fdfbfa); border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: all 0.25s ease; }
+        .sp-dept-item:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.06); border-color: #cbd5e1; }
+        .sp-dept-name { font-weight: 700; color: #334155; font-size: 14px; letter-spacing: 0.2px; }
+        .sp-dept-badge { font-size: 12px; color: #1d4ed8; font-weight: 800; background: #eff6ff; padding: 4px 12px; border-radius: 20px; border: 1px solid #bfdbfe; box-shadow: inset 0 1px 2px rgba(255,255,255,0.7); }
+        .sp-modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,.6); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .sp-modal-box { background: var(--card); border-radius: 8px; padding: 24px 32px; width: 500px; max-width: 90vw; max-height: 85vh; overflow-y: auto; box-shadow: var(--shd2); }
+        .sp-modal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--bdr); pb-2 }
+        .sp-modal-top h3 { margin: 0 0 12px; font-size: 18px; font-weight: 700; color: var(--txt); display: flex; align-items: center; gap: 8px; }
+        .sp-modal-x { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--txt2); padding: 4px; border-radius: 4px; mb-3 }
+        .sp-modal-x:hover { background: var(--bg); color: var(--txt); }
+        .sp-modal-date { font-size: 13px; color: var(--txt2); margin-bottom: 16px; padding: 8px 12px; background: var(--bg); border-radius: 6px; font-weight: 600; border: 1px solid var(--bdr); }
         .sp-modal-existing { margin-bottom: 16px; }
-        .sp-existing-title { font-size: 13px; color: var(--txt2); margin: 0 0 8px; font-weight: 600; }
-        .sp-existing-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f8fafc; border-radius: 10px; border: 1px solid var(--bdr); margin-bottom: 6px; }
-        .sp-existing-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--txt); }
-        .sp-existing-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .sp-existing-title { font-size: 12px; color: var(--txt2); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; }
+        .sp-existing-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #fff; border-radius: 6px; border: 1px solid var(--bdr); margin-bottom: 6px; }
+        .sp-existing-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--txt); font-weight: 500;}
+        .sp-existing-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .sp-existing-actions { display: flex; gap: 4px; }
-        .sp-btn-icon { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 6px; border-radius: 6px; transition: .2s; }
-        .sp-btn-icon:hover { background: #f1f5f9; }
-        .sp-modal-errors { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; }
-        .sp-err-line { color: #dc2626; font-size: 13px; margin-bottom: 4px; }
-        .sp-form-group { margin-bottom: 16px; }
-        .sp-form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--txt); margin-bottom: 6px; }
+        .sp-btn-icon { background: none; border: 1px solid transparent; cursor: pointer; color: var(--txt2); padding: 4px; border-radius: 4px; transition: .2s; display: flex; align-items: center; justify-content: center; }
+        .sp-btn-icon:hover { background: var(--bg); border-color: var(--bdr); color: var(--txt); }
+        .sp-form-group { margin-bottom: 14px; }
+        .sp-form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--txt); margin-bottom: 6px; }
         .sp-req { color: var(--red); }
-        .sp-field { width: 100%; padding: 10px 14px; border: 1.5px solid var(--bdr); border-radius: 10px; font-size: 14px; color: var(--txt); background: #fff; transition: .2s; box-sizing: border-box; }
-        .sp-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
-        .sp-shift-picker { display: flex; gap: 8px; flex-wrap: wrap; }
-        .sp-shift-opt { padding: 8px 14px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; font-size: 13px; font-weight: 600; background: #f8fafc; transition: .2s; }
-        .sp-shift-opt:hover { background: #f1f5f9; }
-        .sp-modal-btns { display: flex; gap: 10px; margin-top: 20px; }
-        .sp-btn-save { flex: 1; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: .25s; }
+        .sp-field { width: 100%; padding: 8px 12px; border: 1px solid var(--bdr); border-radius: 6px; font-size: 13px; color: var(--txt); background: #fff; transition: .2s; box-sizing: border-box; }
+        .sp-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-lt); }
+        .sp-shift-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+        .sp-shift-opt { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--bdr); cursor: pointer; font-size: 12px; font-weight: 600; background: #fff; color: var(--txt2); transition: .2s; }
+        .sp-shift-opt:hover { background: var(--bg); }
+        .sp-modal-btns { display: flex; gap: 8px; margin-top: 20px; border-top: 1px solid var(--bdr); padding-top: 16px; }
+        .sp-btn-save { flex: 1; padding: 10px; border-radius: 6px; border: none; background: var(--primary); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s; }
         .sp-btn-save:hover { background: var(--primary-dk); }
         .sp-btn-save:disabled { opacity: .6; cursor: not-allowed; }
-        .sp-btn-delete { padding: 12px 20px; border-radius: 10px; border: 1.5px solid var(--red); background: #fff; color: var(--red); font-size: 14px; font-weight: 600; cursor: pointer; transition: .25s; }
-        .sp-btn-delete:hover { background: var(--red); color: #fff; }
-        .sp-btn-cancel { padding: 12px 20px; border-radius: 10px; border: 1.5px solid var(--bdr); background: #f8fafc; color: var(--txt2); font-size: 14px; font-weight: 600; cursor: pointer; transition: .25s; }
-        .sp-btn-cancel:hover { background: #e2e8f0; }
-        .sp-loading { text-align: center; padding: 40px; color: var(--txt2); font-size: 15px; }
-        .sp-error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; color: #dc2626; font-size: 14px; }
-      `}</style>
+        .sp-btn-delete { padding: 10px 14px; border-radius: 6px; border: 1px solid #fca5a5; background: #fff; color: var(--red); font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s; }
+        .sp-btn-delete:hover { background: #fef2f2; border-color: var(--red); }
+        .sp-btn-cancel { padding: 10px 14px; border-radius: 6px; border: 1px solid var(--bdr); background: #fff; color: var(--txt2); font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s; }
+        .sp-btn-cancel:hover { background: var(--bg); color: var(--txt); }
+        .sp-loading { text-align: center; padding: 40px; color: var(--txt2); font-size: 14px; }
+        .sp-error { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; color: #b91c1c; font-size: 13px; }
+        /* Fix SVG sizes */
+        .schedule-page svg { max-width: 24px; max-height: 24px; flex-shrink: 0; }
+        .sp-header-icon svg { width: 28px; height: 28px; max-width: 28px; max-height: 28px; }
+        .sp-sum-icon svg { width: 22px; height: 22px; }
+        .sp-btn-nav svg { width: 16px; height: 16px; }
+        .sp-dept-title svg { width: 22px; height: 22px; }
+        .sp-modal-top h3 svg { width: 20px; height: 20px; }
+        .sp-modal-top .sp-modal-x svg { width: 20px; height: 20px; }
+        .sp-btn-icon svg { width: 16px; height: 16px; }
+      `}} />
 
       <div className="schedule-page">
 
         {/* HEADER */}
         <div className="sp-header">
           <div className="sp-header-left">
-            <div className="sp-header-icon">🏥</div>
+            <div className="sp-header-icon">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            </div>
             <div>
               <h1>ตารางเวรพยาบาล</h1>
               <p className="sp-header-sub">Nurse Shift Schedule Management</p>
@@ -248,26 +270,32 @@ export default function SchedulePage() {
         </div>
 
         {/* ERROR BANNER */}
-        {error && <div className="sp-error">⚠️ {error}</div>}
+        {error && <div className="sp-error">เกิดข้อผิดพลาด: {error}</div>}
 
         {/* SUMMARY */}
         <div className="sp-summary-row">
           <div className="sp-sum-card">
-            <div className="sp-sum-icon sp-sum-icon-blue"><span>📋</span></div>
+            <div className="sp-sum-icon sp-sum-icon-blue">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            </div>
             <div className="sp-sum-body">
               <span className="sp-sum-num">{totalSchedules}</span>
               <span className="sp-sum-label">เวรทั้งหมด</span>
             </div>
           </div>
           <div className="sp-sum-card">
-            <div className="sp-sum-icon sp-sum-icon-green"><span>🕐</span></div>
+            <div className="sp-sum-icon sp-sum-icon-green">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
             <div className="sp-sum-body">
               <span className="sp-sum-num">{todaySchedules}</span>
               <span className="sp-sum-label">เวรวันนี้</span>
             </div>
           </div>
           <div className="sp-sum-card">
-            <div className="sp-sum-icon sp-sum-icon-amber"><span>📆</span></div>
+            <div className="sp-sum-icon sp-sum-icon-amber">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
             <div className="sp-sum-body">
               <span className="sp-sum-num">{monthSchedules}</span>
               <span className="sp-sum-label">เวรเดือนนี้</span>
@@ -279,10 +307,14 @@ export default function SchedulePage() {
         <div className="sp-cal-card">
           <div className="sp-cal-controls">
             <div className="sp-cal-nav">
-              <button className="sp-btn-nav" onClick={goPrev}>◀</button>
+              <button className="sp-btn-nav" onClick={goPrev}>
+                  <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+              </button>
               <h2 className="sp-cal-month">{formatDisplay}</h2>
-              <button className="sp-btn-nav" onClick={goNext}>▶</button>
-              <button className="sp-btn-today" onClick={goToday}>Today</button>
+              <button className="sp-btn-nav" onClick={goNext}>
+                  <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+              </button>
+              <button className="sp-btn-today" onClick={goToday}>วันนี้</button>
             </div>
             <div className="sp-cal-views">
               {VIEWS.map((v) => (
@@ -290,13 +322,13 @@ export default function SchedulePage() {
                   key={v}
                   className={`sp-btn-view${currentView === v ? ' active' : ''}`}
                   onClick={() => changeView(v)}
-                >{v}</button>
+                >{v === 'day' ? 'วัน' : v === 'week' ? 'สัปดาห์' : v === 'month' ? 'เดือน' : 'ปี'}</button>
               ))}
             </div>
           </div>
 
           {/* Loading indicator */}
-          {loading && <div className="sp-loading">⏳ กำลังโหลดตารางเวร...</div>}
+          {loading && <div className="sp-loading">กำลังโหลดตารางเวร...</div>}
 
           {/* Views */}
           {!loading && currentView === 'day' && (
@@ -324,7 +356,7 @@ export default function SchedulePage() {
               {shiftTypes.map((st) => (
                 <div key={st.value} className="sp-legend-item">
                   <span className="sp-legend-dot" style={{ background: st.color }} />
-                  <span>{st.value}</span>
+                  <span>{st.label}</span>
                 </div>
               ))}
             </div>
@@ -334,7 +366,10 @@ export default function SchedulePage() {
         {/* DEPARTMENT STATUS */}
         {Object.keys(departmentStatus).length > 0 && (
           <div className="sp-dept-card">
-            <h3 className="sp-dept-title"><span>🏥</span> สถานะเวรแต่ละแผนก</h3>
+            <h3 className="sp-dept-title">
+                <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                สถานะเวรแต่ละแผนก
+            </h3>
             <div className="sp-dept-grid">
               {Object.entries(departmentStatus).map(([dept, count]) => (
                 <div key={dept} className="sp-dept-item">
@@ -351,11 +386,22 @@ export default function SchedulePage() {
           <div className="sp-modal-bg" onClick={closeModal}>
             <div className="sp-modal-box" onClick={(e) => e.stopPropagation()}>
               <div className="sp-modal-top">
-                <h3>{isEditing ? '✏️ แก้ไขเวร' : '➕ เพิ่มเวร'}</h3>
-                <button className="sp-modal-x" onClick={closeModal}>✕</button>
+                <h3>
+                    {isEditing ? (
+                        <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    ) : (
+                        <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                    )}
+                    {isEditing ? 'แก้ไขเวร' : 'เพิ่มเวร'}
+                </h3>
+                <button className="sp-modal-x" onClick={closeModal} aria-label="Close">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
               </div>
 
-              <div className="sp-modal-date">📅 {formatDate(selectedDate)}</div>
+              <div className="sp-modal-date">
+                  วันที่: {formatDate(selectedDate)}
+              </div>
 
               {/* Existing schedules for day */}
               {!isEditing && daySchedules.length > 0 && (
@@ -368,8 +414,12 @@ export default function SchedulePage() {
                         <span>{sch.nurseName} — {sch.shift} — {sch.department}</span>
                       </div>
                       <div className="sp-existing-actions">
-                        <button className="sp-btn-icon" onClick={() => openEditModal(sch)}>✏️</button>
-                        <button className="sp-btn-icon" onClick={() => confirmDelete(sch.id)}>🗑️</button>
+                        <button className="sp-btn-icon" onClick={() => openEditModal(sch)} title="แก้ไข">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
+                        <button className="sp-btn-icon" onClick={() => confirmDelete(sch.id)} title="ลบ">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -378,9 +428,9 @@ export default function SchedulePage() {
 
               {/* Validation errors */}
               {errors.length > 0 && (
-                <div className="sp-modal-errors">
+                <div className="sp-error">
                   {errors.map((err, i) => (
-                    <div key={i} className="sp-err-line">⚠️ {err}</div>
+                    <div key={i} className="mb-1">ข้อผิดพลาด: {err}</div>
                   ))}
                 </div>
               )}
@@ -388,28 +438,47 @@ export default function SchedulePage() {
               {/* Form */}
               <div>
                 <div className="sp-form-group">
-                  <label>👩‍⚕️ ชื่อพยาบาล <span className="sp-req">*</span></label>
-                  <input className="sp-field" value={form.nurseName}
-                    onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, nurseName: e.target.value }))}
-                    placeholder="กรอกชื่อพยาบาล" />
+                  <label>ชื่อบุคลากร <span className="sp-req">*</span></label>
+                  {employees.length > 0 ? (
+                    <>
+                      <input 
+                        className="sp-field" 
+                        list="emp-list" 
+                        value={form.nurseName}
+                        onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, nurseName: e.target.value }))}
+                        placeholder="พิมพ์ รหัส หรือ ชื่อ-สกุล เพื่อค้นหาแบบรวดเร็ว..." 
+                        autoComplete="off"
+                      />
+                      <datalist id="emp-list">
+                        {employees.map(e => (
+                           <option key={e.emp_id} value={`${e.emp_id} - ${e.first_name_th} ${e.last_name_th}`} />
+                        ))}
+                      </datalist>
+                    </>
+                  ) : (
+                    <input className="sp-field" value={form.nurseName}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, nurseName: e.target.value }))}
+                      placeholder="ระบุชื่อรหัสพนักงาน/พยาบาล" />
+                  )}
                 </div>
                 <div className="sp-form-group">
-                  <label>⏰ ประเภทเวร <span className="sp-req">*</span></label>
+                  <label>ประเภทเวร <span className="sp-req">*</span></label>
                   <div className="sp-shift-picker">
                     {shiftTypes.map((st) => (
                       <button key={st.value} className="sp-shift-opt"
                         style={{
-                          borderColor: form.shift === st.value ? st.color : 'transparent',
+                          borderColor: form.shift === st.value ? st.color : '',
                           background: form.shift === st.value ? st.color + '18' : '',
+                          color: form.shift === st.value ? '#1e293b' : ''
                         }}
                         onClick={() => setForm((f: ScheduleForm) => ({ ...f, shift: st.value }))}>
-                        {st.label}
+                        {st.value}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div className="sp-form-group">
-                  <label>🏢 แผนก <span className="sp-req">*</span></label>
+                  <label>แผนก <span className="sp-req">*</span></label>
                   <select className="sp-field" value={form.department}
                     onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, department: e.target.value }))}>
                     <option value="">เลือกแผนก</option>
@@ -417,20 +486,25 @@ export default function SchedulePage() {
                   </select>
                 </div>
                 <div className="sp-form-group">
-                  <label>📝 หมายเหตุ</label>
+                  <label>หมายเหตุ</label>
                   <input className="sp-field" value={form.note}
                     onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, note: e.target.value }))}
-                    placeholder="หมายเหตุ (ไม่จำเป็น)" />
+                    placeholder="ระบุหมายเหตุ (ถ้ามี)" />
                 </div>
               </div>
 
               <div className="sp-modal-btns">
-                <button className="sp-btn-save" onClick={handleSave} disabled={loading}>
-                  💾 {isEditing ? 'อัปเดต' : 'บันทึก'}
+                {!isEditing && (
+                  <button className="sp-btn-save" style={{background: '#0ea5e9'}} onClick={() => handleSave(true)} disabled={loading} title="บันทึกคนนี้แล้วเคลียร์ชื่อเพื่อกรอกคนถัดไป">
+                    บันทึก + เพิ่มต่อ
+                  </button>
+                )}
+                <button className="sp-btn-save" onClick={() => handleSave(false)} disabled={loading}>
+                  {isEditing ? 'อัปเดต (ปิด)' : 'บันทึก (ปิด)'}
                 </button>
                 {isEditing && editingId && (
                   <button className="sp-btn-delete" onClick={() => confirmDelete(editingId)}>
-                    🗑️ ลบเวร
+                    ลบเวร
                   </button>
                 )}
                 <button className="sp-btn-cancel" onClick={closeModal}>ยกเลิก</button>

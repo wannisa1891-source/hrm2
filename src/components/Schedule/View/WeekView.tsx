@@ -60,21 +60,23 @@ export default function WeekView({
   return (
     <>
       <style>{`
-        .wv-header { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 4px; }
-        .wv-day-name { text-align: center; font-weight: 700; font-size: 12px; color: var(--txt2); padding: 8px 0; text-transform: uppercase; letter-spacing: .5px; }
-        .wv-day-name.weekend { color: var(--red); }
-        .wv-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
-        .wv-cell { min-height: 250px; padding: 8px; border-radius: 12px; cursor: pointer; background: var(--card); border: 1.5px solid transparent; transition: .25s; position: relative; display: flex; flex-direction: column; }
-        .wv-cell:hover { background: #eff6ff; border-color: var(--primary); transform: scale(1.02); box-shadow: 0 2px 12px rgba(37,99,235,.12); z-index: 1; }
-        .wv-cell.today { background: var(--purple-lt); border-color: var(--purple); }
-        .wv-cell.weekend:not(.today) .wv-cell-num { color: var(--red); }
-        .wv-cell-num { font-size: 13px; font-weight: 600; color: var(--txt); margin-bottom: 4px; }
-        .wv-cell-num.today-num { background: var(--purple); color: #fff; display: inline-flex; padding: 4px 8px; border-radius: 14px; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
-        .wv-shifts { display: flex; flex-direction: column; gap: 3px; flex: 1; overflow: auto; }
-        .wv-shift { display: flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 6px; background: rgba(0,0,0,.03); border-left: 3px solid; font-size: 11px; transition: .2s; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .wv-shift:hover { background: rgba(0,0,0,.07); }
-        .wv-shift .shift-dot { font-size: 10px; flex-shrink: 0; }
-        .wv-shift .shift-text { overflow: hidden; text-overflow: ellipsis; color: var(--txt); font-weight: 500; }
+        .wv-header { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+        .wv-day-name { text-align: center; font-weight: 700; font-size: 13px; color: var(--txt2); text-transform: uppercase; letter-spacing: 0.5px; }
+        .wv-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 8px; }
+        .wv-cell { min-height: 280px; padding: 12px; border-radius: 12px; cursor: pointer; background: #fff; border: 1px solid #f1f5f9; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); position: relative; display: flex; flex-direction: column; }
+        .wv-cell:hover { background: #fafafa; border-color: #e2e8f0; transform: scale(1.02); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06); z-index: 10; }
+        .wv-cell.today { background: #eff6ff; border-color: #bfdbfe; }
+        .wv-cell.weekend:not(.today) { background: #fdfdfd; }
+        .wv-cell.weekend:not(.today) .wv-cell-num { color: #94a3b8; }
+        .wv-cell-num { font-size: 14px; font-weight: 700; color: #475569; margin-bottom: 8px; display: inline-block; }
+        .wv-cell-num.today-num { background: var(--primary); color: #fff; display: inline-flex; padding: 4px 10px; border-radius: 14px; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; box-shadow: 0 2px 8px rgba(37,99,235,.35); }
+        .wv-shifts { display: flex; flex-direction: column; gap: 5px; flex: 1; overflow: auto; padding-right: 2px; }
+        .wv-shifts::-webkit-scrollbar { width: 3px; }
+        .wv-shifts::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .wv-shift { display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 6px 8px; border-radius: 8px; font-size: 11px; transition: .2s; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .wv-shift:hover { filter: brightness(0.95); transform: translateY(-1px); }
+        .wv-shift .shift-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+        .wv-shift .shift-type { font-size: 10px; font-weight: 700; opacity: 0.8; }
       `}</style>
       <div>
         {/* Day headers */}
@@ -82,7 +84,7 @@ export default function WeekView({
           {DAY_NAMES.map((d) => (
             <div
               key={d}
-              className={`wv-day-name${d === 'Sun' || d === 'Sat' ? ' weekend' : ''}`}
+              className="wv-day-name"
             >
               {d}
             </div>
@@ -100,21 +102,27 @@ export default function WeekView({
                 onClick={() => onOpenDay(day)}
               >
                 <div className={`wv-cell-num${todayCell ? ' today-num' : ''}`}>
-                  {day.getDate()} ({day.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })})
+                  {day.getDate()} ({day.toLocaleDateString('th-TH', { month: 'short' })})
                 </div>
                 <div className="wv-shifts">
-                  {getDaySchedules(day).map((sch) => (
-                    <div
-                      key={sch.id}
-                      className="wv-shift"
-                      style={{ borderLeftColor: getShiftColor(sch.shift) }}
-                      title={`${sch.nurseName} — ${sch.shift} — ${sch.department}`}
-                      onClick={(e) => { e.stopPropagation(); onOpenEditModal(sch) }}
-                    >
-                      <span className="shift-dot">{getShiftDot(sch.shift)}</span>
-                      <span className="shift-text">{sch.nurseName}</span>
-                    </div>
-                  ))}
+                  {getDaySchedules(day).map((sch) => {
+                      const color = getShiftColor(sch.shift);
+                      const bg = color + '15'; 
+                      const shortType = sch.shift === 'Morning' ? 'ช' : sch.shift === 'Afternoon' ? 'บ' : 'ด';
+                      
+                      return (
+                        <div
+                            key={sch.id}
+                            className="wv-shift"
+                            style={{ backgroundColor: bg, color: color, border: `1px solid ${color}30` }}
+                            title={`${sch.nurseName} — ${sch.shift} — ${sch.department}`}
+                            onClick={(e) => { e.stopPropagation(); onOpenEditModal(sch) }}
+                        >
+                            <span className="shift-text">{sch.nurseName}</span>
+                            <span className="shift-type">{shortType}</span>
+                        </div>
+                      )
+                  })}
                 </div>
               </div>
             )

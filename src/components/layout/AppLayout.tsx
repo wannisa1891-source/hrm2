@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import BackButton from '@/components/common/BackButton';
+import NotificationBell from './NotificationBell';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -24,7 +25,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="main-layout">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
       <main className={`main-content${collapsed ? ' expanded' : ''}`}>
-        <BackButton />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <BackButton />
+          <NotificationBell />
+        </div>
         {children}
       </main>
     </div>
