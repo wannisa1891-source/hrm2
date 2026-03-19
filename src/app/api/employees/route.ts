@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 export const dynamic = 'force-dynamic'; // Disable Next.js caching for this route
+import crypto from 'crypto';
 
 // GET /api/employees
 export async function GET() {
@@ -77,15 +78,18 @@ export async function POST(req: NextRequest) {
 
       const sql = `INSERT INTO tbl_employees 
         (emp_id, prefix, first_name_th, last_name_th, first_name_en, last_name_en, 
-         birth_date, gender, address, citizen_id, phone, 
+         birth_date, gender, address, citizen_id, phone, email, password, role, 
          emp_type, dept_id, pos_id, start_date, base_salary, status, image, cneu_cme_points) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?)`;
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?)`;
+
+      const hashedPassword = d.password ? crypto.createHash('sha256').update(d.password).digest('hex') : '';
 
       const values = [
         d.emp_id || '', d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
         d.first_name_en || '', d.last_name_en || '',
         d.birth_date || null, d.gender || 'ชาย', d.address || '',
         d.id_card || d.citizen_id || '0000000000000', d.phone || '',
+        d.email || null, hashedPassword, d.role || 'User',
         d.emp_type || 'พนักงานประจำ', d.dept_id || null, d.pos_id || null, d.start_date || null,
         d.base_salary || 0, imageName,
         d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0
