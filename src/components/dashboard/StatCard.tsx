@@ -24,12 +24,12 @@ export default function StatCard({
 }: Props) {
     return (
         <Link href={href} style={{ textDecoration: "none" }}>
-            <div className="glass-card hover-lift" style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, alignItems: 'flex-start' }}>
+            <div className="glass-card hover-lift" style={{ padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, alignItems: 'flex-start' }}>
                     <div style={{
-                        width: 54,
-                        height: 54,
-                        borderRadius: 18,
+                        width: 48,
+                        height: 48,
+                        borderRadius: 16,
                         background: iconBg,
                         display: "flex",
                         alignItems: "center",
@@ -38,7 +38,7 @@ export default function StatCard({
                         boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
                     }}>
                         {icon.length > 10 ? (
-                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 28, height: 28 }}>
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: 24, height: 24 }}>
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
                             </svg>
                         ) : (

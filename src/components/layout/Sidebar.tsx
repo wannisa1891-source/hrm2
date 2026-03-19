@@ -143,23 +143,24 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="sidebar-footer">
-          {!collapsed && (
-            <>
-              <div className="user-block">
-                <div className="s-avatar">W</div>
-                <div>
-                  <div className="s-username">{user?.username || 'Admin'}</div>
-                  <div className="s-role">Admin</div>
-                </div>
+      </div>
+
+      {/* Footer - Moved outside scroll wrapper */}
+      <div className="sidebar-footer">
+        {!collapsed && (
+          <>
+            <div className="user-block" style={{ flexDirection: 'row', textAlign: 'left', padding: '0 8px' }}>
+              <div className="s-avatar" style={{ width: 40, height: 40, fontSize: 16 }}>{user?.username?.charAt(0).toUpperCase() || 'H'}</div>
+              <div style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
+                <div className="s-username" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.username || 'Admin'}</div>
+                <div className="s-role">Management</div>
               </div>
-              <button className="btn-logout" onClick={logout}>
-                ออกจากระบบ
-              </button>
-            </>
-          )}
-        </div>
+            </div>
+            <button className="btn-logout" onClick={logout}>
+              ออกจากระบบ
+            </button>
+          </>
+        )}
       </div>
     </aside>
   );

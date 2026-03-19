@@ -102,14 +102,14 @@ export default function DashboardHeader({ today, userName = "Hospital HRM" }: { 
     }
   }
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
 
       <div>
         <span style={{
           background: 'white',
-          padding: '4px 14px',
+          padding: '3px 12px',
           borderRadius: 100,
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: 700,
           color: '#4A5644',
           boxShadow: '0 2px 10px rgba(0,0,0,0.06)'
@@ -117,7 +117,7 @@ export default function DashboardHeader({ today, userName = "Hospital HRM" }: { 
           {today}
         </span>
 
-        <h1 style={{ fontSize: 32, fontWeight: 700, margin: '10px 0 4px' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, margin: '4px 0 2px' }}>
           สวัสดีครับ, <span style={{ color: '#4A5644' }}>{userName}</span>
         </h1>
 

@@ -147,8 +147,8 @@ export default function DashboardPage() {
 
   return (
 
-    <AppLayout>
-      <div style={{ height: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <AppLayout hideScrollbar={true}>
+      <div className="no-scrollbar" style={{ height: 'calc(100vh - 44px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <DashboardHeader today={today} />
 
       {loading && <p>Loading...</p>}
