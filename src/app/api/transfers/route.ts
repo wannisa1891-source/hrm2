@@ -143,14 +143,16 @@ export async function PUT(req: NextRequest) {
     const status = data.status || 'Pending';
     const sql = `UPDATE tbl_transfers SET 
       order_no = ?, order_date = ?, subject = ?, transfer_type = ?, effective_date = ?, 
-      new_dept_id = ?, new_position = ?, new_level = ?,  
-      new_salary = ?, order_file = ?, status = ?
+      old_dept_id = ?, new_dept_id = ?, old_position = ?, new_position = ?, 
+      old_level = ?, new_level = ?, old_salary = ?, new_salary = ?, 
+      order_file = ?, status = ?
       WHERE transfer_id = ?`;
 
     await connection.query(sql, [
       data.orderNo, data.orderDate || null, data.title, data.transferType, data.effectDate || null,
-      data.newDeptId || null, data.newPos || null, data.newLevel, 
-      data.newSalary, fileName, status, transfer_id
+      data.oldDeptId || null, data.newDeptId || null, data.oldPos || null, data.newPos || null, 
+      data.oldLevel, data.newLevel, data.oldSalary, data.newSalary, 
+      fileName, status, transfer_id
     ]);
 
     // Only update employee record if approved
