@@ -1,24 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
 
+// Helper to map UI shift strings to DB shift_type_ids
+const shiftMap: Record<string, number> = {
+  'Morning': 1,
+  'Afternoon': 2,
+  'Night': 3
+};
+
 // GET /api/schedules?month=2026-03
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const month = searchParams.get('month'); // "YYYY-MM"
 
-    let sql = 'SELECT * FROM tbl_schedules';
+    // Fetch schedules and join with shift types to get names
+    let sql = `
+      SELECT s.id, s.emp_id as nurse_name, s.role as department, 
+             s.schedule_date, t.code as shift_code, s.notes as note
+      FROM tbl_schedules s
+      LEFT JOIN tbl_shift_types t ON s.shift_type_id = t.id
+      WHERE 1=1
+    `;
     const values: string[] = [];
 
     if (month) {
-      sql += ' WHERE DATE_FORMAT(schedule_date, "%Y-%m") = ?';
+      sql += ' AND DATE_FORMAT(s.schedule_date, "%Y-%m") = ?';
       values.push(month);
     }
 
-    sql += ' ORDER BY schedule_date ASC, shift ASC';
+    sql += ' ORDER BY s.schedule_date ASC, s.shift_type_id ASC';
 
-    const [rows] = await pool.query(sql, values);
-    return NextResponse.json(rows);
+    const [rows]: any = await pool.query(sql, values);
+    
+    const mappedRows = rows.map((r: any) => {
+        // Map back to 'Morning', 'Afternoon', 'Night' for legacy frontend rendering
+        let mappedShift = 'Morning';
+        if (r.shift_code === 'บ') mappedShift = 'Afternoon';
+        if (r.shift_code === 'ด') mappedShift = 'Night';
+
+        return {
+           id: r.id.toString(),
+           nurse_name: r.nurse_name,
+           shift: mappedShift,
+           department: r.department,
+           schedule_date: r.schedule_date,
+           note: r.note
+        };
+    });
+
+    return NextResponse.json(mappedRows);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'DB Error';
     return NextResponse.json({ error: message }, { status: 500 });
@@ -34,24 +65,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'กรุณากรอกข้อมูลให้ครบ' }, { status: 400 });
     }
 
-    // ตรวจสอบ duplicate: พยาบาล 1 คน ห้ามมีมากกว่า 1 เวร ต่อวัน
-    const [dup] = await pool.query(
-      'SELECT id FROM tbl_schedules WHERE nurse_name = ? AND schedule_date = ?',
-      [nurseName.trim(), date]
-    ) as [{ id: string }[], unknown];
-    if ((dup as { id: string }[]).length > 0) {
-      return NextResponse.json({ error: `${nurseName} มีเวรในวันนี้แล้ว` }, { status: 409 });
-    }
+    const shift_type_id = shiftMap[shift] || 1;
 
-    const id = 'SCH' + Date.now().toString().slice(-7);
-    await pool.query(
-      'INSERT INTO tbl_schedules (id, nurse_name, shift, department, schedule_date, note) VALUES (?,?,?,?,?,?)',
-      [id, nurseName.trim(), shift, department, date, note || '']
+    // Check duplicate logic based on the new schema (emp_id = nurse_name, schedule_date = date)
+    const [dup]: any = await pool.query(
+      'SELECT id FROM tbl_schedules WHERE emp_id = ? AND schedule_date = ? AND shift_type_id = ?',
+      [nurseName.trim(), dateStrSafe(date), shift_type_id]
     );
 
-    return NextResponse.json({ success: true, id });
+    if (dup.length > 0) {
+      return NextResponse.json({ error: `${nurseName} มีเวร ${shift} ในวันนี้แล้ว` }, { status: 409 });
+    }
+
+    // Insert to new tbl_schedules (emp_id=nurseName, role=department)
+    const [result]: any = await pool.query(
+      'INSERT INTO tbl_schedules (emp_id, shift_type_id, role, schedule_date, notes, status) VALUES (?,?,?,?,?,?)',
+      [nurseName.trim(), shift_type_id, department, dateStrSafe(date), note || '', 'Published']
+    );
+
+    return NextResponse.json({ success: true, id: result.insertId.toString() });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'DB Error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+// Ensure proper date string format for SQL
+function dateStrSafe(dateStr: string) {
+    return new Date(dateStr).toISOString().split('T')[0];
 }
