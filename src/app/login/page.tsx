@@ -42,10 +42,10 @@ export default function LoginPage() {
       if (result.success) {
         // เก็บข้อมูล user ใน localStorage
         if (result.user) {
-          localStorage.setItem('user', JSON.stringify(result.user));
-          // ใช้ context login
-          const displayName = `${result.user.first_name} ${result.user.last_name}`.trim() || result.user.username;
-          login(displayName);
+
+           login(result.user);
+        } else {
+           login({ username: email });
         }
         // redirect ไปหน้า dashboard
         router.push('/dashboard');

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
+import { logAudit } from '@/lib/audit';
 
 export async function GET() {
   try {
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
       "INSERT INTO tbl_leaves (leave_id, emp_id, leave_type_id, start_date, end_date, reason, status) VALUES (?,?,?,?,?,?,'Pending')",
       [leave_id, emp_id, leave_type_id, start_date, end_date, reason]
     );
+    await logAudit(req.headers.get('x-user-id'), `ยื่นขอลาพักผ่อน/หยุดงาน: พนักงาน ${emp_id} รหัสการลา ${leave_id}`);
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'DB Error';

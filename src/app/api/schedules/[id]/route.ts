@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
 
+const shiftMap: Record<string, number> = {
+    'Morning': 1,
+    'Afternoon': 2,
+    'Night': 3
+};
+
 // PUT /api/schedules/[id]
 export async function PUT(
   req: NextRequest,
@@ -14,9 +20,11 @@ export async function PUT(
       return NextResponse.json({ error: 'กรุณากรอกข้อมูลให้ครบ' }, { status: 400 });
     }
 
+    const shift_type_id = shiftMap[shift] || 1;
+
     await pool.query(
-      'UPDATE tbl_schedules SET nurse_name=?, shift=?, department=?, note=? WHERE id=?',
-      [nurseName.trim(), shift, department, note || '', id]
+      'UPDATE tbl_schedules SET emp_id=?, shift_type_id=?, role=?, notes=? WHERE id=?',
+      [nurseName.trim(), shift_type_id, department, note || '', id]
     );
 
     return NextResponse.json({ success: true });
