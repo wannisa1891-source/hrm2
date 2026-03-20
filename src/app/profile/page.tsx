@@ -126,10 +126,10 @@ export default function MyProfilePage() {
         <div className="glass-card left-card" style={{ padding: '32px 24px', textAlign: 'center' }}>
           <div className="profile-avatar-wrap">
             <img 
-              src={profile.image || profile.photo || 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png'} 
+              src={profile.image ? `/uploads/${profile.image}` : (profile.photo ? `/uploads/${profile.photo}` : 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png')} 
               alt="avatar" 
               className="profile-avatar"
-              onError={(e) => { e.currentTarget.src = 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png'; }}
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }}
             />
           </div>
           <h2 className="profile-name">{fullName}</h2>
