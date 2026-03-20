@@ -498,7 +498,12 @@ export default function RegisterPage() {
           )}
 
           {/* Step 1: Account Information */}
-          <div style={{ display: currentStep === 0 ? 'block' : 'none' }} className="form-section">
+          <form
+            style={{ display: currentStep === 0 ? 'block' : 'none' }}
+            className="form-section"
+            onSubmit={e => { e.preventDefault(); nextStep(); }}
+            autoComplete="on"
+          >
             <h3 className="section-title">
               <span className="section-icon">🔐</span>
               ข้อมูลบัญชีผู้ใช้
@@ -514,6 +519,7 @@ export default function RegisterPage() {
                     onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
                     placeholder="กรอกชื่อผู้ใช้"
                     onBlur={checkUsername}
+                    autoComplete="username"
                   />
                 </div>
                 {usernameStatus === 'taken' && <span className="field-error">❌ Username นี้ถูกใช้แล้ว</span>}
@@ -532,6 +538,7 @@ export default function RegisterPage() {
                     type="email"
                     placeholder="example@hospital.com"
                     onBlur={validateEmailField}
+                    autoComplete="email"
                   />
                 </div>
                 {emailError && <span className="field-error">❌ {emailError}</span>}
@@ -548,6 +555,7 @@ export default function RegisterPage() {
                     onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="กรอกรหัสผ่าน"
+                    autoComplete="new-password"
                   />
                   <span className="toggle-pass" onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? '🙈' : '👁️'}
@@ -578,6 +586,7 @@ export default function RegisterPage() {
                     onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))}
                     type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="ยืนยันรหัสผ่าน"
+                    autoComplete="new-password"
                   />
                   <span className="toggle-pass" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
                     {showConfirmPassword ? '🙈' : '👁️'}
@@ -591,7 +600,7 @@ export default function RegisterPage() {
                 )}
               </div>
             </div>
-          </div>
+          </form>
 
           {/* Step 2: Employee Information */}
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }} className="form-section">
@@ -750,7 +759,12 @@ export default function RegisterPage() {
             )}
 
             {currentStep < steps.length - 1 && (
-              <button className="btn btn-primary" onClick={nextStep}>
+              <button
+                className="btn btn-primary"
+                onClick={nextStep}
+                type={currentStep === 0 ? 'submit' : 'button'}
+                form={currentStep === 0 ? undefined : undefined}
+              >
                 ถัดไป →
               </button>
             )}
