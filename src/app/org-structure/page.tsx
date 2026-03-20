@@ -7,8 +7,7 @@ import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
 
 export default function DepartmentAndEmployeePage() {
-  // ดึงฟังก์ชันจัดการข้อมูลจาก Hook
-  const { employees = [], loadEmployees, removeEmployee, addEmployee, updateEmployee } = useEmployees();
+  const { employees = [], loadEmployees, removeEmployee } = useEmployees();
   const { departments = [], loadDepartments } = useDepartments();
   const { positions = [], loadPositions } = usePositions();
 
@@ -16,102 +15,101 @@ export default function DepartmentAndEmployeePage() {
   const [selectedEmpId, setSelectedEmpId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  // --- เพิ่ม State สำหรับจัดการฟอร์ม ---
-  const [mode, setMode] = useState<'view' | 'edit' | 'create'>('view');
-  const [formData, setFormData] = useState<any>({});
-
   useEffect(() => {
     loadEmployees?.();
     loadDepartments?.();
     loadPositions?.();
   }, []);
 
+  // กรองพนักงานตามแผนกและคำค้นหา
   const filteredEmployees = useMemo(() => {
     let result = employees;
-    if (selectedDeptId) result = result.filter(emp => emp.dept_id === selectedDeptId);
+    if (selectedDeptId) {
+      result = result.filter(emp => emp.dept_id === selectedDeptId);
+    }
     if (search) {
       const term = search.toLowerCase();
-      result = result.filter(e => `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(term));
+      result = result.filter(e =>
+        `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(term)
+      );
     }
     return result;
   }, [employees, selectedDeptId, search]);
 
-  const selectedEmp = useMemo(() => employees.find(e => e.emp_id === selectedEmpId), [selectedEmpId, employees]);
+  const selectedEmp = useMemo(() =>
+    employees.find(e => e.emp_id === selectedEmpId),
+    [selectedEmpId, employees]
+  );
 
   const getDeptName = (id: string) => departments.find(d => d.dept_id === id)?.dept_name || 'ไม่ระบุ';
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
-
-  // --- Functions สำหรับจัดการการคลิก ---
-  const handleOpenCreate = () => {
-    setFormData({
-      emp_id: '',
-      prefix: 'นาย',
-      first_name_th: '',
-      last_name_th: '',
-      dept_id: departments[0]?.dept_id || '',
-      pos_id: positions[0]?.pos_id || '',
-      status: 'Active',
-      emp_type: 'Full-time'
-    });
-    setMode('create');
-    setSelectedEmpId('NEW'); // สั่งเปิด sidebar
-  };
-
-  const handleOpenEdit = () => {
-    setFormData({ ...selectedEmp });
-    setMode('edit');
-  };
-
-  const handleSave = async () => {
-    if (!formData.emp_id || !formData.first_name_th) {
-      alert('กรุณากรอกรหัสพนักงานและชื่อ');
-      return;
-    }
-
-    try {
-      if (mode === 'create') {
-        await addEmployee?.(formData);
-      } else {
-        await updateEmployee?.(formData.emp_id, formData);
-      }
-      loadEmployees?.(); // โหลดข้อมูลใหม่
-      setSelectedEmpId(null); // ปิด Sidebar
-      setMode('view');
-    } catch (error) {
-      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-    }
-  };
 
   return (
     <AppLayout>
       <div style={{ display: 'flex', height: 'calc(100vh - 64px)', background: '#f8fafc', overflow: 'hidden', position: 'relative' }}>
 
-        {/* --- 1. LEFT SIDEBAR --- */}
+        {/* --- 1. LEFT SIDEBAR (Department Selector) --- */}
         <div style={styles.leftSidebar}>
           <div style={{ padding: '24px', background: '#c8b8a0' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#45322e', margin: 0 }}>โครงสร้างองค์กร</h2>
+            <p style={{ fontSize: '12px', color: '#5d4037', margin: '4px 0 0' }}>เลือกแผนกเพื่อดูพนักงาน</p>
           </div>
+
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-            <div onClick={() => setSelectedDeptId('')} style={{ ...styles.deptItem, background: selectedDeptId === '' ? '#fff' : 'transparent', fontWeight: selectedDeptId === '' ? 700 : 400 }}>
+            <div
+              onClick={() => setSelectedDeptId('')}
+              style={{
+                ...styles.deptItem,
+                background: selectedDeptId === '' ? '#fff' : 'transparent',
+                fontWeight: selectedDeptId === '' ? 700 : 400,
+                boxShadow: selectedDeptId === '' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+              }}
+            >
               🌐 พนักงานทั้งหมด
             </div>
+
+            <div style={{ margin: '20px 0 8px 12px', fontSize: '11px', fontWeight: 700, color: '#8b7355', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              กลุ่มงาน / แผนก
+            </div>
             {departments.map(dept => (
-              <div key={dept.dept_id} onClick={() => setSelectedDeptId(dept.dept_id)} style={{ ...styles.deptItem, background: selectedDeptId === dept.dept_id ? '#fff' : 'transparent', fontWeight: selectedDeptId === dept.dept_id ? 700 : 400 }}>
+              <div
+                key={dept.dept_id}
+                onClick={() => setSelectedDeptId(dept.dept_id)}
+                style={{
+                  ...styles.deptItem,
+                  background: selectedDeptId === dept.dept_id ? '#fff' : 'transparent',
+                  color: selectedDeptId === dept.dept_id ? '#2563eb' : '#45322e',
+                  fontWeight: selectedDeptId === dept.dept_id ? 700 : 400,
+                  boxShadow: selectedDeptId === dept.dept_id ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                }}
+              >
                 • {dept.dept_name}
               </div>
             ))}
           </div>
         </div>
 
-        {/* --- 2. MAIN CONTENT --- */}
+        {/* --- 2. MAIN CONTENT (Employee Table) --- */}
         <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <div>
-              <h1 style={{ fontSize: '28px', fontWeight: 800 }}>{selectedDeptId ? getDeptName(selectedDeptId) : 'รายชื่อพนักงาน'}</h1>
+              <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1e293b', margin: 0 }}>
+                {selectedDeptId ? getDeptName(selectedDeptId) : 'รายชื่อพนักงานทั้งหมด'}
+              </h1>
+              <p style={{ color: '#64748b', margin: '4px 0 0' }}>พบพนักงาน {filteredEmployees.length} ท่าน</p>
             </div>
+
             <div style={{ display: 'flex', gap: '12px' }}>
-              <input placeholder="ค้นหา..." value={search} onChange={(e) => setSearch(e.target.value)} style={styles.searchInputCustom} />
-              <button style={styles.addBtn} onClick={handleOpenCreate}>+ เพิ่มพนักงาน</button>
+              <div style={styles.searchWrapper}>
+                <span>🔍</span>
+                <input
+                  placeholder="ค้นหาชื่อ หรือ รหัส..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={styles.searchInput}
+                />
+              </div>
+              <button style={styles.addBtn}>+ เพิ่มพนักงาน</button>
             </div>
           </div>
 
@@ -126,10 +124,33 @@ export default function DepartmentAndEmployeePage() {
               </thead>
               <tbody>
                 {filteredEmployees.map((emp) => (
-                  <tr key={emp.emp_id} onClick={() => { setSelectedEmpId(emp.emp_id); setMode('view'); }} style={styles.tableRow}>
-                    <td style={styles.td}>{emp.first_name_th} {emp.last_name_th}</td>
-                    <td style={styles.td}>{getPosName(emp.pos_id)}</td>
-                    <td style={styles.td}>{emp.status}</td>
+                  <tr
+                    key={emp.emp_id}
+                    onClick={() => setSelectedEmpId(emp.emp_id)}
+                    style={styles.tableRow}
+                  >
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={styles.avatar}>{emp.first_name_th?.[0] || 'E'}</div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{emp.first_name_th} {emp.last_name_th}</div>
+                          <div style={{ fontSize: '12px', color: '#94a3b8' }}>ID: {emp.emp_id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={styles.td}>
+                      <div style={{ fontWeight: 500, fontSize: '14px' }}>{getPosName(emp.pos_id)}</div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>{getDeptName(emp.dept_id)}</div>
+                    </td>
+                    <td style={styles.td}>
+                      <span style={{
+                        padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
+                        background: emp.status === 'Active' ? '#dcfce7' : '#f1f5f9',
+                        color: emp.status === 'Active' ? '#166534' : '#64748b'
+                      }}>
+                        {emp.status}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -137,112 +158,107 @@ export default function DepartmentAndEmployeePage() {
           </div>
         </div>
 
-        {/* --- 3. DETAIL & FORM SIDEBAR --- */}
-        <div style={{ ...styles.overlay, opacity: selectedEmpId ? 1 : 0, visibility: selectedEmpId ? 'visible' : 'hidden' }} onClick={() => setSelectedEmpId(null)} />
+        {/* --- 3. DETAIL SIDEBAR (Drawer) --- */}
+        {/* Overlay กันการกดค้างด้านหลัง */}
+        <div
+          style={{
+            ...styles.overlay,
+            opacity: selectedEmpId ? 1 : 0,
+            visibility: selectedEmpId ? 'visible' : 'hidden'
+          }}
+          onClick={() => setSelectedEmpId(null)}
+        />
 
-        <div style={{ ...styles.detailSidebar, transform: selectedEmpId ? 'translateX(0)' : 'translateX(100%)', visibility: selectedEmpId ? 'visible' : 'hidden' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={styles.sideHeader}>
-              <h3>{mode === 'create' ? 'เพิ่มพนักงานใหม่' : mode === 'edit' ? 'แก้ไขข้อมูล' : 'รายละเอียดข้อมูล'}</h3>
-              <button onClick={() => setSelectedEmpId(null)} style={styles.closeBtn}>✕</button>
-            </div>
+        <div style={{
+          ...styles.detailSidebar,
+          transform: selectedEmpId ? 'translateX(0)' : 'translateX(100%)',
+          visibility: selectedEmpId ? 'visible' : 'hidden'
+        }}>
+          {selectedEmp && (
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
-            <div style={styles.sideBody}>
-              {mode === 'view' ? (
-                // --- MODE: VIEW ---
-                selectedEmp && (
-                  <>
-                    <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                      <div style={styles.largeAvatar}>{selectedEmp.first_name_th?.[0]}</div>
-                      <h2>{selectedEmp.first_name_th} {selectedEmp.last_name_th}</h2>
-                    </div>
-                    <InfoRow label="รหัสพนักงาน" value={selectedEmp.emp_id} />
-                    <InfoRow label="แผนก" value={getDeptName(selectedEmp.dept_id)} />
-                    <InfoRow label="เบอร์โทร" value={selectedEmp.phone || '-'} />
-                    <InfoRow label="ที่อยู่" value={selectedEmp.address || '-'} isLong />
-                  </>
-                )
-              ) : (
-                // --- MODE: EDIT / CREATE ---
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <label style={styles.label}>รหัสพนักงาน *</label>
-                  <input style={styles.formInput} disabled={mode === 'edit'} value={formData.emp_id} onChange={e => setFormData({ ...formData, emp_id: e.target.value })} />
+              {/* Sidebar Header */}
+              <div style={styles.sideHeader}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>รายละเอียดข้อมูล</h3>
+                <button onClick={() => setSelectedEmpId(null)} style={styles.closeBtn}>✕</button>
+              </div>
 
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={styles.label}>ชื่อ (ไทย)</label>
-                      <input style={styles.formInput} value={formData.first_name_th} onChange={e => setFormData({ ...formData, first_name_th: e.target.value })} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <label style={styles.label}>นามสกุล (ไทย)</label>
-                      <input style={styles.formInput} value={formData.last_name_th} onChange={e => setFormData({ ...formData, last_name_th: e.target.value })} />
-                    </div>
-                  </div>
-
-                  <label style={styles.label}>แผนก</label>
-                  <select style={styles.formInput} value={formData.dept_id} onChange={e => setFormData({ ...formData, dept_id: e.target.value })}>
-                    {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
-                  </select>
-
-                  <label style={styles.label}>ตำแหน่ง</label>
-                  <select style={styles.formInput} value={formData.pos_id} onChange={e => setFormData({ ...formData, pos_id: e.target.value })}>
-                    {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
-                  </select>
-
-                  <label style={styles.label}>ที่อยู่</label>
-                  <textarea style={{ ...styles.formInput, height: '80px' }} value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
+              {/* Sidebar Body (Scrollable) */}
+              <div style={styles.sideBody}>
+                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                  <div style={styles.largeAvatar}>{selectedEmp.first_name_th?.[0] || '👤'}</div>
+                  <h2 style={{ margin: '0', fontSize: '22px', fontWeight: 700 }}>
+                    {selectedEmp.prefix || ''}{selectedEmp.first_name_th} {selectedEmp.last_name_th}
+                  </h2>
+                  <p style={{ color: '#6366f1', fontWeight: 600, margin: '4px 0' }}>{getPosName(selectedEmp.pos_id)}</p>
+                  <span style={styles.empIdBadge}>{selectedEmp.emp_id}</span>
                 </div>
-              )}
-            </div>
 
-            <div style={styles.sideFooter}>
-              {mode === 'view' ? (
-                <>
-                  <button style={styles.mainEditBtn} onClick={handleOpenEdit}>แก้ไขข้อมูล</button>
-                  <button style={styles.deleteBtn} onClick={() => { if (confirm('ลบ?')) { removeEmployee?.(selectedEmpId!); setSelectedEmpId(null); } }}>🗑️</button>
-                </>
-              ) : (
-                <>
-                  <button style={{ ...styles.mainEditBtn, background: '#10b981' }} onClick={handleSave}>บันทึกข้อมูล</button>
-                  <button style={{ ...styles.mainEditBtn, background: '#f1f5f9', color: '#64748b' }} onClick={() => mode === 'create' ? setSelectedEmpId(null) : setMode('view')}>ยกเลิก</button>
-                </>
-              )}
+                <div style={styles.sectionDivider}>ข้อมูลการทำงาน</div>
+                <div style={styles.infoList}>
+                  <InfoRow label="แผนก" value={getDeptName(selectedEmp.dept_id)} />
+                  <InfoRow label="ประเภทพนักงาน" value={selectedEmp.emp_type || '-'} />
+                  <InfoRow label="สถานะปัจจุบัน" value={selectedEmp.status} color={selectedEmp.status === 'Active' ? '#166534' : '#64748b'} />
+                </div>
+
+                <div style={styles.sectionDivider}>ข้อมูลการติดต่อ</div>
+                <div style={styles.infoList}>
+                  <InfoRow label="เบอร์โทรศัพท์" value={selectedEmp.phone || '-'} />
+                  <InfoRow label="เลขบัตรประชาชน" value={selectedEmp.citizen_id || '-'} />
+                  <InfoRow label="ที่อยู่ปัจจุบัน" value={selectedEmp.address || '-'} isLong />
+                </div>
+              </div>
+
+              {/* Sidebar Footer (Fixed at bottom) */}
+              <div style={styles.sideFooter}>
+                <button style={styles.mainEditBtn}>แก้ไขข้อมูลพนักงาน</button>
+                <button
+                  onClick={() => { if (confirm('ยืนยันการลบพนักงาน?')) { removeEmployee?.(selectedEmp.emp_id); setSelectedEmpId(null); } }}
+                  style={styles.deleteBtn}
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </AppLayout>
   );
 }
 
-// --- Helper Components & Styles ---
-function InfoRow({ label, value, isLong }: any) {
+// --- Sub-components ---
+function InfoRow({ label, value, color = '#0f172a', isLong = false }: any) {
   return (
-    <div style={{ marginBottom: '15px', display: 'flex', flexDirection: isLong ? 'column' : 'row', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: isLong ? 'column' : 'row', justifyContent: 'space-between', gap: '4px', padding: '8px 0' }}>
       <span style={{ fontSize: '14px', color: '#64748b' }}>{label}</span>
-      <span style={{ fontSize: '14px', fontWeight: 600 }}>{value}</span>
+      <span style={{ fontSize: '14px', color: color, fontWeight: 600, textAlign: isLong ? 'left' : 'right' }}>{value}</span>
     </div>
   );
 }
 
+// --- Styles Object ---
 const styles: Record<string, React.CSSProperties> = {
-  leftSidebar: { width: '280px', background: '#d9cbb3', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' },
-  deptItem: { padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', marginBottom: '4px' },
-  searchInputCustom: { padding: '10px 15px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', width: '250px' },
-  addBtn: { background: '#0f172a', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' },
-  tableCard: { background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' },
-  th: { padding: '15px 20px', textAlign: 'left', fontSize: '12px', color: '#64748b', background: '#f8fafc' },
-  td: { padding: '15px 20px', borderBottom: '1px solid #f1f5f9' },
-  tableRow: { cursor: 'pointer' },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 999 },
-  detailSidebar: { position: 'fixed', right: 0, top: 0, width: '400px', height: '100vh', background: 'white', zIndex: 1000, transition: '0.3s ease' },
-  sideHeader: { padding: '20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  sideBody: { flex: 1, overflowY: 'auto', padding: '20px' },
-  sideFooter: { padding: '20px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '10px' },
-  closeBtn: { border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer' },
-  largeAvatar: { width: '80px', height: '80px', borderRadius: '20px', background: '#f1f5f9', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '30px' },
-  mainEditBtn: { flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#6366f1', color: 'white', fontWeight: 600, cursor: 'pointer' },
-  deleteBtn: { padding: '12px', borderRadius: '10px', border: 'none', background: '#fee2e2', color: '#ef4444', cursor: 'pointer' },
-  label: { fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '5px' },
-  formInput: { padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '14px' }
+  leftSidebar: { width: '280px', background: '#d9cbb3', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', zIndex: 10 },
+  deptItem: { padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', marginBottom: '6px', transition: 'all 0.2s ease' },
+  searchWrapper: { display: 'flex', alignItems: 'center', background: 'white', padding: '0 15px', borderRadius: '12px', border: '1px solid #e2e8f0', width: '300px' },
+  searchInput: { border: 'none', outline: 'none', padding: '12px 8px', flex: 1, fontSize: '14px' },
+  addBtn: { background: '#0f172a', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' },
+  tableCard: { background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' },
+  th: { padding: '16px 24px', textAlign: 'left', fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' },
+  td: { padding: '16px 24px', borderBottom: '1px solid #f1f5f9' },
+  tableRow: { cursor: 'pointer', transition: 'background 0.2s' },
+  avatar: { width: '36px', height: '36px', borderRadius: '10px', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#6366f1' },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 999, transition: 'opacity 0.3s ease' },
+  detailSidebar: { position: 'fixed', right: 0, top: 0, width: '420px', height: '100vh', background: 'white', zIndex: 1000, transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '-10px 0 30px rgba(0,0,0,0.1)' },
+  sideHeader: { padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  closeBtn: { border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', color: '#64748b' },
+  sideBody: { flex: 1, overflowY: 'auto', padding: '32px' },
+  largeAvatar: { width: '90px', height: '90px', borderRadius: '28px', background: '#f1f5f9', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px' },
+  empIdBadge: { display: 'inline-block', padding: '4px 12px', borderRadius: '8px', background: '#eef2ff', fontSize: '12px', color: '#6366f1', fontWeight: 700 },
+  sectionDivider: { fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '24px', marginBottom: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' },
+  infoList: { display: 'flex', flexDirection: 'column', gap: '4px' },
+  sideFooter: { padding: '20px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '12px', background: 'white' },
+  mainEditBtn: { flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: '#6366f1', color: 'white', fontWeight: 600, cursor: 'pointer' },
+  deleteBtn: { padding: '12px', borderRadius: '12px', border: 'none', background: '#fee2e2', color: '#ef4444', cursor: 'pointer' }
 };
