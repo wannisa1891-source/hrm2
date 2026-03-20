@@ -211,119 +211,104 @@ function EmployeesContent() {
 
   return (
     <AppLayout>
-      <div style={{ padding: '20px', background: '#f8fafc', minHeight: 'calc(100vh - 65px)' }}>
-        <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-          
-          {/* Header Row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b', margin: 0, textShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>ทะเบียนบุคลากร</h1>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <div style={{ position: 'relative' }}>
-                <input 
-                  type="text" 
-                  placeholder="ค้นหาชื่อหรือรหัส..." 
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  style={{ padding: '8px 12px 8px 35px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
-                />
-                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}>🔍</span>
-              </div>
-              <button 
-                onClick={openAdd}
-                style={{ padding: '8px 16px', background: '#9d8461', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}
-              >
-                + เพิ่มพนักงานใหม่
-              </button>
-              <button 
-                onClick={exportToCSV}
-                style={{ padding: '8px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}
-              >
-                ดาวน์โหลด EXCEL
-              </button>
-            </div>
+      <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">ทะเบียนบุคลากร</h1>
+            <div className="page-subtitle">จัดการรายชื่อและข้อมูลส่วนตัวของพนักงานทั้งหมดในระบบ</div>
           </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button className="btn-outline hover-glow" onClick={exportToCSV} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              ดาวน์โหลด EXCEL
+            </button>
+            <button className="btn-primary" onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+              เพิ่มพนักงานใหม่
+            </button>
+          </div>
+        </div>
 
-          {/* Filters Row */}
-          <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label style={{ fontSize: '14px', fontWeight: 500 }}>ตัวกรอง:</label>
-              <select value={filterDept} onChange={e => setFilterDept(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white' }}>
+        <div className="glass-card" style={{ marginBottom: '24px' }}>
+          <div className="filter-bar">
+            <div className="search-input-wrap" style={{ flex: '1 1 300px' }}>
+              <svg className="search-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input type="text" placeholder="ค้นหาชื่อหรือรหัสพนักงาน..." value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            
+            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterDept} onChange={e => setFilterDept(e.target.value)}>
                 <option value="all">ทุกแผนก</option>
                 {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
-              </select>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <select value={filterPos} onChange={e => setFilterPos(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white' }}>
+            </select>
+            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterPos} onChange={e => setFilterPos(e.target.value)}>
                 <option value="all">ทุกตำแหน่ง</option>
                 {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
-              </select>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white' }}>
-                <option value="all">สถานะพนักงาน: ทั้งหมด</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <select value={filterLicense} onChange={e => setFilterLicense(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white' }}>
+            </select>
+            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                <option value="all">สถานะการทำงาน: ทั้งหมด</option>
+                <option value="Active">Active (ทำงานอยู่)</option>
+                <option value="Inactive">Inactive (พ้นสภาพ)</option>
+            </select>
+            <select className="form-select" style={{ width: 'auto', minWidth: '160px' }} value={filterLicense} onChange={e => setFilterLicense(e.target.value)}>
                 <option value="all">ใบประกอบฯ: ทั้งหมด</option>
                 <option value="Active">ปกติ (Active)</option>
                 <option value="Expiring Soon">ใกล้หมดอายุ</option>
                 <option value="Expired">หมดอายุแล้ว</option>
-                <option value="Suspended">พักใช้ใบอนุญาต</option>
-              </select>
-            </div>
+                <option value="Suspended">พักใช้/ระงับ</option>
+            </select>
           </div>
 
-          {/* Data Table */}
-          <div style={{ overflowX: 'auto', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data-table">
               <thead>
-                <tr style={{ background: '#bc9c72', color: 'white' }}>
-                  <th style={{ padding: '15px', textAlign: 'center', borderTopLeftRadius: '10px' }}>รูปภาพ</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>ชื่อ-สกุล</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>ตำแหน่ง</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>แผนก</th>
-                  <th style={{ padding: '15px', textAlign: 'center' }}>สถานะ</th>
-                  <th style={{ padding: '15px', textAlign: 'center', borderTopRightRadius: '10px' }}>จัดการ</th>
+                <tr>
+                  <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
+                  <th>ชื่อ-สกุลพนักงาน</th>
+                  <th>ตำแหน่ง</th>
+                  <th>แผนก/งาน</th>
+                  <th style={{ textAlign: 'center' }}>สถานะ</th>
+                  <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>กำลังโหลดข้อมูล...</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
                 ) : currentData.length === 0 ? (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>ไม่พบข้อมูลพนักงาน</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
                   currentData.map((emp) => (
-                    <tr key={emp.emp_id} style={{ borderBottom: '1px solid #f1f5f9', background: emp.license_status === 'Expired' ? '#fbf1f1' : 'transparent' }}>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <div style={{ width: '45px', height: '45px', borderRadius: '10px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                          {emp.image ? <img src={`/uploads/${emp.image}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'รูป'}
+                    <tr key={emp.emp_id} style={{ background: emp.license_status === 'Expired' ? '#fff5f5' : 'transparent', transition: 'background 0.2s' }}>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
+                          {emp.image ? <img src={`/uploads/${emp.image}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{color:'#94a3b8', fontSize: '20px'}}>👤</span>}
                         </div>
                       </td>
-                      <td style={{ padding: '12px' }}>
-                        <div style={{ fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <td>
+                        <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>
                           {emp.prefix}{emp.first_name_th} {emp.last_name_th} 
-                          {emp.license_status === 'Expired' && <span style={{ color: '#ef4444', fontSize: '12px', cursor: 'help', fontWeight: 600, border: '1px solid #ef4444', padding: '2px 6px', borderRadius: '4px' }} title="ใบประกอบวิชาชีพหมดอายุ">หมดอายุ</span>}
+                          {emp.license_status === 'Expired' && <span className="badge badge-red" title="ใบประกอบวิชาชีพหมดอายุ">หมดอายุ</span>}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>รหัส: {emp.emp_id}</div>
+                        <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>รหัส: {emp.emp_id}</div>
                       </td>
-                      <td style={{ padding: '12px', color: '#475569' }}>{getPosName(emp.pos_id)}</td>
-                      <td style={{ padding: '12px', color: '#475569' }}>{getDeptName(emp.dept_id)}</td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <span style={{ 
-                          padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                          background: emp.status === 'Active' ? '#dcfce7' : '#f1f5f9',
-                          color: emp.status === 'Active' ? '#166534' : '#64748b'
-                        }}>
+                      <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
+                      <td style={{ color: '#334155' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', background: '#f8fafc', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }}>
+                          {getDeptName(emp.dept_id)}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className={`badge ${emp.status === 'Active' ? 'badge-green' : 'badge-gray'}`}>
                           {emp.status}
                         </span>
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button onClick={() => openEdit(emp)} style={{ padding: '8px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer' }} title="แก้ไขข้อมูล">แก้ไข</button>
-                          <button onClick={() => handleDelete(emp.emp_id)} style={{ padding: '8px', background: '#fef2f2', border: '1px solid #fca5a5', color: '#ef4444', borderRadius: '6px', cursor: 'pointer' }} title="ลบข้อมูล">ลบ</button>
+                      <td>
+                        <div className="action-btn-group" style={{ justifyContent: 'center' }}>
+                          <button className="icon-btn hover-glow" onClick={() => openEdit(emp)} title="แก้ไขข้อมูล" style={{ color: '#3b82f6' }}>
+                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          </button>
+                          <button className="icon-btn hover-glow" onClick={() => handleDelete(emp.emp_id)} title="ลบข้อมูล" style={{ color: '#ef4444', background: '#fef2f2' }}>
+                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
                         </div>
                       </td>
                     </tr>

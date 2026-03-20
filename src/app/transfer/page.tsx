@@ -228,18 +228,11 @@ export default function TransferPage() {
   return (
     <AppLayout>
       <style dangerouslySetInnerHTML={{ __html: `
-        .tr-page { display: flex; flex-direction: column; gap: 28px; padding: 12px; }
-
-        /* Header */
-        .tr-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; }
-        .tr-header-title { font-size: 36px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.02em; }
-        .tr-header-sub { font-size: 16px; color: #64748b; margin: 6px 0 0; font-weight: 500; }
-        .btn-tr-new { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: #fff; border: none; border-radius: 14px; padding: 12px 28px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .btn-tr-new:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3); background: linear-gradient(135deg, #1d4ed8, #2563eb); }
+        .tr-page { display: flex; flex-direction: column; gap: 24px; padding: 24px; min-height: calc(100vh - 65px); }
 
         /* Premium Stat Cards */
         .tr-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .tr-stat { background: #ffffff; border: 1px solid rgba(226, 232, 240, 0.7); border-radius: 24px; padding: 28px; display: flex; align-items: center; gap: 22px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+        .tr-stat { border: 1px solid rgba(226, 232, 240, 0.7); border-radius: 24px; padding: 28px; display: flex; align-items: center; gap: 22px; position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .tr-stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: transparent; transition: all 0.3s; }
         .tr-stat-blue::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
         .tr-stat-purple::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
@@ -253,9 +246,8 @@ export default function TransferPage() {
         .tr-stat-label { color: #64748b; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
         .tr-stat-tag { position: absolute; bottom: 24px; right: 24px; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: #f1f5f9; color: #475569; }
 
-        /* Table Card */
-        .tr-card { background: #ffffff; border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 24px; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05); overflow: hidden; }
-        .tr-card-header { padding: 24px 28px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); }
+        /* Table Card Tweaks */
+        .tr-card-header { padding: 24px 28px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
         .tr-card-title { font-size: 20px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
         .tr-card-title::before { content: ''; display: block; width: 6px; height: 24px; background: #3b82f6; border-radius: 4px; }
         .tr-search-bar { display: flex; gap: 8px; align-items: center; position: relative; }
@@ -263,12 +255,6 @@ export default function TransferPage() {
         .tr-search-input { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px 12px 42px; font-size: 15px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: #f8fafc; width: 300px; max-width: 100%; color: #1e293b; }
         .tr-search-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         .tr-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .tr-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1000px; }
-        .tr-table thead th { background: #f8fafc; padding: 16px 24px; font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; white-space: nowrap; border-bottom: 1px solid #e2e8f0; }
-        .tr-table tbody tr { transition: all 0.2s; }
-        .tr-table tbody tr:hover { background: #f8fafc; }
-        .tr-table td { padding: 18px 24px; font-size: 15px; color: #475569; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
-        .tr-table tbody tr:last-child td { border-bottom: none; }
 
         /* Status Badge */
         .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid transparent; }
@@ -370,14 +356,15 @@ export default function TransferPage() {
       <div className="tr-page">
 
         {/* ── Header ── */}
-        <div className="tr-header">
+        <div className="page-header">
           <div>
-            <h1 className="tr-header-title">ระบบการโยกย้าย</h1>
-            <p className="tr-header-sub">บันทึกคำสั่งแต่งตั้ง / โยกย้าย / เลื่อนตำแหน่ง</p>
+            <h1 className="page-title">ระบบการโยกย้าย</h1>
+            <p className="page-subtitle">บันทึกคำสั่งแต่งตั้ง / โยกย้าย / เลื่อนตำแหน่ง</p>
           </div>
           {!showForm && (
-            <button className="btn-tr-new" onClick={() => setShowForm(true)}>
-              <span style={{ fontSize: 18 }}>+</span> สร้างคำสั่งย้ายใหม่
+            <button className="btn-primary" onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+              สร้างคำสั่งย้ายใหม่
             </button>
           )}
         </div>
@@ -385,7 +372,7 @@ export default function TransferPage() {
         {/* ── Stat Cards ── */}
         {!showForm && (
           <div className="tr-stats">
-            <div className="tr-stat tr-stat-blue">
+            <div className="glass-card tr-stat tr-stat-blue">
               <div className="tr-stat-icon">
                 <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
               </div>
@@ -395,7 +382,7 @@ export default function TransferPage() {
               </div>
               <div className="tr-stat-tag">รายการ</div>
             </div>
-            <div className="tr-stat tr-stat-purple">
+            <div className="glass-card tr-stat tr-stat-purple">
               <div className="tr-stat-icon">
                 <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
               </div>
@@ -405,7 +392,7 @@ export default function TransferPage() {
               </div>
               <div className="tr-stat-tag">ปีนี้</div>
             </div>
-            <div className="tr-stat tr-stat-teal">
+            <div className="glass-card tr-stat tr-stat-teal">
               <div className="tr-stat-icon">
                 <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
               </div>
@@ -420,7 +407,7 @@ export default function TransferPage() {
 
         {/* ── Analytics & Charts ── */}
         {!showForm && transfers.length > 0 && (
-          <div className="tr-card" style={{ padding: '24px' }}>
+          <div className="glass-card" style={{ padding: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" color="#3b82f6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
               สถิติประเภทการย้าย/แต่งตั้ง
@@ -441,10 +428,10 @@ export default function TransferPage() {
 
         {/* ── List Table (when form is hidden) ── */}
         {!showForm && (
-          <div className="tr-card">
+          <div className="glass-card" style={{ padding: 0 }}>
             <div className="tr-card-header">
               <span className="tr-card-title">ประวัติการย้าย</span>
-              <div className="tr-search-bar">
+              <div className="filter-bar" style={{ padding: '24px 28px' }}>
                 <input
                   className="tr-search-input"
                   placeholder="ค้นหา ชื่อ / เลขที่คำสั่ง..."
@@ -454,7 +441,7 @@ export default function TransferPage() {
               </div>
             </div>
             <div className="tr-table-wrap custom-scroll">
-              <table className="tr-table">
+              <table className="data-table">
               <thead>
                 <tr>
                   <th>เลขที่คำสั่ง</th>
@@ -545,7 +532,7 @@ export default function TransferPage() {
 
         {/* ── FORM (3 sections) ── */}
         {showForm && (
-          <div className="tr-form-panel">
+          <div className="glass-card" style={{ padding: 0 }}>
 
             {/* ─── SECTION 1: ข้อมูลคำสั่ง ─── */}
             <div className="tr-section-header tr-section-1">
