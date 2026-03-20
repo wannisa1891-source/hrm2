@@ -21,12 +21,7 @@ const menuItems = [
     icon: icons.dashboard,
     href: '/dashboard',
   },
-  {
-    id: 'profile',
-    label: 'ข้อมูลส่วนตัว',
-    icon: icons.profile,
-    href: '/profile',
-  },
+
   {
     id: 'personnel',
     label: 'จัดการบุคลากร',

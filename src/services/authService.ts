@@ -13,20 +13,19 @@ export const loginUser = async (username: string, password: string) => {
       if (data.success) {
         return { 
           success: true, 
-          token: data.token, 
-          user: data.user 
+          user: data.user   // { user_id, username, first_name, last_name, email, role, status }
         };
       } else {
         return { 
           success: false, 
-          message: data.message || 'Email หรือ Password ไม่ถูกต้อง' 
+          message: data.message || 'รหัสผ่านหรือผู้ใช้ไม่ถูกต้อง' 
         };
       }
     } else {
       const errorData = await res.json().catch(() => ({}));
       return { 
         success: false, 
-        message: errorData.message || 'Email หรือ Password ไม่ถูกต้อง' 
+        message: errorData.message || 'รหัสผ่านหรือผู้ใช้ไม่ถูกต้อง' 
       };
     }
   } catch (error) {
@@ -35,19 +34,19 @@ export const loginUser = async (username: string, password: string) => {
   }
 };
 
-export const registerUser = async (name: string, email: string, password: string) => {
+export const registerUser = async (formData: Record<string, string>) => {
   try {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify(formData),
     });
 
     if (res.ok) {
       const data = await res.json();
-      return { success: true, message: data.message };
+      return { success: true, message: data.message, user_id: data.user_id };
     } else {
       const errorData = await res.json().catch(() => ({}));
       return { 

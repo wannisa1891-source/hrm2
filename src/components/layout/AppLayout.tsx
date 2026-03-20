@@ -25,9 +25,9 @@ export default function AppLayout({ children, hideScrollbar = false }: { childre
     <div className="main-layout">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
       <main className={`main-content${collapsed ? ' expanded' : ''}${hideScrollbar ? ' no-scrollbar' : ''}`}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-          <BackButton />
-          <NotificationBell />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', width: '100%' }}>
+          <div><BackButton /></div>
+          <div><NotificationBell /></div>
         </div>
         {children}
       </main>

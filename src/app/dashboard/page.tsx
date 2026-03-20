@@ -28,6 +28,17 @@ export default function DashboardPage() {
     image: ''
   })
 
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  useEffect(() => {
+    if (newsList.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentSlide(prev => (prev + 1) % newsList.length)
+      }, 5000)
+      return () => clearInterval(timer)
+    }
+  }, [newsList.length])
+
 
   const fetchAnnouncements = async () => {
 
@@ -234,22 +245,38 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              <div className="custom-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', flex: 1, paddingRight: 4, paddingBottom: 4 }}>
-                {newsList.map((news, i) => (
-                  <div key={i} className="quick-btn hover-glow" onClick={() => setSelectedNews(news)} style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s'
-                  }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                        </svg>
+              <div style={{ position: 'relative', flex: 1, borderRadius: 16, overflow: 'hidden', background: '#0f172a' }}>
+                {newsList.length > 0 ? (
+                  <>
+                    <div style={{ display: 'flex', width: '100%', height: '100%', transition: 'transform 0.5s ease-in-out', transform: `translateX(-${currentSlide * 100}%)` }}>
+                      {newsList.map((news, i) => (
+                        <div key={i} onClick={() => setSelectedNews(news)} style={{ width: '100%', height: '100%', flexShrink: 0, position: 'relative', cursor: 'pointer' }}>
+                          {news.image ? (
+                            <img src={news.image} alt={news.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }} />
+                          )}
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 20px', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)' }}>
+                            <div style={{ display: 'inline-block', padding: '4px 10px', background: '#3b82f6', color: 'white', fontSize: 11, fontWeight: 700, borderRadius: 20, marginBottom: 8 }}>ประกาศ</div>
+                            <h4 style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{news.title}</h4>
+                            <div style={{ color: '#cbd5e1', fontSize: 12, marginTop: 4 }}>{news.date}</div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <b style={{ display: 'block', fontSize: 14, color: '#1e2433', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{news.title}</b>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>{news.date}</div>
+                    
+                    <div style={{ position: 'absolute', bottom: 12, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 6 }}>
+                      {newsList.map((_, idx) => (
+                        <div key={idx} onClick={(e) => { e.stopPropagation(); setCurrentSlide(idx); }} style={{ width: currentSlide === idx ? 16 : 6, height: 6, borderRadius: 6, background: currentSlide === idx ? '#3b82f6' : 'rgba(255,255,255,0.4)', transition: 'all 0.3s', cursor: 'pointer' }} />
+                      ))}
                     </div>
-                  </div>
-                ))}
+
+                    <button onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => (prev === 0 ? newsList.length - 1 : prev - 1)) }} style={{ position: 'absolute', top: '50%', left: 8, transform: 'translateY(-50%)', width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>❮</button>
+                    <button onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => (prev + 1) % newsList.length) }} style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>❯</button>
+                  </>
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 14 }}>ไม่มีข่าวสาร</div>
+                )}
               </div>
 
             </div>

@@ -40,27 +40,17 @@ export default function LoginPage() {
       const result = await loginUser(email, password);
       
       if (result.success) {
-        // เก็บ token ใน localStorage
-        if (result.token) {
-          localStorage.setItem('token', result.token);
-          // เก็บข้อมูล user เพิ่มเติมเพื่อใช้ใน dashboard
-          if (result.user) {
-             localStorage.setItem('mockUser', JSON.stringify(result.user));
-          }
-        }
-        
-        // ถ้าใช้ context
+        // เก็บข้อมูล user ใน localStorage
         if (result.user) {
+
            login(result.user);
         } else {
            login({ username: email });
         }
-        
         // redirect ไปหน้า dashboard
         router.push('/dashboard');
       } else {
-        // แสดง error message บนหน้า login ถ้าไม่สำเร็จ
-        setErrorMessage(result.message || 'Email หรือ Password ไม่ถูกต้อง');
+        setErrorMessage(result.message || 'รหัสผ่านหรือผู้ใช้ไม่ถูกต้อง');
       }
     } catch {
       setErrorMessage('เกิดข้อผิดพลาด กรุณาลองใหม่');
