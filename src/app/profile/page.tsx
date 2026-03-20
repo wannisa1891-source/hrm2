@@ -76,10 +76,8 @@ export default function MyProfilePage() {
   return (
     <AppLayout>
       <style dangerouslySetInnerHTML={{ __html: `
-        .profile-container { display: grid; grid-template-columns: 320px 1fr; gap: 24px; padding: 20px; }
+        .profile-container { display: grid; grid-template-columns: 320px 1fr; gap: 24px; padding: 24px; max-width: 1400px; margin: 0 auto; }
         
-        /* Left Column: Side Card */
-        .profile-side-card { background: white; border-radius: 20px; padding: 32px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; text-align: center; }
         .profile-avatar-wrap { width: 140px; height: 140px; border-radius: 50%; margin: 0 auto 20px; padding: 4px; border: 4px solid #f8fafc; box-shadow: 0 10px 25px -10px rgba(0,0,0,0.1); position: relative; }
         .profile-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         .profile-name { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
@@ -90,12 +88,11 @@ export default function MyProfilePage() {
         
         /* Right Column: Main Content */
         .profile-main { display: flex; flex-direction: column; gap: 24px; }
-        .profile-tabs { display: flex; gap: 12px; background: #f1f5f9; padding: 6px; border-radius: 12px; align-self: flex-start; }
+        .profile-tabs { display: flex; gap: 12px; background: #f8fafc; padding: 6px; border-radius: 12px; align-self: flex-start; border: 1px solid #e2e8f0; }
         .tab-btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: #64748b; background: none; }
         .tab-btn.active { background: white; color: #2563eb; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         
         /* Content Card */
-        .content-card { background: white; border-radius: 20px; padding: 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; }
         .card-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
         .card-title::before { content: ''; display: block; width: 4px; height: 20px; background: #2563eb; border-radius: 2px; }
         
@@ -110,17 +107,14 @@ export default function MyProfilePage() {
         .leave-stat-val { font-size: 28px; font-weight: 800; color: #2563eb; }
         .leave-stat-label { font-size: 13px; color: #64748b; font-weight: 600; }
 
-        /* Tables */
-        .profile-table { width: 100%; border-collapse: collapse; }
-        .profile-table th { text-align: left; padding: 14px 12px; font-size: 13px; color: #64748b; border-bottom: 2px solid #f1f5f9; }
-        .profile-table td { padding: 16px 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; }
-        .badge { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+        /* Badges */
+        .badge { padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; display: inline-block; }
         .badge-success { background: #ecfdf5; color: #059669; }
         .badge-pending { background: #fffbeb; color: #d97706; }
         
         @media (max-width: 1024px) {
           .profile-container { grid-template-columns: 1fr; }
-          .profile-side-card { order: 1; }
+          .left-card { order: 1; }
           .profile-main { order: 2; }
           .info-grid { grid-template-columns: 1fr; }
           .leave-stats { grid-template-columns: 1fr; }
@@ -129,7 +123,7 @@ export default function MyProfilePage() {
 
       <div className="profile-container">
         {/* Left Column */}
-        <div className="profile-side-card">
+        <div className="glass-card left-card" style={{ padding: '32px 24px', textAlign: 'center' }}>
           <div className="profile-avatar-wrap">
             <img 
               src={profile.image || profile.photo || 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png'} 
@@ -166,7 +160,7 @@ export default function MyProfilePage() {
           </div>
 
           {activeTab === 'info' && (
-            <div className="content-card">
+            <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">รายละเอียดส่วนตัว</h3>
               <div className="info-grid">
                 <div className="field">
@@ -206,10 +200,10 @@ export default function MyProfilePage() {
           )}
 
           {activeTab === 'leave' && (
-            <div className="content-card">
+            <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">ประวัติการลา 10 รายการล่าสุด</h3>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="profile-table">
+              <div style={{ overflowX: 'auto' }} className="custom-scroll">
+                <table className="data-table">
                   <thead>
                     <tr>
                       <th>วันที่เริ่ม</th>
@@ -244,10 +238,10 @@ export default function MyProfilePage() {
           )}
 
           {activeTab === 'payroll' && (
-            <div className="content-card">
+            <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">สรุปเงินเพิ่ม/ลด (12 เดือนล่าสุด)</h3>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="profile-table">
+              <div style={{ overflowX: 'auto' }} className="custom-scroll">
+                <table className="data-table">
                   <thead>
                     <tr>
                       <th>งวดเดือน</th>

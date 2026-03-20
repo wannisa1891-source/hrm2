@@ -40,6 +40,7 @@ export interface Employee {
   
   has_license?: boolean | number
   licenses?: ProfessionalLicense[]
+  license_status?: string;
   cneu_cme_points?: number
   
   email?: string

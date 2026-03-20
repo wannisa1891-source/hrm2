@@ -178,45 +178,19 @@ export default function LicensePage() {
 
   return (
     <AppLayout>
+      <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
       {/* Header Section */}
-      <div style={{
-        background: 'transparent',
-        padding: '0 0 24px 0',
-        marginBottom: '16px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-      }}>
+      <div className="page-header">
         <div>
-          <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 800, color: '#1e2433' }}>
-            ใบประกอบวิชาชีพ
-          </h1>
-          <p style={{ margin: '8px 0 0 0', fontSize: '15px', color: '#64748b', maxWidth: '500px' }}>
-            จัดการและติดตามวันหมดอายุใบอนุญาตประกอบวิชาชีพของบุคลากรภายในองค์กร
-          </p>
+          <h1 className="page-title">ใบประกอบวิชาชีพ</h1>
+          <p className="page-subtitle">จัดการและติดตามวันหมดอายุใบอนุญาตประกอบวิชาชีพของบุคลากรภายในองค์กร</p>
         </div>
         <button 
+          className="btn-primary"
           onClick={() => handleOpenModal('add')}
-          style={{
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '12px',
-            fontWeight: 600,
-            fontSize: '15px',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            position: 'relative',
-            zIndex: 50
-          }}
-          onMouseOver={(e) => { e.currentTarget.style.background = '#2563eb'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-          onMouseOut={(e) => { e.currentTarget.style.background = '#3b82f6'; e.currentTarget.style.transform = 'translateY(0)' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
         >
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
           </svg>
           เพิ่มใบประกอบ
@@ -231,26 +205,18 @@ export default function LicensePage() {
           { title: 'หมดอายุแล้ว', count: expiredCount, color: '#dc2626', bg: '#fef2f2', filter: 'expired', iconPath: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' }
         ].map((card, i) => (
           <div key={i} 
+          className="glass-card hover-glow"
           onClick={() => setStatusFilter(card.filter)}
           style={{
-            background: statusFilter === card.filter ? '#f8fafc' : 'white',
-            borderRadius: '20px',
+            border: statusFilter === card.filter ? `2px solid ${card.color}` : '1px solid transparent',
             padding: '24px',
             display: 'flex',
             alignItems: 'center',
             gap: '20px',
-            boxShadow: statusFilter === card.filter ? `inset 0 0 0 2px ${card.color}, 0 4px 6px -1px rgba(0, 0, 0, 0.05)` : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-            border: statusFilter === card.filter ? '1px solid transparent' : '1px solid #f1f5f9',
-            transition: 'all 0.2s',
-            cursor: 'pointer'
-          }}
-          onMouseOver={(e) => {
-             e.currentTarget.style.transform = 'translateY(-4px)';
-             e.currentTarget.style.boxShadow = statusFilter === card.filter ? `inset 0 0 0 2px ${card.color}, 0 10px 15px -3px rgba(0, 0, 0, 0.1)` : '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-          }}
-          onMouseOut={(e) => {
-             e.currentTarget.style.transform = 'translateY(0)';
-             e.currentTarget.style.boxShadow = statusFilter === card.filter ? `inset 0 0 0 2px ${card.color}, 0 4px 6px -1px rgba(0, 0, 0, 0.05)` : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
             <div style={{
               width: '64px', height: '64px', borderRadius: '16px', background: card.bg,
@@ -269,15 +235,9 @@ export default function LicensePage() {
       </div>
 
       {/* Main Panel */}
-      <div style={{
-        background: '#ffffff',
-        borderRadius: '20px',
-        border: '1px solid #f1f5f9',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-        overflow: 'hidden'
-      }}>
+      <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
         {/* Filter Bar */}
-        <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '16px', backgroundColor: '#ffffff' }}>
+        <div className="filter-bar" style={{ padding: '24px' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>
               <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -286,6 +246,7 @@ export default function LicensePage() {
             </div>
             <input 
               type="text" 
+              className="search-input"
               placeholder="ค้นหาชื่อพนักงาน, รหัส หรือเลขใบรับรอง..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -297,10 +258,7 @@ export default function LicensePage() {
                 background: '#f8fafc',
                 fontSize: '15px',
                 outline: 'none',
-                transition: 'all 0.2s',
               }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.1)'; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.boxShadow = 'none'; }}
             />
           </div>
           <select 
@@ -327,17 +285,17 @@ export default function LicensePage() {
         </div>
 
         {/* Table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#ffffff' }}>
+        <div style={{ overflowX: 'auto' }} className="custom-scroll">
+          <table className="data-table">
             <thead>
-              <tr style={{ background: '#f8fafc', color: '#64748b', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <th style={{ padding: '16px 24px', fontWeight: 600 }}>พนักงาน</th>
-                <th style={{ padding: '16px 24px', fontWeight: 600 }}>ประเภทใบประกอบ</th>
-                <th style={{ padding: '16px 24px', fontWeight: 600 }}>เลขที่ใบอนุญาต</th>
-                <th style={{ padding: '16px 24px', fontWeight: 600, textAlign: 'center' }}>คะแนนสะสม</th>
-                <th style={{ padding: '16px 24px', fontWeight: 600 }}>วันหมดอายุ</th>
-                <th style={{ padding: '16px 24px', fontWeight: 600 }}>สถานะ</th>
-                <th style={{ padding: '16px 24px', fontWeight: 600, textAlign: 'right' }}>การจัดการ</th>
+              <tr>
+                <th>พนักงาน</th>
+                <th>ประเภทใบประกอบ</th>
+                <th>เลขที่ใบอนุญาต</th>
+                <th style={{ textAlign: 'center' }}>คะแนนสะสม</th>
+                <th>วันหมดอายุ</th>
+                <th>สถานะ</th>
+                <th style={{ textAlign: 'center' }}>การจัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -390,42 +348,37 @@ export default function LicensePage() {
                           {status.label}
                         </span>
                       </td>
-                      <td style={{ padding: '16px 24px', textAlign: 'right', position: 'relative', zIndex: 50 }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', position: 'relative', zIndex: 50 }}>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
                           <button 
+                            className="btn-primary"
                             onClick={() => handleOpenModal('renew', l)}
                             style={{
                               padding: '8px 16px',
                               borderRadius: '8px',
                               fontSize: '13px',
                               fontWeight: 600,
-                              cursor: 'pointer',
-                              border: 'none',
                               background: l.daysLeft <= 90 ? '#ef4444' : '#f1f5f9',
                               color: l.daysLeft <= 90 ? '#ffffff' : '#475569',
-                              transition: 'all 0.2s',
+                              border: 'none',
                               boxShadow: l.daysLeft <= 90 ? '0 4px 6px -1px rgba(239, 68, 68, 0.3)' : 'none'
                             }}
-                            onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(0.95)'}
-                            onMouseOut={(e) => e.currentTarget.style.filter = 'none'}
                           >
                             ต่ออายุ
                           </button>
                           
                           <button 
+                            className="btn-secondary"
                             onClick={() => handleOpenModal('edit', l)}
-                            style={{ position: 'relative', zIndex: 50, width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-                            onMouseOver={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.color = '#3b82f6'; }}
-                            onMouseOut={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; }}
+                            style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
                             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                           </button>
                           
                           <button 
+                            className="btn-danger"
                             onClick={() => handleDelete(l)}
-                            style={{ position: 'relative', zIndex: 50, width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-                            onMouseOver={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.borderColor = '#fca5a5'; }}
-                            onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                            style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
                             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
@@ -590,6 +543,7 @@ export default function LicensePage() {
           </div>
         </div>
       )}
+    </div>
     </AppLayout>
   );
 }

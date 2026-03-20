@@ -87,82 +87,80 @@ export default function LeavePage() {
 
   return (
     <AppLayout>
+      <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div className="page-header">
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0, letterSpacing: -0.3 }}>ระบบจัดการการลา</h1>
-          <p style={{ color: '#9ca3af', margin: '2px 0 0', fontSize: 12 }}>จัดการคำขอลาทั้งหมดในองค์กร</p>
+          <h1 className="page-title">ระบบจัดการการลา</h1>
+          <p className="page-subtitle">จัดการคำขอลาทั้งหมดในองค์กร</p>
         </div>
-        <button onClick={() => setShowForm(true)} style={{
-          background: '#111827', color: 'white', border: 'none',
-          padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-          boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-        }}>
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+        <button className="btn-primary" onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
           เพิ่มรายการลา
         </button>
       </div>
 
       {/* Stat Cards — clickable filters with icons */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, marginBottom: 24 }}>
         {cards.map((c, i) => {
           const active = filterStatus === c.key;
           return (
-            <button key={i} onClick={() => setFilterStatus(c.key)} style={{
-              padding: '14px 16px', borderRadius: 12,
-              background: active ? c.bgA : c.bg,
-              border: active ? `2px solid ${c.ring}` : '2px solid transparent',
-              cursor: 'pointer', transition: 'all 0.2s', outline: 'none',
-              display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left'
+            <button key={i} className={`glass-card hover-glow`} onClick={() => setFilterStatus(c.key)} style={{
+              padding: '24px',
+              border: active ? `2px solid ${c.ring}` : '1px solid transparent',
+              background: active ? c.bgA : '#fff',
+              cursor: 'pointer', transition: 'all 0.3s', outline: 'none',
+              display: 'flex', alignItems: 'center', gap: 16, textAlign: 'left',
+              position: 'relative', overflow: 'hidden'
             }}>
               <div style={{
-                width: 40, height: 40, borderRadius: 10,
+                width: 56, height: 56, borderRadius: 16,
                 background: active ? c.ring + '22' : c.ic + '12',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: c.ic, flexShrink: 0
               }}>
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={c.icon} /></svg>
+                <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={c.icon} /></svg>
               </div>
               <div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: c.tx, lineHeight: 1 }}>{c.value}</div>
-                <div style={{ fontSize: 11, color: c.ic, fontWeight: 500, marginTop: 2 }}>{c.label}</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: c.tx, lineHeight: 1 }}>{c.value}</div>
+                <div style={{ fontSize: 14, color: c.ic, fontWeight: 600, marginTop: 4 }}>{c.label}</div>
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* Search bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
-          รายการลา {filterStatus === 'Pending' ? '(รออนุมัติ)' : filterStatus === 'Approved' ? '(อนุมัติแล้ว)' : filterStatus === 'Rejected' ? '(ไม่อนุมัติ)' : '(ทั้งหมด)'}
-        </span>
-        <div style={{ position: 'relative' }}>
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input type="text" placeholder="ค้นหาพนักงาน..." value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={{ padding: '7px 12px 7px 30px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12, outline: 'none', width: 200, background: '#f9fafb' }}
-          />
+      {/* Main Panel */}
+      <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+      
+        {/* Search bar */}
+        <div className="filter-bar" style={{ padding: '24px' }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>
+            รายการลา {filterStatus === 'Pending' ? '(รออนุมัติ)' : filterStatus === 'Approved' ? '(อนุมัติแล้ว)' : filterStatus === 'Rejected' ? '(ไม่อนุมัติ)' : '(ทั้งหมด)'}
+          </span>
+          <div style={{ position: 'relative' }}>
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" className="search-input" placeholder="ค้นหาพนักงาน..." value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ width: 300, maxWidth: '100%', paddingLeft: '42px' }}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: '#f9fafb' }}>
-              {['พนักงาน', 'ประเภท', 'ช่วงเวลา', 'วัน', 'เหตุผล', 'สถานะ', ''].map((h, i) => (
-                <th key={i} style={{
-                  padding: '10px 14px', textAlign: i === 3 || i === 5 ? 'center' : i === 6 ? 'right' : 'left',
-                  color: '#6b7280', fontWeight: 600, fontSize: 11, borderBottom: '1px solid #e5e7eb',
-                  textTransform: 'uppercase', letterSpacing: 0.5
-                }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
+        {/* Table */}
+        <div style={{ overflowX: 'auto' }} className="custom-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                {['พนักงาน', 'ประเภท', 'ช่วงเวลา', 'วัน', 'เหตุผล', 'สถานะ', ''].map((h, i) => (
+                  <th key={i} style={{ textAlign: (i === 3 || i === 5) ? 'center' : i === 6 ? 'right' : 'left' }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
           <tbody>
             {loading ? (
               <tr><td colSpan={7} style={{ textAlign: 'center', padding: 48, color: '#9ca3af' }}>
@@ -230,30 +228,31 @@ export default function LeavePage() {
         </table>
 
         {/* Pagination */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderTop: '1px solid #f3f4f6', background: '#f9fafb' }}>
-          <span style={{ fontSize: 12, color: '#9ca3af' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
+          <span style={{ fontSize: 13, color: '#64748b' }}>
             แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, filtered.length)} จาก {filtered.length} รายการ
           </span>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-              style={{ padding: '4px 10px', borderRadius: 4, border: '1px solid #e5e7eb', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 12, color: page === 1 ? '#d1d5db' : '#374151' }}>
+              style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
               ก่อนหน้า
             </button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button key={i} onClick={() => setPage(i + 1)}
                 style={{
-                  padding: '4px 10px', borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  border: page === i + 1 ? 'none' : '1px solid #e5e7eb',
-                  background: page === i + 1 ? '#111827' : 'white',
-                  color: page === i + 1 ? 'white' : '#374151'
+                  padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
+                  background: page === i + 1 ? '#3b82f6' : 'white',
+                  color: page === i + 1 ? 'white' : '#334155'
                 }}>{i + 1}</button>
             ))}
             <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-              style={{ padding: '4px 10px', borderRadius: 4, border: '1px solid #e5e7eb', background: 'white', cursor: page === totalPages ? 'default' : 'pointer', fontSize: 12, color: page === totalPages ? '#d1d5db' : '#374151' }}>
+              style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === totalPages ? 'default' : 'pointer', fontSize: 13, color: page === totalPages ? '#94a3b8' : '#334155', fontWeight: 600 }}>
               ถัดไป
             </button>
           </div>
         </div>
+      </div>
       </div>
 
       {/* Spinner animation */}
@@ -402,6 +401,7 @@ export default function LeavePage() {
           </div>
         );
       })()}
+      </div>
     </AppLayout>
   );
 }

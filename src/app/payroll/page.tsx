@@ -215,42 +215,42 @@ export default function PayrollDashboardPage() {
 
   return (
     <AppLayout>
-      <div className="spa-payroll pd-wrapper">
-        <div className="pd-header">
-          <div className="pd-title-box">
-            <h1>การเงินและรอบค่าจ้าง</h1>
-            <p>จัดการรอบเงินเดือนแบบองค์รวม พร้อมเชื่อมต่อธนาคาร</p>
+      <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">การเงินและรอบค่าจ้าง</h1>
+            <p className="page-subtitle">จัดการรอบเงินเดือนแบบองค์รวม พร้อมเชื่อมต่อธนาคาร</p>
           </div>
-          <div className="pd-actions">
-            <button className="btn-primary" onClick={() => setShowGenerateModal(true)}>
-              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg> 
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button className="btn-primary" onClick={() => setShowGenerateModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg> 
               เริ่มรอบเงินเดือนใหม่
             </button>
-            <button className="btn-secondary" onClick={handleExportCSV}>
-              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> 
+            <button className="btn-secondary" onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> 
               ส่งออกไฟล์ธนาคาร (CSV)
             </button>
           </div>
         </div>
 
-        <div className="pd-stats-row">
-          <div className="pd-stat-card">
-            <div className="stat-icon bg-blue"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
-            <div className="stat-label">ยอดสุทธิประเมิน</div>
-            <div className="stat-value">฿{stats.salary.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '24px' }}>
+          <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>ยอดสุทธิประเมิน</div>
+            <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.salary.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
           </div>
-          <div className="pd-stat-card">
-            <div className="stat-icon bg-amber"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
-            <div className="stat-label">ค่าล่วงเวลารวม</div>
-            <div className="stat-value">฿{stats.ot.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+          <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#fffbeb', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>ค่าล่วงเวลารวม</div>
+            <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.ot.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
           </div>
-          <div className="pd-stat-card">
-            <div className="stat-icon bg-purple"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></div>
-            <div className="stat-label">ค่ากะดึกรวม</div>
-            <div className="stat-value">฿{stats.night.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+          <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#faf5ff', color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>ค่ากะดึกรวม</div>
+            <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.night.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
           </div>
           
-          <div className={`pd-action-card ${stats.draftCount === 0 && stats.approvedCount > 0 ? 'paid-ready' : stats.draftCount === 0 && stats.approvedCount === 0 ? 'empty' : ''}`}>
+          <div className={`pd-action-card hover-glow ${stats.draftCount === 0 && stats.approvedCount > 0 ? 'paid-ready' : stats.draftCount === 0 && stats.approvedCount === 0 ? 'empty' : ''}`}>
             {stats.draftCount > 0 ? (
               <>
                 <div className="ac-title">รออนุมัติสลิป</div>
@@ -272,48 +272,51 @@ export default function PayrollDashboardPage() {
           </div>
         </div>
 
-        <div className="pd-charts-row">
-          <div className="pd-chart-box flex-2">
-            <h3>สัดส่วนรายจ่ายแยกลายแผนก</h3>
-            <div className="chart-inner custom-scroll" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+        <div style={{ display: 'flex', gap: '24px', height: '340px', marginBottom: '24px' }}>
+          <div className="glass-card" style={{ padding: '24px', flex: 2, display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 20px 0', color: '#1e293b' }}>สัดส่วนรายจ่ายแยกลายแผนก</h3>
+            <div className="custom-scroll" style={{ flex: 1, minHeight: 0, overflowX: 'auto', overflowY: 'hidden' }}>
                <div style={{ minWidth: `${Math.max(100, deptDistribution.length * 120)}px`, height: '260px' }}>
                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={deptDistribution} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `${v / 1000}k`} />
-                      <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-                      <Bar dataKey="value" fill="#6366f1" radius={[6, 6, 6, 6]} barSize={40} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#64748b', fontWeight: 500 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#94a3b8', fontWeight: 500 }} tickFormatter={v => `${v / 1000}k`} />
+                      <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
+                      <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 8, 8]} barSize={48} />
                     </BarChart>
                   </ResponsiveContainer>
                </div>
             </div>
           </div>
-          <div className="pd-chart-box flex-1">
-             <h3>สัดส่วนรายรับพิเศษ</h3>
-             <div className="chart-inner">
+          <div className="glass-card" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+             <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 20px 0', color: '#1e293b' }}>สัดส่วนรายรับพิเศษ</h3>
+             <div style={{ flex: 1, minHeight: 0 }}>
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
-                    <Pie data={allowBreakdown} innerRadius="60%" outerRadius="85%" paddingAngle={4} dataKey="total_amount" nameKey="type_name">
+                    <Pie data={allowBreakdown} innerRadius="60%" outerRadius="85%" paddingAngle={4} dataKey="total_amount" nameKey="type_name" stroke="none">
                       {allowBreakdown.map((_: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                     </Pie>
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: '13px' }} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '14px', fontWeight: 500, color: '#475569' }} />
                   </PieChart>
                 </ResponsiveContainer>
              </div>
           </div>
         </div>
 
-        <div className="pd-table-box">
-          <div className="tb-header">
-            <h3>รายชื่อพนักงาน ({filteredEmployees.length} คน)</h3>
-            <div className="tb-filters">
-              <input type="text" placeholder="ค้นหาชื่อ, รหัส..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-              <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)}>
+        <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="filter-bar" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: '#0f172a' }}>รายชื่อพนักงาน ({filteredEmployees.length} คน)</h3>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative' }}>
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <input type="text" className="search-input" placeholder="ค้นหาชื่อ, รหัส..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ paddingLeft: '40px' }} />
+              </div>
+              <select className="search-input" value={deptFilter} onChange={e => setDeptFilter(e.target.value)}>
                 <option value="All">ทุกแผนก</option>
                 {uniqueDepts.map((d: any) => <option key={d} value={d}>{d}</option>)}
               </select>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+              <select className="search-input" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
                 <option value="All">ทุกสถานะ</option>
                 <option value="Draft">ยังไม่อนุมัติ</option>
                 <option value="Approved">อนุมัติแล้ว</option>
@@ -321,8 +324,8 @@ export default function PayrollDashboardPage() {
               </select>
             </div>
           </div>
-          <div className="tb-body">
-            <table>
+          <div style={{ overflowX: 'auto' }} className="custom-scroll">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>พนักงาน</th>
@@ -339,25 +342,26 @@ export default function PayrollDashboardPage() {
                  {filteredEmployees.map((emp: any) => (
                     <tr key={emp.payroll_id}>
                       <td>
-                         <div className="emp-name">{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
-                         <div className="emp-id">{emp.emp_id}</div>
+                         <div style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', fontSize: '15px' }}>{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
+                         <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{emp.emp_id}</div>
                       </td>
-                      <td style={{textAlign:'center'}}><span className="dept-badge">{emp.dept_name || 'ไม่มี'}</span></td>
-                      <td style={{textAlign:'right'}} className="col-base">฿{Number(emp.base_salary).toLocaleString()}</td>
-                      <td style={{textAlign:'right'}}><span className={`amt-badge ${emp.total_allowance > 0 ? 'plus' : ''}`}>{emp.total_allowance > 0 ? `+฿${Number(emp.total_allowance).toLocaleString()}` : '-'}</span></td>
-                      <td style={{textAlign:'right'}}><span className={`amt-badge ${emp.total_deduction > 0 ? 'minus' : ''}`}>{emp.total_deduction > 0 ? `-฿${Number(emp.total_deduction).toLocaleString()}` : '-'}</span></td>
-                      <td style={{textAlign:'right'}} className="col-net">฿{Number(emp.net_salary).toLocaleString()}</td>
+                      <td style={{textAlign:'center'}}><span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569', border: '1px solid #e2e8f0' }}>{emp.dept_name || 'ไม่มี'}</span></td>
+                      <td style={{textAlign:'right', fontWeight: 600, color: '#475569' }}>฿{Number(emp.base_salary).toLocaleString()}</td>
+                      <td style={{textAlign:'right'}}><span style={{ color: emp.total_allowance > 0 ? '#10b981' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_allowance > 0 ? `+฿${Number(emp.total_allowance).toLocaleString()}` : '-'}</span></td>
+                      <td style={{textAlign:'right'}}><span style={{ color: emp.total_deduction > 0 ? '#ef4444' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_deduction > 0 ? `-฿${Number(emp.total_deduction).toLocaleString()}` : '-'}</span></td>
+                      <td style={{textAlign:'right', fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>฿{Number(emp.net_salary).toLocaleString()}</td>
                       <td style={{textAlign:'center'}}>
-                         <span className={`status-dot ${emp.status.toLowerCase()}`}>
-                            <span className="dot" />{emp.status === 'Paid' ? 'จ่ายแล้ว' : emp.status === 'Approved' ? 'อนุมัติ' : 'ยังไม่อนุมัติ'}
+                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, background: emp.status === 'Paid' ? '#d1fae5' : emp.status === 'Approved' ? '#e0e7ff' : '#f1f5f9', color: emp.status === 'Paid' ? '#059669' : emp.status === 'Approved' ? '#4f46e5' : '#64748b', padding: '6px 12px', borderRadius: '99px', whiteSpace: 'nowrap' }}>
+                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: emp.status === 'Paid' ? '#10b981' : emp.status === 'Approved' ? '#4f46e5' : '#94a3b8' }} />
+                            {emp.status === 'Paid' ? 'จ่ายแล้ว' : emp.status === 'Approved' ? 'อนุมัติ' : 'ยังไม่อนุมัติ'}
                          </span>
                       </td>
                       <td style={{textAlign:'center'}}>
-                         <button className="btn-edit-row" onClick={() => openDrawer(emp)}>แก้สลิป</button>
+                         <button className="btn-secondary" onClick={() => openDrawer(emp)} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '13px' }}>แก้สลิป</button>
                       </td>
                     </tr>
                  ))}
-                 {filteredEmployees.length === 0 && <tr><td colSpan={8} className="empty-row">ไม่มีข้อมูล</td></tr>}
+                 {filteredEmployees.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', fontWeight: 600 }}>ไม่มีข้อมูล</td></tr>}
               </tbody>
             </table>
           </div>
