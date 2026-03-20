@@ -270,6 +270,8 @@ export default function TransferPage() {
 
         /* Premium Stat Cards */
         .tr-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        @media (max-width: 900px) { .tr-stats { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .tr-stats { grid-template-columns: 1fr; } }
         .tr-stat { border: 1px solid rgba(226, 232, 240, 0.7); border-radius: 24px; padding: 28px; display: flex; align-items: center; gap: 22px; position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .tr-stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: transparent; transition: all 0.3s; }
         .tr-stat-blue::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
@@ -529,7 +531,7 @@ export default function TransferPage() {
                         )}
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <div className="tr-actions">
+                        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
                           {t.status === 'Pending' && (
                             <>
                               <button className="action-btn action-approve" title="อนุมัติการย้าย" onClick={() => setTransferStatus(t, 'Approved')}>
