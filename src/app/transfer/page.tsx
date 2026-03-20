@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useReactToPrint } from 'react-to-print';
 import OrderPdfTemplate from '@/components/Transfer/OrderPdfTemplate';
+import Swal from 'sweetalert2';
 
 interface Department { dept_id: string; dept_name: string; }
 interface Position { pos_id: string; pos_name: string; }
@@ -57,6 +58,8 @@ export default function TransferPage() {
   const [orderFile, setOrderFile] = useState<File | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const perPage = 10;
   const [detailTransfer, setDetailTransfer] = useState<TransferRecord | null>(null);
   const [viewingTransfer, setViewingTransfer] = useState<TransferRecord | null>(null);
   const [printTransfer, setPrintTransfer] = useState<TransferRecord | null>(null);
@@ -101,6 +104,8 @@ export default function TransferPage() {
     fetch('/api/positions').then(r => r.json()).then(setPositions);
     loadTransfers();
   }, []);
+
+  useEffect(() => { setPage(1); }, [listSearch]);
 
   const search = async () => {
     if (!searchQ.trim()) return;
@@ -154,15 +159,38 @@ export default function TransferPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('ยืนยันการลบคำสั่งย้ายนี้?')) return;
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'ยืนยันการลบคำสั่งย้ายนี้?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบข้อมูล',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    });
+    if (!result.isConfirmed) return;
+    
     const res = await fetch(`/api/transfers?id=${id}`, { method: 'DELETE' });
     const data = await res.json();
-    if (data.success) { loadTransfers(); }
-    else alert('เกิดข้อผิดพลาด: ' + data.error);
+    if (data.success) { 
+      Swal.fire({ title: 'ลบสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+      loadTransfers(); 
+    }
+    else Swal.fire('เกิดข้อผิดพลาด', data.error, 'error');
   };
 
   const setTransferStatus = async (t: TransferRecord, newStatus: string) => {
-    if (!confirm(`ยืนยันการ${newStatus === 'Approved' ? 'อนุมัติ' : 'ไม่อนุมัติ'}คำสั่งย้ายนี้?`)) return;
+    const actionName = newStatus === 'Approved' ? 'อนุมัติ' : 'ไม่อนุมัติ';
+    const result = await Swal.fire({
+      title: `ยืนยันการ${actionName}`,
+      text: `ยืนยันการ${actionName}คำสั่งย้ายนี้?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: newStatus === 'Approved' ? '#10b981' : '#ef4444'
+    });
+    if (!result.isConfirmed) return;
     
     // Convert to update form format
     const updForm = {
@@ -187,9 +215,10 @@ export default function TransferPage() {
     const res = await fetch('/api/transfers', { method: 'PUT', body: fd });
     const data = await res.json();
     if (data.success) {
-      alert(`✅ อัปเดตสถานะเป็น ${newStatus === 'Approved' ? 'อนุมัติ' : 'ไม่อนุมัติ'} สำเร็จ`);
+      const actionName = newStatus === 'Approved' ? 'อนุมัติ' : 'ไม่อนุมัติ';
+      Swal.fire({ title: 'สำเร็จ!', text: `อัปเดตสถานะเป็น ${actionName} สำเร็จ`, icon: 'success', timer: 1500, showConfirmButton: false });
       loadTransfers();
-    } else alert('Error: ' + data.error);
+    } else Swal.fire('Error', data.error, 'error');
   };
 
   const chartData = useMemo(() => {
@@ -202,7 +231,10 @@ export default function TransferPage() {
   }, [transfers]);
 
   const handleSave = async () => {
-    if (!selected || !form.orderNo || !form.newDeptId) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
+    if (!selected || !form.orderNo || !form.newDeptId) { 
+      Swal.fire('ข้อความแจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning'); 
+      return; 
+    }
     setSaving(true);
     const fd = new FormData();
     fd.append('data', JSON.stringify(form));
@@ -213,12 +245,18 @@ export default function TransferPage() {
     const data = await res.json();
     setSaving(false);
     if (data.success) {
-      alert(`✅ ${form.transfer_id ? 'แก้ไข' : 'บันทึก'}คำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว`);
+      Swal.fire({
+        title: 'สำเร็จ!', 
+        text: `${form.transfer_id ? 'แก้ไข' : 'บันทึก'}คำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
       setShowForm(false);
       setSelected(null); setSearchQ('');
       setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', oldPosName: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
       loadTransfers();
-    } else alert('เกิดข้อผิดพลาด: ' + (data.error || ''));
+    } else Swal.fire('เกิดข้อผิดพลาด', data.error || '', 'error');
   };
 
   const setF = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
@@ -478,9 +516,13 @@ export default function TransferPage() {
                         t.new_dept_name?.toLowerCase().includes(q)
                       )
                     : transfers;
+
+                  const totalPages = Math.ceil(filtered.length / perPage);
+                  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+
                   return filtered.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8', fontSize: 14 }}>ยังไม่มีประวัติการย้าย — กด <strong>สร้างคำสั่งย้ายใหม่</strong> เพื่อเริ่มต้น</td></tr>
-                  ) : filtered.map(t => (
+                  ) : paged.map(t => (
                     <tr key={t.transfer_id}>
                       <td><span style={{ fontFamily: 'monospace', fontSize: 12, background: '#f1f5f9', padding: '2px 8px', borderRadius: 6, color: '#64748b' }}>{t.order_no}</span></td>
                       <td style={{ fontSize: 13, color: '#64748b' }}>{t.effective_date?.split('T')[0] || '—'}</td>
@@ -540,6 +582,33 @@ export default function TransferPage() {
               </tbody>
             </table>
           </div>
+          {/* Pagination */}
+          {!loadingList && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
+              <span style={{ fontSize: 13, color: '#64748b' }}>
+                แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length)} จาก {listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length} รายการ
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ก่อนหน้า
+                </button>
+                {Array.from({ length: Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage) }, (_, i) => (
+                  <button key={i} onClick={() => setPage(i + 1)}
+                    style={{
+                      padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
+                      background: page === i + 1 ? '#3b82f6' : 'white',
+                      color: page === i + 1 ? 'white' : '#334155'
+                    }}>{i + 1}</button>
+                ))}
+                <button onClick={() => setPage(p => Math.min(Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage), p + 1))} disabled={page === Math.max(1, Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage))}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.max(1, Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage)) ? 'default' : 'pointer', fontSize: 13, color: page === Math.max(1, Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage)) ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ถัดไป
+                </button>
+              </div>
+            </div>
+          )}
           </div>
         )}
 

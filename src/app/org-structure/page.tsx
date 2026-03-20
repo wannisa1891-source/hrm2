@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
+import Swal from 'sweetalert2';
 
 import EmployeeFormModal from '@/components/employee/EmployeeFormModal';
 
@@ -16,6 +17,10 @@ export default function DepartmentAndEmployeePage() {
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
   const [selectedEmpId, setSelectedEmpId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const perPage = 10;
+
+  useEffect(() => { setPage(1); }, [search, selectedDeptId]);
 
   // --- เพิ่ม State สำหรับการจัดการ Modal (Add/Edit) ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,6 +55,7 @@ export default function DepartmentAndEmployeePage() {
   const getDeptName = (id: string) => departments.find(d => d.dept_id === id)?.dept_name || 'ไม่ระบุ';
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
 
+<<<<<<< HEAD
   // --- Handlers ---
   const handleAddNew = () => {
     setEditData(null); // เคลียร์ข้อมูลเดิมเพื่อเพิ่มใหม่
@@ -73,6 +79,29 @@ export default function DepartmentAndEmployeePage() {
     }
   };
 
+=======
+  const handleDeleteEmployee = async () => {
+    if (!selectedEmp) return;
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'ยืนยันการลบพนักงาน?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบพนักงาน',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    });
+    if (result.isConfirmed) {
+      removeEmployee?.(selectedEmp.emp_id);
+      setSelectedEmpId(null);
+      Swal.fire({ title: 'ลบสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+    }
+  };
+
+  const totalPages = Math.ceil(filteredEmployees.length / perPage);
+  const pagedEmployees = filteredEmployees.slice((page - 1) * perPage, page * perPage);
+
+>>>>>>> 2948caa949c8d5c6b934ff21ebb86162f3ecb1ca
   return (
     <AppLayout>
       <div style={{ display: 'flex', height: 'calc(100vh - 64px)', background: '#f8fafc', overflow: 'hidden', position: 'relative' }}>
@@ -152,7 +181,7 @@ export default function DepartmentAndEmployeePage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredEmployees.map((emp) => (
+                {pagedEmployees.map((emp) => (
                   <tr
                     key={emp.emp_id}
                     onClick={() => setSelectedEmpId(emp.emp_id)}
@@ -188,6 +217,33 @@ export default function DepartmentAndEmployeePage() {
               <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่พบข้อมูลพนักงาน</div>
             )}
           </div>
+          {/* Pagination */}
+          {filteredEmployees.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#fff', borderRadius: '0 0 16px 16px', marginTop: '-16px' }}>
+              <span style={{ fontSize: 13, color: '#64748b' }}>
+                แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, filteredEmployees.length)} จาก {filteredEmployees.length} ท่าน
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ก่อนหน้า
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button key={i} onClick={() => setPage(i + 1)}
+                    style={{
+                      padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
+                      background: page === i + 1 ? '#3b82f6' : 'white',
+                      color: page === i + 1 ? 'white' : '#334155'
+                    }}>{i + 1}</button>
+                ))}
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === totalPages || totalPages === 0 ? 'default' : 'pointer', fontSize: 13, color: page === totalPages || totalPages === 0 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ถัดไป
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* --- 3. DETAIL SIDEBAR (Drawer) --- */}
@@ -239,6 +295,7 @@ export default function DepartmentAndEmployeePage() {
 
               <div style={styles.sideFooter}>
                 <button
+<<<<<<< HEAD
                   onClick={() => handleEdit(selectedEmp)}
                   style={styles.mainEditBtn}
                 >
@@ -246,6 +303,9 @@ export default function DepartmentAndEmployeePage() {
                 </button>
                 <button
                   onClick={() => handleDelete(selectedEmp.emp_id)}
+=======
+                  onClick={handleDeleteEmployee}
+>>>>>>> 2948caa949c8d5c6b934ff21ebb86162f3ecb1ca
                   style={styles.deleteBtn}
                 >
                   🗑️

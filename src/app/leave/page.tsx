@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Leave } from '@/services/apiService';
+import Swal from 'sweetalert2';
 
 const LEAVE_TYPES = [
   { id: 'L01', name: 'ลาป่วย', color: '#f59e0b' },
@@ -58,11 +59,18 @@ export default function LeavePage() {
   }), [leaves]);
 
   const handleSubmit = async () => {
-    if (!form.emp_id || !form.start_date || !form.end_date) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
+    if (!form.emp_id || !form.start_date || !form.end_date) { 
+      Swal.fire('ข้อความแจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning'); 
+      return; 
+    }
     setSaving(true);
     const ok = await addLeave(form);
     setSaving(false);
-    if (ok) { setShowForm(false); setForm({ emp_id: '', leave_type_id: 'L01', start_date: '', end_date: '', reason: '' }); }
+    if (ok) { 
+      setShowForm(false); 
+      setForm({ emp_id: '', leave_type_id: 'L01', start_date: '', end_date: '', reason: '' }); 
+      Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+    }
   };
 
   const badge = (s: string) => {

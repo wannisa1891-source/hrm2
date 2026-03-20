@@ -9,6 +9,7 @@ import PendingList from '@/components/dashboard/PendingList'
 import SystemAlert from '@/components/dashboard/SystemAlert'
 import Modal from '@/components/common/Modal'
 import { useDashboard } from '@/hooks/useDashboard'
+import Swal from 'sweetalert2'
 
 export default function DashboardPage() {
 
@@ -82,7 +83,7 @@ export default function DashboardPage() {
   const submitNews = async () => {
 
     if (!newNewsForm.title || !newNewsForm.content) {
-      alert('กรอกข้อมูลให้ครบ')
+      Swal.fire('ข้อความแจ้งเตือน', 'กรอกข้อมูลให้ครบ', 'warning')
       return
     }
 
@@ -112,6 +113,7 @@ export default function DashboardPage() {
           content: '',
           image: ''
         })
+        Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false })
 
       }
 

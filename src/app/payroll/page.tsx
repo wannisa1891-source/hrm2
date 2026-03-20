@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { useReactToPrint } from 'react-to-print';
 import PayslipTemplate from '@/components/Payroll/PayslipTemplate';
 import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 const CloseIcon = <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>;
 const CheckIcon = <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>;
@@ -19,6 +20,8 @@ export default function PayrollDashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [page, setPage] = useState(1);
+  const perPage = 10;
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Generate logic
@@ -56,6 +59,8 @@ export default function PayrollDashboardPage() {
     fetchMasterData();
   }, []);
 
+  useEffect(() => { setPage(1); }, [searchQuery, deptFilter, statusFilter]);
+
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
@@ -78,7 +83,16 @@ export default function PayrollDashboardPage() {
   };
 
   const handleGenerate = async () => {
-    if (!confirm(`ยืนยันสร้างรอบเงินเดือน ${MONTHS_TH[genMonth - 1]} ${genYear}?`)) return;
+    const result = await Swal.fire({
+      title: 'เริ่มต้นรอบเงินเดือน',
+      text: `ยืนยันสร้างรอบเงินเดือน ${MONTHS_TH[genMonth - 1]} ${genYear}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#4f46e5'
+    });
+    if (!result.isConfirmed) return;
     setIsGenerating(true);
     try {
       const res = await fetch('/api/payroll/generate', {
@@ -87,16 +101,27 @@ export default function PayrollDashboardPage() {
       });
       if (res.ok) {
         setShowGenerateModal(false);
+        Swal.fire({ title: 'สร้างสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
         fetchDashboardData();
       } else {
-        alert('Error: ' + (await res.json()).error);
+        const errorData = await res.json();
+        Swal.fire('ข้อผิดพลาด', errorData.error, 'error');
       }
     } finally { setIsGenerating(false); }
   };
 
   const handleBulkStatusUpdate = async (fromStatus: string, toStatus: string) => {
     const msg = toStatus === 'Approved' ? 'ยืนยันอนุมัติสลิป?' : 'ยืนยันเปลี่ยนเป็นจ่ายแล้ว?';
-    if (!confirm(msg)) return;
+    const result = await Swal.fire({
+      title: 'ยืนยันการเปลี่ยนสถานะ',
+      text: msg,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#10b981'
+    });
+    if (!result.isConfirmed) return;
     setIsUpdatingStatus(true);
     try {
       const res = await fetch('/api/payroll/status', {
@@ -108,7 +133,10 @@ export default function PayrollDashboardPage() {
   };
 
   const handleExportCSV = () => {
-    if (!filteredEmployees.length) return alert('ไม่มีข้อมูล');
+    if (!filteredEmployees.length) {
+      Swal.fire('ข้อความแจ้งเตือน', 'ไม่มีข้อมูลให้ส่งออก', 'warning');
+      return;
+    }
     const BOM = "\uFEFF";
     let csvContent = BOM + "รหัสพนักงาน,ชื่อ-นามสกุล,แผนก,ฐานเงินเดือน,รายรับ+,รายหัก-,ยอดโอนสุทธิ,สถานะ\n";
     filteredEmployees.forEach((emp: any) => {
@@ -157,7 +185,16 @@ export default function PayrollDashboardPage() {
   };
 
   const handleDeleteDetail = async (kind: 'allowance' | 'deduction', id: number) => {
-    if (!confirm('ยืนยันลบรายการนี้?')) return;
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'ยืนยันลบรายการนี้?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบ',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    });
+    if (!result.isConfirmed) return;
     try {
       const endpoint = kind === 'allowance' ? '/api/payroll/allowances' : '/api/payroll/deductions';
       const res = await fetch(`${endpoint}?id=${id}&payroll_id=${selectedRecord.payroll_id}`, { method: 'DELETE' });
@@ -212,6 +249,9 @@ export default function PayrollDashboardPage() {
   }, [data]);
 
   const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#cbd5e1'];
+
+  const totalPages = Math.ceil(filteredEmployees.length / perPage);
+  const pagedEmployees = filteredEmployees.slice((page - 1) * perPage, page * perPage);
 
   return (
     <AppLayout>
@@ -336,7 +376,7 @@ export default function PayrollDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                 {filteredEmployees.map((emp: any) => (
+                 {pagedEmployees.map((emp: any) => (
                     <tr key={emp.payroll_id}>
                       <td>
                          <div className="emp-name">{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
@@ -361,6 +401,33 @@ export default function PayrollDashboardPage() {
               </tbody>
             </table>
           </div>
+          {/* Pagination */}
+          {!isLoading && filteredEmployees.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
+              <span style={{ fontSize: 13, color: '#64748b' }}>
+                แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, filteredEmployees.length)} จาก {filteredEmployees.length} รายการ
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ก่อนหน้า
+                </button>
+                {Array.from({ length: Math.ceil(filteredEmployees.length / perPage) }, (_, i) => (
+                  <button key={i} onClick={() => setPage(i + 1)}
+                    style={{
+                      padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
+                      background: page === i + 1 ? '#3b82f6' : 'white',
+                      color: page === i + 1 ? 'white' : '#334155'
+                    }}>{i + 1}</button>
+                ))}
+                <button onClick={() => setPage(p => Math.min(Math.ceil(filteredEmployees.length / perPage), p + 1))} disabled={page === Math.max(1, Math.ceil(filteredEmployees.length / perPage))}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.max(1, Math.ceil(filteredEmployees.length / perPage)) ? 'default' : 'pointer', fontSize: 13, color: page === Math.max(1, Math.ceil(filteredEmployees.length / perPage)) ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ถัดไป
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* --- Drawer --- */}
