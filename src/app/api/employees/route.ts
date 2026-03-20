@@ -10,16 +10,22 @@ import crypto from 'crypto';
 // GET /api/employees
 export async function GET() {
   try {
-    const [rows] = await pool.query(`
-      SELECT e.* 
-      FROM tbl_employees e
-      ORDER BY e.emp_id DESC
-    `);
-    
-    // Fetch all licenses to attach them to employees
-    const [licenses] = await pool.query(`
-      SELECT * FROM tbl_employee_licenses
-    `);
+    const [
+      empResult,
+      licenseResult
+    ] = await Promise.all([
+      pool.query(`
+        SELECT e.* 
+        FROM tbl_employees e
+        ORDER BY e.emp_id DESC
+      `),
+      pool.query(`
+        SELECT * FROM tbl_employee_licenses
+      `)
+    ]);
+
+    const rows = empResult[0];
+    const licenses = licenseResult[0];
 
     // Map licenses to their corresponding employees
     const employees = (rows as any[]).map(emp => {

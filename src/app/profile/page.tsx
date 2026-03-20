@@ -44,8 +44,10 @@ export default function MyProfilePage() {
       return;
     }
 
-    if (user?.emp_id) {
-      fetch(`/api/profile?emp_id=${user.emp_id}`)
+    const employeeId = user?.emp_id || user?.username || (user as any)?.name;
+    
+    if (employeeId) {
+      fetch(`/api/profile?emp_id=${employeeId}`)
         .then(r => r.json())
         .then(res => {
           if (res.success) {
@@ -53,6 +55,9 @@ export default function MyProfilePage() {
           }
         })
         .finally(() => setLoading(false));
+    } else if (isLoggedIn) {
+      // Fail-safe to avoid infinite loading
+      setLoading(false);
     }
   }, [user, isLoggedIn, router]);
 
