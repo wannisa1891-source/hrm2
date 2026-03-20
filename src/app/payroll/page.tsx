@@ -20,6 +20,8 @@ export default function PayrollDashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [page, setPage] = useState(1);
+  const perPage = 10;
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Generate logic
@@ -56,6 +58,8 @@ export default function PayrollDashboardPage() {
     fetchDashboardData();
     fetchMasterData();
   }, []);
+
+  useEffect(() => { setPage(1); }, [searchQuery, deptFilter, statusFilter]);
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -246,6 +250,9 @@ export default function PayrollDashboardPage() {
 
   const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#cbd5e1'];
 
+  const totalPages = Math.ceil(filteredEmployees.length / perPage);
+  const pagedEmployees = filteredEmployees.slice((page - 1) * perPage, page * perPage);
+
   return (
     <AppLayout>
       <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
@@ -372,7 +379,7 @@ export default function PayrollDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                 {filteredEmployees.map((emp: any) => (
+                 {pagedEmployees.map((emp: any) => (
                     <tr key={emp.payroll_id}>
                       <td>
                          <div style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', fontSize: '15px' }}>{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
@@ -398,6 +405,33 @@ export default function PayrollDashboardPage() {
               </tbody>
             </table>
           </div>
+          {/* Pagination */}
+          {!isLoading && filteredEmployees.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
+              <span style={{ fontSize: 13, color: '#64748b' }}>
+                แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, filteredEmployees.length)} จาก {filteredEmployees.length} รายการ
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ก่อนหน้า
+                </button>
+                {Array.from({ length: Math.ceil(filteredEmployees.length / perPage) }, (_, i) => (
+                  <button key={i} onClick={() => setPage(i + 1)}
+                    style={{
+                      padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
+                      background: page === i + 1 ? '#3b82f6' : 'white',
+                      color: page === i + 1 ? 'white' : '#334155'
+                    }}>{i + 1}</button>
+                ))}
+                <button onClick={() => setPage(p => Math.min(Math.ceil(filteredEmployees.length / perPage), p + 1))} disabled={page === Math.max(1, Math.ceil(filteredEmployees.length / perPage))}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.max(1, Math.ceil(filteredEmployees.length / perPage)) ? 'default' : 'pointer', fontSize: 13, color: page === Math.max(1, Math.ceil(filteredEmployees.length / perPage)) ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ถัดไป
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* --- Drawer --- */}

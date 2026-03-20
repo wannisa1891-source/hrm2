@@ -39,6 +39,8 @@ export default function LicensePage() {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const perPage = 10;
 
   // Modal State
   const [activeModal, setActiveModal] = useState<'none' | 'renew' | 'edit' | 'add'>('none');
@@ -57,6 +59,7 @@ export default function LicensePage() {
 
   useEffect(() => {
     fetchLicenses();
+    setPage(1);
   }, [searchTerm, statusFilter]);
 
   const fetchLicenses = async () => {
@@ -317,9 +320,13 @@ export default function LicensePage() {
               ) : licenses.length === 0 ? (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่พบข้อมูลที่ตรงกับการค้นหา</td></tr>
               ) : (
-                licenses.map(l => {
-                  const status = getStatus(l.daysLeft);
-                  return (
+                (() => {
+                  const filtered = licenses;
+                  const totalPages = Math.ceil(filtered.length / perPage);
+                  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+                  return paged.map(l => {
+                    const status = getStatus(l.daysLeft);
+                    return (
                     <tr key={l.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                       <td style={{ padding: '16px 24px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -400,10 +407,38 @@ export default function LicensePage() {
                     </tr>
                   );
                 })
-              )}
+              })())}
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination */}
+        {!loading && licenses.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
+            <span style={{ fontSize: 13, color: '#64748b' }}>
+              แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, licenses.length)} จาก {licenses.length} รายการ
+            </span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                ก่อนหน้า
+              </button>
+              {Array.from({ length: Math.ceil(licenses.length / perPage) }, (_, i) => (
+                <button key={i} onClick={() => setPage(i + 1)}
+                  style={{
+                    padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
+                    background: page === i + 1 ? '#3b82f6' : 'white',
+                    color: page === i + 1 ? 'white' : '#334155'
+                  }}>{i + 1}</button>
+              ))}
+              <button onClick={() => setPage(p => Math.min(Math.ceil(licenses.length / perPage), p + 1))} disabled={page === Math.ceil(licenses.length / perPage) || Math.ceil(licenses.length / perPage) === 0}
+                style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.ceil(licenses.length / perPage) || Math.ceil(licenses.length / perPage) === 0 ? 'default' : 'pointer', fontSize: 13, color: page === Math.ceil(licenses.length / perPage) || Math.ceil(licenses.length / perPage) === 0 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                ถัดไป
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modals */}

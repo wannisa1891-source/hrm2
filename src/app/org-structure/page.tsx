@@ -15,6 +15,10 @@ export default function DepartmentAndEmployeePage() {
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
   const [selectedEmpId, setSelectedEmpId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const perPage = 10;
+
+  useEffect(() => { setPage(1); }, [search, selectedDeptId]);
 
   useEffect(() => {
     loadEmployees?.();
@@ -62,6 +66,9 @@ export default function DepartmentAndEmployeePage() {
       Swal.fire({ title: 'ลบสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
     }
   };
+
+  const totalPages = Math.ceil(filteredEmployees.length / perPage);
+  const pagedEmployees = filteredEmployees.slice((page - 1) * perPage, page * perPage);
 
   return (
     <AppLayout>
@@ -143,7 +150,7 @@ export default function DepartmentAndEmployeePage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredEmployees.map((emp) => (
+                {pagedEmployees.map((emp) => (
                   <tr
                     key={emp.emp_id}
                     onClick={() => setSelectedEmpId(emp.emp_id)}
@@ -176,6 +183,33 @@ export default function DepartmentAndEmployeePage() {
               </tbody>
             </table>
           </div>
+          {/* Pagination */}
+          {filteredEmployees.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#fff', borderRadius: '0 0 16px 16px', marginTop: '-16px' }}>
+              <span style={{ fontSize: 13, color: '#64748b' }}>
+                แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, filteredEmployees.length)} จาก {filteredEmployees.length} ท่าน
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ก่อนหน้า
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button key={i} onClick={() => setPage(i + 1)}
+                    style={{
+                      padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
+                      background: page === i + 1 ? '#3b82f6' : 'white',
+                      color: page === i + 1 ? 'white' : '#334155'
+                    }}>{i + 1}</button>
+                ))}
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === totalPages || totalPages === 0 ? 'default' : 'pointer', fontSize: 13, color: page === totalPages || totalPages === 0 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                  ถัดไป
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* --- 3. DETAIL SIDEBAR (Drawer) --- */}
