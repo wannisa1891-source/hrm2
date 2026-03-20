@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
+import Swal from 'sweetalert2';
 
 interface ShiftRequest {
     id: number;
@@ -40,8 +41,17 @@ export default function RequestsPage() {
     };
 
     const handleAction = async (id: number, action: 'Approved' | 'Rejected') => {
-        if(!confirm(`ยืนยันการ${action === 'Approved' ? 'อนุมัติ' : 'ปฏิเสธ'}คำขอนี้?`)) return;
-
+        const actionText = action === 'Approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+        const result = await Swal.fire({
+            title: `ยืนยันการ${actionText}`,
+            text: `ยืนยันการ${actionText}คำขอนี้?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: action === 'Approved' ? '#10b981' : '#ef4444'
+        });
+        if (!result.isConfirmed) return;
         try {
             const res = await fetch('/api/schedule/requests', {
                 method: 'PUT',
@@ -50,9 +60,10 @@ export default function RequestsPage() {
             });
 
             if (!res.ok) throw new Error('Failed to update request');
+            Swal.fire({ title: 'สำเร็จ', text: 'บันทึกการทำรายการสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
             fetchRequests(); 
         } catch (err: any) {
-            alert(err.message);
+            Swal.fire('ข้อผิดพลาด', err.message, 'error');
         }
     };
 

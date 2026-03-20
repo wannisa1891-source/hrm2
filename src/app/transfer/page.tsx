@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useReactToPrint } from 'react-to-print';
 import OrderPdfTemplate from '@/components/Transfer/OrderPdfTemplate';
+import Swal from 'sweetalert2';
 
 interface Department { dept_id: string; dept_name: string; }
 interface Position { pos_id: string; pos_name: string; }
@@ -154,15 +155,38 @@ export default function TransferPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('ยืนยันการลบคำสั่งย้ายนี้?')) return;
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'ยืนยันการลบคำสั่งย้ายนี้?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบข้อมูล',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    });
+    if (!result.isConfirmed) return;
+    
     const res = await fetch(`/api/transfers?id=${id}`, { method: 'DELETE' });
     const data = await res.json();
-    if (data.success) { loadTransfers(); }
-    else alert('เกิดข้อผิดพลาด: ' + data.error);
+    if (data.success) { 
+      Swal.fire({ title: 'ลบสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+      loadTransfers(); 
+    }
+    else Swal.fire('เกิดข้อผิดพลาด', data.error, 'error');
   };
 
   const setTransferStatus = async (t: TransferRecord, newStatus: string) => {
-    if (!confirm(`ยืนยันการ${newStatus === 'Approved' ? 'อนุมัติ' : 'ไม่อนุมัติ'}คำสั่งย้ายนี้?`)) return;
+    const actionName = newStatus === 'Approved' ? 'อนุมัติ' : 'ไม่อนุมัติ';
+    const result = await Swal.fire({
+      title: `ยืนยันการ${actionName}`,
+      text: `ยืนยันการ${actionName}คำสั่งย้ายนี้?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: newStatus === 'Approved' ? '#10b981' : '#ef4444'
+    });
+    if (!result.isConfirmed) return;
     
     // Convert to update form format
     const updForm = {
@@ -187,9 +211,10 @@ export default function TransferPage() {
     const res = await fetch('/api/transfers', { method: 'PUT', body: fd });
     const data = await res.json();
     if (data.success) {
-      alert(`✅ อัปเดตสถานะเป็น ${newStatus === 'Approved' ? 'อนุมัติ' : 'ไม่อนุมัติ'} สำเร็จ`);
+      const actionName = newStatus === 'Approved' ? 'อนุมัติ' : 'ไม่อนุมัติ';
+      Swal.fire({ title: 'สำเร็จ!', text: `อัปเดตสถานะเป็น ${actionName} สำเร็จ`, icon: 'success', timer: 1500, showConfirmButton: false });
       loadTransfers();
-    } else alert('Error: ' + data.error);
+    } else Swal.fire('Error', data.error, 'error');
   };
 
   const chartData = useMemo(() => {
@@ -202,7 +227,10 @@ export default function TransferPage() {
   }, [transfers]);
 
   const handleSave = async () => {
-    if (!selected || !form.orderNo || !form.newDeptId) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
+    if (!selected || !form.orderNo || !form.newDeptId) { 
+      Swal.fire('ข้อความแจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning'); 
+      return; 
+    }
     setSaving(true);
     const fd = new FormData();
     fd.append('data', JSON.stringify(form));
@@ -213,12 +241,18 @@ export default function TransferPage() {
     const data = await res.json();
     setSaving(false);
     if (data.success) {
-      alert(`✅ ${form.transfer_id ? 'แก้ไข' : 'บันทึก'}คำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว`);
+      Swal.fire({
+        title: 'สำเร็จ!', 
+        text: `${form.transfer_id ? 'แก้ไข' : 'บันทึก'}คำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
       setShowForm(false);
       setSelected(null); setSearchQ('');
       setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', oldPosName: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
       loadTransfers();
-    } else alert('เกิดข้อผิดพลาด: ' + (data.error || ''));
+    } else Swal.fire('เกิดข้อผิดพลาด', data.error || '', 'error');
   };
 
   const setF = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));

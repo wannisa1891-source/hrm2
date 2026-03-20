@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
+import Swal from 'sweetalert2';
 
 const EMPTY_FORM: Partial<Employee> = {
   prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '',
@@ -61,17 +62,29 @@ function EmployeesContent() {
   });
 
   const handleResetPassword = async (emp: Employee) => {
-    if (!confirm(`คุณต้องการรีเซ็ตรหัสผ่านและส่งอีเมลแจ้ง ${emp.first_name_th} ${emp.last_name_th} ใช่หรือไม่?`)) return;
+    const result = await Swal.fire({
+      title: 'ยืนยันการรีเซ็ตรหัสผ่าน',
+      text: `คุณต้องการรีเซ็ตรหัสผ่านและส่งอีเมลแจ้ง ${emp.first_name_th} ${emp.last_name_th} ใช่หรือไม่?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#3085d6'
+    });
+    if (!result.isConfirmed) return;
+
+    Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
     try {
       const res = await fetch(`/api/employees/${emp.emp_id}/reset-password`, { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message);
+        Swal.fire('สำเร็จ', data.message, 'success');
       } else {
-        alert('เกิดข้อผิดพลาด: ' + data.error);
+        Swal.fire(' เกิดข้อผิดพลาด', data.error, 'error');
       }
     } catch (err) {
-      alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      Swal.fire(' เกิดข้อผิดพลาด', 'ข้อผิดพลาดในการเชื่อมต่อ', 'error');
     }
   };
 
@@ -86,7 +99,7 @@ function EmployeesContent() {
       const rawJsonData = XLSX.utils.sheet_to_json(firstSheet) as any[];
 
       if (rawJsonData.length === 0) {
-        alert('ไม่พบข้อมูลในไฟล์ Excel หรือไฟล์ว่างเปล่า');
+        Swal.fire('แจ้งเตือน', 'ไม่พบข้อมูลในไฟล์ Excel หรือไฟล์ว่างเปล่า', 'warning');
         return;
       }
 
@@ -127,7 +140,7 @@ function EmployeesContent() {
       // Simple validation for the first row to ensure they used correct headers
       const firstRow = mappedData[0];
       if (!firstRow.emp_id && !firstRow.first_name_th) {
-        alert('ตรวจสอบพบว่าหัวคอลัมน์ในไฟล์ Excel ไม่ตรงกับรูปแบบที่ระบบต้องการครับ (ต้องมี รหัสพนักงาน, ชื่อ (TH), แผนก, ตำแหน่ง)');
+        Swal.fire('ข้อผิดพลาด', 'ตรวจสอบพบว่าหัวคอลัมน์ในไฟล์ Excel ไม่ตรงกับรูปแบบที่ระบบต้องการครับ (ต้องมี รหัสพนักงาน, ชื่อ (TH), แผนก, ตำแหน่ง)', 'error');
         setIsImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
@@ -140,13 +153,17 @@ function EmployeesContent() {
       });
       const resData = await res.json();
       if (res.ok) {
-        alert(`นำเข้าข้อมูลสำเร็จ ${resData.successCount} รายการ, ผิดพลาด ${resData.errorCount} รายการ\n${resData.errors?.join('\n') || ''}`);
+        Swal.fire({
+          title: 'นำเข้าสำเร็จ!',
+          html: `สำเร็จ: <b>${resData.successCount}</b> รายการ<br/>ผิดพลาด: <b>${resData.errorCount}</b> รายการ<br/><br/>${resData.errors?.join('<br/>') || ''}`,
+          icon: 'success'
+        });
         loadEmployees();
       } else {
-        alert('เกิดข้อผิดพลาดในการรัน API: ' + resData.error);
+        Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการรัน API: ' + resData.error, 'error');
       }
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการอ่านไฟล์เอ็กเซล: ' + err.message);
+      Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการอ่านไฟล์เอ็กเซล: ' + err.message, 'error');
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -344,16 +361,33 @@ function EmployeesContent() {
 
     if (res.success) {
       setShowForm(false);
-      alert(res.message || (isEditing ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มพนักงานสำเร็จ'));
+      Swal.fire({
+        title: 'สำเร็จ!',
+        text: res.message || (isEditing ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มพนักงานสำเร็จ'),
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      });
       loadEmployees(); // reload after save
     } else {
-      alert(`เกิดข้อผิดพลาดในการบันทึกข้อมูล: ${res.message || 'กรุณาลองใหม่อีกครั้ง'}`);
+      Swal.fire('ข้อผิดพลาด', `เกิดข้อผิดพลาดในการบันทึกข้อมูล: ${res.message || 'กรุณาลองใหม่อีกครั้ง'}`, 'error');
     }
   };
 
   const handleDelete = async (emp_id: string) => {
-    if (!confirm('ยืนยันลบข้อมูลพนักงานระบบจะไม่สามารถกู้คืนได้?')) return;
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'ยืนยันลบข้อมูลพนักงาน ระบบจะไม่สามารถกู้คืนได้?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบข้อมูล',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    });
+    if (!result.isConfirmed) return;
+    
     await removeEmployee(emp_id);
+    Swal.fire({ title: 'ลบสำเร็จ', text: 'ข้อมูลพนักงานถูกลบออกจากระบบแล้ว', icon: 'success', timer: 1500, showConfirmButton: false });
   };
 
   const setField = (key: keyof Employee, value: any) => setFormData(f => ({ ...f, [key]: value }));

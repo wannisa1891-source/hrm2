@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
+import Swal from 'sweetalert2';
 
 interface License {
   id: string;
@@ -103,7 +104,7 @@ export default function LicensePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.expire_date) {
-      alert('กรุณาระบุวันหมดอายุ');
+      Swal.fire('ข้อความแจ้งเตือน', 'กรุณาระบุวันหมดอายุ', 'warning');
       return;
     }
 
@@ -148,8 +149,9 @@ export default function LicensePage() {
 
       await fetchLicenses();
       closeModal();
+      Swal.fire({ title: 'สำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -157,17 +159,28 @@ export default function LicensePage() {
 
   const handleDelete = async (license: License) => {
     if (!license.license_id) {
-      alert('ไม่สามารถลบรายการนี้ได้');
+      Swal.fire('ข้อความแจ้งเตือน', 'ไม่สามารถลบรายการนี้ได้', 'warning');
       return;
     }
-    if (!confirm('ยืนยันการลบข้อมูลใบประกอบวิชาชีพรายการนี้หรือไม่?')) return;
+    
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'ยืนยันการลบข้อมูลใบประกอบวิชาชีพรายการนี้หรือไม่?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบข้อมูล',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`/api/licenses/${license.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
+      Swal.fire({ title: 'ลบสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
       await fetchLicenses();
     } catch (err: any) {
-      alert(err.message);
+      Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
     }
   };
 

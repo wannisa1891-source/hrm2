@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
+import Swal from 'sweetalert2';
 
 export default function DepartmentAndEmployeePage() {
   const { employees = [], loadEmployees, removeEmployee } = useEmployees();
@@ -43,6 +44,24 @@ export default function DepartmentAndEmployeePage() {
 
   const getDeptName = (id: string) => departments.find(d => d.dept_id === id)?.dept_name || 'ไม่ระบุ';
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
+
+  const handleDeleteEmployee = async () => {
+    if (!selectedEmp) return;
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'ยืนยันการลบพนักงาน?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบพนักงาน',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    });
+    if (result.isConfirmed) {
+      removeEmployee?.(selectedEmp.emp_id);
+      setSelectedEmpId(null);
+      Swal.fire({ title: 'ลบสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+    }
+  };
 
   return (
     <AppLayout>
@@ -214,7 +233,7 @@ export default function DepartmentAndEmployeePage() {
               <div style={styles.sideFooter}>
                 <button style={styles.mainEditBtn}>แก้ไขข้อมูลพนักงาน</button>
                 <button
-                  onClick={() => { if (confirm('ยืนยันการลบพนักงาน?')) { removeEmployee?.(selectedEmp.emp_id); setSelectedEmpId(null); } }}
+                  onClick={handleDeleteEmployee}
                   style={styles.deleteBtn}
                 >
                   🗑️

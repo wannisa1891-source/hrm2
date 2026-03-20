@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
+import Swal from 'sweetalert2';
 
 interface ShiftType {
     id: number;
@@ -48,9 +49,10 @@ export default function MasterPage() {
             });
             if (!res.ok) throw new Error('Failed to save');
             setForm({ code: '', name: '', start_time: '', end_time: '', working_hours: 8, allowance: 0, color_code: '#3b82f6' });
+            Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
             fetchShifts();
         } catch (err: any) {
-            alert(err.message);
+            Swal.fire('ข้อผิดพลาด', err.message, 'error');
         }
     };
 

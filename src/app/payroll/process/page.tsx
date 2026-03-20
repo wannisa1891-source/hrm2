@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PayslipTemplate from '@/components/Payroll/PayslipTemplate';
 import { useReactToPrint } from 'react-to-print';
+import Swal from 'sweetalert2';
 
 interface PayrollRecord {
   payroll_id: string;
@@ -151,7 +152,7 @@ function PayrollProcessContent() {
         fetchDetails(selectedRecord!.payroll_id); // Refresh modal lists
       } else {
         const error = await res.json();
-        alert(error.error);
+        Swal.fire('ข้อผิดพลาด', error.error, 'error');
       }
     } catch (e) {
       console.error(e);
@@ -159,7 +160,16 @@ function PayrollProcessContent() {
   };
 
   const handleDeleteDetail = async (kind: 'allowance' | 'deduction', id: number) => {
-    if (!confirm('ยืนยันการลบรายการนี้?')) return;
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'ยืนยันการลบรายการนี้?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบ',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    });
+    if (!result.isConfirmed) return;
     try {
       const endpoint = kind === 'allowance' ? '/api/payroll/allowances' : '/api/payroll/deductions';
       const res = await fetch(`${endpoint}?id=${id}&payroll_id=${selectedRecord!.payroll_id}`, { method: 'DELETE' });

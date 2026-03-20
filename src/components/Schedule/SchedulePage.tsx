@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
+import Swal from 'sweetalert2'
 import useScheduleControls, { VIEWS } from './useScheduleControls'
 import useScheduleModal, { SHIFT_TYPES } from './useScheduleModal'
 import useScheduleSummary from './useScheduleSummary'
@@ -102,10 +103,20 @@ export default function SchedulePage() {
     changeView('day')
   }
 
-  function confirmDelete(id: string) {
-    if (confirm('คุณต้องการลบเวรนี้ใช่ไหม?')) {
+  async function confirmDelete(id: string) {
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบเวร',
+      text: 'คุณต้องการลบเวรนี้ใช่ไหม?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'ลบเวร',
+      cancelButtonText: 'ยกเลิก'
+    });
+    if (result.isConfirmed) {
       removeSchedule(id, toMonthKey(currentDate))
       closeModal()
+      Swal.fire({ title: 'ลบเวรสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
     }
   }
 
@@ -113,7 +124,7 @@ export default function SchedulePage() {
   async function handleSave(keepOpen: boolean = false) {
     if (!selectedDate) return
     if (!form.nurseName.trim() || !form.shift || !form.department) {
-      alert('กรุณาระบุข้อมูลจำเป็นให้ครบถ้วน');
+      Swal.fire('ข้อความแจ้งเตือน', 'กรุณาระบุข้อมูลจำเป็นให้ครบถ้วน', 'warning');
       return;
     }
 
@@ -140,8 +151,9 @@ export default function SchedulePage() {
       } else {
         closeModal()
       }
+      Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
     } catch(err: any) {
-      alert(err.message || 'Error saving schedule');
+      Swal.fire('ข้อผิดพลาด', err.message || 'Error saving schedule', 'error');
     }
   }
 
