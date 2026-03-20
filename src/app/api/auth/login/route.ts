@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
       [username, password_hash]
     );
 
-    if (users.length > 0) {
-      const user = users[0];
+    if (rows && rows.length > 0) {
+      const user = rows[0];
       const mockToken = `token_${user.user_id}_${Date.now()}`;
       
       return NextResponse.json({ 

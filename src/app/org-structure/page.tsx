@@ -6,6 +6,8 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
 
+import EmployeeFormModal from '@/components/employee/EmployeeFormModal';
+
 export default function DepartmentAndEmployeePage() {
   const { employees = [], loadEmployees, removeEmployee } = useEmployees();
   const { departments = [], loadDepartments } = useDepartments();
@@ -14,6 +16,10 @@ export default function DepartmentAndEmployeePage() {
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
   const [selectedEmpId, setSelectedEmpId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+
+  // --- เพิ่ม State สำหรับการจัดการ Modal (Add/Edit) ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
 
   useEffect(() => {
     loadEmployees?.();
@@ -44,11 +50,34 @@ export default function DepartmentAndEmployeePage() {
   const getDeptName = (id: string) => departments.find(d => d.dept_id === id)?.dept_name || 'ไม่ระบุ';
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
 
+  // --- Handlers ---
+  const handleAddNew = () => {
+    setEditData(null); // เคลียร์ข้อมูลเดิมเพื่อเพิ่มใหม่
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (emp: any) => {
+    setEditData(emp); // ส่งข้อมูลพนักงานที่จะแก้ไขเข้าไป
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลพนักงานท่านนี้?')) {
+      try {
+        await removeEmployee?.(id);
+        setSelectedEmpId(null);
+        // loadEmployees(); // โหลดข้อมูลใหม่หลังจากลบ (ถ้า hook ไม่ได้ทำ auto-refresh)
+      } catch (error) {
+        alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+      }
+    }
+  };
+
   return (
     <AppLayout>
       <div style={{ display: 'flex', height: 'calc(100vh - 64px)', background: '#f8fafc', overflow: 'hidden', position: 'relative' }}>
 
-        {/* --- 1. LEFT SIDEBAR (Department Selector) --- */}
+        {/* --- 1. LEFT SIDEBAR --- */}
         <div style={styles.leftSidebar}>
           <div style={{ padding: '24px', background: '#c8b8a0' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#45322e', margin: 0 }}>โครงสร้างองค์กร</h2>
@@ -89,7 +118,7 @@ export default function DepartmentAndEmployeePage() {
           </div>
         </div>
 
-        {/* --- 2. MAIN CONTENT (Employee Table) --- */}
+        {/* --- 2. MAIN CONTENT --- */}
         <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <div>
@@ -109,7 +138,7 @@ export default function DepartmentAndEmployeePage() {
                   style={styles.searchInput}
                 />
               </div>
-              <button style={styles.addBtn}>+ เพิ่มพนักงาน</button>
+              <button onClick={handleAddNew} style={styles.addBtn}>+ เพิ่มพนักงาน</button>
             </div>
           </div>
 
@@ -155,11 +184,13 @@ export default function DepartmentAndEmployeePage() {
                 ))}
               </tbody>
             </table>
+            {filteredEmployees.length === 0 && (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่พบข้อมูลพนักงาน</div>
+            )}
           </div>
         </div>
 
         {/* --- 3. DETAIL SIDEBAR (Drawer) --- */}
-        {/* Overlay กันการกดค้างด้านหลัง */}
         <div
           style={{
             ...styles.overlay,
@@ -176,14 +207,11 @@ export default function DepartmentAndEmployeePage() {
         }}>
           {selectedEmp && (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-
-              {/* Sidebar Header */}
               <div style={styles.sideHeader}>
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>รายละเอียดข้อมูล</h3>
                 <button onClick={() => setSelectedEmpId(null)} style={styles.closeBtn}>✕</button>
               </div>
 
-              {/* Sidebar Body (Scrollable) */}
               <div style={styles.sideBody}>
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                   <div style={styles.largeAvatar}>{selectedEmp.first_name_th?.[0] || '👤'}</div>
@@ -209,11 +237,15 @@ export default function DepartmentAndEmployeePage() {
                 </div>
               </div>
 
-              {/* Sidebar Footer (Fixed at bottom) */}
               <div style={styles.sideFooter}>
-                <button style={styles.mainEditBtn}>แก้ไขข้อมูลพนักงาน</button>
                 <button
-                  onClick={() => { if (confirm('ยืนยันการลบพนักงาน?')) { removeEmployee?.(selectedEmp.emp_id); setSelectedEmpId(null); } }}
+                  onClick={() => handleEdit(selectedEmp)}
+                  style={styles.mainEditBtn}
+                >
+                  แก้ไขข้อมูลพนักงาน
+                </button>
+                <button
+                  onClick={() => handleDelete(selectedEmp.emp_id)}
                   style={styles.deleteBtn}
                 >
                   🗑️
@@ -222,6 +254,18 @@ export default function DepartmentAndEmployeePage() {
             </div>
           )}
         </div>
+
+        {/* --- MODAL FOR ADD/EDIT (ถ้ามี) --- */}
+        {isModalOpen && (
+          <EmployeeFormModal 
+            isOpen={isModalOpen} 
+            onClose={() => setIsModalOpen(false)} 
+            initialData={editData}
+            departments={departments}
+            positions={positions}
+            onSuccess={() => loadEmployees?.()} 
+          />
+        )}
       </div>
     </AppLayout>
   );
@@ -237,7 +281,7 @@ function InfoRow({ label, value, color = '#0f172a', isLong = false }: any) {
   );
 }
 
-// --- Styles Object ---
+// --- Styles (คงเดิมจากที่คุณเขียนไว้ แต่เพิ่ม hover effect เล็กน้อย) ---
 const styles: Record<string, React.CSSProperties> = {
   leftSidebar: { width: '280px', background: '#d9cbb3', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', zIndex: 10 },
   deptItem: { padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', marginBottom: '6px', transition: 'all 0.2s ease' },
