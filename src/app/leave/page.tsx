@@ -74,64 +74,85 @@ export default function LeavePage() {
   };
 
   const badge = (s: string) => {
-    const m: Record<string, { bg: string; tx: string; lb: string }> = {
-      Pending: { bg: '#fef3c7', tx: '#92400e', lb: 'รออนุมัติ' },
-      Approved: { bg: '#d1fae5', tx: '#065f46', lb: 'อนุมัติแล้ว' },
-      Rejected: { bg: '#fee2e2', tx: '#991b1b', lb: 'ไม่อนุมัติ' },
-    };
-    const c = m[s] || { bg: '#f1f5f9', tx: '#475569', lb: s };
-    return <span style={{ background: c.bg, color: c.tx, padding: '3px 10px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>{c.lb}</span>;
+    let cls = 'lv-badge-gray', lb = s;
+    if (s === 'Pending') { cls = 'lv-badge-yellow'; lb = 'รออนุมัติ'; }
+    else if (s === 'Approved') { cls = 'lv-badge-green'; lb = 'อนุมัติแล้ว'; }
+    else if (s === 'Rejected') { cls = 'lv-badge-red'; lb = 'ไม่อนุมัติ'; }
+    return <span className={`lv-badge ${cls}`}>{lb}</span>;
   };
 
   const inp: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 13, outline: 'none', fontFamily: 'inherit' };
 
   // Card config
   const cards = [
-    { key: '', label: 'ทั้งหมด', value: stats.total, icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', bg: '#f8fafc', bgA: '#e2e8f0', ic: '#64748b', tx: '#334155', ring: '#94a3b8' },
-    { key: 'Pending', label: 'รออนุมัติ', value: stats.pending, icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', bg: '#fffbeb', bgA: '#fef3c7', ic: '#d97706', tx: '#92400e', ring: '#f59e0b' },
-    { key: 'Approved', label: 'อนุมัติแล้ว', value: stats.approved, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', bg: '#ecfdf5', bgA: '#d1fae5', ic: '#059669', tx: '#065f46', ring: '#10b981' },
-    { key: 'Rejected', label: 'ไม่อนุมัติ', value: stats.rejected, icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z', bg: '#fef2f2', bgA: '#fee2e2', ic: '#dc2626', tx: '#991b1b', ring: '#ef4444' },
+    { key: '', label: 'คำขอลาทั้งหมด', value: stats.total, icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', bg: '#f8fafc', ic: '#64748b' },
+    { key: 'Pending', label: 'รออนุมัติ', value: stats.pending, icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', bg: '#fffbeb', ic: '#d97706' },
+    { key: 'Approved', label: 'อนุมัติแล้ว', value: stats.approved, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', bg: '#ecfdf5', ic: '#059669' },
+    { key: 'Rejected', label: 'ไม่อนุมัติ', value: stats.rejected, icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z', bg: '#fef2f2', ic: '#dc2626' },
   ];
 
   return (
     <AppLayout>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .lv-page { padding: 24px; min-height: calc(100vh - 65px); animation: fadeIn 0.4s ease-out; }
+        .lv-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 24px; }
+        @media (max-width: 1024px) { .lv-stats { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .lv-stats { grid-template-columns: 1fr; } }
+        .lv-stat { border: 1px solid rgba(226, 232, 240, 0.7); background: white; border-radius: 20px; padding: 24px; display: flex; align-items: center; gap: 20px; transition: all 0.2s; cursor: pointer; text-align: left; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .lv-stat:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); transform: translateY(-2px); border-color: rgba(203, 213, 225, 0.9); }
+        .lv-stat.active { background: #f8fafc; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        
+        .lv-stat-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+        .lv-stat:hover .lv-stat-icon { transform: scale(1.05) rotate(-3deg); }
+        .lv-stat-val { font-size: 32px; font-weight: 800; color: #0f172a; line-height: 1; margin-bottom: 6px; font-family: 'Inter', sans-serif; letter-spacing: -0.5px; }
+        .lv-stat-label { font-size: 14px; font-weight: 600; color: #64748b; }
+
+        .lv-filter-bar { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #fff; }
+        @media (max-width: 600px) { .lv-filter-bar { flex-direction: column; gap: 16px; align-items: flex-start; } }
+        
+        .lv-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+        .lv-badge-yellow { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+        .lv-badge-green { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .lv-badge-red { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .lv-badge-gray { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+
+        .lv-table-row { transition: all 0.2s; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        .lv-table-row:hover { background: #f8fafc !important; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}} />
+
       <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
       {/* Header */}
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24, paddingBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="page-title">ระบบจัดการการลา</h1>
-          <p className="page-subtitle">จัดการคำขอลาทั้งหมดในองค์กร</p>
+          <h1 className="page-title" style={{ fontSize: 24, margin: 0, fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ background: '#eff6ff', color: '#3b82f6', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12 }}>
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            </span>
+            ระบบจัดการการลา
+          </h1>
+          <p className="page-subtitle" style={{ margin: '6px 0 0 54px', color: '#64748b', fontSize: 14 }}>อนุมัติและจัดการเวลาสมดุลในการทำงานของบุคลากร</p>
         </div>
-        <button className="btn-primary" onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button className="btn-primary" onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: 14, borderRadius: 12 }}>
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
           เพิ่มรายการลา
         </button>
       </div>
 
-      {/* Stat Cards — clickable filters with icons */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, marginBottom: 24 }}>
+      {/* Stat Cards */}
+      <div className="lv-stats">
         {cards.map((c, i) => {
           const active = filterStatus === c.key;
           return (
-            <button key={i} className={`glass-card hover-glow`} onClick={() => setFilterStatus(c.key)} style={{
-              padding: '24px',
-              border: active ? `2px solid ${c.ring}` : '1px solid transparent',
-              background: active ? c.bgA : '#fff',
-              cursor: 'pointer', transition: 'all 0.3s', outline: 'none',
-              display: 'flex', alignItems: 'center', gap: 16, textAlign: 'left',
-              position: 'relative', overflow: 'hidden'
-            }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: 16,
-                background: active ? c.ring + '22' : c.ic + '12',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: c.ic, flexShrink: 0
-              }}>
+            <button key={i} className={`lv-stat ${active ? 'active' : ''}`} onClick={() => setFilterStatus(c.key)}>
+              <div className="lv-stat-icon" style={{ background: c.bg, color: c.ic }}>
                 <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={c.icon} /></svg>
               </div>
               <div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: c.tx, lineHeight: 1 }}>{c.value}</div>
-                <div style={{ fontSize: 14, color: c.ic, fontWeight: 600, marginTop: 4 }}>{c.label}</div>
+                <div className="lv-stat-val">{c.value}</div>
+                <div className="lv-stat-label">{c.label}</div>
               </div>
             </button>
           );
@@ -139,20 +160,22 @@ export default function LeavePage() {
       </div>
 
       {/* Main Panel */}
-      <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="glass-card" style={{ marginBottom: 24, borderRadius: 16 }}>
       
         {/* Search bar */}
-        <div className="filter-bar" style={{ padding: '24px' }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>
+        <div className="filter-bar">
+          <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginRight: '16px', whiteSpace: 'nowrap' }}>
             รายการลา {filterStatus === 'Pending' ? '(รออนุมัติ)' : filterStatus === 'Approved' ? '(อนุมัติแล้ว)' : filterStatus === 'Rejected' ? '(ไม่อนุมัติ)' : '(ทั้งหมด)'}
           </span>
-          <div style={{ position: 'relative' }}>
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}>
+          <div className="search-input-wrap" style={{ flex: 1, maxWidth: '400px' }}>
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <input type="text" className="search-input" placeholder="ค้นหาพนักงาน..." value={searchQuery}
+            <input type="text" className="search-input" placeholder="ค้นหาชื่อพนักงาน หรือแผนก..." value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              style={{ width: 300, maxWidth: '100%', paddingLeft: '42px' }}
+              style={{ width: '100%', padding: '10px 14px 10px 40px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', transition: 'border 0.2s', fontSize: 14 }}
+              onFocus={e => (e.currentTarget.style.borderColor = '#3b82f6')}
+              onBlur={e => (e.currentTarget.style.borderColor = '#cbd5e1')}
             />
           </div>
         </div>
@@ -182,10 +205,8 @@ export default function LeavePage() {
               </td></tr>
             ) : paged.map(l => (
               <tr key={l.leave_id} 
-                onClick={() => { setSelectedLeave(l); setShowReviewModal(true); }}
-                style={{ borderBottom: '1px solid #f3f4f6', transition: 'background 0.1s', cursor: 'pointer' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#fafbfc')}
-                onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                className="lv-table-row"
+                onClick={() => { setSelectedLeave(l); setShowReviewModal(true); }}>
                 <td style={{ padding: '10px 14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -220,15 +241,22 @@ export default function LeavePage() {
                 </td>
                 <td style={{ padding: '10px 14px', textAlign: 'center' }}>{badge(l.status)}</td>
                 <td style={{ padding: '10px 14px', textAlign: 'right' }}>
-                  <button onClick={() => { setSelectedLeave(l); setShowReviewModal(true); }}
-                    style={{
-                      padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                      background: l.status === 'Pending' ? '#111827' : 'transparent',
-                      color: l.status === 'Pending' ? 'white' : '#9ca3af',
-                      border: l.status === 'Pending' ? 'none' : '1px solid #e5e7eb',
-                      transition: 'all 0.15s'
-                    }}
-                  >{l.status === 'Pending' ? 'ตรวจสอบ' : 'ดู'}</button>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                    <button className="btn-outline hover-glow" onClick={(e) => { e.stopPropagation(); setSelectedLeave(l); setShowReviewModal(true); }}
+                      style={{ 
+                        width: '32px', height: '32px', padding: 0, borderRadius: '8px', border: '1px solid #e2e8f0', 
+                        background: 'white', color: l.status === 'Pending' ? '#3b82f6' : '#64748b', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                      }}
+                      title={l.status === 'Pending' ? 'ตรวจสอบ' : 'ดูข้อมูล'}
+                    >
+                      {l.status === 'Pending' ? (
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                      ) : (
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      )}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -236,7 +264,7 @@ export default function LeavePage() {
         </table>
 
         {/* Pagination */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#fff', borderRadius: '0 0 16px 16px', marginTop: '-16px' }}>
           <span style={{ fontSize: 13, color: '#64748b' }}>
             แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, filtered.length)} จาก {filtered.length} รายการ
           </span>
@@ -262,9 +290,6 @@ export default function LeavePage() {
         </div>
       </div>
       </div>
-
-      {/* Spinner animation */}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Create Leave Modal */}
       {showForm && (
@@ -329,79 +354,90 @@ export default function LeavePage() {
         const over = rem < 0;
 
         return (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}
             onClick={e => e.target === e.currentTarget && setShowReviewModal(false)}>
-            <div style={{ background: 'white', borderRadius: 16, padding: 28, width: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#111827' }}>รายละเอียดการลา</h3>
-                <button onClick={() => setShowReviewModal(false)} style={{ width: 28, height: 28, borderRadius: 8, background: '#f3f4f6', border: 'none', fontSize: 16, cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+            <div style={{ background: 'white', borderRadius: 24, padding: 32, width: 480, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', animation: 'fadeIn 0.2s ease-out' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0f172a' }}>รายละเอียดการลา</h3>
+                <button onClick={() => setShowReviewModal(false)} style={{ width: 32, height: 32, borderRadius: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}>
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
               </div>
 
               {/* Employee info with avatar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid #f1f5f9' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={selectedLeave.photo ? `/uploads/${selectedLeave.photo}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedLeave.first_name_th || 'User')}&background=random&color=fff&size=128&bold=true`}
                   alt={selectedLeave.first_name_th}
-                  style={{ width: 44, height: 44, borderRadius: '12px', objectFit: 'cover', border: '1px solid #e5e7eb', flexShrink: 0, background: 'white' }}
+                  style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0', flexShrink: 0, background: 'white' }}
                 />
                 <div>
-                  <div style={{ fontWeight: 600, color: '#111827', fontSize: 15 }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th}</div>
-                  <div style={{ fontSize: 12, color: '#9ca3af' }}>{selectedLeave.dept_name}</div>
+                  <div style={{ fontWeight: 800, color: '#0f172a', fontSize: 16, marginBottom: 2 }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th}</div>
+                  <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{selectedLeave.dept_name || 'ไม่ระบุแผนก'}</div>
                 </div>
               </div>
 
               {/* Detail grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
                 {[
-                  { label: 'ประเภท', value: LEAVE_TYPES.find(t => t.id === selectedLeave.leave_type_id)?.name || 'อื่นๆ' },
+                  { label: 'ประเภทการลา', value: LEAVE_TYPES.find(t => t.id === selectedLeave.leave_type_id)?.name || 'อื่นๆ' },
                   { label: 'จำนวนวัน', value: `${days} วัน`, bold: true, color: '#2563eb' },
                   { label: 'วันเริ่มต้น', value: selectedLeave.start_date?.split('T')[0] },
                   { label: 'วันสิ้นสุด', value: selectedLeave.end_date?.split('T')[0] },
                 ].map((d, i) => (
-                  <div key={i} style={{ background: '#f9fafb', padding: '10px 12px', borderRadius: 8 }}>
-                    <div style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5 }}>{d.label}</div>
-                    <div style={{ fontSize: 13, fontWeight: d.bold ? 700 : 500, color: d.color || '#111827', marginTop: 2 }}>{d.value}</div>
+                  <div key={i} style={{ background: '#f8fafc', padding: '14px 16px', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 4 }}>{d.label}</div>
+                    <div style={{ fontSize: 14, fontWeight: d.bold ? 700 : 600, color: d.color || '#0f172a' }}>{d.value}</div>
                   </div>
                 ))}
               </div>
 
               {selectedLeave.reason && (
-                <div style={{ background: '#f9fafb', padding: '10px 12px', borderRadius: 8, marginBottom: 16 }}>
-                  <div style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5 }}>เหตุผล</div>
-                  <div style={{ fontSize: 13, color: '#374151', marginTop: 2 }}>{selectedLeave.reason}</div>
+                <div style={{ background: '#f8fafc', padding: '16px', borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 24 }}>
+                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>เหตุผลการลา</div>
+                  <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.5 }}>{selectedLeave.reason}</div>
                 </div>
               )}
 
               {/* Quota */}
               {qt > 0 && (
-                <div style={{ padding: '10px 12px', borderRadius: 8, marginBottom: 16, border: over ? '1px solid #fca5a5' : '1px solid #86efac', background: over ? '#fef2f2' : '#f0fdf4' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: over ? '#991b1b' : '#065f46', marginBottom: 6 }}>
-                    {over ? 'เกินโควตา!' : 'โควตาวันลา'}
+                <div style={{ padding: '16px', borderRadius: 12, marginBottom: 24, border: over ? '1px solid #fecaca' : '1px solid #bbf7d0', background: over ? '#fef2f2' : '#f0fdf4' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: over ? '#991b1b' : '#166534', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={over ? "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" : "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"} /></svg>
+                    {over ? 'เกินโควตาวันลา!' : 'โควตาวันลา'}
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 2 }}>
-                    <span>{ql} ทั้งหมด</span><span style={{ fontWeight: 600 }}>{qt} วัน</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6, color: over ? '#b91c1c' : '#166534' }}>
+                    <span>จำนวนโควตา {ql} ทั้งหมด</span><span style={{ fontWeight: 600 }}>{qt} วัน</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-                    <span>คงเหลือหลังอนุมัติ</span><span style={{ fontWeight: 700, color: over ? '#dc2626' : '#059669' }}>{rem} วัน</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: over ? '#b91c1c' : '#166534' }}>
+                    <span>คงเหลือหลังอนุมัติ</span><span style={{ fontWeight: 800 }}>{rem} วัน</span>
                   </div>
                 </div>
               )}
 
               {/* Actions */}
               {selectedLeave.status === 'Pending' ? (
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 12, paddingTop: 8 }}>
                   <button onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Rejected'); setShowReviewModal(false); }}
-                    style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #fca5a5', background: 'white', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.15s' }}>
+                    style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1px solid #fecaca', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 700, fontSize: 14, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#fee2e2'}
+                    onMouseLeave={e => e.currentTarget.style.background = '#fef2f2'}>
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                     ไม่อนุมัติ
                   </button>
                   <button onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Approved'); setShowReviewModal(false); }}
-                    style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.15s' }}>
-                    อนุมัติ
+                    style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: '#0f172a', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: 14, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                    อนุมัติการลา
                   </button>
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8 }}>
                   {badge(selectedLeave.status)}
                 </div>
               )}
