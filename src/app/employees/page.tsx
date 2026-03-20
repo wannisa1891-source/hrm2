@@ -33,6 +33,8 @@ function EmployeesContent() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterLicense, setFilterLicense] = useState('all');
 
+  const [thaiAddressData, setThaiAddressData] = useState<any[]>([]);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
@@ -178,6 +180,32 @@ function EmployeesContent() {
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    fetch('/data/thai_address.json')
+      .then(res => res.json())
+      .then(data => setThaiAddressData(data))
+      .catch(err => console.error('Failed to load thai address data:', err));
+  }, []);
+
+  const provinces = useMemo(() => {
+    return Array.from(new Set(thaiAddressData.map((d:any) => d.province))).sort() as string[];
+  }, [thaiAddressData]);
+
+  const amphoes = useMemo(() => {
+    if (!formData.addr_province) return [];
+    return Array.from(new Set(thaiAddressData.filter((d:any) => d.province === formData.addr_province).map((d:any) => d.amphoe))).sort() as string[];
+  }, [thaiAddressData, formData.addr_province]);
+
+  const districts = useMemo(() => {
+    if (!formData.addr_province || !formData.addr_district) return [];
+    return Array.from(new Set(thaiAddressData.filter((d:any) => d.province === formData.addr_province && d.amphoe === formData.addr_district).map((d:any) => d.district))).sort() as string[];
+  }, [thaiAddressData, formData.addr_province, formData.addr_district]);
+
+  const zipcodes = useMemo(() => {
+    if (!formData.addr_province || !formData.addr_district || !formData.addr_subdistrict) return [];
+    return Array.from(new Set(thaiAddressData.filter((d:any) => d.province === formData.addr_province && d.amphoe === formData.addr_district && d.district === formData.addr_subdistrict).map((d:any) => d.zipcode))).sort() as number[];
+  }, [thaiAddressData, formData.addr_province, formData.addr_district, formData.addr_subdistrict]);
 
   const openAdd = () => {
     setFormData({ ...EMPTY_FORM, emp_id: '', licenses: [{ status: 'Active' }] });
@@ -594,19 +622,61 @@ function EmployeesContent() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '16px', marginTop: '16px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={{ fontSize: '12px', color: '#64748b' }}>จังหวัด</span>
-                        <input type="text" value={formData.addr_province || ''} onChange={e => setField('addr_province', e.target.value)} style={addrInputStyle} placeholder="โปรดระบุจังหวัด" />
+                        <input
+                          type="text"
+                          list="province-list"
+                          value={formData.addr_province || ''}
+                          onChange={e => {
+                            setField('addr_province', e.target.value);
+                            setField('addr_district', '');
+                            setField('addr_subdistrict', '');
+                            setField('addr_zipcode', '');
+                          }}
+                          style={addrInputStyle}
+                          placeholder="พิมพ์หรือเลือกจังหวัด"
+                        />
+                        <datalist id="province-list">
+                          {provinces.map(p => <option key={p} value={p} />)}
+                        </datalist>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={{ fontSize: '12px', color: '#64748b' }}>อำเภอ / เขต</span>
-                        <input type="text" value={formData.addr_district || ''} onChange={e => setField('addr_district', e.target.value)} style={addrInputStyle} placeholder="โปรดระบุอำเภอ" />
+                        <select value={formData.addr_district || ''} disabled={!formData.addr_province} onChange={e => {
+                          setField('addr_district', e.target.value);
+                          setField('addr_subdistrict', '');
+                          setField('addr_zipcode', '');
+                        }} style={{ ...addrInputStyle, cursor: formData.addr_province ? 'pointer' : 'not-allowed', opacity: formData.addr_province ? 1 : 0.6 }}>
+                          <option value="">[ เลือกอำเภอ ]</option>
+                          {amphoes.map(a => <option key={a} value={a}>{a}</option>)}
+                        </select>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={{ fontSize: '12px', color: '#64748b' }}>ตำบล / แขวง</span>
-                        <input type="text" value={formData.addr_subdistrict || ''} onChange={e => setField('addr_subdistrict', e.target.value)} style={addrInputStyle} placeholder="โปรดระบุตำบล" />
+                        <select value={formData.addr_subdistrict || ''} disabled={!formData.addr_district} onChange={e => {
+                          setField('addr_subdistrict', e.target.value);
+                          
+                          // Auto-fill zipcode
+                          const matchedZipcodes = Array.from(new Set(thaiAddressData.filter((d:any) => d.province === formData.addr_province && d.amphoe === formData.addr_district && d.district === e.target.value).map((d:any) => d.zipcode)));
+                          if (matchedZipcodes.length === 1) {
+                            setField('addr_zipcode', String(matchedZipcodes[0]));
+                          } else {
+                            setField('addr_zipcode', '');
+                          }
+                        }} style={{ ...addrInputStyle, cursor: formData.addr_district ? 'pointer' : 'not-allowed', opacity: formData.addr_district ? 1 : 0.6 }}>
+                          <option value="">[ เลือกตำบล ]</option>
+                          {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={{ fontSize: '12px', color: '#64748b' }}>รหัสไปรษณีย์</span>
-                        <input type="text" value={formData.addr_zipcode || ''} onChange={e => setField('addr_zipcode', e.target.value)} style={addrInputStyle} placeholder="10xxx" />
+                        {zipcodes.length > 1 ? (
+                          <select value={formData.addr_zipcode || ''} disabled={!formData.addr_subdistrict} onChange={e => setField('addr_zipcode', e.target.value)} style={{ ...addrInputStyle, cursor: formData.addr_subdistrict ? 'pointer' : 'not-allowed', opacity: formData.addr_subdistrict ? 1 : 0.6 }}>
+                            <option value="">[ เลือกรหัส ]</option>
+                            {zipcodes.map(z => <option key={z} value={z}>{z}</option>)}
+                          </select>
+                        ) : (
+                          <input type="text" value={formData.addr_zipcode || ''} onChange={e => setField('addr_zipcode', e.target.value)} style={addrInputStyle} placeholder="10xxx" readOnly={zipcodes.length === 1} />
+                        )}
                       </div>
                     </div>
 
@@ -625,7 +695,7 @@ function EmployeesContent() {
                     SECTION 02
                   </div>
                   <h4 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '20px' }}>💼</span> ข้อมูลการทำงานและวิชาชีพ (Job & Professional Info)
+                    <span style={{ fontSize: '20px' }}></span> ข้อมูลการทำงานและวิชาชีพ (Job & Professional Info)
                   </h4>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
@@ -707,7 +777,7 @@ function EmployeesContent() {
                         <div key={index} style={{ padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc', marginBottom: '10px', position: 'relative' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
                             <span style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
-                              🏷️ ใบรับรองที่ {index + 1}
+                              ใบรับรองที่ {index + 1}
                             </span>
                             <button type="button" onClick={() => handleRemoveLicense(index)} style={{ padding: '4px 8px', fontSize: '12px', color: '#ef4444', background: '#fee2e2', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
                               ลบทิ้ง
