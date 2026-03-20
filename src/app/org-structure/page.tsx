@@ -7,9 +7,9 @@ import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
 import Swal from 'sweetalert2';
 import { 
-  Users, Search, Plus, Edit2, Trash2, X, User as UserIcon, 
+  Users, Search, Plus, Edit2, Trash2, X, UserIcon, 
   ChevronRight, Briefcase, MapPin, Phone, Building, Contact, SearchCode
-} from 'lucide-react';
+} from '@/components/Icons';
 
 export default function DepartmentAndEmployeePage() {
   const { employees = [], loadEmployees, removeEmployee } = useEmployees();
