@@ -14,7 +14,7 @@ const SLIDES = [
 ];
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [slide, setSlide] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -31,13 +31,13 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     setErrorMessage('');
-    if (!email || !password) {
-      setErrorMessage('กรุณากรอก Email และ Password');
+    if (!username || !password) {
+      setErrorMessage('กรุณากรอก Username และ Password');
       return;
     }
     setLoading(true);
     try {
-      const result = await loginUser(email, password);
+      const result = await loginUser(username, password);
       
       if (result.success) {
         // เก็บข้อมูล user ใน localStorage
@@ -45,7 +45,7 @@ export default function LoginPage() {
 
            login(result.user);
         } else {
-           login({ username: email });
+           login({ username: username });
         }
         // redirect ไปหน้า dashboard
         router.push('/dashboard');
@@ -108,17 +108,18 @@ export default function LoginPage() {
         <div style={{ display: 'flex', alignItems: 'center', background: '#f5f7fb', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
           <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" style={{ marginRight: 8, flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
           <input
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            value={username}
+            onChange={e => setUsername(e.target.value)}
             type="text"
             placeholder="Username"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
+            autoComplete="username"
             style={{ border: 'none', background: 'none', width: '100%', fontSize: 15, color: '#333', outline: 'none', fontFamily: 'Sarabun, sans-serif' }}
           />
         </div>
 
         {/* Password */}
-        <div style={{ display: 'flex', alignItems: 'center', background: '#f5f7fb', borderRadius: 12, padding: '10px 14px', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', background: '#f5f7fb', borderRadius: 12, padding: '10px 14px', marginBottom: 8 }}>
           <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" style={{ marginRight: 8, flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           <input
             value={password}
@@ -126,8 +127,22 @@ export default function LoginPage() {
             type="password"
             placeholder="Password"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
+            autoComplete="current-password"
             style={{ border: 'none', background: 'none', width: '100%', fontSize: 15, color: '#333', outline: 'none', fontFamily: 'Sarabun, sans-serif' }}
           />
+        </div>
+
+        {/* Forgot password link */}
+        <div style={{ textAlign: 'right', marginBottom: 16 }}>
+          <a
+            href="#"
+            onClick={e => { e.preventDefault(); router.push('/forgot-password'); }}
+            style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', transition: 'color 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#93c5fd'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
+          >
+            ลืมรหัสผ่าน?
+          </a>
         </div>
 
         {/* แสดง Error Message ถ้ามี */}
