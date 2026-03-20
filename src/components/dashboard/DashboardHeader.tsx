@@ -218,7 +218,13 @@ export default function DashboardHeader({ today, userName = "Hospital HRM" }: { 
 
         <NotificationBell />
         
-        <div style={{ position: 'relative', width: 45, height: 45 }}>
+        <div 
+          style={{ position: 'relative', width: 45, height: 45, cursor: 'pointer', transition: 'transform 0.2s' }}
+          onClick={() => router.push('/profile')}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          title="โปรไฟล์ส่วนตัว"
+        >
 
           <div style={{
             width: 45,

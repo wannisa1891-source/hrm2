@@ -40,6 +40,7 @@ function EmployeesContent() {
 
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [viewMode, setViewMode] = useState(false);
   const [formData, setFormData] = useState<Partial<Employee>>({ ...EMPTY_FORM });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -49,6 +50,8 @@ function EmployeesContent() {
   const [isImporting, setIsImporting] = useState(false);
   const [showIdCard, setShowIdCard] = useState(false);
   const [selectedEmpForCard, setSelectedEmpForCard] = useState<Employee | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkPrinting, setIsBulkPrinting] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -212,8 +215,28 @@ function EmployeesContent() {
     setImageFile(null);
     setPreviewUrl(null);
     setIsEditing(false);
+    setViewMode(false);
     setShowForm(true);
     setActiveTab('personal');
+  };
+
+  const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(currentData.map(emp => emp.emp_id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const toggleSelectRow = (emp_id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(emp_id) ? prev.filter(id => id !== emp_id) : [...prev, emp_id]
+    );
+  };
+
+  const handleBulkPrint = () => {
+    setIsBulkPrinting(true);
+    setShowIdCard(true);
   };
 
   const openEdit = (emp: Employee) => {
@@ -221,6 +244,17 @@ function EmployeesContent() {
     setImageFile(null);
     setPreviewUrl(emp.image ? `/uploads/${emp.image}` : null);
     setIsEditing(true);
+    setViewMode(false);
+    setShowForm(true);
+    setActiveTab('personal');
+  };
+
+  const openView = (emp: Employee) => {
+    setFormData({ ...emp, citizen_id: emp.citizen_id || '', licenses: emp.licenses || [] });
+    setImageFile(null);
+    setPreviewUrl(emp.image ? `/uploads/${emp.image}` : null);
+    setIsEditing(false);
+    setViewMode(true);
     setShowForm(true);
     setActiveTab('personal');
   };
@@ -370,6 +404,12 @@ function EmployeesContent() {
           </div>
         </div>
 
+        {/* Action Bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div>
+          </div>
+        </div>
+
         <div className="glass-card" style={{ marginBottom: '24px' }}>
           <div className="filter-bar">
             <div className="search-input-wrap" style={{ flex: '1 1 300px' }}>
@@ -418,7 +458,13 @@ function EmployeesContent() {
                   <tr><td colSpan={6} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
                   currentData.map((emp) => (
-                    <tr key={emp.emp_id} style={{ background: emp.license_status === 'Expired' ? '#fff5f5' : 'transparent', transition: 'background 0.2s' }}>
+                    <tr 
+                      key={emp.emp_id} 
+                      onClick={() => openView(emp)}
+                      style={{ background: emp.license_status === 'Expired' ? '#fff5f5' : 'transparent', transition: 'all 0.2s', cursor: 'pointer' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = emp.license_status === 'Expired' ? '#fff5f5' : 'transparent'}
+                    >
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
                           {emp.image ? <img src={`/uploads/${emp.image}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <span style={{ color: '#94a3b8', fontSize: '20px' }}>👤</span>}
@@ -442,9 +488,9 @@ function EmployeesContent() {
                           {emp.status}
                         </span>
                       </td>
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
                         <div className="action-btn-group" style={{ justifyContent: 'center' }}>
-                          <button className="icon-btn hover-glow" onClick={() => { setSelectedEmpForCard(emp); setShowIdCard(true); }} title="พิมพ์บัตรพนักงาน" style={{ color: '#0ea5e9', background: '#f0f9ff' }}>
+                          <button className="icon-btn hover-glow" onClick={() => { setIsBulkPrinting(false); setSelectedEmpForCard(emp); setShowIdCard(true); }} title="พิมพ์บัตรพนักงาน" style={{ color: '#0ea5e9', background: '#f0f9ff' }}>
                             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
                           </button>
                           <button className="icon-btn hover-glow" onClick={() => handleResetPassword(emp)} title="ส่งอีเมลรีเซ็ตรหัสผ่าน" style={{ color: '#d97706', background: '#fefce8' }}>
@@ -502,12 +548,14 @@ function EmployeesContent() {
             {/* Modal Header */}
             <div style={{ padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #f1f5f9', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: isEditing ? '#fff7ed' : '#f0fdf4', color: isEditing ? '#f97316' : '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-                  {isEditing ? '✏️' : '✨'}
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: viewMode ? '#eff6ff' : isEditing ? '#fff7ed' : '#f0fdf4', color: viewMode ? '#3b82f6' : isEditing ? '#f97316' : '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+                  {viewMode ? (
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  ) : isEditing ? '✏️' : '✨'}
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>{isEditing ? 'แก้ไขข้อมูลบุคลากร' : 'ลงทะเบียนบุคลากรใหม่'}</h3>
-                  <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>กรอกข้อมูลรายละเอียดของพนักงานให้ครบถ้วนเพื่อบันทึกลงในระบบ</p>
+                  <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>{viewMode ? 'ข้อมูลบุคลากร' : isEditing ? 'แก้ไขข้อมูลบุคลากร' : 'ลงทะเบียนบุคลากรใหม่'}</h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>{viewMode ? 'รายละเอียดข้อมูลพนักงานในระบบ' : 'กรอกข้อมูลรายละเอียดของพนักงานให้ครบถ้วนเพื่อบันทึกลงในระบบ'}</p>
                 </div>
               </div>
               <button type="button" onClick={() => setShowForm(false)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>✕</button>
@@ -515,6 +563,7 @@ function EmployeesContent() {
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '32px' }} className="no-scrollbar">
               <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                <fieldset disabled={viewMode} style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
                 {/* === Section 1: ข้อมูลส่วนตัว === */}
                 <div style={{ background: '#f8fafc', borderRadius: '20px', padding: '28px', border: '1px solid #e2e8f0', position: 'relative' }}>
@@ -907,15 +956,19 @@ function EmployeesContent() {
                   </div>
                 </div>
 
+                </fieldset>
+
                 {/* Action Buttons */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '10px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
-                  <button type="button" onClick={() => setShowForm(false)} style={{ padding: '12px 32px', background: 'white', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '15px', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                    ยกเลิก
-                  </button>
-                  <button type="submit" disabled={saving} style={{ padding: '12px 40px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', border: 'none', borderRadius: '12px', cursor: saving ? 'wait' : 'pointer', fontWeight: 600, fontSize: '15px', display: 'flex', gap: '8px', alignItems: 'center', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)', transition: 'all 0.2s', opacity: saving ? 0.8 : 1 }}>
-                    {saving ? 'กำลังประมวลผล...' : 'บันทึกข้อมูล'}
-                  </button>
-                </div>
+                {!viewMode && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '10px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
+                    <button type="button" onClick={() => setShowForm(false)} style={{ padding: '12px 32px', background: 'white', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '15px', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                      ยกเลิก
+                    </button>
+                    <button type="submit" disabled={saving} style={{ padding: '12px 40px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', border: 'none', borderRadius: '12px', cursor: saving ? 'wait' : 'pointer', fontWeight: 600, fontSize: '15px', display: 'flex', gap: '8px', alignItems: 'center', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)', transition: 'all 0.2s', opacity: saving ? 0.8 : 1 }}>
+                      {saving ? 'กำลังประมวลผล...' : 'บันทึกข้อมูล'}
+                    </button>
+                  </div>
+                )}
               </form>
             </div>
           </div>
@@ -923,47 +976,64 @@ function EmployeesContent() {
       )}
 
       {/* ID Card Modal */}
-      {showIdCard && selectedEmpForCard && (
+      {showIdCard && (isBulkPrinting ? selectedIds.length > 0 : selectedEmpForCard) && (
         <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 1100 }}>
-          <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', padding: '24px', width: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
-
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+          <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', padding: '32px', width: isBulkPrinting ? '800px' : '400px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
+            
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{isBulkPrinting ? 'พิมพ์บัตรพนักงานจำนวนมาก' : 'พิมพ์บัตรพนักงาน'}</h3>
               <button type="button" onClick={() => setShowIdCard(false)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', color: '#64748b' }}>✕</button>
             </div>
 
-            {/* Card Content to Print */}
-            <div ref={printRef} style={{ width: '320px', height: '500px', background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)', borderRadius: '16px', padding: '24px', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.5)', position: 'relative', overflow: 'hidden' }}>
-              {/* Background Decoration */}
-              <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-              <div style={{ position: 'absolute', bottom: '-80px', left: '-50px', width: '200px', height: '200px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+            <div style={{ flex: 1, width: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }} className="no-scrollbar">
+              <div 
+                ref={printRef} 
+                style={{ 
+                  display: isBulkPrinting ? 'grid' : 'flex', 
+                  gridTemplateColumns: isBulkPrinting ? 'repeat(2, 1fr)' : '1fr',
+                  gap: '24px',
+                  padding: '20px',
+                  background: 'white',
+                  width: isBulkPrinting ? '210mm' : 'auto', // A4 width approximately
+                  justifyContent: 'center'
+                }}
+              >
+                {(isBulkPrinting ? currentData.filter(emp => selectedIds.includes(emp.emp_id)) : [selectedEmpForCard!]).map((empForCard) => (
+                  <div key={empForCard.emp_id} style={{ width: isBulkPrinting ? '300px' : '320px', height: isBulkPrinting ? '480px' : '500px', background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)', borderRadius: '16px', padding: '24px', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.5)', position: 'relative', overflow: 'hidden', pageBreakInside: 'avoid' }}>
+                    {/* Background Decoration */}
+                    <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                    <div style={{ position: 'absolute', bottom: '-80px', left: '-50px', width: '200px', height: '200px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
 
-              <h2 style={{ margin: '0 0 20px 0', fontSize: '22px', fontWeight: 700, letterSpacing: '1px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>EMPLOYEE ID</h2>
+                    <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: 700, letterSpacing: '1px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>EMPLOYEE ID</h2>
 
-              <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'white', padding: '4px', marginBottom: '20px', boxShadow: '0 8px 16px rgba(0,0,0,0.15)' }}>
-                <img
-                  src={selectedEmpForCard.image ? `/uploads/${selectedEmpForCard.image}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'}
-                  alt="Employee"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }}
-                />
-              </div>
+                    <div style={{ width: '110px', height: '110px', borderRadius: '50%', background: 'white', padding: '4px', marginBottom: '16px', boxShadow: '0 8px 16px rgba(0,0,0,0.15)', zIndex: 1 }}>
+                      <img
+                        src={empForCard.image ? `/uploads/${empForCard.image}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'}
+                        alt="Employee"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }}
+                      />
+                    </div>
 
-              <div style={{ textAlign: 'center', zIndex: 1 }}>
-                <h3 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight: 700 }}>{selectedEmpForCard.prefix}{selectedEmpForCard.first_name_th} {selectedEmpForCard.last_name_th}</h3>
-                <p style={{ margin: '0 0 16px 0', fontSize: '14px', opacity: 0.9 }}>{getPosName(selectedEmpForCard.pos_id)}</p>
-                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', display: 'inline-block', marginBottom: '20px', backdropFilter: 'blur(4px)' }}>
-                  ID: {selectedEmpForCard.emp_id}
-                </div>
-              </div>
+                    <div style={{ textAlign: 'center', zIndex: 1 }}>
+                      <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: 700 }}>{empForCard.prefix}{empForCard.first_name_th} {empForCard.last_name_th}</h3>
+                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', opacity: 0.9 }}>{getPosName(empForCard.pos_id)}</p>
+                      <div style={{ background: 'rgba(255,255,255,0.2)', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', display: 'inline-block', marginBottom: '16px', backdropFilter: 'blur(4px)' }}>
+                        ID: {empForCard.emp_id}
+                      </div>
+                    </div>
 
-              <div style={{ marginTop: 'auto', background: 'white', padding: '8px', borderRadius: '12px', zIndex: 1 }}>
-                <QRCodeSVG value={selectedEmpForCard.emp_id} size={80} level="M" />
+                    <div style={{ marginTop: 'auto', background: 'white', padding: '8px', borderRadius: '12px', zIndex: 1 }}>
+                      <QRCodeSVG value={empForCard.emp_id} size={70} level="M" />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <button className="btn-primary" onClick={() => handlePrint()} style={{ marginTop: '24px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <button className="btn-primary" onClick={() => handlePrint()} style={{ marginTop: '24px', width: isBulkPrinting ? '300px' : '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px' }}>
               <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-              พิมพ์บัตรพนักงาน
+              พิมพ์บัตรพนักงาน {isBulkPrinting ? `(${selectedIds.length} ใบ)` : ''}
             </button>
           </div>
         </div>
