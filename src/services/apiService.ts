@@ -141,6 +141,23 @@ export const deleteEmployee = (emp_id: string): Promise<{ message: string }> =>
 export const fetchDepartments = (): Promise<Department[]> =>
   apiFetch<Department[]>('/api/departments')
 
+export const createDepartment = (body: { dept_id: string; dept_name: string }): Promise<{ message: string }> =>
+  apiFetch('/api/departments', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+export const updateDepartment = (dept_id: string, body: { dept_name: string }): Promise<{ message: string }> =>
+  apiFetch(`/api/departments/${dept_id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+export const deleteDepartment = (dept_id: string): Promise<{ message: string }> =>
+  apiFetch(`/api/departments/${dept_id}`, { method: 'DELETE' })
+
 // ============================================================
 //  POSITIONS
 // ============================================================

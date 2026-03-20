@@ -11,3 +11,30 @@ export async function GET() {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { dept_id, dept_name } = body;
+
+    if (!dept_id || !dept_name) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Check if dept_id already exists
+    const [existing] = await pool.query('SELECT dept_id FROM tbl_departments WHERE dept_id = ?', [dept_id]);
+    if ((existing as any[]).length > 0) {
+      return NextResponse.json({ error: 'Department ID already exists' }, { status: 400 });
+    }
+
+    await pool.query(
+      'INSERT INTO tbl_departments (dept_id, dept_name) VALUES (?, ?)',
+      [dept_id, dept_name]
+    );
+
+    return NextResponse.json({ message: 'Department created successfully' }, { status: 201 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'DB Error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

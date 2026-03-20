@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { fetchDepartments, type Department } from '@/services/apiService'
+import { fetchDepartments, createDepartment, updateDepartment, deleteDepartment, type Department } from '@/services/apiService'
 
 export function useDepartments() {
   const [departments, setDepartments] = useState<Department[]>([])
@@ -19,6 +19,38 @@ export function useDepartments() {
       setLoading(false)
     }
   }, [])
+  const addDepartment = async (dept_id: string, dept_name: string) => {
+    try {
+      setLoading(true)
+      await createDepartment({ dept_id, dept_name })
+      await loadDepartments() // Refresh
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    } finally { setLoading(false) }
+  }
 
-  return { departments, loading, error, loadDepartments }
+  const editDepartment = async (dept_id: string, dept_name: string) => {
+    try {
+      setLoading(true)
+      await updateDepartment(dept_id, { dept_name })
+      await loadDepartments()
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    } finally { setLoading(false) }
+  }
+
+  const removeDepartment = async (dept_id: string) => {
+    try {
+      setLoading(true)
+      await deleteDepartment(dept_id)
+      await loadDepartments()
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    } finally { setLoading(false) }
+  }
+
+  return { departments, loading, error, loadDepartments, addDepartment, editDepartment, removeDepartment }
 }
