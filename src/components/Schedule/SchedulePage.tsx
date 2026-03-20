@@ -184,7 +184,7 @@ export default function SchedulePage() {
           --bdr: #e2e8f0; --shd: 0 1px 3px rgba(0,0,0,.04); --shd2: 0 4px 12px rgba(0,0,0,.06);
           --rad: 8px;
         }
-        .schedule-page { padding: 24px 32px; max-width: 1440px; margin: 0 auto; min-height: 100vh; font-family: 'Inter', system-ui, sans-serif; }
+        .schedule-page { font-family: 'Inter', system-ui, sans-serif; }
         .sp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--bdr); }
         .sp-header-left { display: flex; align-items: center; gap: 12px; }
         .sp-header-icon { color: var(--txt2); }
@@ -266,13 +266,13 @@ export default function SchedulePage() {
         .sp-btn-icon svg { width: 16px; height: 16px; }
       `}} />
 
-      <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
-
+      <div className="schedule-page" style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
+        
         {/* HEADER */}
         <div className="page-header">
           <div>
             <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <svg className="w-6 h-6 text-blue-600" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                <svg width="28" height="28" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 ตารางเวรพยาบาล
             </h1>
             <p className="page-subtitle">จัดการตารางเวรและการทำงานของบุคลากรทางการแพทย์แบบครบวงจร</p>
@@ -286,7 +286,7 @@ export default function SchedulePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
           <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
             </div>
             <div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{totalSchedules}</div>
@@ -295,7 +295,7 @@ export default function SchedulePage() {
           </div>
           <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
             <div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{todaySchedules}</div>
@@ -304,7 +304,7 @@ export default function SchedulePage() {
           </div>
           <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#fffbeb', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             </div>
             <div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{monthSchedules}</div>
@@ -318,11 +318,11 @@ export default function SchedulePage() {
           <div className="sp-cal-controls">
             <div className="sp-cal-nav">
               <button className="sp-btn-nav" onClick={goPrev}>
-                  <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                  <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
               </button>
               <h2 className="sp-cal-month">{formatDisplay}</h2>
               <button className="sp-btn-nav" onClick={goNext}>
-                  <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                  <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               </button>
               <button className="sp-btn-today" onClick={goToday}>วันนี้</button>
             </div>
@@ -377,7 +377,7 @@ export default function SchedulePage() {
         {Object.keys(departmentStatus).length > 0 && (
           <div className="glass-card" style={{ padding: '32px', border: 'none' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1e2433', margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <svg className="w-6 h-6" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                <svg width="24" height="24" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                 สถานะเวรแต่ละแผนก
             </h3>
             <div className="sp-dept-grid">
