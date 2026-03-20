@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import NotificationBell from '@/components/layout/NotificationBell'
 
 interface SearchResult {
   type: 'employee' | 'leave' | 'transfer' | 'schedule' | 'announcement';
@@ -102,7 +103,7 @@ export default function DashboardHeader({ today, userName = "Hospital HRM" }: { 
     }
   }
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
 
       <div>
         <span style={{
@@ -215,6 +216,8 @@ export default function DashboardHeader({ today, userName = "Hospital HRM" }: { 
           )}
         </div>
 
+        <NotificationBell />
+        
         <div style={{ position: 'relative', width: 45, height: 45 }}>
 
           <div style={{

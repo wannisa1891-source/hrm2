@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import BackButton from '@/components/common/BackButton';
@@ -11,6 +11,8 @@ export default function AppLayout({ children, hideScrollbar = false }: { childre
   const [collapsed, setCollapsed] = useState(false);
   const { isLoggedIn } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const isDashboard = pathname === '/dashboard' || pathname === '/';
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -25,10 +27,12 @@ export default function AppLayout({ children, hideScrollbar = false }: { childre
     <div className="main-layout">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
       <main className={`main-content${collapsed ? ' expanded' : ''}${hideScrollbar ? ' no-scrollbar' : ''}`}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', width: '100%' }}>
-          <div><BackButton /></div>
-          <div><NotificationBell /></div>
-        </div>
+        {!isDashboard && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', width: '100%' }}>
+            <div><BackButton /></div>
+            <div><NotificationBell /></div>
+          </div>
+        )}
         {children}
       </main>
     </div>

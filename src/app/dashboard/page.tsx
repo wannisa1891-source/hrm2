@@ -159,7 +159,7 @@ export default function DashboardPage() {
   return (
 
     <AppLayout hideScrollbar={true}>
-      <div className="no-scrollbar" style={{ height: 'calc(100vh - 44px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: 'calc(100vh - 8px)', paddingBottom: '32px', display: 'flex', flexDirection: 'column' }}>
         <DashboardHeader today={today} />
 
       {loading && <p>Loading...</p>}
@@ -168,7 +168,7 @@ export default function DashboardPage() {
 
         <div className="dashboard-grid" style={{ flex: 1, minHeight: 0 }}>
 
-          <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 24, minHeight: 0 }}>
+          <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 16, minHeight: 0 }}>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
 
@@ -215,7 +215,7 @@ export default function DashboardPage() {
           </div>
 
 
-          <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 24, minHeight: 0 }}>
+          <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 16, minHeight: 0 }}>
 
             <PendingList
               transfersCount={dashboardData.pendingTransfers}
