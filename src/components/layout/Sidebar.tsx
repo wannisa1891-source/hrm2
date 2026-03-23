@@ -46,9 +46,7 @@ const menuItems = [
     id: 'finance',
     label: 'การเงิน',
     icon: icons.finance,
-    children: [
-      { id: 'payroll', label: 'ระบบเงินเดือน', href: '/payroll' },
-    ],
+    href: '/payroll',
   },
   {
     id: 'audit',
@@ -68,6 +66,12 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { logout, user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+
+  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.id === 'audit' && !isAdmin) return false;
+    return true;
+  });
 
   const toggleMenu = (id: string) => {
     if (collapsed) {
@@ -104,7 +108,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* Nav */}
         <nav className="sidebar-nav">
-          {menuItems.map(item => {
+          {filteredMenuItems.map(item => {
             if (!item.children) {
               return (
                 <button
@@ -163,10 +167,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               onClick={() => navigate('/profile')}
               style={{ flexDirection: 'row', textAlign: 'left', padding: '0 8px', cursor: 'pointer' }}
             >
-              <div className="s-avatar" style={{ width: 40, height: 40, fontSize: 16 }}>{user?.username?.charAt(0).toUpperCase() || 'H'}</div>
+              <div className="s-avatar" style={{ width: 40, height: 40, fontSize: 16 }}>{((user as any)?.name || user?.username || 'U').charAt(0).toUpperCase()}</div>
               <div style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
-                <div className="s-username" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.username || 'Admin'}</div>
-                <div className="s-role">{user?.role || 'Management'}</div>
+                <div className="s-username" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(user as any)?.name || user?.username || 'User'}</div>
+                <div className="s-role">{user?.role || 'User'}</div>
               </div>
             </div>
             <button className="btn-logout" onClick={logout}>

@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AuditLog {
   log_id: number;
@@ -11,9 +13,19 @@ interface AuditLog {
 }
 
 export default function AuditLogsPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+  const router = useRouter();
+
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    if (user && !isAdmin) {
+      router.push('/dashboard');
+    }
+  }, [user, isAdmin, router]);
 
   useEffect(() => {
     fetch('/api/audit-logs')
@@ -29,6 +41,10 @@ export default function AuditLogsPage() {
     l.action_detail?.toLowerCase().includes(search.toLowerCase()) || 
     l.user_id?.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (user && !isAdmin) {
+    return null; // Return null while redirecting
+  }
 
   return (
     <AppLayout>

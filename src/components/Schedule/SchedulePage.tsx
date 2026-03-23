@@ -11,6 +11,7 @@ import DayView from './View/DayView'
 import WeekView from './View/WeekView'
 import MonthView from './View/MonthView'
 import YearView from './View/YearView'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Schedule, ScheduleForm } from './useScheduleModal'
 import type { ScheduleRecord } from '@/services/apiService'
 
@@ -50,6 +51,8 @@ function toDateStr(date: Date): string {
 }
 
 export default function SchedulePage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
   const { schedules: apiSchedules, loading, error, loadSchedules, addSchedule, editSchedule, removeSchedule } = useSchedules()
 
   // แปลง ScheduleRecord[] → Schedule[] สำหรับ component ต่างๆ
@@ -90,6 +93,13 @@ export default function SchedulePage() {
   useEffect(() => {
     loadSchedules(toMonthKey(currentDate))
   }, [currentDate, loadSchedules])
+
+  useEffect(() => {
+    if (showModal && !isEditing && !isAdmin && user) {
+      const u = user as any;
+      setForm((f: ScheduleForm) => ({ ...f, nurseName: `${u.emp_id || ''} - ${u.name || u.username || ''}` }))
+    }
+  }, [showModal, isEditing, isAdmin, user, setForm])
 
   function openMonth(monthIndex: number) {
     const newDate = new Date(currentDate)
@@ -344,17 +354,38 @@ export default function SchedulePage() {
           {!loading && currentView === 'day' && (
             <DayView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor} getShiftDot={getShiftDot}
-              onOpenDay={openModal} onOpenEditModal={openEditModal} />
+              onOpenDay={openModal} 
+              onOpenEditModal={(sch) => {
+                if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
+                  openEditModal(sch)
+                } else {
+                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขเวรของผู้อื่น', 'error')
+                }
+              }} />
           )}
           {!loading && currentView === 'week' && (
             <WeekView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor} getShiftDot={getShiftDot}
-              onOpenDay={openDay} onOpenEditModal={openEditModal} />
+              onOpenDay={openDay} 
+              onOpenEditModal={(sch) => {
+                if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
+                  openEditModal(sch)
+                } else {
+                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขเวรของผู้อื่น', 'error')
+                }
+              }} />
           )}
           {!loading && currentView === 'month' && (
             <MonthView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor} getShiftDot={getShiftDot}
-              onOpenDay={openDay} onOpenEditModal={openEditModal} />
+              onOpenDay={openDay} 
+              onOpenEditModal={(sch) => {
+                if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
+                  openEditModal(sch)
+                } else {
+                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขเวรของผู้อื่น', 'error')
+                }
+              }} />
           )}
           {!loading && currentView === 'year' && (
             <YearView currentDate={currentDate} schedules={schedules} onOpenMonth={openMonth} />
@@ -449,7 +480,7 @@ export default function SchedulePage() {
               <div>
                 <div className="sp-form-group">
                   <label>ชื่อบุคลากร <span className="sp-req">*</span></label>
-                  {employees.length > 0 ? (
+                  {employees.length > 0 && isAdmin ? (
                     <>
                       <input 
                         className="sp-field" 
@@ -467,6 +498,7 @@ export default function SchedulePage() {
                     </>
                   ) : (
                     <input className="sp-field" value={form.nurseName}
+                      disabled={!isAdmin}
                       onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, nurseName: e.target.value }))}
                       placeholder="ระบุชื่อรหัสพนักงาน/พยาบาล" />
                   )}

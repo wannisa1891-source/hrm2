@@ -25,10 +25,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Fetch Base Employees
-    const [employeesResult] = await pool.query(`
+    // If emp_id is passed, fetch all history for that employee
+    const userEmpId = url.searchParams.get('emp_id');
+
+    let employeesQuery = `
       SELECT 
-        p.payroll_id, p.emp_id, p.base_salary, p.net_salary, p.status, p.total_allowance, p.total_deduction,
+        p.payroll_id, p.emp_id, p.base_salary, p.net_salary, p.status, p.total_allowance, p.total_deduction, p.pay_month, p.pay_year,
         e.prefix, e.first_name_th, e.last_name_th, e.image,
         COALESCE(d.dept_name, 'ไม่มีแผนก') as dept_name
       FROM tbl_payroll p
@@ -36,17 +38,50 @@ export async function GET(req: NextRequest) {
       LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
       WHERE p.pay_month = ? AND p.pay_year = ?
       ORDER BY p.net_salary DESC
-    `, [targetMonth, targetYear]);
+    `;
+    let employeesParams: any[] = [targetMonth, targetYear];
 
-    // Fetch Allowances for the target month
-    const [allowancesData] = await pool.query(`
+    if (userEmpId) {
+      employeesQuery = `
+        SELECT 
+          p.payroll_id, p.emp_id, p.base_salary, p.net_salary, p.status, p.total_allowance, p.total_deduction, p.pay_month, p.pay_year,
+          e.prefix, e.first_name_th, e.last_name_th, e.image,
+          COALESCE(d.dept_name, 'ไม่มีแผนก') as dept_name
+        FROM tbl_payroll p
+        JOIN tbl_employees e ON p.emp_id = e.emp_id
+        LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
+        WHERE p.emp_id = ?
+        ORDER BY p.pay_year DESC, p.pay_month DESC
+      `;
+      employeesParams = [userEmpId];
+    }
+
+    const [employeesResult] = await pool.query(employeesQuery, employeesParams);
+
+    // Fetch Allowances for the records
+    let allowancesQuery = `
       SELECT 
         pa.payroll_id, pa.amount, t.type_name
       FROM tbl_payroll_allowances pa
       JOIN tbl_payroll p ON pa.payroll_id = p.payroll_id
       JOIN tbl_allowance_types t ON pa.allowance_type_id = t.id
       WHERE p.pay_month = ? AND p.pay_year = ?
-    `, [targetMonth, targetYear]);
+    `;
+    let allowancesParams: any[] = [targetMonth, targetYear];
+
+    if (userEmpId) {
+      allowancesQuery = `
+        SELECT 
+          pa.payroll_id, pa.amount, t.type_name
+        FROM tbl_payroll_allowances pa
+        JOIN tbl_payroll p ON pa.payroll_id = p.payroll_id
+        JOIN tbl_allowance_types t ON pa.allowance_type_id = t.id
+        WHERE p.emp_id = ?
+      `;
+      allowancesParams = [userEmpId];
+    }
+
+    const [allowancesData] = await pool.query(allowancesQuery, allowancesParams);
 
     // Group allowances by payroll_id to determine OT and Night Shift
     const allowanceMap: Record<string, { ot: number, night: number, breakdown: Record<string, number> }> = {};

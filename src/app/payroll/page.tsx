@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { useReactToPrint } from 'react-to-print';
 import PayslipTemplate from '@/components/Payroll/PayslipTemplate';
@@ -14,6 +15,8 @@ const TrashIcon = <svg width="18" height="18" fill="none" stroke="currentColor" 
 const PrintIcon = <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>;
 
 export default function PayrollDashboardPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
   const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +49,7 @@ export default function PayrollDashboardPage() {
   const printRef = useRef(null);
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
-    documentTitle: selectedRecord ? `Payslip_${selectedRecord.emp_id}_${data?.targetMonth}_${data?.targetYear}` : 'Payslip',
+    documentTitle: selectedRecord ? `Payslip_${selectedRecord.emp_id}_${selectedRecord?.pay_month || data?.targetMonth}_${selectedRecord?.pay_year || data?.targetYear}` : 'Payslip',
   });
 
   const MONTHS_TH = [
@@ -64,7 +67,10 @@ export default function PayrollDashboardPage() {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/payroll/dashboard');
+      const url = (!isAdmin && user?.emp_id) 
+        ? `/api/payroll/dashboard?emp_id=${user?.emp_id}` 
+        : '/api/payroll/dashboard';
+      const res = await fetch(url);
       if (res.ok) setData(await res.json());
     } catch (e) {
       console.error(e);
@@ -210,11 +216,19 @@ export default function PayrollDashboardPage() {
 
   const filteredEmployees = useMemo(() => {
     if (!data?.employees) return [];
-    return data.employees.filter((emp: any) => {
-      const matchSearch = (emp.first_name_th + ' ' + emp.last_name_th).toLowerCase().includes(searchQuery.toLowerCase()) || emp.emp_id.includes(searchQuery);
+    
+    // First, filter by role (Own-Data for non-admins)
+    let baseEmployees = data.employees;
+    if (!isAdmin) {
+      baseEmployees = user?.emp_id ? baseEmployees.filter((emp: any) => emp.emp_id === user.emp_id) : [];
+    }
+    
+    return baseEmployees.filter((emp: any) => {
+      const searchStr = `${emp.first_name_th || ''} ${emp.last_name_th || ''} ${emp.emp_id || ''} ${emp.dept_name || ''}`.toLowerCase();
+      const matchSearch = searchStr.includes(searchQuery.toLowerCase());
       return matchSearch && (deptFilter === 'All' || emp.dept_name === deptFilter) && (statusFilter === 'All' || emp.status.toLowerCase() === statusFilter.toLowerCase());
     });
-  }, [data, searchQuery, deptFilter, statusFilter]);
+  }, [data, searchQuery, deptFilter, statusFilter, isAdmin, user?.emp_id]);
 
   const stats = useMemo(() => {
     let salary = 0; let ot = 0; let night = 0; let draftCount = 0; let approvedCount = 0;
@@ -258,19 +272,21 @@ export default function PayrollDashboardPage() {
       <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
         <div className="page-header">
           <div>
-            <h1 className="page-title">การเงินและรอบค่าจ้าง</h1>
-            <p className="page-subtitle">จัดการรอบเงินเดือนแบบองค์รวม พร้อมเชื่อมต่อธนาคาร</p>
+            <h1 className="page-title">{isAdmin ? 'การเงินและรอบค่าจ้าง' : 'สลิปเงินเดือนของฉัน'}</h1>
+            <p className="page-subtitle">{isAdmin ? 'จัดการรอบเงินเดือนแบบองค์รวม พร้อมเชื่อมต่อธนาคาร' : 'ตรวจสอบประวัติเงินเดือนและดาวน์โหลดสลิป'}</p>
           </div>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <button className="btn-primary" onClick={() => setShowGenerateModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg> 
-              เริ่มรอบเงินเดือนใหม่
-            </button>
-            <button className="btn-secondary" onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> 
-              ส่งออกไฟล์ธนาคาร (CSV)
-            </button>
-          </div>
+          {isAdmin && (
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <button className="btn-primary" onClick={() => setShowGenerateModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg> 
+                เริ่มรอบเงินเดือนใหม่
+              </button>
+              <button className="btn-secondary" onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> 
+                ส่งออกไฟล์ธนาคาร (CSV)
+              </button>
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '24px' }}>
@@ -290,26 +306,28 @@ export default function PayrollDashboardPage() {
             <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.night.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
           </div>
           
-          <div className={`pd-action-card hover-glow ${stats.draftCount === 0 && stats.approvedCount > 0 ? 'paid-ready' : stats.draftCount === 0 && stats.approvedCount === 0 ? 'empty' : ''}`}>
-            {stats.draftCount > 0 ? (
-              <>
-                <div className="ac-title">รออนุมัติสลิป</div>
-                <div className="ac-number">{stats.draftCount}</div>
-                <button onClick={() => handleBulkStatusUpdate('Draft', 'Approved')} disabled={isUpdatingStatus}>⭐ อนุมัติทั้งหมด (Approve All)</button>
-              </>
-            ) : stats.approvedCount > 0 ? (
-              <>
-                <div className="ac-title text-green">รอสั่งจ่ายเงิน</div>
-                <div className="ac-number">{stats.approvedCount}</div>
-                <button className="btn-success" onClick={() => handleBulkStatusUpdate('Approved', 'Paid')} disabled={isUpdatingStatus}>💸 สั่งจ่ายแล้ว (Mark Paid)</button>
-              </>
-            ) : (
-               <div className="ac-empty">
-                 <div className="ac-icon">🎉</div>
-                 <span>จบงานเดือนนี้แล้ว</span>
-               </div>
-            )}
-          </div>
+          {isAdmin && (
+            <div className={`pd-action-card hover-glow ${stats.draftCount === 0 && stats.approvedCount > 0 ? 'paid-ready' : stats.draftCount === 0 && stats.approvedCount === 0 ? 'empty' : ''}`}>
+              {stats.draftCount > 0 ? (
+                <>
+                  <div className="ac-title">รออนุมัติสลิป</div>
+                  <div className="ac-number">{stats.draftCount}</div>
+                  <button onClick={() => handleBulkStatusUpdate('Draft', 'Approved')} disabled={isUpdatingStatus}>⭐ อนุมัติทั้งหมด (Approve All)</button>
+                </>
+              ) : stats.approvedCount > 0 ? (
+                <>
+                  <div className="ac-title text-green">รอสั่งจ่ายเงิน</div>
+                  <div className="ac-number">{stats.approvedCount}</div>
+                  <button className="btn-success" onClick={() => handleBulkStatusUpdate('Approved', 'Paid')} disabled={isUpdatingStatus}>💸 สั่งจ่ายแล้ว (Mark Paid)</button>
+                </>
+              ) : (
+                 <div className="ac-empty">
+                   <div className="ac-icon">🎉</div>
+                   <span>จบงานเดือนนี้แล้ว</span>
+                 </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: '24px', height: '340px', marginBottom: '24px' }}>
@@ -346,7 +364,7 @@ export default function PayrollDashboardPage() {
 
         <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
           <div className="filter-bar" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: '#0f172a' }}>รายชื่อพนักงาน ({filteredEmployees.length} คน)</h3>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: '#0f172a' }}>{isAdmin ? `รายชื่อพนักงาน (${filteredEmployees.length} คน)` : `ประวัติสลิปเงินเดือนของฉัน`}</h3>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <div style={{ position: 'relative' }}>
                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -369,7 +387,7 @@ export default function PayrollDashboardPage() {
               <thead>
                 <tr>
                   <th>พนักงาน</th>
-                  <th style={{textAlign:'center'}}>แผนก</th>
+                  <th style={{textAlign:'center'}}>{isAdmin ? 'แผนก' : 'ประจำเดือน'}</th>
                   <th style={{textAlign:'right'}}>ฐานรายได้</th>
                   <th style={{textAlign:'right'}}>รับเพิ่ม</th>
                   <th style={{textAlign:'right'}}>หักลบ</th>
@@ -385,7 +403,13 @@ export default function PayrollDashboardPage() {
                          <div style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', fontSize: '15px' }}>{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
                          <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{emp.emp_id}</div>
                       </td>
-                      <td style={{textAlign:'center'}}><span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569', border: '1px solid #e2e8f0' }}>{emp.dept_name || 'ไม่มี'}</span></td>
+                      <td style={{textAlign:'center'}}>
+                        {isAdmin ? (
+                          <span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569', border: '1px solid #e2e8f0' }}>{emp.dept_name || 'ไม่มี'}</span>
+                        ) : (
+                          <span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#4F46E5', border: '1px solid #e0e7ff' }}>{MONTHS_TH[(emp.pay_month || 1) - 1]} {emp.pay_year}</span>
+                        )}
+                      </td>
                       <td style={{textAlign:'right', fontWeight: 600, color: '#475569' }}>฿{Number(emp.base_salary).toLocaleString()}</td>
                       <td style={{textAlign:'right'}}><span style={{ color: emp.total_allowance > 0 ? '#10b981' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_allowance > 0 ? `+฿${Number(emp.total_allowance).toLocaleString()}` : '-'}</span></td>
                       <td style={{textAlign:'right'}}><span style={{ color: emp.total_deduction > 0 ? '#ef4444' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_deduction > 0 ? `-฿${Number(emp.total_deduction).toLocaleString()}` : '-'}</span></td>
@@ -397,7 +421,7 @@ export default function PayrollDashboardPage() {
                          </span>
                       </td>
                       <td style={{textAlign:'center'}}>
-                         <button className="btn-secondary" onClick={() => openDrawer(emp)} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '13px' }}>แก้สลิป</button>
+                         <button className="btn-secondary" onClick={() => openDrawer(emp)} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '13px' }}>{isAdmin ? 'แก้สลิป' : 'ดูสลิป'}</button>
                       </td>
                     </tr>
                  ))}
@@ -451,7 +475,7 @@ export default function PayrollDashboardPage() {
                 <div className="dr-section">
                    <div className="dr-sec-title green">
                      <h4>+ รายรับพิเศษ / โอที</h4>
-                     {!isAdding && <button onClick={() => {setIsAdding(true); setAddType(allowanceTypes[0]?.id || '')}}>+ เพิ่ม</button>}
+                     {(isAdmin && !isAdding) && <button onClick={() => {setIsAdding(true); setAddType(allowanceTypes[0]?.id || '')}}>+ เพิ่ม</button>}
                    </div>
                    {isAdding && allowanceTypes.length > 0 && (
                      <div className="dr-add-form green">
@@ -472,7 +496,7 @@ export default function PayrollDashboardPage() {
                        </div>
                        <div className="dr-item-actions">
                          <strong className="c-green">+฿{Number(a.amount).toLocaleString()}</strong>
-                         <button onClick={() => handleDeleteDetail('allowance', a.id)}>{TrashIcon}</button>
+                         {isAdmin && <button onClick={() => handleDeleteDetail('allowance', a.id)}>{TrashIcon}</button>}
                        </div>
                      </div>
                    ))}
@@ -482,7 +506,7 @@ export default function PayrollDashboardPage() {
                 <div className="dr-section mt-4">
                    <div className="dr-sec-title red">
                      <h4>- รายจ่าย / หักสาย / ภาษี</h4>
-                     {!isAdding && <button onClick={() => {setIsAdding(true); setAddType(deductionTypes[0]?.id || '')}}>+ เพิ่ม</button>}
+                     {(isAdmin && !isAdding) && <button onClick={() => {setIsAdding(true); setAddType(deductionTypes[0]?.id || '')}}>+ เพิ่ม</button>}
                    </div>
                    {isAdding && deductionTypes.length > 0 && (
                      <div className="dr-add-form red">
@@ -503,7 +527,7 @@ export default function PayrollDashboardPage() {
                        </div>
                        <div className="dr-item-actions">
                          <strong className="c-red">-฿{Number(d.amount).toLocaleString()}</strong>
-                         <button onClick={() => handleDeleteDetail('deduction', d.id)}>{TrashIcon}</button>
+                         {isAdmin && <button onClick={() => handleDeleteDetail('deduction', d.id)}>{TrashIcon}</button>}
                        </div>
                      </div>
                    ))}
@@ -524,7 +548,7 @@ export default function PayrollDashboardPage() {
                    <button className="btn-indigo" onClick={closeDrawer}>บันทึกและปิดหน้าต่าง</button>
                  </div>
               </div>
-              <PayslipTemplate ref={printRef} record={selectedRecord} allowances={allowances} deductions={deductions} month={data?.targetMonth as string} year={data?.targetYear as string} />
+              <PayslipTemplate ref={printRef} record={selectedRecord} allowances={allowances} deductions={deductions} month={String(selectedRecord?.pay_month || data?.targetMonth || '')} year={String(selectedRecord?.pay_year || data?.targetYear || '')} />
             </div>
           </div>
         )}

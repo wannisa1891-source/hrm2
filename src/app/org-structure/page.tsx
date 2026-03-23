@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
 import {
   Users, Search, Plus, Edit2, Trash2, X, UserIcon,
-  ChevronRight, Briefcase, MapPin, Phone, Building, Contact, SearchCode
+  ChevronRight, Briefcase, MapPin, Phone, Building, Contact, SearchCode, FileText
 } from '@/components/Icons';
 
 export default function DepartmentAndEmployeePage() {
@@ -51,12 +51,13 @@ export default function DepartmentAndEmployeePage() {
     }
     if (search) {
       const term = search.toLowerCase();
-      result = result.filter(e =>
-        `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(term)
-      );
+      result = result.filter(e => {
+        const deptName = departments.find(d => d.dept_id === e.dept_id)?.dept_name || '';
+        return `${e.first_name_th || ''} ${e.last_name_th || ''} ${e.first_name_en || ''} ${e.last_name_en || ''} ${e.emp_id || ''} ${deptName}`.toLowerCase().includes(term);
+      });
     }
     return result;
-  }, [employees, selectedDeptId, search]);
+  }, [employees, selectedDeptId, search, departments]);
 
   const selectedEmp = useMemo(() =>
     employees.find(e => e.emp_id === selectedEmpId),
@@ -191,15 +192,17 @@ export default function DepartmentAndEmployeePage() {
 
             <div style={{ margin: '24px 0 12px 12px', fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
               <span>รายชื่อแผนก</span>
-              <button
-                onClick={() => openDeptModal()}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6366f1', display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '4px', transition: 'background 0.2s' }}
-                title="เพิ่มแผนกใหม่"
-                onMouseOver={e => e.currentTarget.style.background = '#eef2ff'}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <Plus size={16} strokeWidth={3} />
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => openDeptModal()}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6366f1', display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '4px', transition: 'background 0.2s' }}
+                  title="เพิ่มแผนกใหม่"
+                  onMouseOver={e => e.currentTarget.style.background = '#eef2ff'}
+                  onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <Plus size={16} strokeWidth={3} />
+                </button>
+              )}
             </div>
 
             {departments.map(dept => (
@@ -221,12 +224,7 @@ export default function DepartmentAndEmployeePage() {
                 </span>
 
                 <div style={{ display: 'flex', gap: '6px', opacity: selectedDeptId === dept.dept_id ? 1 : 0.4, transition: 'opacity 0.2s' }}>
-                  <button onClick={(e) => { e.stopPropagation(); openDeptModal(dept); }} style={styles.iconBtn} title="แก้ไข">
-                    <Edit2 size={14} />
-                  </button>
-                  <button onClick={(e) => handleDeleteDepartment(dept.dept_id, e)} style={{ ...styles.iconBtn, color: '#ef4444' }} title="ลบ">
-                    <Trash2 size={14} />
-                  </button>
+                  <ChevronRight size={16} />
                 </div>
               </div>
             ))}
@@ -256,10 +254,12 @@ export default function DepartmentAndEmployeePage() {
                   style={styles.searchInput}
                 />
               </div>
-              <button style={styles.addBtn} onClick={() => router.push('/employees')}>
-                <Plus size={20} />
-                เพิ่มพนักงานใหม่
-              </button>
+              {isAdmin && (
+                <button style={styles.addBtn} onClick={() => router.push('/employees')}>
+                  <Plus size={20} />
+                  เพิ่มพนักงานใหม่
+                </button>
+              )}
             </div>
           </div>
 
@@ -423,12 +423,16 @@ export default function DepartmentAndEmployeePage() {
               </div>
 
               <div style={styles.sideFooter}>
-                <button style={styles.mainEditBtn} onClick={() => router.push(`/employees?q=${selectedEmp.emp_id}`)}>
-                  <Edit2 size={18} /> แก้ไขแฟ้มประวัติ
-                </button>
-                <button onClick={handleDeleteEmployee} style={styles.deleteBtn} title="ลบข้อมูล">
-                  <Trash2 size={18} />
-                </button>
+                {isAdmin && (
+                  <>
+                    <button style={styles.mainEditBtn} onClick={() => router.push(`/employees?q=${selectedEmp.emp_id}`)}>
+                      <Edit2 size={18} /> แก้ไขแฟ้มประวัติ
+                    </button>
+                    <button onClick={handleDeleteEmployee} style={styles.deleteBtn} title="ลบข้อมูล">
+                      <Trash2 size={18} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -503,13 +507,13 @@ export default function DepartmentAndEmployeePage() {
                       {(deptForm.org_chart_url || deptForm.sop_url || deptForm.rules_url) ? (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                           {deptForm.org_chart_url && (
-                            <a href={deptForm.org_chart_url} target="_blank" rel="noreferrer" style={{ padding: '12px 20px', background: '#fff', borderRadius: '16px', fontSize: '14px', color: '#4f46e5', textDecoration: 'none', fontWeight: 700, border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} onMouseOver={e => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)' }}>📄 Org Chart</a>
+                            <a href={deptForm.org_chart_url} target="_blank" rel="noreferrer" style={{ padding: '12px 20px', background: '#fff', borderRadius: '16px', fontSize: '14px', color: '#4f46e5', textDecoration: 'none', fontWeight: 700, border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} onMouseOver={e => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)' }}><FileText size={16} /> Org Chart</a>
                           )}
                           {deptForm.sop_url && (
-                            <a href={deptForm.sop_url} target="_blank" rel="noreferrer" style={{ padding: '12px 20px', background: '#fff', borderRadius: '16px', fontSize: '14px', color: '#4f46e5', textDecoration: 'none', fontWeight: 700, border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} onMouseOver={e => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)' }}>📄 SOP</a>
+                            <a href={deptForm.sop_url} target="_blank" rel="noreferrer" style={{ padding: '12px 20px', background: '#fff', borderRadius: '16px', fontSize: '14px', color: '#4f46e5', textDecoration: 'none', fontWeight: 700, border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} onMouseOver={e => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)' }}><FileText size={16} /> SOP</a>
                           )}
                           {deptForm.rules_url && (
-                            <a href={deptForm.rules_url} target="_blank" rel="noreferrer" style={{ padding: '12px 20px', background: '#fff', borderRadius: '16px', fontSize: '14px', color: '#4f46e5', textDecoration: 'none', fontWeight: 700, border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} onMouseOver={e => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)' }}>📄 Rules</a>
+                            <a href={deptForm.rules_url} target="_blank" rel="noreferrer" style={{ padding: '12px 20px', background: '#fff', borderRadius: '16px', fontSize: '14px', color: '#4f46e5', textDecoration: 'none', fontWeight: 700, border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} onMouseOver={e => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)' }}><FileText size={16} /> Rules</a>
                           )}
                         </div>
                       ) : null}
@@ -581,12 +585,23 @@ export default function DepartmentAndEmployeePage() {
                   </div>
 
                   {isAdmin && (
-                    <div style={{ display: 'flex' }}>
+                    <div style={{ display: 'flex', gap: '12px' }}>
                       <button
                         onClick={() => setModalMode('edit')}
                         style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#0f172a', color: '#fff', fontWeight: 600, fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}
+                        onMouseOver={e => e.currentTarget.style.background = '#1e293b'}
+                        onMouseOut={e => e.currentTarget.style.background = '#0f172a'}
                       >
                         <Edit2 size={16} /> แก้ไขข้อมูลแผนก
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteDepartment(deptForm.id, e)}
+                        style={{ width: '56px', borderRadius: '12px', border: '1px solid #fca5a5', background: '#fff', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+                        title="ลบแผนก"
+                        onMouseOver={e => e.currentTarget.style.background = '#fef2f2'}
+                        onMouseOut={e => e.currentTarget.style.background = '#fff'}
+                      >
+                        <Trash2 size={20} />
                       </button>
                     </div>
                   )}
