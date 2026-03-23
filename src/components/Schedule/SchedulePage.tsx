@@ -298,7 +298,9 @@ export default function SchedulePage() {
 
         {/* SUMMARY */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
-          <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div className="glass-card hover-glow" 
+               style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+               onClick={() => changeView('month')}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
             </div>
@@ -307,7 +309,9 @@ export default function SchedulePage() {
               <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>เวรทั้งหมด</div>
             </div>
           </div>
-          <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div className="glass-card hover-glow" 
+               style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+               onClick={() => { goToday(); changeView('day'); }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
@@ -316,7 +320,9 @@ export default function SchedulePage() {
               <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>เวรวันนี้</div>
             </div>
           </div>
-          <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div className="glass-card hover-glow" 
+               style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+               onClick={() => changeView('month')}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#fffbeb', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             </div>
@@ -370,7 +376,7 @@ export default function SchedulePage() {
           {!loading && currentView === 'week' && (
             <WeekView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor} getShiftDot={getShiftDot}
-              onOpenDay={openDay} 
+              onOpenDay={openModal} 
               onOpenEditModal={(sch) => {
                 if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
@@ -382,7 +388,7 @@ export default function SchedulePage() {
           {!loading && currentView === 'month' && (
             <MonthView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor} getShiftDot={getShiftDot}
-              onOpenDay={openDay} 
+              onOpenDay={openModal} 
               onOpenEditModal={(sch) => {
                 if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
