@@ -657,8 +657,10 @@ body {
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 20px; /* Reduced from 24 */
+  gap: 20px;
   align-items: stretch;
+  height: 100%;
+  min-height: 0;
 }
 
 /* Hide scrollbar utility */

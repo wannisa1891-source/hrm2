@@ -15,7 +15,8 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
                 display: "flex",
                 flexDirection: "column",
                 boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-                justifyContent: "center"
+                minHeight: 0,
+                overflow: 'hidden'
             }}
         >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
@@ -25,8 +26,8 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", gap: 20, flex: 1, flexWrap: 'wrap' }}>
 
-                {/* Donut */}
-                <div style={{ position: "relative", width: 220, height: 220, filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.06))", transition: "transform 0.3s ease", cursor: "pointer" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
+                {/* Donut Container */}
+                <div style={{ position: "relative", width: '100%', maxWidth: 220, aspectRatio: '1/1', maxHeight: '35vh', filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.06))", transition: "transform 0.3s ease", cursor: "pointer", flexShrink: 1 }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
                     <svg viewBox="0 0 36 36" style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
 
                         {/* background */}
@@ -88,7 +89,7 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
                 </div>
 
                 {/* legend */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div className="custom-scrollbar" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, overflowY: 'auto', paddingRight: 4, minHeight: 0 }}>
                     {data.length > 0 ? data.map((item, index) => {
                         const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
                         return (
