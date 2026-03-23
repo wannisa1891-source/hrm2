@@ -19,10 +19,10 @@ export function useDepartments() {
       setLoading(false)
     }
   }, [])
-  const addDepartment = async (dept_id: string, dept_name: string) => {
+  const addDepartment = async (deptData: Partial<Department>) => {
     try {
       setLoading(true)
-      await createDepartment({ dept_id, dept_name })
+      await createDepartment(deptData)
       await loadDepartments() // Refresh
       return { success: true }
     } catch (err: any) {
@@ -30,10 +30,10 @@ export function useDepartments() {
     } finally { setLoading(false) }
   }
 
-  const editDepartment = async (dept_id: string, dept_name: string) => {
+  const editDepartment = async (dept_id: string, deptData: Partial<Department>) => {
     try {
       setLoading(true)
-      await updateDepartment(dept_id, { dept_name })
+      await updateDepartment(dept_id, deptData)
       await loadDepartments()
       return { success: true }
     } catch (err: any) {

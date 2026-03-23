@@ -68,6 +68,12 @@ export interface ProfessionalLicense {
 export interface Department {
   dept_id: string
   dept_name: string
+  description?: string
+  head_emp_id?: string
+  phone?: string
+  org_chart_url?: string
+  sop_url?: string
+  rules_url?: string
 }
 
 export interface Position {
@@ -141,14 +147,14 @@ export const deleteEmployee = (emp_id: string): Promise<{ message: string }> =>
 export const fetchDepartments = (): Promise<Department[]> =>
   apiFetch<Department[]>('/api/departments')
 
-export const createDepartment = (body: { dept_id: string; dept_name: string }): Promise<{ message: string }> =>
+export const createDepartment = (body: Partial<Department>): Promise<{ message: string }> =>
   apiFetch('/api/departments', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
 
-export const updateDepartment = (dept_id: string, body: { dept_name: string }): Promise<{ message: string }> =>
+export const updateDepartment = (dept_id: string, body: Partial<Department>): Promise<{ message: string }> =>
   apiFetch(`/api/departments/${dept_id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

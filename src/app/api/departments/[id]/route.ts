@@ -5,15 +5,15 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   try {
     const dept_id = params.id;
     const body = await req.json();
-    const { dept_name } = body;
+    const { dept_name, description, head_emp_id, phone, org_chart_url, sop_url, rules_url } = body;
 
     if (!dept_name) {
       return NextResponse.json({ error: 'Missing department name' }, { status: 400 });
     }
 
     const [result] = await pool.query(
-      'UPDATE tbl_departments SET dept_name = ? WHERE dept_id = ?',
-      [dept_name, dept_id]
+      'UPDATE tbl_departments SET dept_name = ?, description = ?, head_emp_id = ?, phone = ?, org_chart_url = ?, sop_url = ?, rules_url = ? WHERE dept_id = ?',
+      [dept_name, description || null, head_emp_id || null, phone || null, org_chart_url || null, sop_url || null, rules_url || null, dept_id]
     );
 
     if ((result as any).affectedRows === 0) {

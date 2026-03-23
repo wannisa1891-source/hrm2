@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
+import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
 import { 
   Users, Search, Plus, Edit2, Trash2, X, UserIcon, 
@@ -12,6 +14,9 @@ import {
 } from '@/components/Icons';
 
 export default function DepartmentAndEmployeePage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
   const { employees = [], loadEmployees, removeEmployee } = useEmployees();
   const { departments = [], loadDepartments, addDepartment, editDepartment, removeDepartment } = useDepartments();
   const { positions = [], loadPositions } = usePositions();
@@ -21,7 +26,12 @@ export default function DepartmentAndEmployeePage() {
 
   // Department Modal State
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
-  const [deptForm, setDeptForm] = useState({ id: '', name: '', isEdit: false });
+  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>('view');
+  const [deptForm, setDeptForm] = useState({ 
+    id: '', name: '', isEdit: false,
+    description: '', head_emp_id: '', phone: '', org_chart_url: '', sop_url: '', rules_url: ''
+  });
+  const [showDeptEmployees, setShowDeptEmployees] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const perPage = 10;
@@ -79,9 +89,18 @@ export default function DepartmentAndEmployeePage() {
       Swal.fire({ title: 'กรุณากรอกข้อมูลให้ครบ', icon: 'warning' });
       return;
     }
+    const deptData = {
+      description: deptForm.description,
+      head_emp_id: deptForm.head_emp_id,
+      phone: deptForm.phone,
+      org_chart_url: deptForm.org_chart_url,
+      sop_url: deptForm.sop_url,
+      rules_url: deptForm.rules_url
+    };
+
     const res = deptForm.isEdit 
-      ? await editDepartment(deptForm.id, deptForm.name)
-      : await addDepartment(deptForm.id, deptForm.name);
+      ? await editDepartment(deptForm.id, { dept_name: deptForm.name, ...deptData })
+      : await addDepartment({ dept_id: deptForm.id, dept_name: deptForm.name, ...deptData });
 
     if (res.success) {
        Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
@@ -114,12 +133,26 @@ export default function DepartmentAndEmployeePage() {
     }
   };
 
-  const openDeptModal = (dept: any = null) => {
+  const openDeptModal = (dept: any = null, mode: 'view' | 'edit' | 'create' = 'view') => {
     if (dept) {
-      setDeptForm({ id: dept.dept_id, name: dept.dept_name, isEdit: true });
+      setModalMode(mode);
+      setDeptForm({ 
+        id: dept.dept_id, name: dept.dept_name, isEdit: true,
+        description: dept.description || '',
+        head_emp_id: dept.head_emp_id || '',
+        phone: dept.phone || '',
+        org_chart_url: dept.org_chart_url || '',
+        sop_url: dept.sop_url || '',
+        rules_url: dept.rules_url || ''
+      });
     } else {
-      setDeptForm({ id: '', name: '', isEdit: false });
+      setModalMode('create');
+      setDeptForm({ 
+        id: '', name: '', isEdit: false,
+        description: '', head_emp_id: '', phone: '', org_chart_url: '', sop_url: '', rules_url: ''
+      });
     }
+    setShowDeptEmployees(false);
     setIsDeptModalOpen(true);
   };
 
@@ -140,7 +173,7 @@ export default function DepartmentAndEmployeePage() {
             <p style={{ fontSize: '13px', color: '#64748b', margin: '6px 0 0 32px' }}>จัดการกลุ่มงานและบุคลากร</p>
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px 12px' }}>
+          <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px 12px' }}>
             <div
               onClick={() => setSelectedDeptId('')}
               style={{
@@ -198,7 +231,7 @@ export default function DepartmentAndEmployeePage() {
         </div>
 
         {/* --- 2. MAIN CONTENT (Employee Table) --- */}
-        <div style={{ flex: 1, padding: '32px 40px', overflowY: 'auto' }}>
+        <div className="no-scrollbar" style={{ flex: 1, padding: '32px 40px', overflowY: 'auto', overflowX: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
             <div>
               <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1e293b', margin: 0, letterSpacing: '-0.5px' }}>
@@ -220,7 +253,7 @@ export default function DepartmentAndEmployeePage() {
                   style={styles.searchInput}
                 />
               </div>
-              <button style={styles.addBtn}>
+              <button style={styles.addBtn} onClick={() => router.push('/employees')}>
                 <Plus size={20} />
                 เพิ่มพนักงานใหม่
               </button>
@@ -241,14 +274,22 @@ export default function DepartmentAndEmployeePage() {
                 {pagedEmployees.map((emp) => (
                   <tr
                     key={emp.emp_id}
-                    onClick={() => setSelectedEmpId(emp.emp_id)}
+                    onClick={() => {
+                      const currentDept = departments.find(d => d.dept_id === emp.dept_id);
+                      const canView = isAdmin || (currentDept && user?.emp_id === currentDept.head_emp_id);
+                      if (canView) {
+                        setSelectedEmpId(emp.emp_id);
+                      } else {
+                        Swal.fire({ title: 'ไม่มีสิทธิ์เข้าถึง', text: 'เฉพาะแอดมินหรือหัวหน้าแผนกเท่านั้นที่จะดูข้อมูลได้', icon: 'error' });
+                      }
+                    }}
                     style={styles.tableRow}
                   >
                     <td style={styles.td}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <div style={styles.avatar}>
                           {emp.image ? (
-                             <img src={emp.image} alt="pic" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
+                             <img src={`/uploads/${emp.image}`} alt="pic" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
                           ) : (
                              <span>{emp.first_name_th?.[0] || 'U'}</span>
                           )}
@@ -347,7 +388,7 @@ export default function DepartmentAndEmployeePage() {
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                   <div style={styles.largeAvatar}>
                      {selectedEmp.image ? (
-                        <img src={selectedEmp.image} alt="pic" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '32px' }} />
+                        <img src={`/uploads/${selectedEmp.image}`} alt="pic" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '32px' }} />
                      ) : (
                        <UserIcon size={48} color="#6366f1" />
                      )}
@@ -379,7 +420,7 @@ export default function DepartmentAndEmployeePage() {
               </div>
 
               <div style={styles.sideFooter}>
-                <button style={styles.mainEditBtn}>
+                <button style={styles.mainEditBtn} onClick={() => router.push(`/employees?q=${selectedEmp.emp_id}`)}>
                   <Edit2 size={18} /> แก้ไขแฟ้มประวัติ
                 </button>
                 <button onClick={handleDeleteEmployee} style={styles.deleteBtn} title="ลบข้อมูล">
@@ -393,58 +434,269 @@ export default function DepartmentAndEmployeePage() {
 
       {/* --- Department Modal --- */}
       {isDeptModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 1, transition: 'all 0.3s ease' }}>
-           <div style={{ background: '#fff', width: '420px', borderRadius: '24px', padding: '32px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>
-                  {deptForm.isEdit ? 'แก้ไขแผนก' : 'สร้างแผนกใหม่'}
-                </h2>
-                <div style={{ width: 48, height: 48, borderRadius: '16px', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-                   <Briefcase size={24} />
-                </div>
-              </div>
+        <div onClick={() => setIsDeptModalOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 1, transition: 'all 0.3s ease', cursor: 'pointer' }}>
+           <div className="custom-scrollbar" onClick={e => e.stopPropagation()} style={{ background: '#fff', width: '540px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '32px', padding: '40px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', cursor: 'default' }}>
               
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>รหัสแผนก <span style={{color: '#ef4444'}}>*</span></label>
-                <input 
-                  type="text" 
-                  value={deptForm.id}
-                  onChange={(e) => setDeptForm({...deptForm, id: e.target.value})}
-                  disabled={deptForm.isEdit}
-                  style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', background: deptForm.isEdit ? '#f8fafc' : '#fff', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: deptForm.isEdit ? '#64748b' : '#0f172a' }}
-                  placeholder="เช่น D01, HR, IT"
-                />
-              </div>
+              {modalMode === 'view' ? (() => {
+                const deptHeadEmp = employees.find(e => e.emp_id === deptForm.head_emp_id);
+                const deptEmployeesList = employees.filter(e => e.dept_id === deptForm.id);
+                return (
+                  <div>
+                    {/* Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+                      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <div style={{ width: 56, height: 56, borderRadius: '18px', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', flexShrink: 0, boxShadow: '0 8px 16px rgba(99, 102, 241, 0.15)' }}>
+                           <Briefcase size={28} strokeWidth={2.5} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: 800, color: '#6366f1', letterSpacing: '0.05em', marginBottom: '2px', textTransform: 'uppercase' }}>รหัสแผนก: {deptForm.id}</div>
+                          <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>{deptForm.name}</h2>
+                          {deptForm.description && <p style={{ margin: '6px 0 0', fontSize: '14px', color: '#64748b', lineHeight: '1.5' }}>{deptForm.description}</p>}
+                        </div>
+                      </div>
+                      <button onClick={() => setIsDeptModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '8px', borderRadius: '50%', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '-8px', marginRight: '-8px' }} onMouseOver={e => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }} onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94a3b8'; }}>
+                        <X size={22} strokeWidth={2.5} />
+                      </button>
+                    </div>
 
-              <div style={{ marginBottom: '32px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>ชื่อแผนก <span style={{color: '#ef4444'}}>*</span></label>
-                <input 
-                  type="text" 
-                  value={deptForm.name}
-                  onChange={(e) => setDeptForm({...deptForm, name: e.target.value})}
-                  style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
-                  placeholder="เช่น ฝ่ายทรัพยากรบุคคล"
-                />
-              </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
+                      {/* Dept Head */}
+                      <div style={{ background: '#f8fafc', borderRadius: '24px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          <UserIcon size={16} /> หัวหน้าแผนก
+                        </div>
+                        {deptHeadEmp ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#e0e7ff', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                              {deptHeadEmp.image ? (
+                                <img src={`/uploads/${deptHeadEmp.image}`} alt="head" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', fontWeight: 800, fontSize: '24px' }}>{deptHeadEmp.first_name_th?.[0] || 'U'}</div>
+                              )}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: '18px', color: '#0f172a' }}>{deptHeadEmp.prefix}{deptHeadEmp.first_name_th} {deptHeadEmp.last_name_th}</div>
+                              <div style={{ fontSize: '14px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>{getPosName(deptHeadEmp.pos_id)}</div>
+                              <div style={{ fontSize: '13px', color: '#64748b', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}><Phone size={14} color="#6366f1" /> {deptHeadEmp.phone || 'ไม่ระบุเบอร์โทร'}</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '14px', color: '#94a3b8', fontStyle: 'italic', background: '#fff', padding: '16px', borderRadius: '16px', textAlign: 'center' }}>ยังไม่ได้ระบุหัวหน้าแผนก</div>
+                        )}
+                      </div>
 
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
-                  onClick={() => setIsDeptModalOpen(false)}
-                  style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s' }}
-                  onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
-                  onMouseOut={e => e.currentTarget.style.background = '#fff'}
-                >
-                  ยกเลิก
-                </button>
-                <button 
-                  onClick={handleSaveDepartment}
-                  style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#4f46e5', color: '#fff', fontWeight: 600, fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)', transition: 'all 0.2s' }}
-                  onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                  onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                  บันทึกข้อมูล
-                </button>
-              </div>
+                      {/* Contact & Docs */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+                        {deptForm.phone && (
+                          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
+                            <div style={{ width: 44, height: 44, borderRadius: '14px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}><Contact size={20} /></div>
+                            <div>
+                              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>เบอร์ติดต่อแผนก</div>
+                              <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 800, marginTop: '2px' }}>{deptForm.phone}</div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {(deptForm.org_chart_url || deptForm.sop_url || deptForm.rules_url) ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                              {deptForm.org_chart_url && (
+                                 <a href={deptForm.org_chart_url} target="_blank" rel="noreferrer" style={{ padding: '12px 20px', background: '#fff', borderRadius: '16px', fontSize: '14px', color: '#4f46e5', textDecoration: 'none', fontWeight: 700, border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} onMouseOver={e => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)' }}>📄 Org Chart</a>
+                              )}
+                              {deptForm.sop_url && (
+                                 <a href={deptForm.sop_url} target="_blank" rel="noreferrer" style={{ padding: '12px 20px', background: '#fff', borderRadius: '16px', fontSize: '14px', color: '#4f46e5', textDecoration: 'none', fontWeight: 700, border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} onMouseOver={e => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)' }}>📄 SOP</a>
+                              )}
+                              {deptForm.rules_url && (
+                                 <a href={deptForm.rules_url} target="_blank" rel="noreferrer" style={{ padding: '12px 20px', background: '#fff', borderRadius: '16px', fontSize: '14px', color: '#4f46e5', textDecoration: 'none', fontWeight: 700, border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} onMouseOver={e => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)' }}>📄 Rules</a>
+                              )}
+                            </div>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {/* Employee List Section */}
+                    <div style={{ marginBottom: '32px' }}>
+                      <div 
+                        onClick={() => setShowDeptEmployees(!showDeptEmployees)}
+                        style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '16px 20px', background: '#f8fafc', borderRadius: '20px', transition: 'all 0.2s', border: '1px solid transparent' }}
+                        onMouseOver={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                        onMouseOut={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'transparent'; }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <Users size={20} color="#6366f1" />
+                          <span>ดูรายชื่อพนักงานทั้งหมด ({deptEmployeesList.length} คน)</span>
+                        </div>
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                          <ChevronRight size={18} color="#64748b" style={{ transform: showDeptEmployees ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                        </div>
+                      </div>
+                      
+                      {showDeptEmployees && (
+                        <div>
+                          {deptEmployeesList.length > 0 ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                              {deptEmployeesList.map(emp => {
+                                const canViewEmployeeDetails = isAdmin || user?.emp_id === deptForm.head_emp_id;
+                                return (
+                                  <div 
+                                    key={emp.emp_id} 
+                                    onClick={() => {
+                                      if (canViewEmployeeDetails) {
+                                        setSelectedEmpId(emp.emp_id);
+                                        setIsDeptModalOpen(false);
+                                      }
+                                    }}
+                                    style={{ 
+                                      display: 'flex', alignItems: 'center', gap: '16px', background: '#fff', padding: '16px', borderRadius: '20px', border: '1px solid #f1f5f9',
+                                      cursor: canViewEmployeeDetails ? 'pointer' : 'default',
+                                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                      boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                                    }}
+                                    onMouseOver={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#e2e8f0'; } }}
+                                    onMouseOut={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = '#f1f5f9'; } }}
+                                  >
+                                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0 }}>
+                                      {emp.image ? (
+                                        <img src={`/uploads/${emp.image}`} alt="emp" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      ) : (
+                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 800, fontSize: '18px' }}>{emp.first_name_th?.[0] || 'U'}</div>
+                                      )}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.first_name_th} {emp.last_name_th}</div>
+                                      <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '4px', fontWeight: 500 }}>{getPosName(emp.pos_id) || 'พนักงาน'}</div>
+                                    </div>
+                                    {canViewEmployeeDetails && <ChevronRight size={18} color="#cbd5e1" />}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: '14px', color: '#94a3b8', fontStyle: 'italic', padding: '24px', background: '#f8fafc', borderRadius: '20px', textAlign: 'center' }}>ไม่มีพนักงานในแผนกนี้</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {isAdmin && (
+                      <div style={{ display: 'flex' }}>
+                        <button 
+                          onClick={() => setModalMode('edit')}
+                          style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#0f172a', color: '#fff', fontWeight: 600, fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}
+                        >
+                          <Edit2 size={16} /> แก้ไขข้อมูลแผนก
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })() : (
+                // Edit / Create Form
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>
+                      {deptForm.isEdit ? 'แก้ไขแผนก' : 'สร้างแผนกใหม่'}
+                    </h2>
+                    <div style={{ width: 48, height: 48, borderRadius: '16px', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                       <Briefcase size={24} />
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>รหัสแผนก <span style={{color: '#ef4444'}}>*</span></label>
+                    <input 
+                      type="text" 
+                      value={deptForm.id}
+                      onChange={(e) => setDeptForm({...deptForm, id: e.target.value})}
+                      disabled={deptForm.isEdit}
+                      style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', background: deptForm.isEdit ? '#f8fafc' : '#fff', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: deptForm.isEdit ? '#64748b' : '#0f172a' }}
+                      placeholder="เช่น D01, HR, IT"
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>ชื่อแผนก <span style={{color: '#ef4444'}}>*</span></label>
+                    <input 
+                      type="text" 
+                      value={deptForm.name}
+                      onChange={(e) => setDeptForm({...deptForm, name: e.target.value})}
+                      style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
+                      placeholder="เช่น ฝ่ายทรัพยากรบุคคล"
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>คำอธิบายแผนก</label>
+                    <textarea 
+                      rows={2}
+                      value={deptForm.description}
+                      onChange={(e) => setDeptForm({...deptForm, description: e.target.value})}
+                      style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a', resize: 'vertical' }}
+                      placeholder="รายละเอียดหน้าที่รับผิดชอบของแผนก..."
+                    />
+                  </div>
+
+                  {isAdmin && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>หัวหน้าแผนก (สิทธิ์แอดมิน)</label>
+                      <select 
+                        value={deptForm.head_emp_id}
+                        onChange={(e) => setDeptForm({...deptForm, head_emp_id: e.target.value})}
+                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #6366f1', background: '#f8fafc', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
+                      >
+                        <option value="">-- ไม่ระบุ --</option>
+                        {employees.map(emp => (
+                          <option key={emp.emp_id} value={emp.emp_id}>{emp.first_name_th} {emp.last_name_th} ({getPosName(emp.pos_id)})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>ช่องทางติดต่อ</label>
+                      <input 
+                        type="text" 
+                        value={deptForm.phone}
+                        onChange={(e) => setDeptForm({...deptForm, phone: e.target.value})}
+                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
+                        placeholder="เบอร์โทร/อีเมล"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f1f5f9', padding: '16px', borderRadius: '16px', marginBottom: '32px', border: '1px solid #e2e8f0' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#475569', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>เอกสารแนบส่วนแผนก (ระบุลิงก์ URL)</label>
+                    
+                    <div style={{ marginBottom: '12px' }}>
+                      <span style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>ผังโครงสร้าง (Org Chart)</span>
+                      <input type="text" value={deptForm.org_chart_url} onChange={(e) => setDeptForm({...deptForm, org_chart_url: e.target.value})} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} placeholder="https://..." />
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <span style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>คู่มือปฏิบัติงาน (SOP)</span>
+                      <input type="text" value={deptForm.sop_url} onChange={(e) => setDeptForm({...deptForm, sop_url: e.target.value})} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} placeholder="https://..." />
+                    </div>
+                    <div>
+                      <span style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>ระเบียบปฏิบัติ (Rules)</span>
+                      <input type="text" value={deptForm.rules_url} onChange={(e) => setDeptForm({...deptForm, rules_url: e.target.value})} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} placeholder="https://..." />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button 
+                      onClick={() => setIsDeptModalOpen(false)}
+                      style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s' }}
+                    >
+                      ยกเลิก
+                    </button>
+                    <button 
+                      onClick={handleSaveDepartment}
+                      style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#4f46e5', color: '#fff', fontWeight: 600, fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)', transition: 'all 0.2s' }}
+                    >
+                      บันทึกข้อมูล
+                    </button>
+                  </div>
+                </div>
+              )}
            </div>
         </div>
       )}
