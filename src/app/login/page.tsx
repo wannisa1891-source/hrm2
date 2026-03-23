@@ -40,7 +40,10 @@ export default function LoginPage() {
       const result = await loginUser(username, password);
       
       if (result.success) {
-        // เก็บข้อมูล user ใน localStorage
+        // เก็บข้อมูล user และ token ใน localStorage
+        if (result.token) {
+          localStorage.setItem('token', result.token);
+        }
         if (result.user) {
 
            login(result.user);

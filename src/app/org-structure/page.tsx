@@ -191,15 +191,17 @@ export default function DepartmentAndEmployeePage() {
 
             <div style={{ margin: '24px 0 12px 12px', fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
               <span>รายชื่อแผนก</span>
-              <button
-                onClick={() => openDeptModal()}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6366f1', display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '4px', transition: 'background 0.2s' }}
-                title="เพิ่มแผนกใหม่"
-                onMouseOver={e => e.currentTarget.style.background = '#eef2ff'}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <Plus size={16} strokeWidth={3} />
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => openDeptModal()}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6366f1', display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '4px', transition: 'background 0.2s' }}
+                  title="เพิ่มแผนกใหม่"
+                  onMouseOver={e => e.currentTarget.style.background = '#eef2ff'}
+                  onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <Plus size={16} strokeWidth={3} />
+                </button>
+              )}
             </div>
 
             {departments.map(dept => (
@@ -221,12 +223,16 @@ export default function DepartmentAndEmployeePage() {
                 </span>
 
                 <div style={{ display: 'flex', gap: '6px', opacity: selectedDeptId === dept.dept_id ? 1 : 0.4, transition: 'opacity 0.2s' }}>
-                  <button onClick={(e) => { e.stopPropagation(); openDeptModal(dept); }} style={styles.iconBtn} title="แก้ไข">
-                    <Edit2 size={14} />
-                  </button>
-                  <button onClick={(e) => handleDeleteDepartment(dept.dept_id, e)} style={{ ...styles.iconBtn, color: '#ef4444' }} title="ลบ">
-                    <Trash2 size={14} />
-                  </button>
+                  {isAdmin && (
+                    <>
+                      <button onClick={(e) => { e.stopPropagation(); openDeptModal(dept); }} style={styles.iconBtn} title="แก้ไข">
+                        <Edit2 size={14} />
+                      </button>
+                      <button onClick={(e) => handleDeleteDepartment(dept.dept_id, e)} style={{ ...styles.iconBtn, color: '#ef4444' }} title="ลบ">
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -256,10 +262,12 @@ export default function DepartmentAndEmployeePage() {
                   style={styles.searchInput}
                 />
               </div>
-              <button style={styles.addBtn} onClick={() => router.push('/employees')}>
-                <Plus size={20} />
-                เพิ่มพนักงานใหม่
-              </button>
+              {isAdmin && (
+                <button style={styles.addBtn} onClick={() => router.push('/employees')}>
+                  <Plus size={20} />
+                  เพิ่มพนักงานใหม่
+                </button>
+              )}
             </div>
           </div>
 
@@ -423,12 +431,16 @@ export default function DepartmentAndEmployeePage() {
               </div>
 
               <div style={styles.sideFooter}>
-                <button style={styles.mainEditBtn} onClick={() => router.push(`/employees?q=${selectedEmp.emp_id}`)}>
-                  <Edit2 size={18} /> แก้ไขแฟ้มประวัติ
-                </button>
-                <button onClick={handleDeleteEmployee} style={styles.deleteBtn} title="ลบข้อมูล">
-                  <Trash2 size={18} />
-                </button>
+                {isAdmin && (
+                  <>
+                    <button style={styles.mainEditBtn} onClick={() => router.push(`/employees?q=${selectedEmp.emp_id}`)}>
+                      <Edit2 size={18} /> แก้ไขแฟ้มประวัติ
+                    </button>
+                    <button onClick={handleDeleteEmployee} style={styles.deleteBtn} title="ลบข้อมูล">
+                      <Trash2 size={18} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}

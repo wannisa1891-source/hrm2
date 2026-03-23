@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
 
 interface License {
@@ -32,6 +33,8 @@ function getStatus(days: number) {
 }
 
 export default function LicensePage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
   const [licenses, setLicenses] = useState<License[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -187,10 +190,16 @@ export default function LicensePage() {
     }
   };
 
+  const visibleLicenses = useMemo(() => {
+    if (isAdmin) return licenses;
+    if (!user?.emp_id) return [];
+    return licenses.filter(l => l.emp_id === user.emp_id);
+  }, [licenses, isAdmin, user?.emp_id]);
+
   // Summary counts
-  const total = licenses.length;
-  const expiringCount = licenses.filter(l => l.daysLeft >= 0 && l.daysLeft <= 90).length;
-  const expiredCount = licenses.filter(l => l.daysLeft < 0).length;
+  const total = visibleLicenses.length;
+  const expiringCount = visibleLicenses.filter(l => l.daysLeft >= 0 && l.daysLeft <= 90).length;
+  const expiredCount = visibleLicenses.filter(l => l.daysLeft < 0).length;
 
   return (
     <AppLayout>
@@ -201,16 +210,18 @@ export default function LicensePage() {
           <h1 className="page-title">ใบประกอบวิชาชีพ</h1>
           <p className="page-subtitle">จัดการและติดตามวันหมดอายุใบอนุญาตประกอบวิชาชีพของบุคลากรภายในองค์กร</p>
         </div>
-        <button 
-          className="btn-primary"
-          onClick={() => handleOpenModal('add')}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-          </svg>
-          เพิ่มใบประกอบ
-        </button>
+        {isAdmin && (
+          <button 
+            className="btn-primary"
+            onClick={() => handleOpenModal('add')}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            เพิ่มใบประกอบ
+          </button>
+        )}
       </div>
 
       {/* Summary Cards */}
@@ -317,11 +328,11 @@ export default function LicensePage() {
             <tbody>
               {loading ? (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>กำลังค้นหาข้อมูล...</td></tr>
-              ) : licenses.length === 0 ? (
+              ) : visibleLicenses.length === 0 ? (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่พบข้อมูลที่ตรงกับการค้นหา</td></tr>
               ) : (
                 (() => {
-                  const filtered = licenses;
+                  const filtered = visibleLicenses;
                   const totalPages = Math.ceil(filtered.length / perPage);
                   const paged = filtered.slice((page - 1) * perPage, page * perPage);
                   return paged.map(l => {
@@ -370,38 +381,45 @@ export default function LicensePage() {
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                          <button 
-                            className="btn-primary"
-                            onClick={() => handleOpenModal('renew', l)}
-                            style={{
-                              padding: '8px 16px',
-                              borderRadius: '8px',
-                              fontSize: '13px',
-                              fontWeight: 600,
-                              background: l.daysLeft <= 90 ? '#ef4444' : '#f1f5f9',
-                              color: l.daysLeft <= 90 ? '#ffffff' : '#475569',
-                              border: 'none',
-                              boxShadow: l.daysLeft <= 90 ? '0 4px 6px -1px rgba(239, 68, 68, 0.3)' : 'none'
-                            }}
-                          >
-                            ต่ออายุ
-                          </button>
-                          
-                          <button 
-                            className="btn-secondary"
-                            onClick={() => handleOpenModal('edit', l)}
-                            style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          >
-                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                          
-                          <button 
-                            className="btn-danger"
-                            onClick={() => handleDelete(l)}
-                            style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          >
-                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
+                          {isAdmin && (
+                            <>
+                              <button 
+                                className="btn-primary"
+                                onClick={() => handleOpenModal('renew', l)}
+                                style={{
+                                  padding: '8px 16px',
+                                  borderRadius: '8px',
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  background: l.daysLeft <= 90 ? '#ef4444' : '#f1f5f9',
+                                  color: l.daysLeft <= 90 ? '#ffffff' : '#475569',
+                                  border: 'none',
+                                  boxShadow: l.daysLeft <= 90 ? '0 4px 6px -1px rgba(239, 68, 68, 0.3)' : 'none'
+                                }}
+                              >
+                                ต่ออายุ
+                              </button>
+                              
+                              <button 
+                                className="btn-secondary"
+                                onClick={() => handleOpenModal('edit', l)}
+                                style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                              </button>
+                              
+                              <button 
+                                className="btn-danger"
+                                onClick={() => handleDelete(l)}
+                                style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                              </button>
+                            </>
+                          )}
+                          {!isAdmin && (
+                            <span style={{ fontSize: '13px', color: '#94a3b8' }}>-</span>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -413,17 +431,17 @@ export default function LicensePage() {
         </div>
         
         {/* Pagination */}
-        {!loading && licenses.length > 0 && (
+        {!loading && visibleLicenses.length > 0 && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
             <span style={{ fontSize: 13, color: '#64748b' }}>
-              แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, licenses.length)} จาก {licenses.length} รายการ
+              แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, visibleLicenses.length)} จาก {visibleLicenses.length} รายการ
             </span>
             <div style={{ display: 'flex', gap: 6 }}>
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                 style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
                 ก่อนหน้า
               </button>
-              {Array.from({ length: Math.ceil(licenses.length / perPage) }, (_, i) => (
+              {Array.from({ length: Math.ceil(visibleLicenses.length / perPage) }, (_, i) => (
                 <button key={i} onClick={() => setPage(i + 1)}
                   style={{
                     padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
@@ -432,8 +450,8 @@ export default function LicensePage() {
                     color: page === i + 1 ? 'white' : '#334155'
                   }}>{i + 1}</button>
               ))}
-              <button onClick={() => setPage(p => Math.min(Math.ceil(licenses.length / perPage), p + 1))} disabled={page === Math.ceil(licenses.length / perPage) || Math.ceil(licenses.length / perPage) === 0}
-                style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.ceil(licenses.length / perPage) || Math.ceil(licenses.length / perPage) === 0 ? 'default' : 'pointer', fontSize: 13, color: page === Math.ceil(licenses.length / perPage) || Math.ceil(licenses.length / perPage) === 0 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+              <button onClick={() => setPage(p => Math.min(Math.ceil(visibleLicenses.length / perPage), p + 1))} disabled={page === Math.ceil(visibleLicenses.length / perPage) || Math.ceil(visibleLicenses.length / perPage) === 0}
+                style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.ceil(visibleLicenses.length / perPage) || Math.ceil(visibleLicenses.length / perPage) === 0 ? 'default' : 'pointer', fontSize: 13, color: page === Math.ceil(visibleLicenses.length / perPage) || Math.ceil(visibleLicenses.length / perPage) === 0 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
                 ถัดไป
               </button>
             </div>

@@ -13,6 +13,7 @@ export const loginUser = async (username: string, password: string) => {
       if (data.success) {
         return { 
           success: true, 
+          token: data.token,
           user: data.user   // { user_id, username, first_name, last_name, email, role, status }
         };
       } else {

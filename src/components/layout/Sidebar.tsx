@@ -69,6 +69,12 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.id === 'audit' && !isAdmin) return false;
+    return true;
+  });
+
   const toggleMenu = (id: string) => {
     if (collapsed) {
       onToggle(); // expand sidebar first
@@ -104,7 +110,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* Nav */}
         <nav className="sidebar-nav">
-          {menuItems.map(item => {
+          {filteredMenuItems.map(item => {
             if (!item.children) {
               return (
                 <button

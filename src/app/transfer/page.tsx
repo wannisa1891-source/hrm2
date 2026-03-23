@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useReactToPrint } from 'react-to-print';
 import OrderPdfTemplate from '@/components/Transfer/OrderPdfTemplate';
@@ -47,6 +48,8 @@ const TRANSFER_TYPES = [
 ];
 
 export default function TransferPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [transfers, setTransfers] = useState<TransferRecord[]>([]);
@@ -221,14 +224,20 @@ export default function TransferPage() {
     } else Swal.fire('Error', data.error, 'error');
   };
 
+  const visibleTransfers = useMemo(() => {
+    if (isAdmin) return transfers;
+    if (!user?.emp_id) return [];
+    return transfers.filter(t => t.emp_id === user.emp_id);
+  }, [transfers, isAdmin, user?.emp_id]);
+
   const chartData = useMemo(() => {
-    const counts = transfers.reduce((acc, t) => {
+    const counts = visibleTransfers.reduce((acc, t) => {
       const type = t.transfer_type || 'อื่นๆ';
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     return Object.entries(counts).map(([name, count]) => ({ name, count }));
-  }, [transfers]);
+  }, [visibleTransfers]);
 
   const handleSave = async () => {
     if (!selected || !form.orderNo || !form.newDeptId) { 
@@ -401,7 +410,7 @@ export default function TransferPage() {
             <h1 className="page-title">ระบบการโยกย้าย</h1>
             <p className="page-subtitle">บันทึกคำสั่งแต่งตั้ง / โยกย้าย / เลื่อนตำแหน่ง</p>
           </div>
-          {!showForm && (
+          {!showForm && isAdmin && (
             <button className="btn-primary" onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
               สร้างคำสั่งย้ายใหม่
@@ -417,7 +426,7 @@ export default function TransferPage() {
                 <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
               </div>
               <div>
-                <div className="tr-stat-count">{transfers.length}</div>
+                <div className="tr-stat-count">{visibleTransfers.length}</div>
                 <div className="tr-stat-label">คำสั่งทั้งหมด</div>
               </div>
               <div className="tr-stat-tag">รายการ</div>
@@ -427,7 +436,7 @@ export default function TransferPage() {
                 <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
               </div>
               <div>
-                <div className="tr-stat-count">{transfers.filter(t => t.order_date?.startsWith(new Date().getFullYear().toString())).length}</div>
+                <div className="tr-stat-count">{visibleTransfers.filter(t => t.order_date?.startsWith(new Date().getFullYear().toString())).length}</div>
                 <div className="tr-stat-label">โยกย้ายปีนี้</div>
               </div>
               <div className="tr-stat-tag">ปีนี้</div>
@@ -437,7 +446,7 @@ export default function TransferPage() {
                 <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
               </div>
               <div>
-                <div className="tr-stat-count">{transfers.filter(t => t.transfer_type?.includes('เลื่อน') && t.order_date?.startsWith(new Date().getFullYear().toString())).length}</div>
+                <div className="tr-stat-count">{visibleTransfers.filter(t => t.transfer_type?.includes('เลื่อน') && t.order_date?.startsWith(new Date().getFullYear().toString())).length}</div>
                 <div className="tr-stat-label">เลื่อนตำแหน่งปีนี้</div>
               </div>
               <div className="tr-stat-tag">ปีนี้</div>
@@ -499,18 +508,18 @@ export default function TransferPage() {
                 ) : (() => {
                   const q = listSearch.toLowerCase();
                   const filtered = q
-                    ? transfers.filter(t =>
+                    ? visibleTransfers.filter(t =>
                         t.order_no?.toLowerCase().includes(q) ||
                         t.emp_name?.toLowerCase().includes(q) ||
                         t.new_dept_name?.toLowerCase().includes(q)
                       )
-                    : transfers;
+                    : visibleTransfers;
 
                   const totalPages = Math.ceil(filtered.length / perPage);
                   const paged = filtered.slice((page - 1) * perPage, page * perPage);
 
                   return filtered.length === 0 ? (
-                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8', fontSize: 14 }}>ยังไม่มีประวัติการย้าย — กด <strong>สร้างคำสั่งย้ายใหม่</strong> เพื่อเริ่มต้น</td></tr>
+                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8', fontSize: 14 }}>ยังไม่มีประวัติการย้าย — {isAdmin && <span>กด <strong>สร้างคำสั่งย้ายใหม่</strong> เพื่อเริ่มต้น</span>}</td></tr>
                   ) : paged.map(t => (
                     <tr key={t.transfer_id}>
                       <td><span style={{ fontFamily: 'monospace', fontSize: 12, background: '#f1f5f9', padding: '2px 8px', borderRadius: 6, color: '#64748b' }}>{t.order_no}</span></td>
@@ -532,7 +541,7 @@ export default function TransferPage() {
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
-                          {t.status === 'Pending' && (
+                          {isAdmin && t.status === 'Pending' && (
                             <>
                               <button className="action-btn action-approve" title="อนุมัติการย้าย" onClick={() => setTransferStatus(t, 'Approved')}>
                                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -550,7 +559,7 @@ export default function TransferPage() {
                               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                             </button>
                           )}
-                          {t.status !== 'Approved' && (
+                          {isAdmin && t.status !== 'Approved' && (
                             <button className="action-btn action-edit" title="แก้ไข" onClick={() => handleEdit(t)}>
                               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             </button>
@@ -560,9 +569,11 @@ export default function TransferPage() {
                               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                             </a>
                           )}
-                          <button className="action-btn action-del" title="ลบ" onClick={() => handleDelete(t.transfer_id)}>
-                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
+                          {isAdmin && (
+                            <button className="action-btn action-del" title="ลบ" onClick={() => handleDelete(t.transfer_id)}>
+                              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -575,14 +586,14 @@ export default function TransferPage() {
           {!loadingList && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
               <span style={{ fontSize: 13, color: '#64748b' }}>
-                แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length)} จาก {listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length} รายการ
+                แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length)} จาก {listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length} รายการ
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                   style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
                   ก่อนหน้า
                 </button>
-                {Array.from({ length: Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage) }, (_, i) => (
+                {Array.from({ length: Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage) }, (_, i) => (
                   <button key={i} onClick={() => setPage(i + 1)}
                     style={{
                       padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
@@ -591,8 +602,8 @@ export default function TransferPage() {
                       color: page === i + 1 ? 'white' : '#334155'
                     }}>{i + 1}</button>
                 ))}
-                <button onClick={() => setPage(p => Math.min(Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage), p + 1))} disabled={page === Math.max(1, Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage))}
-                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.max(1, Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage)) ? 'default' : 'pointer', fontSize: 13, color: page === Math.max(1, Math.ceil((listSearch ? transfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : transfers.length) / perPage)) ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                <button onClick={() => setPage(p => Math.min(Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage), p + 1))} disabled={page === Math.max(1, Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage))}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.max(1, Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage)) ? 'default' : 'pointer', fontSize: 13, color: page === Math.max(1, Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage)) ? '#94a3b8' : '#334155', fontWeight: 600 }}>
                   ถัดไป
                 </button>
               </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Leave } from '@/services/apiService';
@@ -17,8 +18,16 @@ const LEAVE_TYPES = [
 ];
 
 export default function LeavePage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
   const { leaves, loading, loadLeaves, addLeave, changeLeaveStatus } = useLeaves();
   const { employees, loadEmployees } = useEmployees();
+
+  const visibleLeaves = useMemo(() => {
+    if (isAdmin) return leaves;
+    if (!user?.emp_id) return [];
+    return leaves.filter(l => l.emp_id === user.emp_id);
+  }, [leaves, isAdmin, user?.emp_id]);
 
   const [filterStatus, setFilterStatus] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,7 +48,7 @@ export default function LeavePage() {
   useEffect(() => { setPage(1); }, [filterStatus, searchQuery]);
 
   const filtered = useMemo(() => {
-    let r = leaves;
+    let r = visibleLeaves;
     if (filterStatus) r = r.filter(l => l.status === filterStatus);
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -52,19 +61,25 @@ export default function LeavePage() {
   const paged = filtered.slice((page - 1) * perPage, page * perPage);
 
   const stats = useMemo(() => ({
-    total: leaves.length,
-    pending: leaves.filter(l => l.status === 'Pending').length,
-    approved: leaves.filter(l => l.status === 'Approved').length,
-    rejected: leaves.filter(l => l.status === 'Rejected').length,
-  }), [leaves]);
+    total: visibleLeaves.length,
+    pending: visibleLeaves.filter(l => l.status === 'Pending').length,
+    approved: visibleLeaves.filter(l => l.status === 'Approved').length,
+    rejected: visibleLeaves.filter(l => l.status === 'Rejected').length,
+  }), [visibleLeaves]);
 
   const handleSubmit = async () => {
-    if (!form.emp_id || !form.start_date || !form.end_date) { 
+    // If user is not admin, auto-assign their emp_id to the form
+    const submissionData = { ...form };
+    if (!isAdmin && user?.emp_id) {
+      submissionData.emp_id = user.emp_id;
+    }
+
+    if (!submissionData.emp_id || !submissionData.start_date || !submissionData.end_date) { 
       Swal.fire('ข้อความแจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning'); 
       return; 
     }
     setSaving(true);
-    const ok = await addLeave(form);
+    const ok = await addLeave(submissionData);
     setSaving(false);
     if (ok) { 
       setShowForm(false); 
@@ -245,12 +260,12 @@ export default function LeavePage() {
                     <button className="btn-outline hover-glow" onClick={(e) => { e.stopPropagation(); setSelectedLeave(l); setShowReviewModal(true); }}
                       style={{ 
                         width: '32px', height: '32px', padding: 0, borderRadius: '8px', border: '1px solid #e2e8f0', 
-                        background: 'white', color: l.status === 'Pending' ? '#3b82f6' : '#64748b', 
+                        background: 'white', color: (isAdmin && l.status === 'Pending') ? '#3b82f6' : '#64748b', 
                         display: 'flex', alignItems: 'center', justifyContent: 'center' 
                       }}
-                      title={l.status === 'Pending' ? 'ตรวจสอบ' : 'ดูข้อมูล'}
+                      title={(isAdmin && l.status === 'Pending') ? 'ตรวจสอบ' : 'ดูข้อมูล'}
                     >
-                      {l.status === 'Pending' ? (
+                      {(isAdmin && l.status === 'Pending') ? (
                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                       ) : (
                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
@@ -301,13 +316,17 @@ export default function LeavePage() {
               <button onClick={() => setShowForm(false)} style={{ width: 28, height: 28, borderRadius: 8, background: '#f3f4f6', border: 'none', fontSize: 16, cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>พนักงาน</label>
-                <select value={form.emp_id} onChange={e => setForm({ ...form, emp_id: e.target.value })} style={inp}>
-                  <option value="">-- เลือกพนักงาน --</option>
-                  {employees.map(emp => <option key={emp.emp_id} value={emp.emp_id}>{emp.first_name_th} {emp.last_name_th}</option>)}
-                </select>
-              </div>
+              {isAdmin ? (
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>พนักงาน</label>
+                  <select value={form.emp_id} onChange={e => setForm({ ...form, emp_id: e.target.value })} style={inp}>
+                    <option value="">-- เลือกพนักงาน --</option>
+                    {employees.map(emp => <option key={emp.emp_id} value={emp.emp_id}>{emp.first_name_th} {emp.last_name_th}</option>)}
+                  </select>
+                </div>
+              ) : (
+                <input type="hidden" value={user?.emp_id} />
+              )}
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>ประเภทการลา</label>
                 <select value={form.leave_type_id} onChange={e => setForm({ ...form, leave_type_id: e.target.value })} style={inp}>
@@ -419,7 +438,7 @@ export default function LeavePage() {
               )}
 
               {/* Actions */}
-              {selectedLeave.status === 'Pending' ? (
+              {(isAdmin && selectedLeave.status === 'Pending') ? (
                 <div style={{ display: 'flex', gap: 12, paddingTop: 8 }}>
                   <button onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Rejected'); setShowReviewModal(false); }}
                     style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1px solid #fecaca', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 700, fontSize: 14, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
