@@ -205,7 +205,10 @@ export default function DepartmentAndEmployeePage() {
             {departments.map(dept => (
               <div
                 key={dept.dept_id}
-                onClick={() => setSelectedDeptId(dept.dept_id)}
+                onClick={() => {
+                  setSelectedDeptId(dept.dept_id);
+                  openDeptModal(dept);
+                }}
                 style={{
                   ...styles.deptItem,
                   background: selectedDeptId === dept.dept_id ? '#e0e7ff' : 'transparent',
