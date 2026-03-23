@@ -78,3 +78,35 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { emp_id, phone, email, citizen_id, gender, quota_vacation, quota_sick, quota_personal, updater_role } = body;
+
+    if (!emp_id) {
+      return NextResponse.json({ error: 'Missing emp_id' }, { status: 400 });
+    }
+
+    if (emp_id === 'admin' || emp_id === 'view' || emp_id.startsWith('test')) {
+      return NextResponse.json({ success: true, message: 'ข้อมูลถูกบันทึกจำลองสำหรับผู้ดูแลระบบ (Demo mock save)' });
+    }
+
+    if (updater_role === 'Admin' || updater_role === 'admin') {
+      await pool.query(
+        `UPDATE tbl_employees SET phone = ?, email = ?, citizen_id = ?, gender = ?, quota_vacation = ?, quota_sick = ?, quota_personal = ? WHERE emp_id = ?`,
+        [phone, email, citizen_id, gender, quota_vacation, quota_sick, quota_personal, emp_id]
+      );
+    } else {
+      await pool.query(
+        `UPDATE tbl_employees SET phone = ?, email = ?, citizen_id = ?, gender = ? WHERE emp_id = ?`,
+        [phone, email, citizen_id, gender, emp_id]
+      );
+    }
+
+    return NextResponse.json({ success: true, message: 'บันทึกข้อมูลสำเร็จ' });
+  } catch (error: any) {
+    console.error('Profile Update API Error:', error);
+    return NextResponse.json({ error: error.message || 'Error updating profile' }, { status: 500 });
+  }
+}

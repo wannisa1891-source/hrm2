@@ -26,25 +26,48 @@
 
       // 3. Query จาก tbl_users โดยเช็ค username + password_hash
       const [rows]: any = await pool.query(
-        'SELECT user_id, username, first_name, last_name, email, role, status FROM tbl_users WHERE username = ? AND password_hash = ?',
+        'SELECT id as user_id, username, email, status FROM tbl_users WHERE username = ? AND password_hash = ?',
         [username, password_hash]
       );
 
       if (rows.length > 0) {
         const user = rows[0];
+        if (user.status !== 'Active') {
+           return NextResponse.json({ success: false, message: 'บัญชีนี้ถูกระงับการใช้งาน' }, { status: 403 });
+        }
         const mockToken = `token_${user.user_id}_${Date.now()}`;
         
         return NextResponse.json({ 
           success: true, 
           token: mockToken,
-          user: { id: user.user_id, name: user.username, email: user.email, role: user.role }
+          user: { id: user.user_id, name: user.username, email: user.email, role: 'Admin' }
+        });
+      }
+
+      // 4. ถ้าไม่พบใน tbl_users ลองค้นหาใน tbl_employees
+      const [empRows]: any = await pool.query(
+        'SELECT emp_id, first_name_th, last_name_th, email, role, status FROM tbl_employees WHERE (emp_id = ? OR email = ?) AND password = ?',
+        [username, username, password_hash]
+      );
+
+      if (empRows.length > 0) {
+        const emp = empRows[0];
+        if (emp.status !== 'Active') {
+          return NextResponse.json({ success: false, message: 'บัญชีนี้ถูกระงับการใช้งาน' }, { status: 403 });
+        }
+        const mockToken = `token_emp_${emp.emp_id}_${Date.now()}`;
+        
+        return NextResponse.json({ 
+          success: true, 
+          token: mockToken,
+          user: { id: emp.emp_id, emp_id: emp.emp_id, name: `${emp.first_name_th} ${emp.last_name_th}`, email: emp.email, role: emp.role || 'User' }
         });
       }
 
       return NextResponse.json({ success: false, message: 'Username หรือ Password ไม่ถูกต้อง' }, { status: 401 });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login API Error:', error);
       console.error('Login Route Error:', error);
-      return NextResponse.json({ success: false, message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' }, { status: 500 });
+      return NextResponse.json({ success: false, message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ', details: error.message }, { status: 500 });
     }
   }
