@@ -4,8 +4,44 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { logAudit } from '@/lib/audit';
+import nodemailer from 'nodemailer'; // เพิ่ม nodemailer เข้ามา
 
 export const dynamic = 'force-dynamic';
+
+// --- ฟังก์ชันช่วยเหลือสำหรับส่งอีเมล ---
+async function sendEmailNotification(to: string, employeeName: string, newPassword?: string) {
+  // ตั้งค่าการเชื่อมต่อกับ Gmail SMTP
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'อีเมลของคุณ@gmail.com', // *** เปลี่ยนเป็น Gmail ของคุณ ***
+      pass: 'xxxx xxxx xxxx xxxx'  // *** เปลี่ยนเป็นรหัส App Password 16 หลักที่ก๊อปมา ***
+    }
+  });
+
+  const mailOptions = {
+    from: '"HR System" <อีเมลของคุณ@gmail.com>',
+    to: to,
+    subject: 'แจ้งเตือน: ข้อมูลพนักงานของคุณได้รับการอัปเดต',
+    html: `
+      <div style="font-family: sans-serif; line-height: 1.6;">
+        <h2>สวัสดีคุณ ${employeeName}</h2>
+        <p>ขณะนี้เจ้าหน้าที่ได้ทำการอัปเดตข้อมูลพนักงานของคุณในระบบ HRM เรียบร้อยแล้ว</p>
+        ${newPassword ? `
+          <div style="background: #f4f4f4; padding: 15px; border-radius: 5px; border: 1px solid #ddd;">
+            <p style="margin: 0;"><b>รหัสผ่านใหม่ของคุณคือ:</b> <span style="color: #d9534f; font-size: 1.2em;">${newPassword}</span></p>
+          </div>
+          <p style="color: #888;">* กรุณาเปลี่ยนรหัสผ่านทันทีหลังจากเข้าสู่ระบบเพื่อความปลอดภัย</p>
+        ` : ''}
+        <p>คุณสามารถเข้าตรวจสอบข้อมูลล่าสุดได้ที่หน้าเว็บไซต์ของบริษัท</p>
+        <hr>
+        <p style="font-size: 0.8em; color: #aaa;">นี่เป็นอีเมลอัตโนมัติ กรุณาอย่าตอบกลับ</p>
+      </div>
+    `
+  };
+
+  return transporter.sendMail(mailOptions);
+}
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const empId = params.id;
@@ -29,7 +65,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     let licenses: any[] = [];
     if (d.licenses_data) {
-      try { licenses = JSON.parse(d.licenses_data); } catch(e) {}
+      try { licenses = JSON.parse(d.licenses_data); } catch (e) { }
     }
 
     const connection = await pool.getConnection();
@@ -41,10 +77,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         `birth_date = ?`, `gender = ?`, `address = ?`, `citizen_id = ?`, `phone = ?`, `email = ?`, `role = ?`,
         `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `base_salary = ?`, `status = ?`, `cneu_cme_points = ?`
       ];
-      
+
       const values: any[] = [
         d.prefix || '-', d.first_name_th || '', d.last_name_th || '', d.first_name_en || '', d.last_name_en || '',
-        d.birth_date || null, d.gender || 'ชาย', d.address || '', d.id_card || d.citizen_id || '0000000000000', 
+        d.birth_date || null, d.gender || 'ชาย', d.address || '', d.id_card || d.citizen_id || '0000000000000',
         d.phone || '', d.email || null, d.role || 'User',
         d.emp_type || 'พนักงานประจำ', d.dept_id || null, d.pos_id || null, d.start_date || null,
         d.base_salary || 0, d.status || 'Active', d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0
@@ -55,8 +91,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         values.push(imageName);
       }
 
-      // If user typed a new password, hash it and update
+      // ตรวจสอบการเปลี่ยนรหัสผ่าน
+      let rawPassword = "";
       if (d.password && d.password.trim() !== '') {
+        rawPassword = d.password; // เก็บไว้ส่งเมลก่อน Hash
         const hashedPassword = crypto.createHash('sha256').update(d.password).digest('hex');
         updateFields.push(`password = ?`);
         values.push(hashedPassword);
@@ -67,7 +105,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       const sql = `UPDATE tbl_employees SET ${updateFields.join(', ')} WHERE emp_id = ?`;
       await connection.query(sql, values);
 
-      // Handle Licenses: Delete old ones and re-insert the provided array
       await connection.query('DELETE FROM tbl_employee_licenses WHERE emp_id = ?', [empId]);
 
       if (licenses.length > 0) {
@@ -80,7 +117,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
             const buffer = Buffer.from(await licFile.arrayBuffer());
             fs.writeFileSync(path.join(uploadDir, licFileName), buffer);
           } else {
-             licFileName = licenses[i].file_path || null;
+            licFileName = licenses[i].file_path || null;
           }
 
           const lic = licenses[i];
@@ -97,9 +134,22 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       }
 
       await connection.commit();
+
+      // --- ส่วนการส่งอีเมล: ทำงานหลังจาก Commit สำเร็จ ---
+      if (d.email) {
+        try {
+          const fullName = `${d.first_name_th} ${d.last_name_th}`;
+          await sendEmailNotification(d.email, fullName, rawPassword || undefined);
+        } catch (mailError) {
+          console.error("Mail Error:", mailError);
+          // ไม่ต้อง throw error เพื่อให้ผลลัพธ์การบันทึก DB ยังถือว่าสำเร็จ
+        }
+      }
+
       await logAudit(req.headers.get('x-user-id'), `แก้ไขข้อมูลพนักงาน: ${empId}`, connection);
       connection.release();
-      return NextResponse.json({ message: '✅ อัปเดตข้อมูลพนักงานสำเร็จ!' });
+      return NextResponse.json({ message: '✅ อัปเดตข้อมูลและส่งเมลแจ้งเตือนสำเร็จ!' });
+
     } catch (e: any) {
       await connection.rollback();
       connection.release();
@@ -124,7 +174,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       await logAudit(req.headers.get('x-user-id'), `ลบข้อมูลพนักงาน: ${empId}`, connection);
       connection.release();
       return NextResponse.json({ message: '✅ ลบข้อมูลพนักงานสำเร็จ!' });
-    } catch(e: any) {
+    } catch (e: any) {
       await connection.rollback();
       connection.release();
       throw e;
