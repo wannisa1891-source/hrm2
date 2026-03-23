@@ -97,7 +97,7 @@ export default function LicensePage() {
         issue_date: license.issue_date || ''
       });
     } else {
-      setFormData({ license_no: '', expire_date: '', points: 0, emp_id: '', license_name: '', license_type: '', institution: '', issue_date: '' });
+      setFormData({ license_no: '', expire_date: '', points: 0, emp_id: isAdmin ? '' : (user?.emp_id as string || ''), license_name: '', license_type: '', institution: '', issue_date: '' });
     }
     setActiveModal(type);
   };
@@ -210,7 +210,6 @@ export default function LicensePage() {
           <h1 className="page-title">ใบประกอบวิชาชีพ</h1>
           <p className="page-subtitle">จัดการและติดตามวันหมดอายุใบอนุญาตประกอบวิชาชีพของบุคลากรภายในองค์กร</p>
         </div>
-        {isAdmin && (
           <button 
             className="btn-primary"
             onClick={() => handleOpenModal('add')}
@@ -221,7 +220,6 @@ export default function LicensePage() {
             </svg>
             เพิ่มใบประกอบ
           </button>
-        )}
       </div>
 
       {/* Summary Cards */}
@@ -381,7 +379,7 @@ export default function LicensePage() {
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                          {isAdmin && (
+                          {(isAdmin || l.emp_id === user?.emp_id) && (
                             <>
                               <button 
                                 className="btn-primary"
@@ -417,7 +415,7 @@ export default function LicensePage() {
                               </button>
                             </>
                           )}
-                          {!isAdmin && (
+                          {!(isAdmin || l.emp_id === user?.emp_id) && (
                             <span style={{ fontSize: '13px', color: '#94a3b8' }}>-</span>
                           )}
                         </div>
@@ -502,30 +500,17 @@ export default function LicensePage() {
                       type="text" 
                       required
                       placeholder="เช่น EMP001"
-                      style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }}
+                      disabled={!isAdmin}
+                      style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: isAdmin ? '#fff' : '#f8fafc', color: isAdmin ? '#000' : '#64748b' }}
                       value={formData.emp_id} 
                       onChange={e => setFormData({...formData, emp_id: e.target.value})}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
+                      onFocus={(e) => !isAdmin ? null : e.currentTarget.style.borderColor = '#3b82f6'}
+                      onBlur={(e) => !isAdmin ? null : e.currentTarget.style.borderColor = '#cbd5e1'}
                     />
                   </div>
                 )}
                 
-                {activeModal === 'add' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>รหัสพนักงาน (EMP-ID) <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="เช่น EMP001"
-                      style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }}
-                      value={formData.emp_id} 
-                      onChange={e => setFormData({...formData, emp_id: e.target.value})}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
-                    />
-                  </div>
-                )}
+
                 
                 <div style={{ display: 'flex', gap: '16px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>

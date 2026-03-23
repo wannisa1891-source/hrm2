@@ -49,7 +49,7 @@ export default function PayrollDashboardPage() {
   const printRef = useRef(null);
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
-    documentTitle: selectedRecord ? `Payslip_${selectedRecord.emp_id}_${data?.targetMonth}_${data?.targetYear}` : 'Payslip',
+    documentTitle: selectedRecord ? `Payslip_${selectedRecord.emp_id}_${selectedRecord?.pay_month || data?.targetMonth}_${selectedRecord?.pay_year || data?.targetYear}` : 'Payslip',
   });
 
   const MONTHS_TH = [
@@ -67,7 +67,10 @@ export default function PayrollDashboardPage() {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/payroll/dashboard');
+      const url = (!isAdmin && user?.emp_id) 
+        ? `/api/payroll/dashboard?emp_id=${user?.emp_id}` 
+        : '/api/payroll/dashboard';
+      const res = await fetch(url);
       if (res.ok) setData(await res.json());
     } catch (e) {
       console.error(e);
@@ -216,12 +219,13 @@ export default function PayrollDashboardPage() {
     
     // First, filter by role (Own-Data for non-admins)
     let baseEmployees = data.employees;
-    if (!isAdmin && user?.emp_id) {
-      baseEmployees = baseEmployees.filter((emp: any) => emp.emp_id === user.emp_id);
+    if (!isAdmin) {
+      baseEmployees = user?.emp_id ? baseEmployees.filter((emp: any) => emp.emp_id === user.emp_id) : [];
     }
     
     return baseEmployees.filter((emp: any) => {
-      const matchSearch = (emp.first_name_th + ' ' + emp.last_name_th).toLowerCase().includes(searchQuery.toLowerCase()) || emp.emp_id.includes(searchQuery);
+      const searchStr = `${emp.first_name_th || ''} ${emp.last_name_th || ''} ${emp.emp_id || ''} ${emp.dept_name || ''}`.toLowerCase();
+      const matchSearch = searchStr.includes(searchQuery.toLowerCase());
       return matchSearch && (deptFilter === 'All' || emp.dept_name === deptFilter) && (statusFilter === 'All' || emp.status.toLowerCase() === statusFilter.toLowerCase());
     });
   }, [data, searchQuery, deptFilter, statusFilter, isAdmin, user?.emp_id]);
@@ -383,7 +387,7 @@ export default function PayrollDashboardPage() {
               <thead>
                 <tr>
                   <th>พนักงาน</th>
-                  <th style={{textAlign:'center'}}>แผนก</th>
+                  <th style={{textAlign:'center'}}>{isAdmin ? 'แผนก' : 'ประจำเดือน'}</th>
                   <th style={{textAlign:'right'}}>ฐานรายได้</th>
                   <th style={{textAlign:'right'}}>รับเพิ่ม</th>
                   <th style={{textAlign:'right'}}>หักลบ</th>
@@ -399,7 +403,13 @@ export default function PayrollDashboardPage() {
                          <div style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', fontSize: '15px' }}>{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
                          <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{emp.emp_id}</div>
                       </td>
-                      <td style={{textAlign:'center'}}><span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569', border: '1px solid #e2e8f0' }}>{emp.dept_name || 'ไม่มี'}</span></td>
+                      <td style={{textAlign:'center'}}>
+                        {isAdmin ? (
+                          <span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569', border: '1px solid #e2e8f0' }}>{emp.dept_name || 'ไม่มี'}</span>
+                        ) : (
+                          <span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#4F46E5', border: '1px solid #e0e7ff' }}>{MONTHS_TH[(emp.pay_month || 1) - 1]} {emp.pay_year}</span>
+                        )}
+                      </td>
                       <td style={{textAlign:'right', fontWeight: 600, color: '#475569' }}>฿{Number(emp.base_salary).toLocaleString()}</td>
                       <td style={{textAlign:'right'}}><span style={{ color: emp.total_allowance > 0 ? '#10b981' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_allowance > 0 ? `+฿${Number(emp.total_allowance).toLocaleString()}` : '-'}</span></td>
                       <td style={{textAlign:'right'}}><span style={{ color: emp.total_deduction > 0 ? '#ef4444' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_deduction > 0 ? `-฿${Number(emp.total_deduction).toLocaleString()}` : '-'}</span></td>
@@ -538,7 +548,7 @@ export default function PayrollDashboardPage() {
                    <button className="btn-indigo" onClick={closeDrawer}>บันทึกและปิดหน้าต่าง</button>
                  </div>
               </div>
-              <PayslipTemplate ref={printRef} record={selectedRecord} allowances={allowances} deductions={deductions} month={data?.targetMonth as string} year={data?.targetYear as string} />
+              <PayslipTemplate ref={printRef} record={selectedRecord} allowances={allowances} deductions={deductions} month={String(selectedRecord?.pay_month || data?.targetMonth || '')} year={String(selectedRecord?.pay_year || data?.targetYear || '')} />
             </div>
           </div>
         )}

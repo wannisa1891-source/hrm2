@@ -51,12 +51,13 @@ export default function DepartmentAndEmployeePage() {
     }
     if (search) {
       const term = search.toLowerCase();
-      result = result.filter(e =>
-        `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(term)
-      );
+      result = result.filter(e => {
+        const deptName = departments.find(d => d.dept_id === e.dept_id)?.dept_name || '';
+        return `${e.first_name_th || ''} ${e.last_name_th || ''} ${e.first_name_en || ''} ${e.last_name_en || ''} ${e.emp_id || ''} ${deptName}`.toLowerCase().includes(term);
+      });
     }
     return result;
-  }, [employees, selectedDeptId, search]);
+  }, [employees, selectedDeptId, search, departments]);
 
   const selectedEmp = useMemo(() =>
     employees.find(e => e.emp_id === selectedEmpId),
