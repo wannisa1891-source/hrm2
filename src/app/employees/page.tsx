@@ -585,7 +585,11 @@ function EmployeesContent() {
                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: viewMode ? '#eff6ff' : isEditing ? '#fff7ed' : '#f0fdf4', color: viewMode ? '#3b82f6' : isEditing ? '#f97316' : '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
                   {viewMode ? (
                     <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                  ) : isEditing ? '✏️' : '✨'}
+                  ) : isEditing ? (
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                  ) : (
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                  )}
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>{viewMode ? 'ข้อมูลบุคลากร' : isEditing ? 'แก้ไขข้อมูลบุคลากร' : 'ลงทะเบียนบุคลากรใหม่'}</h3>
@@ -1012,35 +1016,38 @@ function EmployeesContent() {
       {/* ID Card Modal */}
       {showIdCard && (isBulkPrinting ? selectedIds.length > 0 : selectedEmpForCard) && (
         <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 1100 }}>
-          <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', padding: '32px', width: isBulkPrinting ? '800px' : '400px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
+          <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', padding: '24px', width: isBulkPrinting ? '700px' : '360px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
             
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{isBulkPrinting ? 'พิมพ์บัตรพนักงานจำนวนมาก' : 'พิมพ์บัตรพนักงาน'}</h3>
               <button type="button" onClick={() => setShowIdCard(false)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', color: '#64748b' }}>✕</button>
             </div>
 
-            <div style={{ flex: 1, width: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }} className="no-scrollbar">
+            <div style={{ flex: 1, width: '100%', overflowY: 'auto', display: 'block' }} className="custom-scrollbar">
               <div 
                 ref={printRef} 
                 style={{ 
                   display: isBulkPrinting ? 'grid' : 'flex', 
                   gridTemplateColumns: isBulkPrinting ? 'repeat(2, 1fr)' : '1fr',
                   gap: '24px',
-                  padding: '20px',
+                  padding: '16px',
                   background: 'white',
                   width: isBulkPrinting ? '210mm' : 'auto', // A4 width approximately
-                  justifyContent: 'center'
+                  margin: '0 auto',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  flexDirection: 'column'
                 }}
               >
                 {(isBulkPrinting ? currentData.filter(emp => selectedIds.includes(emp.emp_id)) : [selectedEmpForCard!]).map((empForCard) => (
-                  <div key={empForCard.emp_id} style={{ width: isBulkPrinting ? '300px' : '320px', height: isBulkPrinting ? '480px' : '500px', background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)', borderRadius: '16px', padding: '24px', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.5)', position: 'relative', overflow: 'hidden', pageBreakInside: 'avoid' }}>
+                  <div key={empForCard.emp_id} style={{ width: isBulkPrinting ? '280px' : '300px', minHeight: isBulkPrinting ? '420px' : '440px', background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)', borderRadius: '16px', padding: '20px', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.5)', position: 'relative', overflow: 'hidden', pageBreakInside: 'avoid', margin: '0 auto' }}>
                     {/* Background Decoration */}
                     <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
                     <div style={{ position: 'absolute', bottom: '-80px', left: '-50px', width: '200px', height: '200px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
 
-                    <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: 700, letterSpacing: '1px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>EMPLOYEE ID</h2>
+                    <h2 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: 700, letterSpacing: '1px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>EMPLOYEE ID</h2>
 
-                    <div style={{ width: '110px', height: '110px', borderRadius: '50%', background: 'white', padding: '4px', marginBottom: '16px', boxShadow: '0 8px 16px rgba(0,0,0,0.15)', zIndex: 1 }}>
+                    <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: 'white', padding: '4px', marginBottom: '12px', boxShadow: '0 8px 16px rgba(0,0,0,0.15)', zIndex: 1 }}>
                       <img
                         src={empForCard.image ? `/uploads/${empForCard.image}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'}
                         alt="Employee"
@@ -1050,15 +1057,15 @@ function EmployeesContent() {
                     </div>
 
                     <div style={{ textAlign: 'center', zIndex: 1 }}>
-                      <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: 700 }}>{empForCard.prefix}{empForCard.first_name_th} {empForCard.last_name_th}</h3>
-                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', opacity: 0.9 }}>{getPosName(empForCard.pos_id)}</p>
-                      <div style={{ background: 'rgba(255,255,255,0.2)', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', display: 'inline-block', marginBottom: '16px', backdropFilter: 'blur(4px)' }}>
+                      <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 700 }}>{empForCard.prefix}{empForCard.first_name_th} {empForCard.last_name_th}</h3>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '12px', opacity: 0.9 }}>{getPosName(empForCard.pos_id)}</p>
+                      <div style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', display: 'inline-block', marginBottom: '12px', backdropFilter: 'blur(4px)' }}>
                         ID: {empForCard.emp_id}
                       </div>
                     </div>
 
-                    <div style={{ marginTop: 'auto', background: 'white', padding: '8px', borderRadius: '12px', zIndex: 1 }}>
-                      <QRCodeSVG value={empForCard.emp_id} size={70} level="M" />
+                    <div style={{ marginTop: 'auto', background: 'white', padding: '6px', borderRadius: '10px', zIndex: 1 }}>
+                      <QRCodeSVG value={empForCard.emp_id} size={60} level="M" />
                     </div>
                   </div>
                 ))}

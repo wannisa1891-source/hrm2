@@ -16,9 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'ไม่พบพนักงานในระบบ' }, { status: 404 });
     }
 
-    if (!emp.email) {
-      return NextResponse.json({ error: 'พนักงานรายนี้ไม่มีข้อมูลอีเมลในระบบ (ไม่สามารถส่งรหัสผ่านให้ได้)' }, { status: 400 });
-    }
+    const hasEmail = Boolean(emp.email);
 
     // Generate random 8 character password
     const newPassword = Math.random().toString(36).slice(-8); 
@@ -27,46 +25,72 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Update password
     await pool.query(`UPDATE tbl_employees SET password = ? WHERE emp_id = ?`, [hashedPassword, id]);
 
-    // Send email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_SENDER || 'yourcompany.hr@gmail.com',
-        pass: process.env.EMAIL_PASSWORD || 'your-app-password-here'
-      }
-    });
+    // Send email gracefully if they have an email
+    let emailSent = false;
+    let smtpError = false;
 
-    const mailOptions = {
-      from: `"HRM System " <${process.env.EMAIL_SENDER || 'yourcompany.hr@gmail.com'}>`,
-      to: emp.email,
-      subject: `🔑 แจ้งรีเซ็ตรหัสผ่านบัญชี HRM ของคุณ`,
-      html: `
-        <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-          <h2 style="color: #0284c7;">แจ้งรีเซ็ตรหัสผ่าน</h2>
-          <p>เรียน คุณ${emp.first_name_th} ${emp.last_name_th},</p>
-          <p>ระบบได้ทำการรีเซ็ตรหัสผ่านสำหรับการเข้าใช้งานระบบ HRM ของคุณเรียบร้อยแล้ว</p>
-          
-          <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>รหัสพนักงาน:</strong> ${emp.emp_id}</p>
-            <p><strong>รหัสผ่านใหม่ของคุณคือ:</strong> <span style="color: #ef4444; font-weight: bold; font-size: 18px;">${newPassword}</span></p>
+    if (hasEmail) {
+      try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_SENDER || 'yourcompany.hr@gmail.com',
+          pass: process.env.EMAIL_PASSWORD || 'your-app-password-here'
+        }
+      });
+
+      const mailOptions = {
+        from: `"HRM System" <${process.env.EMAIL_SENDER || 'yourcompany.hr@gmail.com'}>`,
+        to: emp.email,
+        subject: `🔑 แจ้งรีเซ็ตรหัสผ่านบัญชี HRM ของคุณ`,
+        html: `
+          <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2 style="color: #0284c7;">แจ้งรีเซ็ตรหัสผ่าน</h2>
+            <p>เรียน คุณ${emp.first_name_th} ${emp.last_name_th},</p>
+            <p>ระบบได้ทำการรีเซ็ตรหัสผ่านสำหรับการเข้าใช้งานระบบ HRM ของคุณเรียบร้อยแล้ว</p>
+            
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>รหัสพนักงาน:</strong> ${emp.emp_id}</p>
+              <p><strong>รหัสผ่านใหม่ของคุณคือ:</strong> <span style="color: #ef4444; font-weight: bold; font-size: 18px;">${newPassword}</span></p>
+            </div>
+            
+            <p>กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่นี้ และคุณสามารถเปลี่ยนรหัสผ่านอีกครั้งด้วยตัวเองได้ในเมนูแก้ไขโปรไฟล์ส่วนตัว</p>
+            <p style="color: #666; font-size: 13px; margin-top: 30px;">
+              *อีเมลฉบับนี้เป็นการส่งอัตโนมัติจากระบบ HRM ทรัพยากรบุคคล กรุณาอย่าตอบกลับ
+            </p>
           </div>
-          
-          <p>กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่นี้ และคุณสามารถเปลี่ยนรหัสผ่านอีกครั้งด้วยตัวเองได้ในเมนูแก้ไขโปรไฟล์ส่วนตัว</p>
-          <p style="color: #666; font-size: 13px; margin-top: 30px;">
-            *อีเมลฉบับนี้เป็นการส่งอัตโนมัติจากระบบ HRM ทรัพยากรบุคคล กรุณาอย่าตอบกลับ
-          </p>
-        </div>
-      `
-    };
+        `
+      };
 
-    await transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
+      emailSent = true;
+      } catch (mailErr: any) {
+        console.error('Failed to send mail:', mailErr.message);
+        smtpError = true;
+        // Suppress the error so the password reset doesn't fail
+      }
+    }
 
     const userId = req.headers.get('x-user-id');
     if (userId) {
       await logAudit(userId, `รีเซ็ตรหัสผ่านพนักงาน: ${id} (${emp.first_name_th} ${emp.last_name_th})`, pool);
     }
 
-    return NextResponse.json({ message: 'รีเซ็ตรหัสผ่านและส่งอีเมลเรียบร้อยแล้วรหัสผ่านใหม่คือ: ' + newPassword, newPassword: newPassword });
+    if (!hasEmail) {
+      return NextResponse.json({ 
+        message: 'รีเซ็ตรหัสผ่านสำเร็จ! แต่พนักงานรายนี้ไม่มีข้อมูลอีเมลในระบบ (รหัสผ่านใหม่คือ: ' + newPassword + ')', 
+        newPassword: newPassword 
+      });
+    }
+
+    if (smtpError) {
+      return NextResponse.json({ 
+        message: 'รีเซ็ตรหัสผ่านสำเร็จ! แต่ระบบส่งอีเมลไม่ได้ครบ โปรดเช็คการตั้งค่า Email SMTP (รหัสผ่านใหม่คือ: ' + newPassword + ')', 
+        newPassword: newPassword 
+      });
+    }
+
+    return NextResponse.json({ message: 'รีเซ็ตรหัสผ่านและส่งอีเมลแจ้งพนักงานเรียบร้อยแล้ว รหัสผ่านใหม่คือ: ' + newPassword, newPassword: newPassword });
 
   } catch (error: any) {
     console.error('Reset password error:', error);
