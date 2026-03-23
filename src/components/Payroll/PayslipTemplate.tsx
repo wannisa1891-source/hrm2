@@ -26,114 +26,117 @@ const PayslipTemplate = forwardRef<HTMLDivElement, PayslipProps>(({ record, allo
 
   return (
     <div style={{ display: 'none' }}>
-      <div ref={ref} className="payslip-container">
-        <style dangerouslySetInnerHTML={{ __html: `
-          .payslip-container { padding: 40px; font-family: 'Sarabun', sans-serif; color: #000; width: 210mm; margin: 0 auto; box-sizing: border-box; }
-          .ps-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-          .ps-title { font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 1px; }
-          .ps-subtitle { font-size: 16px; margin: 5px 0; }
+      <div ref={ref} className="modern-payslip">
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
           
-          .ps-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 14px; margin-bottom: 20px; line-height: 1.8; }
-          .ps-info-item { display: flex; }
-          .ps-info-label { width: 120px; font-weight: bold; }
+          .modern-payslip { 
+            padding: 60px; 
+            font-family: 'Prompt', sans-serif; 
+            color: #2d3748; 
+            width: 210mm; 
+            margin: 0 auto; 
+            background: #fff;
+          }
+
+          .header-grid { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 40px; align-items: center; }
+          .brand-name { font-size: 22px; font-weight: 600; color: #4a5568; }
+          .doc-type { text-align: right; font-size: 14px; color: #a0aec0; letter-spacing: 2px; }
+
+          .hero-card { 
+            background: #f7fafc; 
+            border-radius: 16px; 
+            padding: 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 40px;
+            border: 1px solid #edf2f7;
+          }
+          .hero-label { font-size: 14px; color: #718096; margin-bottom: 5px; }
+          .hero-value { font-size: 32px; font-weight: 600; color: #2d3748; }
+          .period-badge { background: #2d3748; color: #fff; padding: 6px 16px; border-radius: 99px; font-size: 13px; }
+
+          .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; padding: 0 10px; }
+          .info-box span { display: block; }
+          .label { font-size: 11px; color: #a0aec0; text-transform: uppercase; margin-bottom: 4px; }
+          .value { font-size: 14px; font-weight: 500; color: #4a5568; }
+
+          .section-title { font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #edf2f7; }
           
-          .ps-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; border: 1px solid #000; }
-          .ps-table th, .ps-table td { border: 1px solid #000; padding: 8px 12px; }
-          .ps-table th { background: #f0f0f0; text-align: center; }
-          .ps-col-title { font-weight: bold; text-align: center; background: #e5e5e5 !important; }
+          .data-row { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; }
+          .data-row.total { border-top: 1px dashed #e2e8f0; margin-top: 10px; font-weight: 600; }
           
-          .ps-footer { margin-top: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; text-align: center; font-size: 14px; line-height: 1.6; }
-          .signature-box { border-bottom: 1px dashed #000; width: 200px; margin: 0 auto 10px auto; height: 30px; }
+          .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+
+          .footer-sig { margin-top: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 100px; }
+          .sig-box { border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center; font-size: 12px; color: #a0aec0; }
         `}} />
 
-        <div className="ps-header">
-          <h1 className="ps-title">ใบรับรองเงินเดือน (PAYSLIP)</h1>
-          <p className="ps-subtitle">บริษัท ระบบทรัพยากรบุคคล จำกัด (HRM System Co., Ltd.)</p>
-          <p style={{ fontWeight: 'bold', marginTop: '10px' }}>ประจำเดือน: {MONTHS_TH[Number(month)-1]} {year}</p>
+        <div className="header-grid">
+          <div className="brand-name">HRM SYSTEM CO., LTD.</div>
+          <div className="doc-type">PAYSLIP / ใบแจ้งเงินเดือน</div>
         </div>
 
-        <div className="ps-info-grid">
+        <div className="hero-card">
           <div>
-            <div className="ps-info-item"><div className="ps-info-label">รหัสพนักงาน:</div><div>{record.emp_id}</div></div>
-            <div className="ps-info-item"><div className="ps-info-label">ชื่อ-นามสกุล:</div><div>{record.prefix}{record.first_name_th} {record.last_name_th}</div></div>
+            <div className="hero-label">ยอดเงินโอนสุทธิ (Net Salary)</div>
+            <div className="hero-value">฿ {formatNumber(netSalary)}</div>
           </div>
-          <div>
-            <div className="ps-info-item"><div className="ps-info-label">ตำแหน่ง:</div><div>{record.pos_name || '-'}</div></div>
-            <div className="ps-info-item"><div className="ps-info-label">แผนก:</div><div>{record.dept_name || '-'}</div></div>
+          <div className="period-badge">
+            รอบเดือน {MONTHS_TH[Number(month) - 1]} {year}
           </div>
         </div>
 
-        <table className="ps-table">
-          <thead>
-            <tr>
-              <th colSpan={2} style={{ width: '50%' }}>รายรับ (Earnings)</th>
-              <th colSpan={2} style={{ width: '50%' }}>รายการหัก (Deductions)</th>
-            </tr>
-            <tr>
-              <th style={{ width: '35%' }}>รายการ</th>
-              <th style={{ width: '15%', textAlign: 'right' }}>จำนวนเงิน (บาท)</th>
-              <th style={{ width: '35%' }}>รายการ</th>
-              <th style={{ width: '15%', textAlign: 'right' }}>จำนวนเงิน (บาท)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>เงินเดือนพื้นฐาน (Base Salary)</td>
-              <td style={{ textAlign: 'right' }}>{formatNumber(record.base_salary)}</td>
-              { deductions.length > 0 ? (
-                <>
-                  <td>{deductions[0].type_name} {deductions[0].remark && `(${deductions[0].remark})`}</td>
-                  <td style={{ textAlign: 'right' }}>{formatNumber(deductions[0].amount)}</td>
-                </>
-              ) : (
-                <><td></td><td></td></>
-              )}
-            </tr>
-            
-            {/* Loop through the max items between allowances and deductions (excluding the first deduction which is on the base_salary row if any) */}
-            {Array.from({ length: Math.max(allowances.length, deductions.length > 1 ? deductions.length - 1 : 0) }).map((_, i) => {
-              const a = allowances[i];
-              const d = deductions[i + 1];
-              return (
-                <tr key={i}>
-                  <td>{a ? `${a.type_name} ${a.remark ? '('+a.remark+')' : ''}` : ''}</td>
-                  <td style={{ textAlign: 'right' }}>{a ? formatNumber(a.amount) : ''}</td>
-                  <td>{d ? `${d.type_name} ${d.remark ? '('+d.remark+')' : ''}` : ''}</td>
-                  <td style={{ textAlign: 'right' }}>{d ? formatNumber(d.amount) : ''}</td>
-                </tr>
-              );
-            })}
+        <div className="info-grid">
+          <div className="info-box"><span className="label">Employee ID</span><span className="value">{record.emp_id}</span></div>
+          <div className="info-box"><span className="label">Name</span><span className="value">{record.prefix}{record.first_name_th} {record.last_name_th}</span></div>
+          <div className="info-box"><span className="label">Position</span><span className="value">{record.pos_name || '-'}</span></div>
+          <div className="info-box"><span className="label">Department</span><span className="value">{record.dept_name || '-'}</span></div>
+        </div>
 
-            {/* Empty padding rows to make it look standard */}
-            <tr style={{ height: '30px' }}><td></td><td></td><td></td><td></td></tr>
-
-            <tr>
-              <td style={{ fontWeight: 'bold' }}>รวมรายรับ (Total Earnings)</td>
-              <td style={{ textAlign: 'right', fontWeight: 'bold' }}>{formatNumber(Number(record.base_salary) + totalAllowances)}</td>
-              <td style={{ fontWeight: 'bold' }}>รวมรายการหัก (Total Deductions)</td>
-              <td style={{ textAlign: 'right', fontWeight: 'bold' }}>{formatNumber(totalDeductions)}</td>
-            </tr>
-            
-            <tr>
-              <td colSpan={2} style={{ backgroundColor: '#f9fafb', fontSize: '16px', fontWeight: 'bold', textAlign: 'right', paddingRight: '20px' }}>รายรับสุทธิ (Net Pay)</td>
-              <td colSpan={2} style={{ backgroundColor: '#f9fafb', fontSize: '18px', fontWeight: 'bold', textAlign: 'center', color: '#000' }}>
-                ฿ {formatNumber(netSalary)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div className="ps-footer">
+        <div className="grid-container">
+          {/* Earnings Column */}
           <div>
-            <div className="signature-box"></div>
-            <div>( ผู้จ่ายเงิน / Employer )</div>
-            <div>วันที่: ........./........./.........</div>
+            <div className="section-title">รายรับ (EARNINGS)</div>
+            <div className="data-row">
+              <span>เงินเดือนพื้นฐาน (Base Salary)</span>
+              <span>{formatNumber(record.base_salary)}</span>
+            </div>
+            {allowances.map((a, i) => (
+              <div className="data-row" key={i}>
+                <span>{a.type_name} {a.remark && `(${a.remark})`}</span>
+                <span>{formatNumber(a.amount)}</span>
+              </div>
+            ))}
+            <div className="data-row total">
+              <span>รวมรายรับ</span>
+              <span>{formatNumber(Number(record.base_salary) + totalAllowances)}</span>
+            </div>
           </div>
+
+          {/* Deductions Column */}
           <div>
-            <div className="signature-box"></div>
-            <div>( ผู้รับเงิน / Employee )</div>
-            <div>วันที่: ........./........./.........</div>
+            <div className="section-title">รายหัก (DEDUCTIONS)</div>
+            {deductions.length > 0 ? deductions.map((d, i) => (
+              <div className="data-row" key={i}>
+                <span>{d.type_name} {d.remark && `(${d.remark})`}</span>
+                <span>-{formatNumber(d.amount)}</span>
+              </div>
+            )) : (
+              <div className="data-row" style={{ color: '#cbd5e0' }}><span>ไม่มีรายการหัก</span><span>0.00</span></div>
+            )}
+            <div className="data-row total" style={{ color: '#e53e3e' }}>
+              <span>รวมรายหัก</span>
+              <span>-{formatNumber(totalDeductions)}</span>
+            </div>
           </div>
+        </div>
+
+        <div className="footer-sig">
+          <div className="sig-box">ลายมือชื่อพนักงาน (Employee Signature)</div>
+          <div className="sig-box">ผู้มีอำนาจลงนาม (Authorized Person)</div>
         </div>
       </div>
     </div>
