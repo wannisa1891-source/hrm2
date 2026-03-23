@@ -65,19 +65,20 @@ export default function useScheduleModal(
   const [form, setForm] = useState<ScheduleForm>({ ...EMPTY_FORM })
   const [employees, setEmployees] = useState<Employee[]>([])
   
-  const { departments: deptData } = useDepartments()
+  const { departments: deptData, loadDepartments } = useDepartments()
 
   const isEditing = useMemo(() => editingId !== null, [editingId])
 
   // Fetch employees for dropdown
   useEffect(() => {
+    loadDepartments()
     fetch('/api/employees')
       .then(res => res.json())
       .then(data => {
         if(Array.isArray(data)) setEmployees(data)
       })
       .catch(console.error)
-  }, [])
+  }, [loadDepartments])
 
   function openModal(date: Date) {
     setSelectedDate(date)
@@ -190,7 +191,8 @@ export default function useScheduleModal(
     editingId,
     errors,
     shiftTypes: SHIFT_TYPES,
-    departments: deptData.map(d => d.dept_name), // ส่งกลับเฉพาะชื่อแผนกเป็น array of strings
+    departments: deptData.map(d => d.dept_name),
+    deptData, // Add full objects
     employees,
     form,
     setForm,

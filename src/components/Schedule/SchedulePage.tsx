@@ -84,6 +84,7 @@ export default function SchedulePage() {
     openModal,
     openEditModal,
     closeModal,
+    deptData,
   } = useScheduleModal(schedules, () => {})
 
   const { totalSchedules, todaySchedules, monthSchedules } = useScheduleSummary(schedules)
@@ -139,16 +140,19 @@ export default function SchedulePage() {
     }
 
     try {
+      // Extract Emp ID from nurseName if it's in format "ID - Name"
+      const empIdOnly = form.nurseName.split(' - ')[0].trim();
+
       if (isEditing && editingId) {
         await editSchedule(editingId, {
-          nurseName: form.nurseName.trim(),
+          nurseName: empIdOnly,
           shift: form.shift,
           department: form.department,
           note: form.note || '',
         }, toMonthKey(currentDate))
       } else {
         await addSchedule({
-          nurseName: form.nurseName.trim(),
+          nurseName: empIdOnly,
           shift: form.shift,
           department: form.department,
           date: toDateStr(selectedDate),
@@ -486,7 +490,21 @@ export default function SchedulePage() {
                         className="sp-field" 
                         list="emp-list" 
                         value={form.nurseName}
-                        onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, nurseName: e.target.value }))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setForm((f: ScheduleForm) => {
+                            const newForm = { ...f, nurseName: val };
+                            
+                            // Lookup employee and their department
+                            const empId = val.split(' - ')[0].trim();
+                            const emp = employees.find(e => e.emp_id === empId);
+                            if (emp && emp.dept_id) {
+                              const d = (deptData as any[])?.find(d => d.dept_id === emp.dept_id);
+                              if (d) newForm.department = d.dept_name;
+                            }
+                            return newForm;
+                          });
+                        }}
                         placeholder="พิมพ์ รหัส หรือ ชื่อ-สกุล เพื่อค้นหาแบบรวดเร็ว..." 
                         autoComplete="off"
                       />
