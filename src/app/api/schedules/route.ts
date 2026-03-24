@@ -92,5 +92,6 @@ export async function POST(req: NextRequest) {
 
 // Ensure proper date string format for SQL
 function dateStrSafe(dateStr: string) {
-    return new Date(dateStr).toISOString().split('T')[0];
+    if (!dateStr) return null;
+    return dateStr; // Already in YYYY-MM-DD from frontend
 }
