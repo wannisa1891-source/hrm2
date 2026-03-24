@@ -54,6 +54,7 @@ export default function NotificationBell() {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button 
+        suppressHydrationWarning
         onClick={() => setOpen(!open)}
         style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative', padding: '8px' }}>
         <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" color="#64748b">

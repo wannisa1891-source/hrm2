@@ -96,11 +96,25 @@ export default function SchedulePage() {
   }, [currentDate, loadSchedules])
 
   useEffect(() => {
-    if (showModal && !isEditing && !isAdmin && user) {
+    if (showModal && !isEditing && !isAdmin && user && employees.length > 0) {
       const u = user as any;
-      setForm((f: ScheduleForm) => ({ ...f, nurseName: `${u.emp_id || ''} - ${u.name || u.username || ''}` }))
+      const expectedName = `${u.emp_id || ''} - ${u.name || u.username || ''}`;
+      let expectedDept = '';
+      
+      const empData = employees.find(e => e.emp_id === u.emp_id);
+      if (empData && empData.dept_id && deptData) {
+        const d = (deptData as any[])?.find(d => d.dept_id === empData.dept_id);
+        if (d) expectedDept = d.dept_name;
+      }
+
+      setForm((f: ScheduleForm) => {
+        if (f.nurseName === expectedName && f.department === expectedDept) {
+          return f; // Prevent infinite loop
+        }
+        return { ...f, nurseName: expectedName, department: expectedDept };
+      });
     }
-  }, [showModal, isEditing, isAdmin, user, setForm])
+  }, [showModal, isEditing, isAdmin, user, setForm, deptData, employees])
 
   function openMonth(monthIndex: number) {
     const newDate = new Date(currentDate)
@@ -545,7 +559,7 @@ export default function SchedulePage() {
                 </div>
                 <div className="sp-form-group">
                   <label>แผนก <span className="sp-req">*</span></label>
-                  <select className="sp-field" value={form.department}
+                  <select className="sp-field" value={form.department} disabled={!isAdmin}
                     onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, department: e.target.value }))}>
                     <option value="">เลือกแผนก</option>
                     {departments.map((d) => <option key={d} value={d}>{d}</option>)}

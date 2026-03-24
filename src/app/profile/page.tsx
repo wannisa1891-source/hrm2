@@ -5,6 +5,10 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
+import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useDepartments } from '@/hooks/useDepartments';
+import { usePositions } from '@/hooks/usePositions';
 
 interface ProfileData {
   profile: {
@@ -39,8 +43,14 @@ export default function MyProfilePage() {
   const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password'>('info');
   const router = useRouter();
 
-  const [isEditingInfo, setIsEditingInfo] = useState(false);
-  const [editData, setEditData] = useState({ phone: '', email: '', citizen_id: '', gender: 'ชาย', quota_vacation: 0, quota_sick: 0, quota_personal: 0 });
+  const [showEditModal, setShowEditModal] = useState(false);
+  // Full data fetching for the Modal
+  const { employees, editEmployee, loadEmployees } = useEmployees();
+  const { departments } = useDepartments();
+  const { positions } = usePositions();
+
+  // Find the fully details of current user from employees array (contains licenses, address, etc)
+  const fullProfile = employees.find(e => e.emp_id === user?.emp_id) || null;
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -107,76 +117,50 @@ export default function MyProfilePage() {
   };
 
   const handleEditInfoClick = () => {
-    if (!data?.profile) return;
-    setEditData({
-      phone: data.profile.mobile_no || (data.profile as any).phone || '',
-      email: data.profile.email || '',
-      citizen_id: data.profile.citizen_id || '',
-      gender: data.profile.gender || 'ชาย',
-      quota_vacation: data.profile.quota_vacation || 0,
-      quota_sick: data.profile.quota_sick || 0,
-      quota_personal: data.profile.quota_personal || 0
-    });
-    setIsEditingInfo(true);
+    setShowEditModal(true);
   };
 
-  const handleSaveInfo = async () => {
+  const fetchProfile = async () => {
+    if (!user?.emp_id) return;
     try {
-      const res = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emp_id: data?.profile?.emp_id, updater_role: user?.role, ...editData })
-      });
-      const resData = await res.json();
-      if (res.ok) {
-        Swal.fire({ title: 'สำเร็จ!', text: 'อัปเดตข้อมูลเสร็จสมบูรณ์', icon: 'success', timer: 1500, showConfirmButton: false });
-        setIsEditingInfo(false);
-        setData(prev => {
-          if(!prev) return prev;
-          return {
-            ...prev,
-            profile: {
-              ...prev.profile,
-              mobile_no: editData.phone,
-              email: editData.email,
-              citizen_id: editData.citizen_id,
-              gender: editData.gender,
-              quota_vacation: editData.quota_vacation,
-              quota_sick: editData.quota_sick,
-              quota_personal: editData.quota_personal
-            }
-          };
-        });
+      const res = await fetch(`/api/profile?emp_id=${user.emp_id}`);
+      const result = await res.json();
+      if (result.success) {
+        setData(result.data);
       } else {
-        Swal.fire('เกิดข้อผิดพลาด', resData.error || 'บันทึกข้อมูลไม่สำเร็จ', 'error');
+        Swal.fire('เกิดข้อผิดพลาด', result.error, 'error');
       }
-    } catch(err) {
-      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+    } catch (err) {
+      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้', 'error');
+    } finally {
+      setLoading(false);
     }
+  };
+  
+  const handleSaveProfile = async (fd: FormData, isEditing: boolean) => {
+    if (!fullProfile?.emp_id) return { success: false, message: 'ไม่พบข้อมูลบัญชี' };
+    const res = await editEmployee(fullProfile.emp_id, fd);
+    if (res.success) {
+      setShowEditModal(false);
+      await fetchProfile(); // Reload local profile API
+      await loadEmployees(); // Reload extensive employees array
+      Swal.fire({ title: 'สำเร็จ!', text: 'อัปเดตข้อมูลส่วนตัวเสร็จสมบูรณ์', icon: 'success', timer: 1500, showConfirmButton: false });
+    } else {
+      Swal.fire('ข้อผิดพลาด', res.message || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+    }
+    return res;
   };
 
   useEffect(() => {
     if (!isLoggedIn) {
       router.push('/login');
-      return;
+    } else {
+      loadEmployees();
+      if (user?.emp_id) {
+        fetchProfile();
+      }
     }
-
-    const employeeId = user?.emp_id || user?.username || (user as any)?.name;
-    
-    if (employeeId) {
-      fetch(`/api/profile?emp_id=${employeeId}`)
-        .then(r => r.json())
-        .then(res => {
-          if (res.success) {
-            setData(res.data);
-          }
-        })
-        .finally(() => setLoading(false));
-    } else if (isLoggedIn) {
-      // Fail-safe to avoid infinite loading
-      setLoading(false);
-    }
-  }, [user, isLoggedIn, router]);
+  }, [isLoggedIn, router, user]);
 
   if (loading) return (
     <AppLayout>
@@ -283,89 +267,130 @@ export default function MyProfilePage() {
           </div>
 
           {activeTab === 'info' && (
-            <div className="glass-card" style={{ padding: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h3 className="card-title" style={{ marginBottom: 0 }}>รายละเอียดส่วนตัว</h3>
-                {!isEditingInfo ? (
-                  <button onClick={handleEditInfoClick} style={{ padding: '8px 16px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }} onMouseOver={e=>e.currentTarget.style.backgroundColor='#f1f5f9'} onMouseOut={e=>e.currentTarget.style.backgroundColor='#f8fafc'}>
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    แก้ไขข้อมูล
-                  </button>
-                ) : (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => setIsEditingInfo(false)} style={{ padding: '8px 16px', background: 'white', color: '#64748b', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}>
-                      ยกเลิก
-                    </button>
-                    <button onClick={handleSaveInfo} style={{ padding: '8px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 6px -1px rgba(37,99,235,0.2)', transition: 'all 0.2s' }}>
-                      บันทึกข้อมูล
-                    </button>
-                  </div>
-                )}
+            <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
+              <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                <h3 className="card-title" style={{ margin: 0 }}>รายละเอียดแฟ้มประวัติ (Profile Details)</h3>
+                <button onClick={handleEditInfoClick} style={{ padding: '8px 20px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)', transition: 'transform 0.2s' }} onMouseOver={e=>e.currentTarget.style.transform='translateY(-2px)'} onMouseOut={e=>e.currentTarget.style.transform='translateY(0)'}>
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                  แก้ไขประวัติส่วนตัว
+                </button>
               </div>
               
-              <div className="info-grid">
-                <div className="field">
-                  <div className="field-label">เบอร์โทรศัพท์</div>
-                  {isEditingInfo ? (
-                    <input type="text" value={editData.phone} onChange={e=>setEditData({...editData, phone: e.target.value})} className="field-val" style={{ width: '100%', outline: 'none', border: '1px solid #3b82f6', background: 'white', boxShadow: '0 0 0 2px rgba(59,130,246,0.1)' }} />
-                  ) : (
-                    <div className="field-val">{profile.mobile_no || (profile as any).phone || '—'}</div>
-                  )}
-                </div>
-                <div className="field">
-                  <div className="field-label">อีเมล</div>
-                  {isEditingInfo ? (
-                    <input type="email" value={editData.email} onChange={e=>setEditData({...editData, email: e.target.value})} className="field-val" style={{ width: '100%', outline: 'none', border: '1px solid #3b82f6', background: 'white', boxShadow: '0 0 0 2px rgba(59,130,246,0.1)' }} />
-                  ) : (
-                    <div className="field-val">{profile.email || '—'}</div>
-                  )}
-                </div>
-                <div className="field">
-                  <div className="field-label">เลขบัตรประชาชน</div>
-                  {isEditingInfo ? (
-                    <input type="text" maxLength={13} value={editData.citizen_id} onChange={e=>setEditData({...editData, citizen_id: e.target.value})} className="field-val" style={{ width: '100%', outline: 'none', border: '1px solid #3b82f6', background: 'white', boxShadow: '0 0 0 2px rgba(59,130,246,0.1)' }} />
-                  ) : (
-                    <div className="field-val">{profile.citizen_id || '—'}</div>
-                  )}
-                </div>
-                <div className="field">
-                  <div className="field-label">เพศ</div>
-                  {isEditingInfo ? (
-                    <select value={editData.gender} onChange={e=>setEditData({...editData, gender: e.target.value})} className="field-val" style={{ width: '100%', outline: 'none', border: '1px solid #3b82f6', background: 'white', cursor: 'pointer', appearance: 'none', boxShadow: '0 0 0 2px rgba(59,130,246,0.1)' }}>
-                      <option value="ชาย">ชาย</option>
-                      <option value="หญิง">หญิง</option>
-                      <option value="อื่นๆ">อื่นๆ</option>
-                    </select>
-                  ) : (
-                    <div className="field-val">{profile.gender || '—'}</div>
-                  )}
-                </div>
-                
-                <h4 style={{ gridColumn: 'span 2', marginTop: 20, marginBottom: 12, fontSize: 13, color: '#64748b' }}>สิทธิ์การลาคงเหลือประจำปี</h4>
-                <div className="leave-stats">
-                  <div className="leave-stat">
-                    {isEditingInfo && (user?.role === 'Admin' || user?.role === 'admin') ? (
-                      <div style={{ marginBottom: '8px' }}><input type="number" min={0} value={editData.quota_vacation} onChange={e=>setEditData({...editData, quota_vacation: Number(e.target.value)})} style={{ width: '80px', fontSize: '28px', fontWeight: 800, color: '#2563eb', border: 'none', background: 'transparent', outline: 'none', borderBottom: '2px solid #3b82f6', textAlign: 'center', transition: 'all 0.2s' }} /></div>
-                    ) : (
-                      <div className="leave-stat-val">{profile.quota_vacation || 0}</div>
-                    )}
-                    <div className="leave-stat-label">ลาพักร้อนคงเหลือ (วัน)</div>
+              <div style={{ padding: '32px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+                  
+                  {/* Personal & Contact */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
+                      <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: '#2563eb' }}>▍</span> ข้อมูลการติดต่อ
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
+                          <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 600 }}>เบอร์โทรศัพท์</span>
+                          <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 500 }}>{fullProfile?.phone || profile.mobile_no || '—'}</span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
+                          <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 600 }}>อีเมล</span>
+                          <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 500 }}>{fullProfile?.email || profile.email || '—'}</span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'flex-start' }}>
+                          <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>ที่อยู่ปัจจุบัน</span>
+                          <span style={{ color: '#0f172a', fontSize: '14px', lineHeight: '1.6' }}>{fullProfile?.address || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
+                      <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: '#10b981' }}>▍</span> ข้อมูลส่วนบุคคล
+                      </h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div>
+                          <div className="field-label">เลขบัตรประจำตัวประชาชน</div>
+                          <div className="field-val">{fullProfile?.citizen_id || profile.citizen_id || '—'}</div>
+                        </div>
+                        <div>
+                          <div className="field-label">วัน/เดือน/ปีเกิด</div>
+                          <div className="field-val">
+                            {fullProfile?.birth_date ? new Date(fullProfile.birth_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="field-label">เพศ</div>
+                          <div className="field-val">{fullProfile?.gender || profile.gender || '—'}</div>
+                        </div>
+                        <div>
+                          <div className="field-label">สถานะพนักงาน</div>
+                          <div className="field-val" style={{ color: fullProfile?.status === 'Active' ? '#059669' : '#dc2626', fontWeight: 800 }}>
+                            {fullProfile?.status || '—'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="leave-stat">
-                    {isEditingInfo && (user?.role === 'Admin' || user?.role === 'admin') ? (
-                      <div style={{ marginBottom: '8px' }}><input type="number" min={0} value={editData.quota_sick} onChange={e=>setEditData({...editData, quota_sick: Number(e.target.value)})} style={{ width: '80px', fontSize: '28px', fontWeight: 800, color: '#2563eb', border: 'none', background: 'transparent', outline: 'none', borderBottom: '2px solid #3b82f6', textAlign: 'center', transition: 'all 0.2s' }} /></div>
-                    ) : (
-                      <div className="leave-stat-val">{profile.quota_sick || 0}</div>
-                    )}
-                    <div className="leave-stat-label">ลาป่วยคงเหลือ (วัน)</div>
-                  </div>
-                  <div className="leave-stat">
-                    {isEditingInfo && (user?.role === 'Admin' || user?.role === 'admin') ? (
-                      <div style={{ marginBottom: '8px' }}><input type="number" min={0} value={editData.quota_personal} onChange={e=>setEditData({...editData, quota_personal: Number(e.target.value)})} style={{ width: '80px', fontSize: '28px', fontWeight: 800, color: '#2563eb', border: 'none', background: 'transparent', outline: 'none', borderBottom: '2px solid #3b82f6', textAlign: 'center', transition: 'all 0.2s' }} /></div>
-                    ) : (
-                      <div className="leave-stat-val">{profile.quota_personal || 0}</div>
-                    )}
-                    <div className="leave-stat-label">ลากิจคงเหลือ (วัน)</div>
+
+                  {/* Licenses & Leave */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    
+                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
+                      <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: '#8b5cf6' }}>▍</span> ใบประกอบวิชาชีพ
+                        </div>
+                        <span style={{ background: '#f1f5f9', color: '#475569', fontSize: '12px', padding: '2px 10px', borderRadius: '20px' }}>
+                          {fullProfile?.licenses?.length || 0} รายการ
+                        </span>
+                      </h4>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {!fullProfile?.licenses || fullProfile.licenses.length === 0 ? (
+                          <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '14px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+                            ไม่มีข้อมูลใบอนุญาตวิชาชีพ
+                          </div>
+                        ) : (
+                          fullProfile.licenses.map((lic, idx) => (
+                            <div key={idx} style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div>
+                                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{lic.license_no || 'ไม่ระบุเลขที่'}</div>
+                                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>{lic.institution || 'ไม่ระบุแพทยสภา'}</div>
+                                {(lic.issue_date || lic.expire_date) && (
+                                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '8px', background: '#e2e8f0', display: 'inline-block', padding: '2px 8px', borderRadius: '10px' }}>
+                                    {[lic.issue_date?.split('T')[0], lic.expire_date?.split('T')[0]].filter(Boolean).join(' ถึง ')}
+                                  </div>
+                                )}
+                              </div>
+                              {lic.status && (
+                                <span className={`badge ${lic.status === 'Active' ? 'badge-success' : lic.status === 'Suspended' ? 'badge-pending' : ''}`} style={{ background: lic.status === 'Expired' ? '#fef2f2' : undefined, color: lic.status === 'Expired' ? '#ef4444' : undefined }}>
+                                  {lic.status}
+                                </span>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
+                      <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: '#f59e0b' }}>▍</span> สิทธิ์การลาคงเหลือประจำปี
+                      </h4>
+                      <div className="leave-stats" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: 0 }}>
+                        <div className="leave-stat" style={{ background: '#fff' }}>
+                          <div className="leave-stat-val" style={{ color: '#059669' }}>{profile.quota_vacation || 0}</div>
+                          <div className="leave-stat-label">พักร้อน</div>
+                        </div>
+                        <div className="leave-stat" style={{ background: '#fff' }}>
+                          <div className="leave-stat-val" style={{ color: '#ef4444' }}>{profile.quota_sick || 0}</div>
+                          <div className="leave-stat-label">ลาป่วย</div>
+                        </div>
+                        <div className="leave-stat" style={{ background: '#fff' }}>
+                          <div className="leave-stat-val" style={{ color: '#f59e0b' }}>{profile.quota_personal || 0}</div>
+                          <div className="leave-stat-label">ลากิจ</div>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -475,6 +500,17 @@ export default function MyProfilePage() {
           )}
         </div>
       </div>
+
+      <EmployeeFormModal 
+        isOpen={showEditModal} 
+        onClose={() => setShowEditModal(false)}
+        employee={fullProfile}
+        onSave={handleSaveProfile}
+        viewMode={false}
+        isProfileMode={true}
+        departments={departments}
+        positions={positions}
+      />
     </AppLayout>
   );
 }

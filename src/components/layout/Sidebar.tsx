@@ -68,7 +68,19 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const router = useRouter();
 
   const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
-  const filteredMenuItems = menuItems.filter(item => {
+  const filteredMenuItems = menuItems.map(item => {
+    if (item.id === 'personnel' && !isAdmin) {
+      return {
+        ...item,
+        label: 'โครงสร้างองค์กร',
+        children: item.children?.filter(c => c.id === 'org-structure').map(c => ({
+          ...c,
+          label: 'รายชื่อบุคลากร'
+        }))
+      };
+    }
+    return item;
+  }).filter(item => {
     if (item.id === 'audit' && !isAdmin) return false;
     return true;
   });
@@ -88,7 +100,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside className={`sidebar-hybrid${collapsed ? ' collapsed' : ''}`}>
-      <button className="toggle-floating-btn" onClick={onToggle}>
+      <button className="toggle-floating-btn" onClick={onToggle} suppressHydrationWarning>
         {collapsed ? '❯' : '❮'}
       </button>
 
@@ -116,6 +128,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   className={`menu-item-single${isActive(item.href!) ? ' active' : ''}`}
                   onClick={() => navigate(item.href!)}
                   title={collapsed ? item.label : ''}
+                  suppressHydrationWarning
                 >
                   <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
                   {!collapsed && <span className="nav-label">{item.label}</span>}
@@ -129,6 +142,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   className={`menu-header-btn${openMenus[item.id] && !collapsed ? ' is-open' : ''}`}
                   onClick={() => toggleMenu(item.id)}
                   title={collapsed ? item.label : ''}
+                  suppressHydrationWarning
                 >
                   <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
                   {!collapsed && (
@@ -145,6 +159,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                         key={child.id}
                         className={`sub-item${isActive(child.href) ? ' active' : ''}`}
                         onClick={() => navigate(child.href)}
+                        suppressHydrationWarning
                       >
                         {child.label}
                       </button>
@@ -173,7 +188,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <div className="s-role">{user?.role || 'User'}</div>
               </div>
             </div>
-            <button className="btn-logout" onClick={logout}>
+            <button className="btn-logout" onClick={logout} suppressHydrationWarning>
               ออกจากระบบ
             </button>
           </>

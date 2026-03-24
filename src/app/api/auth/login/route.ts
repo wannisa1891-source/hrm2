@@ -26,21 +26,30 @@
 
       // 3. Query จาก tbl_users โดยเช็ค username + password_hash
       const [rows]: any = await pool.query(
-        'SELECT id as user_id, username, email, status FROM tbl_users WHERE username = ? AND password_hash = ?',
+        'SELECT * FROM tbl_users WHERE username = ? AND password_hash = ?',
         [username, password_hash]
       );
 
       if (rows.length > 0) {
         const user = rows[0];
-        if (user.status !== 'Active') {
+        if (user.status && user.status !== 'Active') {
            return NextResponse.json({ success: false, message: 'บัญชีนี้ถูกระงับการใช้งาน' }, { status: 403 });
         }
-        const mockToken = `token_${user.user_id}_${Date.now()}`;
+        
+        // Use user.user_id if available, fallback to user.id
+        const userId = user.user_id || user.id;
+        const mockToken = `token_${userId}_${Date.now()}`;
         
         return NextResponse.json({ 
           success: true, 
           token: mockToken,
-          user: { id: user.user_id, name: user.username, email: user.email, role: 'Admin' }
+          user: { 
+            id: userId, 
+            emp_id: user.emp_id || '',
+            name: user.username, 
+            email: user.email || '', 
+            role: user.role || 'User' 
+          }
         });
       }
 
