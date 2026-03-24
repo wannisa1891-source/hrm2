@@ -59,7 +59,27 @@ export async function POST(req: NextRequest) {
           successCount++;
         } catch (rowErr: any) {
           errorCount++;
-          errors.push(`แถว พนักงาน: ${emp.emp_id || emp.first_name_th} แจ้งเตือน: ${rowErr.message}`);
+          let errmsg = rowErr.message || '';
+          
+          if (errmsg.includes('foreign key constraint fails')) {
+            if (errmsg.includes('dept_id')) {
+              errmsg = 'ไม่พบข้อมูลแผนกนี้ในระบบ';
+            } else if (errmsg.includes('pos_id')) {
+              errmsg = 'ไม่พบข้อมูลตำแหน่งนี้ในระบบ';
+            } else {
+              errmsg = 'ข้อมูลอ้างอิงไม่ถูกต้อง';
+            }
+          } else if (errmsg.includes('Duplicate entry')) {
+            errmsg = 'รหัสพนักงานมีซ้ำซ้อนในระบบแล้ว';
+          } else if (errmsg.includes('Data too long')) {
+            errmsg = 'ข้อมูลยาวเกินกว่าที่ระบบรองรับได้';
+          } else if (errmsg.includes('Incorrect date value')) {
+            errmsg = 'รูปแบบวันที่ไม่ถูกต้อง';
+          } else {
+            errmsg = `ข้อผิดพลาดฐานข้อมูล: ${errmsg}`;
+          }
+
+          errors.push(`${emp.emp_id || emp.first_name_th} แจ้งเตือน: ${errmsg}`);
         }
       }
 

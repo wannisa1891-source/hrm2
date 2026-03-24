@@ -156,10 +156,60 @@ function EmployeesContent() {
       });
       const resData = await res.json();
       if (res.ok) {
+        const successCount = resData.successCount;
+        const errorCount = resData.errorCount;
+        const errors = resData.errors || [];
+
+        let htmlContent = `
+          <div style="font-family: 'Sarabun', sans-serif; text-align: left;">
+            <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 24px;">
+              ${successCount > 0 ? `
+              <div style="background: #ecfdf5; border: 1px solid #10b981; padding: 12px 20px; border-radius: 12px; text-align: center; flex: 1; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);">
+                <div style="font-size: 28px; font-weight: 800; color: #059669; line-height: 1;">${successCount}</div>
+                <div style="font-size: 13px; color: #10b981; font-weight: 700; margin-top: 4px;">สำเร็จ</div>
+              </div>` : ''}
+              ${errorCount > 0 ? `
+              <div style="background: #fef2f2; border: 1px solid #ef4444; padding: 12px 20px; border-radius: 12px; text-align: center; flex: 1; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);">
+                <div style="font-size: 28px; font-weight: 800; color: #dc2626; line-height: 1;">${errorCount}</div>
+                <div style="font-size: 13px; color: #ef4444; font-weight: 700; margin-top: 4px;">ผิดพลาด</div>
+              </div>` : ''}
+            </div>
+        `;
+
+        if (errors.length > 0) {
+          htmlContent += `
+            <div style="background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03);">
+              <div style="background: #f1f5f9; padding: 10px 16px; font-size: 14px; font-weight: 700; color: #475569; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#64748b"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                รายละเอียดข้อผิดพลาด
+              </div>
+              <div style="max-height: 220px; overflow-y: auto; padding: 8px 0;" class="custom-scrollbar">
+                ${errors.map((err: string) => `
+                  <div style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 12px; align-items: flex-start; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                    <div style="margin-top: 2px; flex-shrink: 0;">
+                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#ef4444"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div style="font-size: 13.5px; color: #334155; line-height: 1.5; font-weight: 500;">${err}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        htmlContent += `</div>`;
+
         Swal.fire({
-          title: 'นำเข้าสำเร็จ!',
-          html: `สำเร็จ: <b>${resData.successCount}</b> รายการ<br/>ผิดพลาด: <b>${resData.errorCount}</b> รายการ<br/><br/>${resData.errors?.join('<br/>') || ''}`,
-          icon: 'success'
+          title: '<span style="font-size: 26px; font-weight: 800; color: #0f172a;">สรุปผลการนำเข้าระบบ</span>',
+          html: htmlContent,
+          icon: errorCount > 0 ? (successCount > 0 ? 'warning' : 'error') : 'success',
+          confirmButtonText: 'ตกลง',
+          confirmButtonColor: '#3b82f6',
+          width: '500px',
+          customClass: {
+            popup: 'rounded-3xl shadow-2xl border border-slate-100',
+            confirmButton: 'rounded-xl px-8 py-3 font-bold text-md shadow-lg shadow-blue-500/30'
+          }
         });
         loadEmployees();
       } else {
@@ -1030,7 +1080,7 @@ function EmployeesContent() {
           <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', padding: '24px', width: isBulkPrinting ? '700px' : '360px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
 
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{isBulkPrinting ? 'พิมพ์บัตรพนักงานจำนวนมาก' : 'พิมพ์บัตรพนักงาน'}</h3>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{isBulkPrinting ? 'บัตรพนักงาน (จำนวนมาก)' : 'บัตรพนักงาน'}</h3>
               <button type="button" onClick={() => setShowIdCard(false)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', color: '#64748b' }}>✕</button>
             </div>
 
@@ -1126,28 +1176,28 @@ function EmployeesContent() {
                       </div>
 
                       {/* Content */}
-                      <div style={{ position: 'relative', zIndex: 3, padding: '20px 28px', marginTop: '20px' }}>
-                        <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', textAlign: 'center', margin: '0 0 20px 0', letterSpacing: '0.5px' }}>Terms & Conditions</h3>
+                      <div style={{ position: 'relative', zIndex: 3, padding: '20px 28px', marginTop: '40px' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', textAlign: 'center', margin: '0 0 20px 0', letterSpacing: '0.5px' }}>ข้อกำหนดและเงื่อนไข</h3>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '10px', color: '#64748b', lineHeight: 1.5 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>
                           <div style={{ display: 'flex', gap: '8px' }}>
                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: '4px' }} />
-                            <div>This card is the property of the company and must be returned upon termination of employment.</div>
+                            <div>บัตรนี้เป็นทรัพย์สินของบริษัทและต้องคืนเมื่อสิ้นสุดการจ้างงาน</div>
                           </div>
                           <div style={{ display: 'flex', gap: '8px' }}>
                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: '4px' }} />
-                            <div>You must wear this identity card visibly at all times while on company premises.</div>
+                            <div>ท่านต้องสวมบัตรประจำตัวนี้ให้เห็นชัดเจนตลอดเวลาขณะอยู่ในบริเวณบริษัท</div>
                           </div>
                           <div style={{ display: 'flex', gap: '8px' }}>
                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: '4px' }} />
-                            <div>If found, please return this card to the Human Resources department immediately.</div>
+                            <div>หากพบเห็นโปรดส่งคืนฝ่ายทรัพยากรบุคคลทันที</div>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', fontSize: '10px', fontWeight: 600, color: '#475569' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', fontSize: '12px', fontWeight: 600, color: '#475569' }}>
                           <div>
-                            <div style={{ marginBottom: '6px' }}>Joined Date &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(empForCard.start_date).toLocaleDateString('en-GB') : '-'}</span></div>
-                            <div>Expiry Date &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleDateString('en-GB') : '-'}</span></div>
+                            <div style={{ marginBottom: '6px' }}>วันที่เริ่มงาน &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(empForCard.start_date).toLocaleDateString('en-GB') : '-'}</span></div>
+                            <div>วันหมดอายุ &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleDateString('en-GB') : '-'}</span></div>
                           </div>
                         </div>
 
@@ -1155,7 +1205,7 @@ function EmployeesContent() {
                         <div style={{ marginTop: '40px', textAlign: 'center' }}>
                           <div style={{ fontFamily: "'Brush Script MT', 'Dancing Script', cursive", fontSize: '24px', color: '#0f172a', margin: '0', lineHeight: 1, height: '24px' }}>Wannisa</div>
                           <div style={{ borderTop: '1px solid #cbd5e1', margin: '8px auto 0', width: '140px', paddingTop: '6px' }} />
-                          <div style={{ fontSize: '10px', fontWeight: 600, color: '#0f172a' }}>Authorized Signature</div>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>ลายมือชื่อผู้มีอำนาจ</div>
                         </div>
 
                       </div>

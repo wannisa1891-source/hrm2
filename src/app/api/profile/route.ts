@@ -40,24 +40,7 @@ export async function GET(req: NextRequest) {
     
     let employee = null;
     if (empRows.length === 0) {
-      // Fallback for missing employee (e.g. 'admin')
-      if (emp_id === 'admin' || emp_id === 'view' || emp_id.startsWith('test')) {
-         employee = {
-            emp_id: emp_id,
-            prefix: '',
-            first_name_th: 'ผู้ดูแลระบบ',
-            last_name_th: '(System User)',
-            pos_name: 'System Administrator',
-            dept_name: 'IT / Management',
-            image: null,
-            hire_date: new Date().toISOString(),
-            quota_vacation: 0,
-            quota_sick: 0,
-            quota_personal: 0
-         };
-      } else {
-         return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
-      }
+      return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
     } else {
       employee = empRows[0];
     }
@@ -86,10 +69,6 @@ export async function PUT(req: NextRequest) {
 
     if (!emp_id) {
       return NextResponse.json({ error: 'Missing emp_id' }, { status: 400 });
-    }
-
-    if (emp_id === 'admin' || emp_id === 'view' || emp_id.startsWith('test')) {
-      return NextResponse.json({ success: true, message: 'ข้อมูลถูกบันทึกจำลองสำหรับผู้ดูแลระบบ (Demo mock save)' });
     }
 
     if (updater_role === 'Admin' || updater_role === 'admin') {
