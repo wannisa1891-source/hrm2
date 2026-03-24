@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const [rows] = await pool.query('SELECT * FROM tbl_departments ORDER BY dept_id');
@@ -35,6 +37,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Department created successfully' }, { status: 201 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'DB Error';
+    if (message.includes('foreign key constraint fails')) {
+      return NextResponse.json({ error: 'ไม่สามารถสร้างแผนกได้: รหัสพนักงานหัวหน้าแผนกไม่มีอยู่ในระบบ (อาจถูกลบไปแล้ว) กรุณาเลือกหัวหน้าแผนกใหม่' }, { status: 400 });
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

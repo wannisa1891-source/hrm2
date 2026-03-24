@@ -13,6 +13,7 @@ import { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import Swal from 'sweetalert2';
 import { useAuth } from '@/contexts/AuthContext';
+import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
 
 const EMPTY_FORM: Partial<Employee> = {
   prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '',
@@ -37,19 +38,13 @@ function EmployeesContent() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterLicense, setFilterLicense] = useState('all');
 
-  const [thaiAddressData, setThaiAddressData] = useState<any[]>([]);
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [viewMode, setViewMode] = useState(false);
-  const [formData, setFormData] = useState<Partial<Employee>>({ ...EMPTY_FORM });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'personal' | 'job'>('personal');
+  const [formData, setFormData] = useState<Partial<Employee> | null>(null);
 
   const [isImporting, setIsImporting] = useState(false);
   const [showIdCard, setShowIdCard] = useState(false);
@@ -156,60 +151,10 @@ function EmployeesContent() {
       });
       const resData = await res.json();
       if (res.ok) {
-        const successCount = resData.successCount;
-        const errorCount = resData.errorCount;
-        const errors = resData.errors || [];
-
-        let htmlContent = `
-          <div style="font-family: 'Sarabun', sans-serif; text-align: left;">
-            <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 24px;">
-              ${successCount > 0 ? `
-              <div style="background: #ecfdf5; border: 1px solid #10b981; padding: 12px 20px; border-radius: 12px; text-align: center; flex: 1; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);">
-                <div style="font-size: 28px; font-weight: 800; color: #059669; line-height: 1;">${successCount}</div>
-                <div style="font-size: 13px; color: #10b981; font-weight: 700; margin-top: 4px;">สำเร็จ</div>
-              </div>` : ''}
-              ${errorCount > 0 ? `
-              <div style="background: #fef2f2; border: 1px solid #ef4444; padding: 12px 20px; border-radius: 12px; text-align: center; flex: 1; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);">
-                <div style="font-size: 28px; font-weight: 800; color: #dc2626; line-height: 1;">${errorCount}</div>
-                <div style="font-size: 13px; color: #ef4444; font-weight: 700; margin-top: 4px;">ผิดพลาด</div>
-              </div>` : ''}
-            </div>
-        `;
-
-        if (errors.length > 0) {
-          htmlContent += `
-            <div style="background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03);">
-              <div style="background: #f1f5f9; padding: 10px 16px; font-size: 14px; font-weight: 700; color: #475569; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;">
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#64748b"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                รายละเอียดข้อผิดพลาด
-              </div>
-              <div style="max-height: 220px; overflow-y: auto; padding: 8px 0;" class="custom-scrollbar">
-                ${errors.map((err: string) => `
-                  <div style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 12px; align-items: flex-start; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                    <div style="margin-top: 2px; flex-shrink: 0;">
-                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#ef4444"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div style="font-size: 13.5px; color: #334155; line-height: 1.5; font-weight: 500;">${err}</div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          `;
-        }
-
-        htmlContent += `</div>`;
-
         Swal.fire({
-          title: '<span style="font-size: 26px; font-weight: 800; color: #0f172a;">สรุปผลการนำเข้าระบบ</span>',
-          html: htmlContent,
-          icon: errorCount > 0 ? (successCount > 0 ? 'warning' : 'error') : 'success',
-          confirmButtonText: 'ตกลง',
-          confirmButtonColor: '#3b82f6',
-          width: '500px',
-          customClass: {
-            popup: 'rounded-3xl shadow-2xl border border-slate-100',
-            confirmButton: 'rounded-xl px-8 py-3 font-bold text-md shadow-lg shadow-blue-500/30'
-          }
+          title: 'นำเข้าสำเร็จ!',
+          html: `สำเร็จ: <b>${resData.successCount}</b> รายการ<br/>ผิดพลาด: <b>${resData.errorCount}</b> รายการ<br/><br/>${resData.errors?.join('<br/>') || ''}`,
+          icon: 'success'
         });
         loadEmployees();
       } else {
@@ -234,7 +179,7 @@ function EmployeesContent() {
     loadPositions();
   }, [loadEmployees, loadDepartments, loadPositions]);
 
-  const getDeptName = (id: string) => departments.find(d => d.dept_id === id)?.dept_name || id;
+  const getDeptName = (id: string) => departments.find(d => d.dept_name === id)?.dept_name || id;
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
 
   const filteredData = useMemo(() => {
@@ -254,36 +199,8 @@ function EmployeesContent() {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  useEffect(() => {
-    fetch('/data/thai_address.json')
-      .then(res => res.json())
-      .then(data => setThaiAddressData(data))
-      .catch(err => console.error('Failed to load thai address data:', err));
-  }, []);
-
-  const provinces = useMemo(() => {
-    return Array.from(new Set(thaiAddressData.map((d: any) => d.province))).sort() as string[];
-  }, [thaiAddressData]);
-
-  const amphoes = useMemo(() => {
-    if (!formData.addr_province) return [];
-    return Array.from(new Set(thaiAddressData.filter((d: any) => d.province === formData.addr_province).map((d: any) => d.amphoe))).sort() as string[];
-  }, [thaiAddressData, formData.addr_province]);
-
-  const districts = useMemo(() => {
-    if (!formData.addr_province || !formData.addr_district) return [];
-    return Array.from(new Set(thaiAddressData.filter((d: any) => d.province === formData.addr_province && d.amphoe === formData.addr_district).map((d: any) => d.district))).sort() as string[];
-  }, [thaiAddressData, formData.addr_province, formData.addr_district]);
-
-  const zipcodes = useMemo(() => {
-    if (!formData.addr_province || !formData.addr_district || !formData.addr_subdistrict) return [];
-    return Array.from(new Set(thaiAddressData.filter((d: any) => d.province === formData.addr_province && d.amphoe === formData.addr_district && d.district === formData.addr_subdistrict).map((d: any) => d.zipcode))).sort() as number[];
-  }, [thaiAddressData, formData.addr_province, formData.addr_district, formData.addr_subdistrict]);
-
   const openAdd = () => {
     setFormData({ ...EMPTY_FORM, emp_id: '', licenses: [{ status: 'Active' }] });
-    setImageFile(null);
-    setPreviewUrl(null);
     setIsEditing(false);
     setViewMode(false);
     setShowForm(true);
@@ -311,8 +228,6 @@ function EmployeesContent() {
 
   const openEdit = (emp: Employee) => {
     setFormData({ ...emp, citizen_id: emp.citizen_id || '', licenses: emp.licenses || [] });
-    setImageFile(null);
-    setPreviewUrl(emp.image ? `/uploads/${emp.image}` : null);
     setIsEditing(true);
     setViewMode(false);
     setShowForm(true);
@@ -320,111 +235,35 @@ function EmployeesContent() {
   };
 
   const openView = (emp: Employee) => {
+    const isOwnProfile = user?.emp_id === emp.emp_id || user?.username === emp.emp_id || (user as any)?.name === emp.emp_id;
+    if (!isAdmin && !isOwnProfile) {
+      Swal.fire('ปฏิเสธการเข้าถึง', 'คุณไม่มีสิทธิ์เข้าดูรายละเอียดของพนักงานท่านอื่น', 'warning');
+      return;
+    }
     setFormData({ ...emp, citizen_id: emp.citizen_id || '', licenses: emp.licenses || [] });
-    setImageFile(null);
-    setPreviewUrl(emp.image ? `/uploads/${emp.image}` : null);
     setIsEditing(false);
     setViewMode(true);
     setShowForm(true);
     setActiveTab('personal');
   };
 
-  const handleAddLicense = () => {
-    setFormData(prev => ({
-      ...prev,
-      licenses: [...(prev.licenses || []), { status: 'Active' }]
-    }));
-  };
-
-  const handleRemoveLicense = (index: number) => {
-    setFormData(prev => {
-      const newLics = [...(prev.licenses || [])];
-      newLics.splice(index, 1);
-      return { ...prev, licenses: newLics };
-    });
-  };
-
-  const setLicenseField = (index: number, key: keyof ProfessionalLicense, value: any) => {
-    setFormData(prev => {
-      const newLics = [...(prev.licenses || [])];
-      newLics[index] = { ...newLics[index], [key]: value };
-      return { ...prev, licenses: newLics };
-    });
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const fd = new FormData();
-
-    // Combine address parts
-    const combinedAddress = [
-      formData.addr_no ? `เลขที่ ${formData.addr_no}` : '',
-      formData.addr_moo ? `หมู่ ${formData.addr_moo}` : '',
-      formData.addr_village ? `หมู่บ้าน/อาคาร ${formData.addr_village}` : '',
-      formData.addr_soi ? `ซอย ${formData.addr_soi}` : '',
-      formData.addr_road ? `ถนน ${formData.addr_road}` : '',
-      formData.addr_subdistrict ? `ตำบล/แขวง ${formData.addr_subdistrict}` : '',
-      formData.addr_district ? `อำเภอ/เขต ${formData.addr_district}` : '',
-      formData.addr_province ? `จังหวัด ${formData.addr_province}` : '',
-      formData.addr_zipcode ? `รหัสไปรษณีย์ ${formData.addr_zipcode}` : '',
-    ].filter(Boolean).join(' ');
-
-    const finalFormData = { ...formData };
-    if (combinedAddress.trim().length > 0) {
-      finalFormData.address = combinedAddress;
-    }
-
-    if (imageFile) fd.append('image', imageFile);
-
-    // Filter relevant licenses
-    let finalLicenses = finalFormData.licenses || [];
-    if (!finalFormData.has_license && finalFormData.has_license !== 1) {
-      finalLicenses = []; // user unchecked "has_license", send empty
-    }
-
-    // append json payload
-    const payloadLicenses = finalLicenses.map(l => {
-      const { file, previewUrl, ...rest } = l;
-      return rest;
-    });
-    fd.append('licenses_data', JSON.stringify(payloadLicenses));
-
-    // append files
-    finalLicenses.forEach((l, idx) => {
-      if (l.file) {
-        fd.append(`license_file_${idx}`, l.file);
-      }
-    });
-
-    Object.entries(finalFormData).forEach(([k, v]) => {
-      // exclude these keys from string appending
-      if (k !== 'licenses' && k !== 'license_name' && k !== 'license_type' && k !== 'license_no' && k !== 'license_institution' && k !== 'license_issue_date' && k !== 'license_expire' && k !== 'license_status' && k !== 'license_file' && v !== null && v !== undefined) {
-        fd.append(k, String(v));
-      }
-    });
-
-    setSaving(true);
+  const handleSaveWrapper = async (fd: FormData, editing: boolean, empId?: string) => {
     let res: { success: boolean, message?: string };
-    if (isEditing) {
-      res = await editEmployee(formData.emp_id!, fd);
+    if (editing) {
+      if (!empId) return { success: false, message: 'Employee ID is missing for editing.' };
+      res = await editEmployee(empId, fd);
     } else {
       res = await addEmployee(fd);
     }
-    setSaving(false);
 
     if (res.success) {
       setShowForm(false);
-      Swal.fire({
-        title: 'สำเร็จ!',
-        text: res.message || (isEditing ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มพนักงานสำเร็จ'),
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-      });
-      loadEmployees(); // reload after save
+      Swal.fire({ title: 'สำเร็จ!', text: res.message || (editing ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มพนักงานสำเร็จ'), icon: 'success', timer: 1500, showConfirmButton: false });
+      loadEmployees();
     } else {
-      Swal.fire('ข้อผิดพลาด', `เกิดข้อผิดพลาดในการบันทึกข้อมูล: ${res.message || 'กรุณาลองใหม่อีกครั้ง'}`, 'error');
+      Swal.fire('ข้อผิดพลาด', res.message || 'บันทึกไม่สำเร็จ', 'error');
     }
+    return res;
   };
 
   const handleDelete = async (emp_id: string) => {
@@ -443,7 +282,7 @@ function EmployeesContent() {
     Swal.fire({ title: 'ลบสำเร็จ', text: 'ข้อมูลพนักงานถูกลบออกจากระบบแล้ว', icon: 'success', timer: 1500, showConfirmButton: false });
   };
 
-  const setField = (key: keyof Employee, value: any) => setFormData(f => ({ ...f, [key]: value }));
+
 
   const exportToCSV = () => {
     const headers = ['รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'แผนก', 'ตำแหน่ง', 'สถานะการทำงาน', 'ข้อมูลใบอนุญาต'];
@@ -462,9 +301,6 @@ function EmployeesContent() {
     link.click();
     document.body.removeChild(link);
   };
-
-  const inputStyle = { width: '100%', padding: '10px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', background: '#ffffff', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px' };
-  const addrInputStyle = { width: '100%', padding: '8px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', outline: 'none', transition: 'border-color 0.2s', fontSize: '13px' };
 
   return (
     <AppLayout>
@@ -635,444 +471,17 @@ function EmployeesContent() {
         </div>
       </div>
 
-      {/* Beautiful High-End Edit/Add Modal */}
-      {showForm && (
-        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(12px)', zIndex: 1000, padding: '20px', animation: 'fadeIn 0.2s ease-out' }}>
-          <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', width: '100%', maxWidth: '960px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.1)', border: 'none', position: 'relative', overflow: 'hidden' }}>
-
-            {/* Modal Header */}
-            <div style={{ padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #f1f5f9', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: viewMode ? '#eff6ff' : isEditing ? '#fff7ed' : '#f0fdf4', color: viewMode ? '#3b82f6' : isEditing ? '#f97316' : '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-                  {viewMode ? (
-                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                  ) : isEditing ? (
-                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                  ) : (
-                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
-                  )}
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>{viewMode ? 'ข้อมูลบุคลากร' : isEditing ? 'แก้ไขข้อมูลบุคลากร' : 'ลงทะเบียนบุคลากรใหม่'}</h3>
-                  <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>{viewMode ? 'รายละเอียดข้อมูลพนักงานในระบบ' : 'กรอกข้อมูลรายละเอียดของพนักงานให้ครบถ้วนเพื่อบันทึกลงในระบบ'}</p>
-                </div>
-              </div>
-              <button type="button" onClick={() => setShowForm(false)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>✕</button>
-            </div>
-
-            <div style={{ flex: 1, overflowY: 'auto', padding: '32px' }} className="no-scrollbar">
-              <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                <fieldset disabled={viewMode} style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '32px' }}>
-
-                  {/* === Section 1: ข้อมูลส่วนตัว === */}
-                  <div style={{ background: '#f8fafc', borderRadius: '20px', padding: '28px', border: '1px solid #e2e8f0', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: '-14px', left: '24px', background: '#3b82f6', color: 'white', padding: '4px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, letterSpacing: '0.5px', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)' }}>
-                      SECTION 01
-                    </div>
-                    <h4 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      ข้อมูลส่วนบุคคล (Personal Information)
-                    </h4>
-
-                    <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                      {/* Avatar Upload */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '140px', height: '160px', borderRadius: '16px', background: '#ffffff', border: '2px dashed #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.04)' }} onClick={() => document.getElementById('imageUpload')?.click()}>
-                          {previewUrl ? <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#94a3b8' }}><span style={{ fontSize: '12px', fontWeight: 500 }}>อัปโหลดรูปภาพ</span></div>}
-                        </div>
-                        <input id="imageUpload" type="file" accept="image/*" onChange={e => {
-                          const file = e.target.files?.[0];
-                          if (file) { setImageFile(file); setPreviewUrl(URL.createObjectURL(file)); }
-                        }} style={{ display: 'none' }} />
-                      </div>
-
-                      {/* Main Inputs Grid */}
-                      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>คำนำหน้า</label>
-                          <select value={formData.prefix || ''} onChange={e => setField('prefix', e.target.value)} required style={inputStyle}>
-                            <option value="">[ เลือกคำนำหน้า ]</option>
-                            <option value="นาย">นาย</option>
-                            <option value="นาง">นาง</option>
-                            <option value="นางสาว">นางสาว</option>
-                            <option value="นพ.">นพ.</option>
-                            <option value="พญ.">พญ.</option>
-                          </select>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสบัตรประชาชน 13 หลัก</label>
-                          <input type="text" placeholder="X-XXXX-XXXXX-XX-X" value={formData.citizen_id || ''} onChange={e => setField('citizen_id', e.target.value)} required maxLength={13} style={inputStyle} />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ชื่อ (ภาษาไทย)</label>
-                          <input type="text" placeholder="ระบุชื่อย่อไทย" value={formData.first_name_th || ''} onChange={e => setField('first_name_th', e.target.value)} required style={inputStyle} />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>นามสกุล (ภาษาไทย)</label>
-                          <input type="text" placeholder="ระบุนามสกุลไทย" value={formData.last_name_th || ''} onChange={e => setField('last_name_th', e.target.value)} required style={inputStyle} />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ชื่อ (English)</label>
-                          <input type="text" placeholder="First Name" value={formData.first_name_en || ''} onChange={e => setField('first_name_en', e.target.value)} style={inputStyle} />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>นามสกุล (English)</label>
-                          <input type="text" placeholder="Last Name" value={formData.last_name_en || ''} onChange={e => setField('last_name_en', e.target.value)} style={inputStyle} />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วัน/เดือน/ปีเกิด</label>
-                          <input type="date" value={formData.birth_date ? formData.birth_date.substring(0, 10) : ''} onChange={e => setField('birth_date', e.target.value)} required style={inputStyle} />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เพศ</label>
-                          <select value={formData.gender || ''} onChange={e => setField('gender', e.target.value)} required style={inputStyle}>
-                            <option value="ชาย">ชาย</option>
-                            <option value="หญิง">หญิง</option>
-                            <option value="อื่นๆ">อื่นๆ</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Advanced Address Box */}
-                    <div style={{ marginTop: '24px', background: '#ffffff', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0' }}>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>ที่อยู่ปัจจุบันตามทะเบียนบ้าน</label>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>เลขที่</span>
-                          <input type="text" value={formData.addr_no || ''} onChange={e => setField('addr_no', e.target.value)} style={addrInputStyle} placeholder="เช่น 123/4" />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>หมู่ที่</span>
-                          <input type="text" value={formData.addr_moo || ''} onChange={e => setField('addr_moo', e.target.value)} style={addrInputStyle} placeholder="เช่น ม.5" />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', gridColumn: 'span 2' }}>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>หมู่บ้าน / อาคาร</span>
-                          <input type="text" value={formData.addr_village || ''} onChange={e => setField('addr_village', e.target.value)} style={addrInputStyle} placeholder="ชื่อหมู่บ้านหรือคอนโด" />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>ซอย</span>
-                          <input type="text" value={formData.addr_soi || ''} onChange={e => setField('addr_soi', e.target.value)} style={addrInputStyle} placeholder="เช่น ซอย 2" />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', gridColumn: 'span 2' }}>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>ถนน</span>
-                          <input type="text" value={formData.addr_road || ''} onChange={e => setField('addr_road', e.target.value)} style={addrInputStyle} placeholder="เช่น ถ.สุขุมวิท" />
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '16px', marginTop: '16px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>จังหวัด</span>
-                          <input
-                            type="text"
-                            list="province-list"
-                            value={formData.addr_province || ''}
-                            onChange={e => {
-                              setField('addr_province', e.target.value);
-                              setField('addr_district', '');
-                              setField('addr_subdistrict', '');
-                              setField('addr_zipcode', '');
-                            }}
-                            style={addrInputStyle}
-                            placeholder="พิมพ์หรือเลือกจังหวัด"
-                          />
-                          <datalist id="province-list">
-                            {provinces.map(p => <option key={p} value={p} />)}
-                          </datalist>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>อำเภอ / เขต</span>
-                          <select value={formData.addr_district || ''} disabled={!formData.addr_province} onChange={e => {
-                            setField('addr_district', e.target.value);
-                            setField('addr_subdistrict', '');
-                            setField('addr_zipcode', '');
-                          }} style={{ ...addrInputStyle, cursor: formData.addr_province ? 'pointer' : 'not-allowed', opacity: formData.addr_province ? 1 : 0.6 }}>
-                            <option value="">[ เลือกอำเภอ ]</option>
-                            {amphoes.map(a => <option key={a} value={a}>{a}</option>)}
-                          </select>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>ตำบล / แขวง</span>
-                          <select value={formData.addr_subdistrict || ''} disabled={!formData.addr_district} onChange={e => {
-                            setField('addr_subdistrict', e.target.value);
-
-                            // Auto-fill zipcode
-                            const matchedZipcodes = Array.from(new Set(thaiAddressData.filter((d: any) => d.province === formData.addr_province && d.amphoe === formData.addr_district && d.district === e.target.value).map((d: any) => d.zipcode)));
-                            if (matchedZipcodes.length === 1) {
-                              setField('addr_zipcode', String(matchedZipcodes[0]));
-                            } else {
-                              setField('addr_zipcode', '');
-                            }
-                          }} style={{ ...addrInputStyle, cursor: formData.addr_district ? 'pointer' : 'not-allowed', opacity: formData.addr_district ? 1 : 0.6 }}>
-                            <option value="">[ เลือกตำบล ]</option>
-                            {districts.map(d => <option key={d} value={d}>{d}</option>)}
-                          </select>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>รหัสไปรษณีย์</span>
-                          {zipcodes.length > 1 ? (
-                            <select value={formData.addr_zipcode || ''} disabled={!formData.addr_subdistrict} onChange={e => setField('addr_zipcode', e.target.value)} style={{ ...addrInputStyle, cursor: formData.addr_subdistrict ? 'pointer' : 'not-allowed', opacity: formData.addr_subdistrict ? 1 : 0.6 }}>
-                              <option value="">[ เลือกรหัส ]</option>
-                              {zipcodes.map(z => <option key={z} value={z}>{z}</option>)}
-                            </select>
-                          ) : (
-                            <input type="text" value={formData.addr_zipcode || ''} onChange={e => setField('addr_zipcode', e.target.value)} style={addrInputStyle} placeholder="10xxx" readOnly={zipcodes.length === 1} />
-                          )}
-                        </div>
-                      </div>
-
-                      {isEditing && formData.address && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
-                          <span style={{ fontSize: '12px', color: '#f97316', fontWeight: 600 }}>⚠️ ข้อมูลที่อยู่ดั้งเดิม (Old Address Data)</span>
-                          <textarea rows={2} value={formData.address || ''} readOnly style={{ ...addrInputStyle, background: '#fff7ed', border: '1px solid #fdba74' }}></textarea>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* === Section 2: ข้อมูลการทำงานและวิชาชีพ === */}
-                  <div style={{ background: '#f8fafc', borderRadius: '20px', padding: '28px', border: '1px solid #e2e8f0', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: '-14px', left: '24px', background: '#10b981', color: 'white', padding: '4px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, letterSpacing: '0.5px', boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)' }}>
-                      SECTION 02
-                    </div>
-                    <h4 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '20px' }}></span> ข้อมูลการทำงานและวิชาชีพ (Job & Professional Info)
-                    </h4>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสพนักงาน</label>
-                        <input type="text" placeholder="ระบุรหัสพนักงานใหม่" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} required readOnly={isEditing} style={{ ...inputStyle, background: isEditing ? '#f1f5f9' : '#ffffff', color: isEditing ? '#64748b' : '#0f172a', cursor: isEditing ? 'not-allowed' : 'text', border: isEditing ? '1px solid #e2e8f0' : inputStyle.border }} />
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน</label>
-                        <input type="date" value={formData.start_date ? formData.start_date.substring(0, 10) : ''} onChange={e => setField('start_date', e.target.value)} required style={inputStyle} />
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
-                        <select value={formData.emp_type || ''} onChange={e => setField('emp_type', e.target.value)} style={inputStyle}>
-                          <option value="ข้าราชการ">ข้าราชการ</option>
-                          <option value="พนักงานประจำ">พนักงานประจำ</option>
-                          <option value="พาร์ทไทม์">พาร์ทไทม์</option>
-                          <option value="สัญญาจ้าง">สัญญาจ้าง</option>
-                        </select>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สถานะพนักงาน</label>
-                        <select value={formData.status || ''} onChange={e => setField('status', e.target.value)} style={inputStyle}>
-                          <option value="Active">ทำงานอยู่ (Active)</option>
-                          <option value="Inactive">พ้นสภาพ (Inactive)</option>
-                        </select>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สังกัดกลุ่มงาน</label>
-                        <select value={formData.dept_id || ''} onChange={e => setField('dept_id', e.target.value)} required style={inputStyle}>
-                          <option value="">[ เลือกสังกัด / แผนก ]</option>
-                          {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
-                        </select>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ตำแหน่งงาน</label>
-                        <select value={formData.pos_id || ''} onChange={e => setField('pos_id', e.target.value)} required style={inputStyle}>
-                          <option value="">[ เลือกตำแหน่ง ]</option>
-                          {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
-                        </select>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เงินเดือน (Base Salary)</label>
-                        <input type="number" value={formData.base_salary || ''} onChange={e => setField('base_salary', Number(e.target.value))} required min={0} placeholder="฿0.00" style={inputStyle} />
-                      </div>
-                    </div>
-
-                    {/* Professional Licenses Dynamic List Sub-section */}
-                    <div style={{ marginTop: '24px', background: '#ffffff', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0', borderLeft: '4px solid #10b981' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', marginBottom: '16px' }}>
-                        <label style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: 0 }}>ข้อมูลใบประกอบวิชาชีพและวุฒิบัตร (Professional Licenses / Certificates)</label>
-                        <div style={{ display: 'flex', gap: '15px', background: '#f1f5f9', padding: '6px 12px', borderRadius: '12px' }}>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', color: formData.has_license === true || (formData.has_license as any) === 1 ? '#0f172a' : '#64748b' }}>
-                            <input type="radio" checked={formData.has_license === true || (formData.has_license as any) === 1} onChange={() => setField('has_license', true)} style={{ width: '16px', height: '16px' }} />
-                            มีใบประกอบฯ / ใบประกาศ
-                          </label>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', color: (formData.has_license !== true && (formData.has_license as any) !== 1) ? '#0f172a' : '#64748b' }}>
-                            <input type="radio" checked={formData.has_license !== true && (formData.has_license as any) !== 1} onChange={() => { setField('has_license', false); }} style={{ width: '16px', height: '16px' }} />
-                            ไม่มี / ไม่ระบุ
-                          </label>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', opacity: (formData.has_license === true || (formData.has_license as any) === 1) ? 1 : 0.5, pointerEvents: (formData.has_license === true || (formData.has_license as any) === 1) ? 'auto' : 'none', transition: 'all 0.3s' }}>
-
-                        {/* General CNEU points for the employee */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', maxWidth: '300px' }}>
-                          <label style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>🌟 คะแนนหน่วยกิตสะสมรวม (CNEU/CME/CCPE Points)</label>
-                          <input type="number" step="0.5" min="0" placeholder="0" value={formData.cneu_cme_points || ''} onChange={e => setField('cneu_cme_points', parseFloat(e.target.value))} style={addrInputStyle} />
-                        </div>
-
-                        {(formData.licenses || []).map((lic, index) => (
-                          <div key={index} style={{ padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc', marginBottom: '10px', position: 'relative' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
-                              <span style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
-                                ใบรับรองที่ {index + 1}
-                              </span>
-                              <button type="button" onClick={() => handleRemoveLicense(index)} style={{ padding: '4px 8px', fontSize: '12px', color: '#ef4444', background: '#fee2e2', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
-                                ลบทิ้ง
-                              </button>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '12px', color: '#64748b' }}>ชื่อใบอนุญาต / วุฒิบัตร</label>
-                                <input type="text" placeholder="เช่น ใบประกอบวิชาชีพเวชกรรม" value={lic.license_name || ''} onChange={e => setLicenseField(index, 'license_name', e.target.value)} style={addrInputStyle} />
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '12px', color: '#64748b' }}>ประเภทวิชาชีพ</label>
-                                <select value={lic.license_type || ''} onChange={e => setLicenseField(index, 'license_type', e.target.value)} style={addrInputStyle}>
-                                  <option value="">[ เลือกประเภท ]</option>
-                                  <option value="พยาบาล (RN)">พยาบาล (RN)</option>
-                                  <option value="พยาบาลเทคนิค (PN)">พยาบาลเทคนิค (PN)</option>
-                                  <option value="แพทย์ (MD)">แพทย์ (MD)</option>
-                                  <option value="เภสัชกร">เภสัชกร</option>
-                                  <option value="นักเทคนิคการแพทย์">นักเทคนิคการแพทย์</option>
-                                  <option value="วุฒิบัตรสนับสนุน (NA/นักประดาน้ำ ฯลฯ)">วุฒิบัตรสนับสนุน (NA/นักประดาน้ำ ฯลฯ)</option>
-                                  <option value="อื่นๆ">อื่นๆ</option>
-                                </select>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '12px', color: '#64748b' }}>เลขที่ใบอนุญาต</label>
-                                <input type="text" placeholder="ระบุเลขที่..." value={lic.license_no || ''} onChange={e => setLicenseField(index, 'license_no', e.target.value)} style={addrInputStyle} />
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '12px', color: '#64748b' }}>สถาบัน/แพทยสภาที่ออกให้</label>
-                                <input type="text" placeholder="เช่น สภาการพยาบาล" value={lic.institution || ''} onChange={e => setLicenseField(index, 'institution', e.target.value)} style={addrInputStyle} />
-                              </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginTop: '16px' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '12px', color: '#64748b' }}>วันที่ออกบัตร</label>
-                                <input type="date" value={lic.issue_date ? lic.issue_date.substring(0, 10) : ''} onChange={e => setLicenseField(index, 'issue_date', e.target.value)} style={addrInputStyle} />
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '12px', color: '#64748b' }}>วันหมดอายุ (Expire Date)</label>
-                                <input type="date" value={lic.expire_date ? lic.expire_date.substring(0, 10) : ''} onChange={e => setLicenseField(index, 'expire_date', e.target.value)} style={addrInputStyle} />
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '12px', color: '#64748b' }}>สถานะใบอนุญาต</label>
-                                <select value={lic.status || 'Active'} onChange={e => setLicenseField(index, 'status', e.target.value)} style={{ ...addrInputStyle, background: lic.status === 'Expired' ? '#fef2f2' : lic.status === 'Suspended' ? '#fffbeb' : '#ffffff' }}>
-                                  <option value="Active">ปกติ (Active)</option>
-                                  <option value="Expiring Soon">ใกล้หมดอายุ</option>
-                                  <option value="Expired">หมดอายุแล้ว</option>
-                                  <option value="Suspended">พักใช้ใบอนุญาต</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
-                              <label style={{ fontSize: '12px', color: '#64748b' }}>ไฟล์ภาพอ้างอิง (Image / PDF Copy)</label>
-                              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                <button type="button" onClick={() => document.getElementById(`licenseFile_${index}`)?.click()} style={{ padding: '6px 14px', background: '#cbd5e1', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>
-                                  เลือกไฟล์แนบ
-                                </button>
-                                <input id={`licenseFile_${index}`} type="file" accept="image/*,.pdf" onChange={e => {
-                                  const f = e.target.files?.[0];
-                                  if (f) {
-                                    setLicenseField(index, 'file', f);
-                                    if (f.type.startsWith('image/')) setLicenseField(index, 'previewUrl', URL.createObjectURL(f));
-                                  }
-                                }} style={{ display: 'none' }} />
-
-                                {(lic.file || lic.file_path) && (
-                                  <span style={{ fontSize: '12px', color: '#059669', fontWeight: 500, display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                    ✓ {lic.file ? lic.file.name : 'มีไฟล์ข้อมูลอยู่ในระบบชิ้นเดิมแล้ว'}
-                                  </span>
-                                )}
-                              </div>
-                              {(lic.previewUrl || (lic.file_path && !lic.file)) && (
-                                <div style={{ marginTop: '10px', width: '200px', height: '140px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #cbd5e1', background: '#fff' }}>
-                                  <img src={lic.previewUrl || `/uploads/${lic.file_path}`} alt="License" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="20" x="50" y="55" text-anchor="middle">No Image</text></svg>'; }} />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-
-                        <div>
-                          <button type="button" onClick={handleAddLicense} style={{ padding: '8px 16px', background: 'transparent', border: '1px dashed #10b981', color: '#10b981', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            + เพิ่มใบอนุญาต/วุฒิบัตร (Add License)
-                          </button>
-                        </div>
-
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* === Section 3: การติดต่อ === */}
-                  <div style={{ background: '#f8fafc', borderRadius: '20px', padding: '28px', border: '1px solid #e2e8f0', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: '-14px', left: '24px', background: '#8b5cf6', color: 'white', padding: '4px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, letterSpacing: '0.5px', boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.3)' }}>
-                      SECTION 03
-                    </div>
-                    <h4 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      ข้อมูลการติดต่อ และการเข้าสู่ระบบ (Contact & Account)
-                    </h4>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เบอร์โทรศัพท์มือถือ</label>
-                        <input type="tel" placeholder="08X-XXX-XXXX" value={formData.phone || ''} onChange={e => setField('phone', e.target.value)} required style={inputStyle} />
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>อีเมลบริษัท (Corporate Email)</label>
-                        <input type="email" placeholder="example@chaam-hosp.go.th" value={formData.email || ''} onChange={e => setField('email', e.target.value)} style={inputStyle} />
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสผ่านเริ่มต้น (Default Password)</label>
-                        <input type="text" placeholder="กำหนดรหัสผ่านเบื้องต้น" value={formData.password || ''} onChange={e => setField('password', e.target.value)} style={inputStyle} />
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สิทธิ์การใช้งานระบบ (System Role)</label>
-                        <select value={formData.role || ''} onChange={e => setField('role', e.target.value)} style={inputStyle}>
-                          <option value="User">พนักงานทั่วไป (User)</option>
-                          <option value="Head">หัวหน้าแผนก (Head)</option>
-                          <option value="Admin">ผู้ดูแลระบบ (Admin)</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                </fieldset>
-
-                {/* Action Buttons */}
-                {!viewMode && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '10px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
-                    <button type="button" onClick={() => setShowForm(false)} style={{ padding: '12px 32px', background: 'white', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '15px', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                      ยกเลิก
-                    </button>
-                    <button type="submit" disabled={saving} style={{ padding: '12px 40px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', border: 'none', borderRadius: '12px', cursor: saving ? 'wait' : 'pointer', fontWeight: 600, fontSize: '15px', display: 'flex', gap: '8px', alignItems: 'center', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)', transition: 'all 0.2s', opacity: saving ? 0.8 : 1 }}>
-                      {saving ? 'กำลังประมวลผล...' : 'บันทึกข้อมูล'}
-                    </button>
-                  </div>
-                )}
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Shared Full Functionality Edit/Add Modal */}
+      <EmployeeFormModal
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        employee={formData}
+        onSave={async (fd, editing) => await handleSaveWrapper(fd, editing, formData?.emp_id)}
+        viewMode={viewMode}
+        isProfileMode={false}
+        departments={departments}
+        positions={positions}
+      />
 
       {/* ID Card Modal */}
       {showIdCard && (isBulkPrinting ? selectedIds.length > 0 : selectedEmpForCard) && (

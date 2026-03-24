@@ -72,18 +72,40 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     try {
       await connection.beginTransaction();
 
+      const [existingRows] = await connection.query('SELECT * FROM tbl_employees WHERE emp_id = ?', [empId]);
+      if ((existingRows as any[]).length === 0) {
+        throw new Error('Employee not found');
+      }
+      const existing = (existingRows as any[])[0];
+
       let updateFields = [
         `prefix = ?`, `first_name_th = ?`, `last_name_th = ?`, `first_name_en = ?`, `last_name_en = ?`,
         `birth_date = ?`, `gender = ?`, `address = ?`, `citizen_id = ?`, `phone = ?`, `email = ?`, `role = ?`,
         `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `base_salary = ?`, `status = ?`, `cneu_cme_points = ?`
       ];
 
+      const safeVal = (v: any, fallback: any) => (v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') ? fallback : v;
+
       const values: any[] = [
-        d.prefix || '-', d.first_name_th || '', d.last_name_th || '', d.first_name_en || '', d.last_name_en || '',
-        d.birth_date || null, d.gender || 'ชาย', d.address || '', d.id_card || d.citizen_id || '0000000000000',
-        d.phone || '', d.email || null, d.role || 'User',
-        d.emp_type || 'พนักงานประจำ', d.dept_id || null, d.pos_id || null, d.start_date || null,
-        d.base_salary || 0, d.status || 'Active', d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0
+        safeVal(d.prefix, existing.prefix), 
+        safeVal(d.first_name_th, existing.first_name_th), 
+        safeVal(d.last_name_th, existing.last_name_th), 
+        safeVal(d.first_name_en, existing.first_name_en), 
+        safeVal(d.last_name_en, existing.last_name_en),
+        safeVal(d.birth_date, existing.birth_date), 
+        safeVal(d.gender, existing.gender), 
+        safeVal(d.address, existing.address), 
+        safeVal(d.id_card || d.citizen_id, existing.citizen_id),
+        safeVal(d.phone, existing.phone), 
+        safeVal(d.email, existing.email), 
+        safeVal(d.role, existing.role),
+        safeVal(d.emp_type, existing.emp_type), 
+        safeVal(d.dept_id, existing.dept_id), 
+        safeVal(d.pos_id, existing.pos_id), 
+        safeVal(d.start_date, existing.start_date),
+        safeVal(d.base_salary, existing.base_salary), 
+        safeVal(d.status, existing.status), 
+        d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : existing.cneu_cme_points
       ];
 
       if (imageName) {

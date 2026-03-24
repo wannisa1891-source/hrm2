@@ -144,6 +144,7 @@ export default function DashboardHeader({ today, userName = "Hospital HRM" }: { 
             <span>🔍</span>
 
             <input
+              suppressHydrationWarning
               type="text"
               placeholder="ค้นหาข้อมูล..."
               value={searchQuery}

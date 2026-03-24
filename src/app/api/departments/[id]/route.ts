@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
 
+export const dynamic = 'force-dynamic';
+
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const dept_id = params.id;
@@ -23,6 +25,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ message: 'Department updated successfully' });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'DB Error';
+    if (message.includes('foreign key constraint fails')) {
+      return NextResponse.json({ error: 'ไม่สามารถบันทึกได้: รหัสพนักงานหัวหน้าแผนกไม่มีอยู่ในระบบ (อาจถูกลบไปแล้ว) กรุณาเลือกหัวหน้าแผนกใหม่' }, { status: 400 });
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -40,7 +40,30 @@ export async function GET(req: NextRequest) {
     
     let employee = null;
     if (empRows.length === 0) {
-      return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
+      // Fallback: If not in tbl_employees, check if they exist in tbl_users as a system account
+      const [sysUserRows] = await pool.query(
+        'SELECT * FROM tbl_users WHERE emp_id = ? OR username = ?',
+        [emp_id, emp_id]
+      ) as any;
+
+      if (sysUserRows.length > 0) {
+        const u = sysUserRows[0];
+        employee = {
+          emp_id: u.emp_id || u.username,
+          prefix: '',
+          first_name_th: u.username,
+          last_name_th: `(${u.role || 'User'})`,
+          pos_name: 'System Account',
+          dept_name: '-',
+          image: null,
+          hire_date: new Date().toISOString(),
+          quota_vacation: 0,
+          quota_sick: 0,
+          quota_personal: 0
+        };
+      } else {
+        return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
+      }
     } else {
       employee = empRows[0];
     }
