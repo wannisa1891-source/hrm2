@@ -32,7 +32,13 @@ export async function POST(req: NextRequest) {
     );
     await logAudit(req.headers.get('x-user-id'), `ยื่นขอลาพักผ่อน/หยุดงาน: พนักงาน ${emp_id} รหัสการลา ${leave_id}`);
     return NextResponse.json({ success: true });
-  } catch (err: unknown) {
+  } catch (err: any) {
+    if (err.code === 'ER_NO_REFERENCED_ROW_2' || err.message.includes('foreign key constraint fails')) {
+      return NextResponse.json(
+        { error: 'บัญชีนี้ยังไม่ได้ผูกกับประวัติพนักงานในระบบ (HR) จึงไม่สามารถยื่นใบลาได้' },
+        { status: 400 }
+      );
+    }
     const message = err instanceof Error ? err.message : 'DB Error';
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -55,13 +55,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Create user_id = 'U' + timestamp
+    // 4. Handle Employee Profile Creation/Linking
+    let final_emp_id = emp_id;
+    if (final_emp_id) {
+      // Check if employee already exists in tbl_employees
+      const [existingEmp]: any = await connection.query(
+        'SELECT emp_id FROM tbl_employees WHERE emp_id = ?',
+        [final_emp_id]
+      );
+      if (existingEmp.length === 0) {
+        // If they provided an ID but it doesn't exist, create it
+        await connection.query(
+          `INSERT INTO tbl_employees 
+            (emp_id, prefix, first_name_th, last_name_th, email, phone, gender, birth_date, start_date, citizen_id, base_salary, status, role)
+           VALUES (?, '-', ?, ?, ?, ?, ?, ?, ?, '0000000000000', 0, 'Active', 'User')`,
+          [final_emp_id, first_name, last_name, email, phone || '', gender || 'ชาย', date_of_birth || null, start_date || null]
+        );
+      }
+    } else {
+      // Auto-generate emp_id and create new employee
+      final_emp_id = 'E' + Date.now().toString().slice(-5);
+      await connection.query(
+        `INSERT INTO tbl_employees 
+          (emp_id, prefix, first_name_th, last_name_th, email, phone, gender, birth_date, start_date, citizen_id, base_salary, status, role)
+         VALUES (?, '-', ?, ?, ?, ?, ?, ?, ?, '0000000000000', 0, 'Active', 'User')`,
+        [final_emp_id, first_name, last_name, email, phone || '', gender || 'ชาย', date_of_birth || null, start_date || null]
+      );
+    }
+
+    // 5. Create user_id = 'U' + timestamp
     const user_id = 'U' + Date.now();
 
-    // 5. Hash password ด้วย SHA-256
+    // 6. Hash password ด้วย SHA-256
     const password_hash = sha256(password);
 
-    // 6. Insert into tbl_users
+    // 7. Insert into tbl_users
     await connection.query(
       `INSERT INTO tbl_users 
         (user_id, username, password_hash, first_name, last_name, email,
@@ -70,7 +98,7 @@ export async function POST(req: NextRequest) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', 'Active')`,
       [
         user_id, username, password_hash, first_name, last_name, email,
-        emp_id || null, gender || null, date_of_birth || null, phone || null,
+        final_emp_id, gender || null, date_of_birth || null, phone || null,
         position || null, department || null,
         start_date || null, employee_type || null
       ]
