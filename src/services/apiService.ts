@@ -108,6 +108,12 @@ export interface DashboardData {
   pendingLeaves: number
   expiringLicenses: number
   expiredLicenses: number
+  leaveStats?: {
+    vacation: { remain: number; used: number; raw: number }
+    personal: { remain: number; used: number; raw: number }
+    sick: { remain: number; used: number; raw: number }
+  }
+  recentLeaves?: any[]
 }
 
 // ---------- Helpers ----------

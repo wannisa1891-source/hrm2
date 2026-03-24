@@ -12,6 +12,12 @@ const DEFAULT_DATA: DashboardData = {
   pendingLeaves: 0,
   expiringLicenses: 0,
   expiredLicenses: 0,
+  leaveStats: {
+    vacation: { remain: 0, used: 0, raw: 0 },
+    personal: { remain: 0, used: 0, raw: 0 },
+    sick: { remain: 0, used: 0, raw: 0 },
+  },
+  recentLeaves: []
 }
 
 export function useDashboard() {

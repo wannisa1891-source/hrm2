@@ -11,6 +11,7 @@ import SystemAlert from '@/components/dashboard/SystemAlert'
 import Modal from '@/components/common/Modal'
 import { useDashboard } from '@/hooks/useDashboard'
 import Swal from 'sweetalert2'
+import UserDashboard from '@/components/dashboard/UserDashboard'
 
 export default function DashboardPage() {
 
@@ -168,7 +169,7 @@ export default function DashboardPage() {
 
 
   const newsContent = (
-    <div className={isAdmin ? 'glass-card' : 'clay-card'} style={{ display: 'flex', flexDirection: 'column', height: 480, padding: isAdmin ? '24px' : '32px' }}>
+    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 340, maxHeight: 420, padding: isAdmin ? '24px' : '32px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
            <div className={isAdmin ? '' : 'clay-accent-blue'} style={{ color: isAdmin ? '#3b82f6' : undefined, display: 'flex', width: 56, height: 56, borderRadius: isAdmin ? 14 : '50%', background: isAdmin ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : undefined, alignItems: 'center', justifyContent: 'center', boxShadow: isAdmin ? 'inset 0 2px 4px rgba(255,255,255,0.5)' : undefined }}>
@@ -243,7 +244,8 @@ export default function DashboardPage() {
       )}
 
       {!loading && (
-        <>
+        isAdmin ? (
+          <>
             <div className="dashboard-grid">
               <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -283,7 +285,7 @@ export default function DashboardPage() {
                   />
                 </div>
 
-                <div style={{ height: 480 }}>
+                <div style={{ flex: 1, minHeight: 340, display: 'flex', flexDirection: 'column' }}>
                   <DonutChart data={dashboardData.professions} />
                 </div>
 
@@ -305,7 +307,17 @@ export default function DashboardPage() {
 
               </div>
             </div>
-        </>
+          </>
+        ) : (
+          <UserDashboard
+            user={user}
+            leaveStats={dashboardData.leaveStats || { vacation: { remain: 0, used: 0, raw: 0 }, personal: { remain: 0, used: 0, raw: 0 }, sick: { remain: 0, used: 0, raw: 0 } }}
+            recentLeaves={dashboardData.recentLeaves || []}
+            newsList={newsList}
+            onSelectNews={setSelectedNews}
+            today={today}
+          />
+        )
       )}
       </div>
 

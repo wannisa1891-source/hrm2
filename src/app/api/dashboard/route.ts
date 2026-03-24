@@ -22,6 +22,27 @@ export async function GET(req: NextRequest) {
       queryParams.push(empId);
     }
 
+    // Employee-specific queries for Dashboard
+    let employeeQuotaQuery: Promise<any> = Promise.resolve([[]]);
+    let employeeUsedLeavesQuery: Promise<any> = Promise.resolve([[]]);
+    let employeeRecentLeavesQuery: Promise<any> = Promise.resolve([[]]);
+
+    if (empId) {
+      employeeQuotaQuery = pool.query('SELECT quota_vacation, quota_personal, quota_sick FROM tbl_employees WHERE emp_id = ?', [empId]);
+      employeeUsedLeavesQuery = pool.query(`
+        SELECT leave_type_id, DATEDIFF(end_date, start_date) + 1 AS used_days 
+        FROM tbl_leaves 
+        WHERE emp_id = ? AND status = 'Approved'
+      `, [empId]);
+      employeeRecentLeavesQuery = pool.query(`
+        SELECT * 
+        FROM tbl_leaves 
+        WHERE emp_id = ? 
+        ORDER BY start_date DESC 
+        LIMIT 5
+      `, [empId]);
+    }
+
     // Execute all queries in parallel
     const [
       empResult,
@@ -29,7 +50,10 @@ export async function GET(req: NextRequest) {
       profResult,
       transferResult,
       pendingLeavesResult,
-      licenseResult
+      licenseResult,
+      userQuotaResult,
+      userUsedResult,
+      userRecentResult
     ] = await Promise.all([
       pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status = 'Active'"),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE ? >= start_date AND ? <= end_date", [today, today]),
@@ -42,7 +66,10 @@ export async function GET(req: NextRequest) {
       `),
       pool.query("SELECT COUNT(*) as count FROM tbl_transfers").catch(() => [[{ count: 0 }]]),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE status = 'Pending'"),
-      pool.query(licenseQuery, queryParams)
+      pool.query(licenseQuery, queryParams),
+      employeeQuotaQuery,
+      employeeUsedLeavesQuery,
+      employeeRecentLeavesQuery
     ]);
 
     const empCount = (empResult[0] as any[])[0].count;
@@ -79,6 +106,36 @@ export async function GET(req: NextRequest) {
       }
     });
 
+    let leaveStats = {
+      vacation: { remain: 0, used: 0, raw: 0 },
+      personal: { remain: 0, used: 0, raw: 0 },
+      sick: { remain: 0, used: 0, raw: 0 },
+    };
+    let recentLeaves: any[] = [];
+
+    if (empId) {
+      const quotaRows = userQuotaResult[0] as any[];
+      if (quotaRows.length > 0) {
+        leaveStats.vacation.raw = quotaRows[0].quota_vacation || 0;
+        leaveStats.personal.raw = quotaRows[0].quota_personal || 0;
+        leaveStats.sick.raw = quotaRows[0].quota_sick || 0;
+      }
+
+      const usedRows = userUsedResult[0] as any[];
+      usedRows.forEach((row: any) => {
+        const days = Number(row.used_days) || 0;
+        if (row.leave_type_id === 'L03') leaveStats.vacation.used += days;
+        if (row.leave_type_id === 'L02') leaveStats.personal.used += days;
+        if (row.leave_type_id === 'L01') leaveStats.sick.used += days;
+      });
+
+      leaveStats.vacation.remain = Math.max(0, leaveStats.vacation.raw - leaveStats.vacation.used);
+      leaveStats.personal.remain = Math.max(0, leaveStats.personal.raw - leaveStats.personal.used);
+      leaveStats.sick.remain = Math.max(0, leaveStats.sick.raw - leaveStats.sick.used);
+
+      recentLeaves = userRecentResult[0] as any[];
+    }
+
     return NextResponse.json({
       empCount,
       leaveTodayCount,
@@ -87,7 +144,9 @@ export async function GET(req: NextRequest) {
       pendingTransfers,
       pendingLeaves,
       expiringLicenses,
-      expiredLicenses
+      expiredLicenses,
+      leaveStats,
+      recentLeaves
     });
 
   } catch (err: unknown) {

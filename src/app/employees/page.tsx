@@ -159,12 +159,39 @@ function EmployeesContent() {
       });
       const resData = await res.json();
       if (res.ok) {
-        Swal.fire({
-          title: 'นำเข้าสำเร็จ!',
-          html: `สำเร็จ: <b>${resData.successCount}</b> รายการ<br/>ผิดพลาด: <b>${resData.errorCount}</b> รายการ<br/><br/>${resData.errors?.join('<br/>') || ''}`,
-          icon: 'success'
-        });
-        loadEmployees();
+        if (resData.successCount === 0 && resData.errorCount > 0) {
+          Swal.fire({
+            title: 'นำเข้าล้มเหลว!',
+            html: `
+              <div style="margin-bottom: 12px;">ไม่สามารถนำเข้าข้อมูลได้เลย</div>
+              <div style="margin-bottom: 16px;">ผิดพลาด: <b>${resData.errorCount}</b> รายการ</div>
+              <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 0 24px; color: #dc2626; font-size: 13px; text-align: center; align-items: center; max-height: 200px; overflow-y: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;">
+                ${resData.errors?.map((err: string) => `<div>• ${err}</div>`).join('') || ''}
+              </div>
+            `,
+            icon: 'error'
+          });
+        } else if (resData.errorCount > 0 && resData.successCount > 0) {
+          Swal.fire({
+            title: 'นำเข้าสำเร็จบางส่วน',
+            html: `
+              <div style="margin-bottom: 12px;">สำเร็จ: <b>${resData.successCount}</b> รายการ</div>
+              <div style="margin-bottom: 16px;">ผิดพลาด: <b>${resData.errorCount}</b> รายการ</div>
+              <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 16px; margin: 0 24px; color: #d97706; font-size: 13px; text-align: center; align-items: center; max-height: 200px; overflow-y: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;">
+                ${resData.errors?.map((err: string) => `<div>• ${err}</div>`).join('') || ''}
+              </div>
+            `,
+            icon: 'warning'
+          });
+          loadEmployees();
+        } else {
+          Swal.fire({
+            title: 'นำเข้าสำเร็จสมบูรณ์!',
+            html: `นำเข้าข้อมูลพนักงาน <b>${resData.successCount}</b> รายการเรียบร้อยแล้ว`,
+            icon: 'success'
+          });
+          loadEmployees();
+        }
       } else {
         Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการรัน API: ' + resData.error, 'error');
       }
@@ -212,7 +239,6 @@ function EmployeesContent() {
     setIsEditing(false);
     setViewMode(false);
     setShowForm(true);
-    setActiveTab('personal');
   };
 
   const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -239,7 +265,6 @@ function EmployeesContent() {
     setIsEditing(true);
     setViewMode(false);
     setShowForm(true);
-    setActiveTab('personal');
   };
 
   const openView = (emp: Employee) => {
@@ -252,7 +277,6 @@ function EmployeesContent() {
     setIsEditing(false);
     setViewMode(true);
     setShowForm(true);
-    setActiveTab('personal');
   };
 
   const handleSaveWrapper = async (fd: FormData, editing: boolean, empId?: string) => {
