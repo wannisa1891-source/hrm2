@@ -11,14 +11,12 @@ import SystemAlert from '@/components/dashboard/SystemAlert'
 import Modal from '@/components/common/Modal'
 import { useDashboard } from '@/hooks/useDashboard'
 import Swal from 'sweetalert2'
-import UserDashboard from '@/components/dashboard/UserDashboard'
 
 export default function DashboardPage() {
 
   const { dashboardData, loading, error, loadDashboard } = useDashboard()
 
   const [selectedNews, setSelectedNews] = useState<any>(null)
-  const [userProfile, setUserProfile] = useState<any>(null)
   const [user, setUser] = useState<any>(null)
 
   const [newsList, setNewsList] = useState<any[]>([])
@@ -128,15 +126,7 @@ export default function DashboardPage() {
 
   }
 
-  const fetchUserProfile = async (emp_id: string) => {
-    try {
-      const res = await fetch(`/api/profile?emp_id=${emp_id}`)
-      const data = await res.json()
-      if (res.ok) {
-        setUserProfile(data)
-      }
-    } catch (err) { }
-  }
+
 
 
   useEffect(() => {
@@ -157,7 +147,7 @@ export default function DashboardPage() {
       setUser(parsed)
       loadDashboard(parsed.emp_id, parsed.role)
       if (parsed.role !== 'admin' && parsed.role !== 'Admin') {
-        fetchUserProfile(parsed.emp_id || parsed.username)
+        // user profile logic removed
       }
     } else {
       setUser({ role: 'user' })
@@ -174,36 +164,6 @@ export default function DashboardPage() {
   })
 
   const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
-
-  // Calculate actual remaining leave limits based on profile data and approved leaves
-  const pData = userProfile?.data?.profile || {};
-  const leavesData = userProfile?.data?.leaves || [];
-
-  const calculateDays = (start: string, end: string) => {
-    if (!start || !end) return 0;
-    return Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 3600 * 24)) + 1;
-  };
-
-  let usedVacation = 0;
-  let usedPersonal = 0;
-  let usedSick = 0;
-
-  leavesData.forEach((l: any) => {
-    if (l.status === 'Approved') {
-      const days = calculateDays(l.start_date, l.end_date);
-      if (l.leave_type_id === 'L03') usedVacation += days; // ลาพักผ่อน
-      else if (l.leave_type_id === 'L02') usedPersonal += days; // ลากิจ
-      else if (l.leave_type_id === 'L01') usedSick += days; // ลาป่วย
-    }
-  });
-
-  const rawVacation = pData.quota_vacation !== undefined && pData.quota_vacation !== null ? pData.quota_vacation : 10;
-  const rawPersonal = pData.quota_personal !== undefined && pData.quota_personal !== null ? pData.quota_personal : 45;
-  const rawSick = pData.quota_sick !== undefined && pData.quota_sick !== null ? pData.quota_sick : 30;
-
-  const remainVacation = Math.max(0, rawVacation - usedVacation);
-  const remainPersonal = Math.max(0, rawPersonal - usedPersonal);
-  const remainSick = Math.max(0, rawSick - usedSick);
 
 
 

@@ -121,9 +121,14 @@ export default function MyProfilePage() {
   };
 
   const fetchProfile = async () => {
-    if (!user?.emp_id) return;
+    const targetId = user?.emp_id || user?.username;
+    if (!targetId) {
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const res = await fetch(`/api/profile?emp_id=${user.emp_id}`);
+      const res = await fetch(`/api/profile?emp_id=${targetId}`);
       const result = await res.json();
       if (result.success) {
         setData(result.data);
@@ -156,7 +161,7 @@ export default function MyProfilePage() {
       router.push('/login');
     } else {
       loadEmployees();
-      if (user?.emp_id) {
+      if (user) {
         fetchProfile();
       }
     }
