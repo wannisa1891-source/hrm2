@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'; // Disable Next.js caching for this rout
 import crypto from 'crypto';
 
 // GET /api/employees
+
 export async function GET() {
   try {
     const [

@@ -6,7 +6,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
 import type { Employee, ProfessionalLicense } from '@/services/apiService';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef } from 'react';
@@ -26,8 +26,16 @@ const EMPTY_FORM: Partial<Employee> = {
 
 function EmployeesContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { user } = useAuth();
-  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+  
+  useEffect(() => {
+    if (user && !isAdmin) {
+      router.push('/dashboard');
+    }
+  }, [user, isAdmin, router]);
+
   const { employees, loading, error, loadEmployees, addEmployee, editEmployee, removeEmployee } = useEmployees();
   const { departments, loadDepartments } = useDepartments();
   const { positions, loadPositions } = usePositions();
@@ -301,6 +309,10 @@ function EmployeesContent() {
     link.click();
     document.body.removeChild(link);
   };
+
+  if (user && !isAdmin) {
+    return null; // Return nothing while redirecting
+  }
 
   return (
     <AppLayout>

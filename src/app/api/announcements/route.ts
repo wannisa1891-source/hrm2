@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/hrm_db';
 
 // GET: Fetch all announcements
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const [rows] = await db.query('SELECT * FROM tbl_announcements ORDER BY created_at DESC');

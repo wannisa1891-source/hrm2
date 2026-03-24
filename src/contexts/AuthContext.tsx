@@ -38,10 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (currentUserStr && typeof resource === 'string' && resource.startsWith('/api/')) {
         try {
           const u = JSON.parse(currentUserStr);
-          if (u?.username) {
+          const userName = u?.username || u?.name;
+          if (userName) {
             config = config || {};
             const headers = new Headers(config.headers || {});
-            headers.append('x-user-id', u.username);
+            headers.append('x-user-id', encodeURIComponent(userName));
             config.headers = headers;
           }
         } catch(e) {}

@@ -8,7 +8,8 @@ const shiftMap: Record<string, number> = {
   'Night': 3
 };
 
-// GET /api/schedules?month=2026-03
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

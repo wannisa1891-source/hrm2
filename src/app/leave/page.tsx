@@ -19,15 +19,16 @@ const LEAVE_TYPES = [
 
 export default function LeavePage() {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
   const { leaves, loading, loadLeaves, addLeave, changeLeaveStatus } = useLeaves();
   const { employees, loadEmployees } = useEmployees();
 
   const visibleLeaves = useMemo(() => {
     if (isAdmin) return leaves;
-    if (!user?.emp_id) return [];
-    return leaves.filter(l => l.emp_id === user.emp_id);
-  }, [leaves, isAdmin, user?.emp_id]);
+    const currentEmpId = user?.emp_id || user?.username || (user as any)?.name;
+    if (!currentEmpId) return [];
+    return leaves.filter(l => l.emp_id === currentEmpId);
+  }, [leaves, isAdmin, user]);
 
   const [filterStatus, setFilterStatus] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,8 +71,9 @@ export default function LeavePage() {
   const handleSubmit = async () => {
     // If user is not admin, auto-assign their emp_id to the form
     const submissionData = { ...form };
-    if (!isAdmin && user?.emp_id) {
-      submissionData.emp_id = user.emp_id;
+    const currentEmpId = user?.emp_id || user?.username || (user as any)?.name;
+    if (!isAdmin && currentEmpId) {
+      submissionData.emp_id = currentEmpId;
     }
 
     if (!submissionData.emp_id || !submissionData.start_date || !submissionData.end_date) { 

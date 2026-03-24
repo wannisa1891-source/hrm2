@@ -45,8 +45,7 @@ export default function LoginPage() {
           localStorage.setItem('token', result.token);
         }
         if (result.user) {
-
-           login(result.user);
+           login({ ...result.user, username: username });
         } else {
            login({ username: username });
         }

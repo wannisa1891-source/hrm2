@@ -14,7 +14,7 @@ interface AuditLog {
 
 export default function AuditLogsPage() {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
   const router = useRouter();
 
   const [logs, setLogs] = useState<AuditLog[]>([]);

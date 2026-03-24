@@ -155,7 +155,10 @@ export default function SchedulePage() {
 
     try {
       // Extract Emp ID from nurseName if it's in format "ID - Name"
-      const empIdOnly = form.nurseName.split(' - ')[0].trim();
+      let empIdOnly = form.nurseName.split(' - ')[0].trim();
+      if (!empIdOnly) {
+         empIdOnly = form.nurseName.replace(' - ', '').trim();
+      }
 
       if (isEditing && editingId) {
         await editSchedule(editingId, {

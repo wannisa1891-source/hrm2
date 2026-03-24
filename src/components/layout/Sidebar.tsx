@@ -67,23 +67,28 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
-  const filteredMenuItems = menuItems.map(item => {
-    if (item.id === 'personnel' && !isAdmin) {
-      return {
-        ...item,
-        label: 'โครงสร้างองค์กร',
-        children: item.children?.filter(c => c.id === 'org-structure').map(c => ({
-          ...c,
-          label: 'รายชื่อบุคลากร'
-        }))
-      };
+  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+  const filteredMenuItems = menuItems.reduce<any[]>((acc, item) => {
+    if (!isAdmin) {
+      if (item.id === 'personnel') return acc;
+      if (item.id === 'finance') return acc;
+      if (item.id === 'audit') return acc;
+      
+      if (item.children) {
+        item.children.forEach(child => {
+          acc.push({
+            id: child.id,
+            label: child.label,
+            icon: item.icon,
+            href: child.href
+          });
+        });
+        return acc;
+      }
     }
-    return item;
-  }).filter(item => {
-    if (item.id === 'audit' && !isAdmin) return false;
-    return true;
-  });
+    acc.push(item);
+    return acc;
+  }, []);
 
   const toggleMenu = (id: string) => {
     if (collapsed) {
@@ -154,7 +159,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 </button>
                 {openMenus[item.id] && !collapsed && (
                   <div className="sub-menu-list">
-                    {item.children.map(child => (
+                    {item.children.map((child: any) => (
                       <button
                         key={child.id}
                         className={`sub-item${isActive(child.href) ? ' active' : ''}`}

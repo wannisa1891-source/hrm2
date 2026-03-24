@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useReactToPrint } from 'react-to-print';
 import OrderPdfTemplate from '@/components/Transfer/OrderPdfTemplate';
@@ -49,7 +50,14 @@ const TRANSFER_TYPES = [
 
 export default function TransferPage() {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+  const router = useRouter();
+  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+
+  useEffect(() => {
+    if (user && !isAdmin) {
+      router.push('/dashboard');
+    }
+  }, [user, isAdmin, router]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [transfers, setTransfers] = useState<TransferRecord[]>([]);
@@ -271,6 +279,11 @@ export default function TransferPage() {
   const setF = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
 
   const newDeptName = departments.find(d => d.dept_id === form.newDeptId)?.dept_name || '—';
+
+  // Need to insert redirect block immediately before return 
+  if (user && !isAdmin) {
+    return null; // Return null while redirecting
+  }
 
   return (
     <AppLayout>
