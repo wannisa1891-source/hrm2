@@ -55,12 +55,27 @@
 
       // 4. ถ้าไม่พบใน tbl_users ลองค้นหาใน tbl_employees
       const [empRows]: any = await pool.query(
-        'SELECT emp_id, first_name_th, last_name_th, email, role, status FROM tbl_employees WHERE (emp_id = ? OR email = ?) AND password = ?',
-        [username, username, password_hash]
+        'SELECT emp_id, first_name_th, last_name_th, email, role, status, password FROM tbl_employees WHERE emp_id = ? OR email = ?',
+        [username, username]
       );
 
+      let empMatch = null;
       if (empRows.length > 0) {
         const emp = empRows[0];
+        if (emp.password) {
+          if (emp.password.startsWith('$2')) {
+            const bcrypt = require('bcrypt');
+            if (await bcrypt.compare(password, emp.password)) {
+               empMatch = emp;
+            }
+          } else if (emp.password === password_hash) {
+            empMatch = emp;
+          }
+        }
+      }
+
+      if (empMatch) {
+        const emp = empMatch;
         if (emp.status !== 'Active') {
           return NextResponse.json({ success: false, message: 'บัญชีนี้ถูกระงับการใช้งาน' }, { status: 403 });
         }
