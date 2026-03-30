@@ -48,25 +48,13 @@ export default function EmployeeFormModal({
   // Address Data State
   const [thaiAddressData, setThaiAddressData] = useState<any[]>([]);
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/earthchie/jquery.Thailand.js/master/jquery.Thailand.js/database/raw_database/raw_database.json')
-      .then(r => r.json())
-      .then(data => {
-        let expanded: any[] = [];
-        data.forEach((prov: any) => {
-          prov[1].forEach((amp: any) => {
-            amp[1].forEach((dist: any) => {
-              expanded.push({
-                province: prov[0],
-                amphoe: amp[0],
-                district: dist[0],
-                zipcode: dist[1].length > 0 ? dist[1][0] : ''
-              });
-            });
-          });
-        });
-        setThaiAddressData(expanded);
+    fetch('/data/thai_address.json')
+      .then(r => {
+        if (!r.ok) throw new Error('Network response was not ok');
+        return r.json();
       })
-      .catch(() => console.error('Failed to load thai address data'));
+      .then(data => setThaiAddressData(Array.isArray(data) ? data : []))
+      .catch((err) => console.error('Failed to load thai address data', err));
   }, []);
 
   const provinces = Array.from(new Set(thaiAddressData.map((d: any) => d.province))).sort();
