@@ -124,20 +124,27 @@ function EmployeesContent() {
       // Map Thai headers from our normal export template
       const mappedData = jsonData.map((row, index) => {
         // Fix matching when names have extra spaces
-        const deptName = row['แผนก']?.toString() || '';
-        const dept = departments.find(d => d.dept_name.trim() === deptName);
+        const deptName = row['แผนก']?.toString().trim() || row['แผนก/สังกัด']?.toString().trim() || '';
+        const dept = departments.find(d => d.dept_name.trim() === deptName || d.dept_id === deptName);
 
-        const posName = row['ตำแหน่ง']?.toString() || '';
-        const pos = positions.find(p => p.pos_name.trim() === posName);
+        const posName = row['ตำแหน่ง']?.toString().trim() || '';
+        const pos = positions.find(p => p.pos_name.trim() === posName || p.pos_id === posName);
 
         return {
           emp_id: row['รหัสพนักงาน'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
           first_name_th: row['ชื่อ (TH)'] || row['ชื่อ(TH)'] || row['ชื่อ'] || row['first_name_th'] || '',
           last_name_th: row['นามสกุล (TH)'] || row['นามสกุล(TH)'] || row['นามสกุล'] || row['last_name_th'] || '',
+          first_name_en: row['ชื่อ (EN)'] || row['first_name_en'] || '',
+          last_name_en: row['นามสกุล (EN)'] || row['last_name_en'] || '',
+          gender: row['เพศ'] || row['gender'] || 'ชาย',
+          birth_date: row['วัน/เดือน/ปีเกิด'] || row['วันเกิด'] || row['birth_date'] || null,
           citizen_id: row['บัตรประชาชน'] || row['เลขบัตรประชาชน'] || row['citizen_id'] || '',
           phone: row['เบอร์โทร'] || row['เบอร์โทรศัพท์'] || row['phone'] || '',
           email: row['อีเมล'] || row['อีเมลล์'] || row['email'] || '',
+          address: row['ที่อยู่'] || row['address'] || '',
+          emp_type: row['ประเภทพนักงาน'] || row['ประเภทการจ้างงาน'] || row['emp_type'] || 'พนักงานประจำ',
+          start_date: row['วันที่เริ่มงาน'] || row['start_date'] || null,
           base_salary: row['เงินเดือน'] || row['ฐานเงินเดือน'] || row['base_salary'] || 0,
           dept_id: dept ? dept.dept_id : null,
           pos_id: pos ? pos.pos_id : null,

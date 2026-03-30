@@ -41,9 +41,9 @@ export async function POST(req: NextRequest) {
             emp.birth_date || null,
             emp.gender || 'ชาย',
             emp.address || '',
-            emp.citizen_id || '',
-            emp.phone || '',
-            emp.email || '',
+            emp.citizen_id || null,
+            emp.phone || null,
+            emp.email || null,
             hashedPassword,
             emp.role || 'User',
             emp.emp_type || 'พนักงานประจำ',
@@ -70,7 +70,23 @@ export async function POST(req: NextRequest) {
               errmsg = 'ข้อมูลอ้างอิงไม่ถูกต้อง';
             }
           } else if (errmsg.includes('Duplicate entry')) {
-            errmsg = 'รหัสพนักงานมีซ้ำซ้อนในระบบแล้ว';
+            if (errmsg.includes('citizen_id') || errmsg.includes('citizen')) {
+              errmsg = 'เลขบัตรประชาชนซ้ำซ้อนในระบบ';
+            } else if (errmsg.includes('email')) {
+              errmsg = 'อีเมลซ้ำซ้อนในระบบ';
+            } else if (errmsg.includes('phone')) {
+              errmsg = 'เบอร์โทรศัพท์ซ้ำซ้อนในระบบ';
+            } else if (errmsg.includes('PRIMARY') || errmsg.includes('emp_id')) {
+              errmsg = 'รหัสพนักงานมีซ้ำซ้อนในระบบแล้ว';
+            } else {
+              // Extract the duplicate value/key to show exactly what's wrong
+              const match = errmsg.match(/Duplicate entry '(.*?)' for key '(.*?)'/);
+              if (match) {
+                errmsg = `ข้อมูลซ้ำซ้อน: ค่า '${match[1]}' ในช่อง '${match[2]}'`;
+              } else {
+                errmsg = 'ข้อมูลบางอย่างมีซ้ำซ้อนในระบบ (เช่น อีเมล หรือ เลขบัตรประชาชน)';
+              }
+            }
           } else if (errmsg.includes('Data too long')) {
             errmsg = 'ข้อมูลยาวเกินกว่าที่ระบบรองรับได้';
           } else if (errmsg.includes('Incorrect date value')) {
