@@ -51,7 +51,7 @@ export default function MyProfilePage() {
   const { positions } = usePositions();
 
   // Find the fully details of current user from employees array (contains licenses, address, etc)
-  const fullProfile = employees.find(e => e.emp_id === user?.emp_id) || null;
+  const fullProfile = employees.find((e: any) => e.emp_id === user?.emp_id) || null;
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -357,7 +357,7 @@ export default function MyProfilePage() {
                             ไม่มีข้อมูลใบอนุญาตวิชาชีพ
                           </div>
                         ) : (
-                          fullProfile.licenses.map((lic, idx) => (
+                          fullProfile.licenses.map((lic: any, idx: number) => (
                             <div key={idx} style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                               <div>
                                 <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{lic.license_no || 'ไม่ระบุเลขที่'}</div>
@@ -491,7 +491,28 @@ export default function MyProfilePage() {
           {activeTab === 'password' && (
             <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">เปลี่ยนรหัสผ่าน</h3>
-              <div style={{ maxWidth: '500px', background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '12px' }}>
+              
+              {/* Manual Form */}
+              <form onSubmit={handleChangePassword} style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px', background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 12px 0', fontWeight: 600 }}>เปลี่ยนรหัสผ่านด้วยตนเอง</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>รหัสผ่านเดิม (หรือเลขบัตรประชาชนสำหรับเข้าสู่ระบบครั้งแรก)</label>
+                  <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านเดิม..." />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>รหัสผ่านใหม่</label>
+                  <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านใหม่..." />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>ยืนยันรหัสผ่านใหม่</label>
+                  <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านใหม่อีกครั้ง..." />
+                </div>
+                <button type="submit" className="btn-primary" style={{ marginTop: '12px', padding: '12px', width: '100%' }}>
+                  บันทึกรหัสผ่านใหม่
+                </button>
+              </form>
+
+              <div style={{ maxWidth: '500px', background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 12px 0', fontWeight: 600 }}>
                   รีเซ็ตรหัสผ่านแบบอัตโนมัติ
                 </h4>

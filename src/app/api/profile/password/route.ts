@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const hashedOldPassword = crypto.createHash('sha256').update(oldPassword).digest('hex');
 
     const [rows]: any = await pool.query(
-      `SELECT password FROM tbl_employees WHERE emp_id = ? LIMIT 1`,
+      `SELECT password, citizen_id FROM tbl_employees WHERE emp_id = ? LIMIT 1`,
       [emp_id]
     );
 
@@ -23,7 +23,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'ไม่พบผู้ใช้งานในระบบ' }, { status: 404 });
     }
 
-    if (rows[0].password !== hashedOldPassword) {
+    const { password: currentPassword, citizen_id: citizenId } = rows[0];
+
+    let isPasswordCorrect = false;
+
+    if (!currentPassword) {
+      // Handle the case where password is null/empty by checking against fallbacks
+      const defaultPass1 = citizenId ? String(citizenId) : '123456';
+      const defaultPass2 = '123456';
+
+      if (oldPassword === defaultPass1 || oldPassword === defaultPass2) {
+        isPasswordCorrect = true;
+      }
+    } else {
+      // Check against hashed password or plain-text password if it was stored that way
+      if (currentPassword === hashedOldPassword || currentPassword === oldPassword) {
+        isPasswordCorrect = true;
+      }
+    }
+
+    if (!isPasswordCorrect) {
       return NextResponse.json({ error: 'รหัสผ่านเดิมไม่ถูกต้อง' }, { status: 401 });
     }
 

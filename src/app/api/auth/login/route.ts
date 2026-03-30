@@ -68,20 +68,31 @@
 
       // 4. ถ้าไม่พบใน tbl_users ลองค้นหาใน tbl_employees
       const [empRows]: any = await pool.query(
-        'SELECT emp_id, first_name_th, last_name_th, email, role, status, password FROM tbl_employees WHERE emp_id = ? OR email = ?',
+        'SELECT emp_id, first_name_th, last_name_th, email, role, status, password, citizen_id FROM tbl_employees WHERE emp_id = ? OR email = ?',
         [username, username]
       );
 
       let empMatch = null;
       if (empRows.length > 0) {
         const emp = empRows[0];
-        if (emp.password) {
+        
+        if (!emp.password) {
+          // Fallback สำหรับกรณีรหัสผ่านเป็น null หรือค่าว่าง (ยังไม่ได้ตั้ง)
+          // ให้ใช้เลขบัตรประชาชน หรือ '123456' เป็นรหัสแทน
+          const defaultPass1 = emp.citizen_id ? String(emp.citizen_id) : '123456';
+          const defaultPass2 = '123456';
+          
+          if (password === defaultPass1 || password === defaultPass2) {
+            empMatch = emp;
+          }
+        } else {
+          // กรณีมีรหัสผ่าน Hash แล้ว
           if (emp.password.startsWith('$2')) {
             const bcrypt = require('bcrypt');
             if (await bcrypt.compare(password, emp.password)) {
                empMatch = emp;
             }
-          } else if (emp.password === password_hash) {
+          } else if (emp.password === password_hash || emp.password === password) {
             empMatch = emp;
           }
         }
@@ -96,8 +107,9 @@
         const payload = { 
           id: emp.emp_id, 
           emp_id: emp.emp_id, 
+          username: emp.emp_id, // Add username for AuthContext compatibility
           name: `${emp.first_name_th} ${emp.last_name_th}`, 
-          email: emp.email, 
+          email: emp.email || '', 
           role: emp.role || 'User' 
         };
         const token = await signJWT(payload, '24h');
