@@ -318,21 +318,52 @@ function EmployeesContent() {
 
 
   const exportToCSV = () => {
-    const headers = ['รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'แผนก', 'ตำแหน่ง', 'สถานะการทำงาน', 'ข้อมูลใบอนุญาต'];
+    const headers = [
+      'รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อ (EN)', 'นามสกุล (EN)',
+      'เพศ', 'วัน/เดือน/ปีเกิด', 'บัตรประชาชน', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่',
+      'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน', 'เงินเดือน',
+      'สถานะการทำงาน', 'คะแนน CNEU/CME', 'ข้อมูลใบอนุญาต'
+    ];
+    
     const rows = filteredData.map(e => {
-      const licText = e.licenses && e.licenses.length > 0 ? e.licenses.map(l => `${l.license_name || ''} (${l.status || ''})`).join(' | ') : 'ไม่มี';
-      return [
-        e.emp_id, e.prefix, e.first_name_th, e.last_name_th, getDeptName(e.dept_id), getPosName(e.pos_id), e.status, licText
+      const licText = e.licenses && e.licenses.length > 0 ? e.licenses.map(l => `${l.license_name || ''} เลขที่:${l.license_no || '-'} (${l.status || ''})`).join(' | ') : 'ไม่มี';
+      const rowData = [
+        e.emp_id || '',
+        e.prefix || '',
+        e.first_name_th || '',
+        e.last_name_th || '',
+        e.first_name_en || '',
+        e.last_name_en || '',
+        e.gender || '',
+        e.birth_date ? new Date(e.birth_date).toLocaleDateString('en-GB') : '',
+        e.citizen_id || '',
+        e.phone || '',
+        e.email || '',
+        (e.address || '').replace(/"/g, '""'),
+        getDeptName(e.dept_id) || '',
+        getPosName(e.pos_id) || '',
+        e.emp_type || '',
+        e.start_date ? new Date(e.start_date).toLocaleDateString('en-GB') : '',
+        e.base_salary || 0,
+        e.status || '',
+        e.cneu_cme_points || 0,
+        licText.replace(/"/g, '""')
       ];
+      // Wrap each field in quotes to safely handle commas and spaces
+      return rowData.map(value => `"${value}"`);
     });
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
+
+    const csvContent = "\uFEFF" + [headers.map(h => `"${h}"`).join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'employees_list.csv');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'employees_list_full.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (user && !isAdmin) {
