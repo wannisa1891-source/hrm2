@@ -1,6 +1,8 @@
   import { NextRequest, NextResponse } from 'next/server';
+  import { cookies } from 'next/headers';
   import pool from '@/lib/hrm_db';
   import crypto from 'crypto';
+  import { signJWT } from '@/lib/jwt';
 
   function sha256(text: string): string {
     return crypto.createHash('sha256').update(text).digest('hex');
@@ -38,18 +40,29 @@
         
         // Use user.user_id if available, fallback to user.id
         const userId = user.user_id || user.id;
-        const mockToken = `token_${userId}_${Date.now()}`;
         
+        const payload = { 
+          id: userId, 
+          emp_id: user.emp_id || '',
+          name: user.username, 
+          email: user.email || '', 
+          role: user.role || 'User' 
+        };
+        const token = await signJWT(payload, '24h');
+        
+        cookies().set({
+          name: 'token',
+          value: token,
+          httpOnly: true,
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 60 * 60 * 24 // 1 day
+        });
+
         return NextResponse.json({ 
           success: true, 
-          token: mockToken,
-          user: { 
-            id: userId, 
-            emp_id: user.emp_id || '',
-            name: user.username, 
-            email: user.email || '', 
-            role: user.role || 'User' 
-          }
+          token: token,
+          user: payload
         });
       }
 
@@ -79,12 +92,29 @@
         if (emp.status !== 'Active') {
           return NextResponse.json({ success: false, message: 'บัญชีนี้ถูกระงับการใช้งาน' }, { status: 403 });
         }
-        const mockToken = `token_emp_${emp.emp_id}_${Date.now()}`;
         
+        const payload = { 
+          id: emp.emp_id, 
+          emp_id: emp.emp_id, 
+          name: `${emp.first_name_th} ${emp.last_name_th}`, 
+          email: emp.email, 
+          role: emp.role || 'User' 
+        };
+        const token = await signJWT(payload, '24h');
+        
+        cookies().set({
+          name: 'token',
+          value: token,
+          httpOnly: true,
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 60 * 60 * 24 // 1 day
+        });
+
         return NextResponse.json({ 
           success: true, 
-          token: mockToken,
-          user: { id: emp.emp_id, emp_id: emp.emp_id, name: `${emp.first_name_th} ${emp.last_name_th}`, email: emp.email, role: emp.role || 'User' }
+          token: token,
+          user: payload
         });
       }
 
