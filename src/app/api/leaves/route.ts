@@ -30,6 +30,13 @@ export async function POST(req: NextRequest) {
       "INSERT INTO tbl_leaves (leave_id, emp_id, leave_type_id, start_date, end_date, reason, status) VALUES (?,?,?,?,?,?,'Pending')",
       [leave_id, emp_id, leave_type_id, start_date, end_date, reason]
     );
+
+    // Notify Admins
+    await pool.query(
+      "INSERT INTO tbl_notifications (emp_id, title, message) VALUES (?, ?, ?)",
+      ['admin', 'ยื่นขอลาใหม่', `พนักงานรหัส ${emp_id} ได้ยื่นขอลาตั้งแต่วันที่ ${start_date} ถึง ${end_date}`]
+    );
+
     await logAudit(req.headers.get('x-user-id'), `ยื่นขอลาพักผ่อน/หยุดงาน: พนักงาน ${emp_id} รหัสการลา ${leave_id}`);
     return NextResponse.json({ success: true });
   } catch (err: any) {
