@@ -2,6 +2,7 @@
 
 import AppLayout from '@/components/layout/AppLayout'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
@@ -11,18 +12,20 @@ import PendingList from '@/components/dashboard/PendingList'
 import SystemAlert from '@/components/dashboard/SystemAlert'
 import Modal from '@/components/common/Modal'
 import { useDashboard } from '@/hooks/useDashboard'
+import { useAnnouncements } from '@/hooks/useAnnouncements'
 import Swal from 'sweetalert2'
 import UserDashboard from '@/components/dashboard/UserDashboard'
 
 export default function DashboardPage() {
+  const router = useRouter()
 
-  const { dashboardData, loading, error, loadDashboard } = useDashboard()
+  const [user, setUser] = useState<any>(null)
+  
+  // React Query Hooks
+  const { dashboardData, loading, error, loadDashboard } = useDashboard(user?.emp_id, user?.role)
+  const { announcements, loading: announcementsLoading, refetch: refetchAnnouncements } = useAnnouncements()
 
   const [selectedNews, setSelectedNews] = useState<any>(null)
-  const [user, setUser] = useState<any>(null)
-
-  const [newsList, setNewsList] = useState<any[]>([])
-
   const [isAddingNews, setIsAddingNews] = useState(false)
 
   const [newNewsForm, setNewNewsForm] = useState<any>({
@@ -35,52 +38,15 @@ export default function DashboardPage() {
   const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
-    if (newsList.length > 0) {
+    if (announcements.length > 0) {
       const timer = setInterval(() => {
-        setCurrentSlide(prev => (prev + 1) % newsList.length)
+        setCurrentSlide(prev => (prev + 1) % announcements.length)
       }, 5000)
       return () => clearInterval(timer)
     }
-  }, [newsList.length])
+  }, [announcements.length])
 
 
-  const fetchAnnouncements = async () => {
-
-    try {
-
-      const res = await fetch('/api/announcements')
-      const json = await res.json()
-
-      if (json.success) {
-
-        const formatted = json.data.map((item: any) => {
-
-          const d = new Date(item.created_at)
-
-          const dateStr = d.toLocaleDateString('th-TH', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-          })
-
-          return {
-            ...item,
-            date: `ประกาศเมื่อ ${dateStr}`
-          }
-
-        })
-
-        setNewsList(formatted)
-
-      }
-
-    } catch (err) {
-
-      console.error(err)
-
-    }
-
-  }
 
 
   const submitNews = async () => {
@@ -106,7 +72,7 @@ export default function DashboardPage() {
 
       if (data.success) {
 
-        await fetchAnnouncements()
+        await refetchAnnouncements()
 
         setIsAddingNews(false)
 
@@ -132,31 +98,21 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     
-    // หากไม่มี token ให้ทำการ redirect ไปหน้า login 
     if (!token) {
-      window.location.href = '/login';
+      router.push('/login');
       return;
     }
 
-    fetchAnnouncements()
-
     const u = localStorage.getItem('hrm_user')
-
     if (u) {
-      const parsed = JSON.parse(u)
-      setUser(parsed)
-      loadDashboard(parsed.emp_id, parsed.role)
-      if (parsed.role !== 'admin' && parsed.role !== 'Admin') {
-        // user profile logic removed
-      }
+      setUser(JSON.parse(u))
     } else {
       setUser({ role: 'user' })
-      loadDashboard()
     }
 
-  }, [loadDashboard])
+  }, [router])
 
 
   const today = new Date().toLocaleDateString('th-TH', {
@@ -194,10 +150,10 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ position: 'relative', flex: 1, borderRadius: isAdmin ? 16 : 16, overflow: 'hidden', background: isAdmin ? '#0f172a' : '#e0e5ec', boxShadow: isAdmin ? undefined : 'inset 6px 6px 12px rgba(163, 177, 198, 0.4), inset -6px -6px 12px rgba(255, 255, 255, 0.8)' }}>
-        {newsList.length > 0 ? (
+        {announcements.length > 0 ? (
           <>
             <div style={{ display: 'flex', width: '100%', height: '100%', transition: 'transform 0.5s ease-in-out', transform: `translateX(-${currentSlide * 100}%)` }}>
-              {newsList.map((news, i) => (
+              {announcements.map((news, i) => (
                 <div key={i} onClick={() => setSelectedNews(news)} style={{ width: '100%', height: '100%', flexShrink: 0, position: 'relative', cursor: 'pointer', padding: isAdmin ? 0 : '16px' }}>
                   <div style={{ width: '100%', height: '100%', borderRadius: isAdmin ? 0 : 12, overflow: 'hidden', position: 'relative', boxShadow: isAdmin ? 'none' : '4px 4px 8px rgba(163, 177, 198, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.8)' }}>
                     {news.image ? (
@@ -216,13 +172,13 @@ export default function DashboardPage() {
             </div>
             
             <div style={{ position: 'absolute', bottom: isAdmin ? 12 : 36, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 8 }}>
-              {newsList.map((_, idx) => (
+              {announcements.map((_, idx) => (
                 <div key={idx} onClick={(e) => { e.stopPropagation(); setCurrentSlide(idx); }} style={{ width: currentSlide === idx ? 20 : 8, height: 8, borderRadius: 8, background: currentSlide === idx ? (isAdmin ? '#3b82f6' : '#8fa29e') : (isAdmin ? 'rgba(255,255,255,0.4)' : '#c5c5e8'), transition: 'all 0.3s', cursor: 'pointer', boxShadow: isAdmin ? 'none' : 'inset 1px 1px 2px rgba(0,0,0,0.1)' }} />
               ))}
             </div>
 
-            <button onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => (prev === 0 ? newsList.length - 1 : prev - 1)) }} style={{ position: 'absolute', top: '50%', left: isAdmin ? 8 : 24, transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: 12, background: isAdmin ? 'rgba(0,0,0,0.5)' : '#e0e5ec', color: isAdmin ? 'white' : '#5a6268', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, boxShadow: isAdmin ? undefined : '2px 2px 4px rgba(163, 177, 198, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.8)' }}>❮</button>
-            <button onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => (prev + 1) % newsList.length) }} style={{ position: 'absolute', top: '50%', right: isAdmin ? 8 : 24, transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: 12, background: isAdmin ? 'rgba(0,0,0,0.5)' : '#e0e5ec', color: isAdmin ? 'white' : '#5a6268', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, boxShadow: isAdmin ? undefined : '2px 2px 4px rgba(163, 177, 198, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.8)' }}>❯</button>
+            <button onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => (prev === 0 ? announcements.length - 1 : prev - 1)) }} style={{ position: 'absolute', top: '50%', left: isAdmin ? 8 : 24, transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: 12, background: isAdmin ? 'rgba(0,0,0,0.5)' : '#e0e5ec', color: isAdmin ? 'white' : '#5a6268', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, boxShadow: isAdmin ? undefined : '2px 2px 4px rgba(163, 177, 198, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.8)' }}>❮</button>
+            <button onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => (prev + 1) % announcements.length) }} style={{ position: 'absolute', top: '50%', right: isAdmin ? 8 : 24, transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: 12, background: isAdmin ? 'rgba(0,0,0,0.5)' : '#e0e5ec', color: isAdmin ? 'white' : '#5a6268', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, boxShadow: isAdmin ? undefined : '2px 2px 4px rgba(163, 177, 198, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.8)' }}>❯</button>
           </>
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 14 }}>ไม่มีข่าวสาร</div>
@@ -253,7 +209,7 @@ export default function DashboardPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
                   <StatCard
                     label="บุคลากรทั้งหมด"
-                    value={dashboardData.empCount}
+                    value={dashboardData?.empCount || 0}
                     unit="คน"
                     icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                     iconBg="#dcfce7"
@@ -265,7 +221,7 @@ export default function DashboardPage() {
 
                   <StatCard
                     label="ลางาน/พักร้อน"
-                    value={dashboardData.leaveTodayCount}
+                    value={dashboardData?.leaveTodayCount || 0}
                     unit="คน"
                     icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                     iconBg="#fee2e2"
@@ -276,7 +232,7 @@ export default function DashboardPage() {
 
                   <StatCard
                     label="อัตรากำลังว่าง"
-                    value={dashboardData.vacantCount}
+                    value={dashboardData?.vacantCount || 0}
                     unit="อัตรา"
                     icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     iconBg="#fef9c3"
@@ -287,7 +243,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div style={{ flex: 1, minHeight: 340, display: 'flex', flexDirection: 'column' }}>
-                  <DonutChart data={dashboardData.professions} />
+                  <DonutChart data={dashboardData?.professions || []} />
                 </div>
 
               </div>
@@ -295,15 +251,15 @@ export default function DashboardPage() {
               <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
                 <PendingList
-                  transfersCount={dashboardData.pendingTransfers}
-                  leavesCount={dashboardData.pendingLeaves}
+                  transfersCount={dashboardData?.pendingTransfers || 0}
+                  leavesCount={dashboardData?.pendingLeaves || 0}
                 />
 
                 {newsContent}
 
                 <SystemAlert 
-                  expiringCount={dashboardData.expiringLicenses} 
-                  expiredCount={dashboardData.expiredLicenses} 
+                  expiringCount={dashboardData?.expiringLicenses || 0} 
+                  expiredCount={dashboardData?.expiredLicenses || 0} 
                 />
 
               </div>
@@ -312,9 +268,9 @@ export default function DashboardPage() {
         ) : (
           <UserDashboard
             user={user}
-            leaveStats={dashboardData.leaveStats || { vacation: { remain: 0, used: 0, raw: 0 }, personal: { remain: 0, used: 0, raw: 0 }, sick: { remain: 0, used: 0, raw: 0 } }}
-            recentLeaves={dashboardData.recentLeaves || []}
-            newsList={newsList}
+            leaveStats={dashboardData?.leaveStats || { vacation: { remain: 0, used: 0, raw: 0 }, personal: { remain: 0, used: 0, raw: 0 }, sick: { remain: 0, used: 0, raw: 0 } }}
+            recentLeaves={dashboardData?.recentLeaves || []}
+            newsList={announcements}
             onSelectNews={setSelectedNews}
             today={today}
           />

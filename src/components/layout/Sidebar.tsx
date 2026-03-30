@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
 const icons = {
@@ -62,7 +63,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({ personnel: true });
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const { logout, user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -128,16 +129,16 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           {filteredMenuItems.map(item => {
             if (!item.children) {
               return (
-                <button
+                <Link
                   key={item.id}
+                  href={item.href!}
                   className={`menu-item-single${isActive(item.href!) ? ' active' : ''}`}
-                  onClick={() => navigate(item.href!)}
                   title={collapsed ? item.label : ''}
                   suppressHydrationWarning
                 >
                   <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
                   {!collapsed && <span className="nav-label">{item.label}</span>}
-                </button>
+                </Link>
               );
             }
 
@@ -160,14 +161,14 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 {openMenus[item.id] && !collapsed && (
                   <div className="sub-menu-list">
                     {item.children.map((child: any) => (
-                      <button
+                      <Link
                         key={child.id}
+                        href={child.href}
                         className={`sub-item${isActive(child.href) ? ' active' : ''}`}
-                        onClick={() => navigate(child.href)}
                         suppressHydrationWarning
                       >
                         {child.label}
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 )}

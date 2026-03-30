@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import NotificationBell from '@/components/layout/NotificationBell'
+
 
 interface SearchResult {
   type: 'employee' | 'leave' | 'transfer' | 'schedule' | 'announcement';
@@ -217,7 +217,7 @@ export default function DashboardHeader({ today, userName = "Hospital HRM" }: { 
           )}
         </div>
 
-        <NotificationBell />
+
         
         <div 
           style={{ position: 'relative', width: 45, height: 45, cursor: 'pointer', transition: 'transform 0.2s' }}

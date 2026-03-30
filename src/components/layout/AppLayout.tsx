@@ -8,7 +8,7 @@ import BackButton from '@/components/common/BackButton';
 import NotificationBell from './NotificationBell';
 
 export default function AppLayout({ children, hideScrollbar = false }: { children: React.ReactNode, hideScrollbar?: boolean }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const { isLoggedIn } = useAuth();
   const router = useRouter();
   const pathname = usePathname();

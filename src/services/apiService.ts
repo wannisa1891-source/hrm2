@@ -116,6 +116,41 @@ export interface DashboardData {
   recentLeaves?: any[]
 }
 
+export interface Announcement {
+  id: string
+  title: string
+  content: string
+  image?: string
+  created_at: string
+  date?: string // Formatted for UI
+}
+
+export interface PayrollRecord {
+  payroll_id: string
+  emp_id: string
+  pay_month: number
+  pay_year: number
+  base_salary: number
+  total_allowance: number
+  total_deduction: number
+  net_salary: number
+  status: string
+  first_name_th?: string
+  last_name_th?: string
+  prefix?: string
+  dept_name?: string
+  allowances_breakdown?: Record<string, number>
+}
+
+export interface AuditLog {
+  id: string
+  user_id: string
+  action: string
+  details: string
+  timestamp: string
+  username?: string
+}
+
 // ---------- Helpers ----------
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
@@ -265,3 +300,30 @@ export const updateScheduleRecord = (
 
 export const deleteScheduleRecord = (id: string): Promise<{ success: boolean }> =>
   apiFetch(`/api/schedules/${id}`, { method: 'DELETE' })
+
+// ============================================================
+//  PAYROLL
+// ============================================================
+
+export const fetchPayrollDashboard = (empId?: string): Promise<{
+  employees: PayrollRecord[],
+  targetMonth: number,
+  targetYear: number
+}> => {
+  const url = empId ? `/api/payroll/dashboard?emp_id=${empId}` : '/api/payroll/dashboard'
+  return apiFetch(url)
+}
+
+// ============================================================
+//  ANNOUNCEMENTS
+// ============================================================
+
+export const fetchAnnouncements = (): Promise<{ success: boolean; data: Announcement[] }> =>
+  apiFetch('/api/announcements')
+
+// ============================================================
+//  AUDIT LOGS
+// ============================================================
+
+export const fetchAuditLogs = (): Promise<AuditLog[]> =>
+  apiFetch('/api/audit-logs')
