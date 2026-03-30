@@ -12,6 +12,7 @@ import {
   Users, Search, Plus, Edit2, Trash2, X, UserIcon,
   ChevronRight, Briefcase, MapPin, Phone, Building, Contact, SearchCode, FileText
 } from '@/components/Icons';
+import Image from 'next/image';
 
 export default function DepartmentAndEmployeePage() {
   const router = useRouter();
@@ -324,7 +325,7 @@ export default function DepartmentAndEmployeePage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <div style={styles.avatar}>
                           {emp.image ? (
-                            <img src={`/uploads/${emp.image}`} alt="pic" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
+                            <Image fill unoptimized src={`/uploads/${emp.image}`} alt="pic" style={{ objectFit: 'cover', borderRadius: '12px' }} />
                           ) : (
                             <span>{emp.first_name_th?.[0] || 'U'}</span>
                           )}
@@ -423,7 +424,7 @@ export default function DepartmentAndEmployeePage() {
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                   <div style={styles.largeAvatar}>
                     {selectedEmp.image ? (
-                      <img src={`/uploads/${selectedEmp.image}`} alt="pic" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '32px' }} />
+                      <Image fill unoptimized src={`/uploads/${selectedEmp.image}`} alt="pic" style={{ objectFit: 'cover', borderRadius: '32px' }} />
                     ) : (
                       <UserIcon size={48} color="#6366f1" />
                     )}
@@ -506,9 +507,9 @@ export default function DepartmentAndEmployeePage() {
                       </div>
                       {deptHeadEmp ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                          <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#e0e7ff', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                          <div style={{ width: '64px', height: '64px', position: 'relative', borderRadius: '20px', background: '#e0e7ff', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                             {deptHeadEmp.image ? (
-                              <img src={`/uploads/${deptHeadEmp.image}`} alt="head" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <Image fill unoptimized src={`/uploads/${deptHeadEmp.image}`} alt="head" style={{ objectFit: 'cover' }} />
                             ) : (
                               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', fontWeight: 800, fontSize: '24px' }}>{deptHeadEmp.first_name_th?.[0] || 'U'}</div>
                             )}
@@ -593,9 +594,9 @@ export default function DepartmentAndEmployeePage() {
                                   onMouseOver={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#e2e8f0'; } }}
                                   onMouseOut={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = '#f1f5f9'; } }}
                                 >
-                                  <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0 }}>
+                                  <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0 }}>
                                     {emp.image ? (
-                                      <img src={`/uploads/${emp.image}`} alt="emp" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      <Image fill unoptimized src={`/uploads/${emp.image}`} alt="emp" style={{ objectFit: 'cover' }} />
                                     ) : (
                                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 800, fontSize: '18px' }}>{emp.first_name_th?.[0] || 'U'}</div>
                                     )}
@@ -778,16 +779,15 @@ const styles: Record<string, React.CSSProperties> = {
   addBtn: { background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', color: 'white', border: 'none', padding: '0 24px', borderRadius: '16px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)', transition: 'transform 0.2s, boxShadow 0.2s' },
   tableCard: { background: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(12px)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.6)', overflow: 'hidden', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01)' },
   th: { padding: '20px 24px', textAlign: 'left', fontSize: '12px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' },
-  td: { padding: '24px 24px', borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' },
   tableRow: { cursor: 'pointer', background: '#ffffff' },
-  avatar: { width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#4f46e5', fontSize: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' },
+  avatar: { position: 'relative', width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#4f46e5', fontSize: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' },
   pageBtn: { padding: '8px 16px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', fontSize: '14px', fontWeight: 600, color: '#475569', transition: 'all 0.2s' },
   overlay: { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.3)', backdropFilter: 'blur(4px)', zIndex: 999, transition: 'opacity 0.4s ease' },
   detailSidebar: { position: 'fixed', right: 0, top: 0, width: '460px', height: '100vh', background: '#ffffff', zIndex: 1000, transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)', boxShadow: '-20px 0 40px rgba(0,0,0,0.1)' },
   sideHeader: { padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   closeBtn: { border: 'none', background: '#f8fafc', width: '36px', height: '36px', borderRadius: '10px', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s, color 0.2s' },
   sideBody: { flex: 1, overflowY: 'auto', padding: '32px' },
-  largeAvatar: { width: '100px', height: '100px', borderRadius: '32px', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.3)' },
+  largeAvatar: { position: 'relative', width: '100px', height: '100px', borderRadius: '32px', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.3)' },
   empIdBadge: { display: 'inline-block', padding: '6px 16px', borderRadius: '12px', background: '#f1f5f9', fontSize: '13px', color: '#475569', fontWeight: 700, letterSpacing: '0.05em' },
   sectionDivider: { fontSize: '13px', color: '#64748b', fontWeight: 700, letterSpacing: '0.05em', marginTop: '32px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' },
   infoBox: { background: '#f8fafc', borderRadius: '16px', padding: '8px 20px' },

@@ -14,6 +14,7 @@ import { useReactToPrint } from 'react-to-print';
 import Swal from 'sweetalert2';
 import { useAuth } from '@/contexts/AuthContext';
 import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
+import Image from 'next/image';
 
 const EMPTY_FORM: Partial<Employee> = {
   prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '',
@@ -429,8 +430,8 @@ function EmployeesContent() {
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = emp.license_status === 'Expired' ? '#fff5f5' : 'transparent'}
                     >
                       <td style={{ textAlign: 'center' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
-                          {emp.image ? <img src={`/uploads/${emp.image}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <span style={{ color: '#94a3b8', fontSize: '20px' }}>👤</span>}
+                        <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
+                          {emp.image ? <Image fill src={`/uploads/${emp.image}`} alt="" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <span style={{ color: '#94a3b8', fontSize: '20px' }}>👤</span>}
                         </div>
                       </td>
                       <td>
@@ -567,8 +568,8 @@ function EmployeesContent() {
 
                       {/* Image */}
                       <div style={{ position: 'relative', zIndex: 3, marginTop: '4px', display: 'flex', justifyContent: 'center' }}>
-                        <div style={{ width: '130px', height: '130px', borderRadius: '50%', border: '6px solid #ffffff', boxShadow: '0 8px 16px rgba(0,0,0,0.1)', background: '#f1f5f9', overflow: 'hidden' }}>
-                          <img src={empForCard.image ? `/uploads/${empForCard.image}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>`} alt="Employee" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} />
+                        <div style={{ width: '130px', height: '130px', position: 'relative', borderRadius: '50%', border: '6px solid #ffffff', boxShadow: '0 8px 16px rgba(0,0,0,0.1)', background: '#f1f5f9', overflow: 'hidden' }}>
+                          <Image fill src={empForCard.image ? `/uploads/${empForCard.image}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>`} alt="Employee" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} />
                         </div>
                       </div>
 

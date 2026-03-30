@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Leave } from '@/services/apiService';
+import Image from 'next/image';
 import Swal from 'sweetalert2';
 
 const LEAVE_TYPES = [
@@ -226,12 +227,15 @@ export default function LeavePage() {
                 onClick={() => { setSelectedLeave(l); setShowReviewModal(true); }}>
                 <td style={{ padding: '10px 14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                      src={l.photo ? `/uploads/${l.photo}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(l.first_name_th || 'User')}&background=random&color=fff&size=128&bold=true`}
-                      alt={l.first_name_th}
-                      style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid #e5e7eb', flexShrink: 0, background: 'white' }}
-                    />
+                    <div style={{ position: 'relative', width: 36, height: 36, flexShrink: 0 }}>
+                      <Image 
+                        src={l.photo ? `/uploads/${l.photo}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(l.first_name_th || 'User')}&background=random&color=fff&size=128&bold=true`}
+                        alt={l.first_name_th || 'Avatar'}
+                        fill
+                        unoptimized
+                        style={{ borderRadius: '50%', objectFit: 'cover', border: '1px solid #e5e7eb', background: 'white' }}
+                      />
+                    </div>
                     <div>
                       <div style={{ fontWeight: 600, color: '#111827', fontSize: 13 }}>{l.first_name_th} {l.last_name_th}</div>
                       <div style={{ fontSize: 11, color: '#9ca3af' }}>{l.dept_name}</div>
@@ -389,12 +393,15 @@ export default function LeavePage() {
 
               {/* Employee info with avatar */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid #f1f5f9' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src={selectedLeave.photo ? `/uploads/${selectedLeave.photo}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedLeave.first_name_th || 'User')}&background=random&color=fff&size=128&bold=true`}
-                  alt={selectedLeave.first_name_th}
-                  style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0', flexShrink: 0, background: 'white' }}
-                />
+                <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
+                  <Image 
+                    src={selectedLeave.photo ? `/uploads/${selectedLeave.photo}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedLeave.first_name_th || 'User')}&background=random&color=fff&size=128&bold=true`}
+                    alt={selectedLeave.first_name_th || 'Avatar'}
+                    fill
+                    unoptimized
+                    style={{ borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0', background: 'white' }}
+                  />
+                </div>
                 <div>
                   <div style={{ fontWeight: 800, color: '#0f172a', fontSize: 16, marginBottom: 2 }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th}</div>
                   <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{selectedLeave.dept_name || 'ไม่ระบุแผนก'}</div>

@@ -3,6 +3,7 @@
 import AppLayout from '@/components/layout/AppLayout'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import StatCard from '@/components/dashboard/StatCard'
 import DonutChart from '@/components/dashboard/DonutChart'
@@ -200,7 +201,7 @@ export default function DashboardPage() {
                 <div key={i} onClick={() => setSelectedNews(news)} style={{ width: '100%', height: '100%', flexShrink: 0, position: 'relative', cursor: 'pointer', padding: isAdmin ? 0 : '16px' }}>
                   <div style={{ width: '100%', height: '100%', borderRadius: isAdmin ? 0 : 12, overflow: 'hidden', position: 'relative', boxShadow: isAdmin ? 'none' : '4px 4px 8px rgba(163, 177, 198, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.8)' }}>
                     {news.image ? (
-                      <img src={news.image} alt={news.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isAdmin ? 0.6 : 0.85 }} />
+                      <Image fill unoptimized src={news.image} alt={news.title} style={{ objectFit: 'cover', opacity: isAdmin ? 0.6 : 0.85 }} />
                     ) : (
                       <div style={{ width: '100%', height: '100%', background: isAdmin ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' : 'linear-gradient(135deg, #8fa29e 0%, #b5b3d6 100%)' }} />
                     )}
@@ -329,8 +330,8 @@ export default function DashboardPage() {
         {selectedNews && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {selectedNews.image && (
-              <div style={{ width: '100%', height: 200, borderRadius: 12, overflow: 'hidden', background: '#f1f5f9' }}>
-                <img src={selectedNews.image} alt={selectedNews.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none' }} />
+              <div style={{ width: '100%', height: 200, position: 'relative', borderRadius: 12, overflow: 'hidden', background: '#f1f5f9' }}>
+                <Image fill unoptimized src={selectedNews.image} alt={selectedNews.title} style={{ objectFit: 'cover' }} onError={(e: any) => { e.currentTarget.style.display = 'none' }} />
               </div>
             )}
             <div>
@@ -414,8 +415,8 @@ export default function DashboardPage() {
               }}
             />
             {newNewsForm.image && (
-              <div style={{ marginTop: 12, width: 120, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                <img src={newNewsForm.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ marginTop: 12, width: 120, height: 80, position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                <Image fill unoptimized src={newNewsForm.image} alt="Preview" style={{ objectFit: 'cover' }} />
               </div>
             )}
           </div>
