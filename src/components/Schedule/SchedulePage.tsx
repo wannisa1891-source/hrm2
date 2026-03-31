@@ -85,7 +85,7 @@ export default function SchedulePage() {
     openEditModal,
     closeModal,
     deptData,
-  } = useScheduleModal(schedules, () => {})
+  } = useScheduleModal(schedules, () => { })
 
   const { totalSchedules, todaySchedules, monthSchedules } = useScheduleSummary(schedules)
   const { departmentStatus } = useScheduleStatus(schedules)
@@ -100,7 +100,7 @@ export default function SchedulePage() {
       const u = user as any;
       const expectedName = `${u.emp_id || ''} - ${u.name || u.username || ''}`;
       let expectedDept = '';
-      
+
       const empData = employees.find(e => e.emp_id === u.emp_id);
       if (empData && empData.dept_id && deptData) {
         const d = (deptData as any[])?.find(d => d.dept_id === empData.dept_id);
@@ -157,7 +157,7 @@ export default function SchedulePage() {
       // Extract Emp ID from nurseName if it's in format "ID - Name"
       let empIdOnly = form.nurseName.split(' - ')[0].trim();
       if (!empIdOnly) {
-         empIdOnly = form.nurseName.replace(' - ', '').trim();
+        empIdOnly = form.nurseName.replace(' - ', '').trim();
       }
 
       if (isEditing && editingId) {
@@ -183,7 +183,7 @@ export default function SchedulePage() {
         closeModal()
       }
       Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
-    } catch(err: any) {
+    } catch (err: any) {
       Swal.fire('ข้อผิดพลาด', err.message || 'Error saving schedule', 'error');
     }
   }
@@ -201,7 +201,8 @@ export default function SchedulePage() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         /* ===========================
            COLOR TOKENS & FORMAL THEME
            =========================== */
@@ -298,13 +299,14 @@ export default function SchedulePage() {
       `}} />
 
       <div className="schedule-page" style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
-        
+
         {/* HEADER */}
         <div className="page-header">
           <div>
             <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <svg width="28" height="28" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                ตารางเวรพยาบาล
+              <svg width="28" height="28" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+              ตารางเวร
+
             </h1>
             <p className="page-subtitle">จัดการตารางเวรและการทำงานของบุคลากรทางการแพทย์แบบครบวงจร</p>
           </div>
@@ -315,33 +317,33 @@ export default function SchedulePage() {
 
         {/* SUMMARY */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
-          <div className="glass-card hover-glow" 
-               style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
-               onClick={() => changeView('month')}>
+          <div className="glass-card hover-glow"
+            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+            onClick={() => changeView('month')}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
             </div>
             <div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{totalSchedules}</div>
               <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>เวรทั้งหมด</div>
             </div>
           </div>
-          <div className="glass-card hover-glow" 
-               style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
-               onClick={() => { goToday(); changeView('day'); }}>
+          <div className="glass-card hover-glow"
+            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+            onClick={() => { goToday(); changeView('day'); }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
             <div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{todaySchedules}</div>
               <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>เวรวันนี้</div>
             </div>
           </div>
-          <div className="glass-card hover-glow" 
-               style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
-               onClick={() => changeView('month')}>
+          <div className="glass-card hover-glow"
+            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+            onClick={() => changeView('month')}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#fffbeb', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             </div>
             <div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{monthSchedules}</div>
@@ -355,11 +357,11 @@ export default function SchedulePage() {
           <div className="sp-cal-controls">
             <div className="sp-cal-nav">
               <button className="sp-btn-nav" onClick={goPrev}>
-                  <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
               </button>
               <h2 className="sp-cal-month">{formatDisplay}</h2>
               <button className="sp-btn-nav" onClick={goNext}>
-                  <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               </button>
               <button className="sp-btn-today" onClick={goToday}>วันนี้</button>
             </div>
@@ -381,7 +383,7 @@ export default function SchedulePage() {
           {!loading && currentView === 'day' && (
             <DayView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor} getShiftDot={getShiftDot}
-              onOpenDay={openModal} 
+              onOpenDay={openModal}
               onOpenEditModal={(sch) => {
                 if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
@@ -393,7 +395,7 @@ export default function SchedulePage() {
           {!loading && currentView === 'week' && (
             <WeekView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor} getShiftDot={getShiftDot}
-              onOpenDay={openModal} 
+              onOpenDay={openModal}
               onOpenEditModal={(sch) => {
                 if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
@@ -405,7 +407,7 @@ export default function SchedulePage() {
           {!loading && currentView === 'month' && (
             <MonthView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor} getShiftDot={getShiftDot}
-              onOpenDay={openModal} 
+              onOpenDay={openModal}
               onOpenEditModal={(sch) => {
                 if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
@@ -435,8 +437,8 @@ export default function SchedulePage() {
         {Object.keys(departmentStatus).length > 0 && (
           <div className="glass-card" style={{ padding: '32px', border: 'none' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1e2433', margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <svg width="24" height="24" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                สถานะเวรแต่ละแผนก
+              <svg width="24" height="24" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              สถานะเวรแต่ละแผนก
             </h3>
             <div className="sp-dept-grid">
               {Object.entries(departmentStatus).map(([dept, count]) => (
@@ -455,20 +457,20 @@ export default function SchedulePage() {
             <div className="sp-modal-box" onClick={(e) => e.stopPropagation()}>
               <div className="sp-modal-top">
                 <h3>
-                    {isEditing ? (
-                        <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                    ) : (
-                        <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                    )}
-                    {isEditing ? 'แก้ไขเวร' : 'เพิ่มเวร'}
+                  {isEditing ? (
+                    <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                  )}
+                  {isEditing ? 'แก้ไขเวร' : 'เพิ่มเวร'}
                 </h3>
                 <button className="sp-modal-x" onClick={closeModal} aria-label="Close">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
 
               <div className="sp-modal-date">
-                  วันที่: {formatDate(selectedDate)}
+                วันที่: {formatDate(selectedDate)}
               </div>
 
               {/* Existing schedules for day */}
@@ -483,10 +485,10 @@ export default function SchedulePage() {
                       </div>
                       <div className="sp-existing-actions">
                         <button className="sp-btn-icon" onClick={() => openEditModal(sch)} title="แก้ไข">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                         </button>
                         <button className="sp-btn-icon" onClick={() => confirmDelete(sch.id)} title="ลบ">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                       </div>
                     </div>
@@ -509,15 +511,15 @@ export default function SchedulePage() {
                   <label>ชื่อบุคลากร <span className="sp-req">*</span></label>
                   {employees.length > 0 && isAdmin ? (
                     <>
-                      <input 
-                        className="sp-field" 
-                        list="emp-list" 
+                      <input
+                        className="sp-field"
+                        list="emp-list"
                         value={form.nurseName}
                         onChange={(e) => {
                           const val = e.target.value;
                           setForm((f: ScheduleForm) => {
                             const newForm = { ...f, nurseName: val };
-                            
+
                             // Lookup employee and their department
                             const empId = val.split(' - ')[0].trim();
                             const emp = employees.find(e => e.emp_id === empId);
@@ -528,12 +530,12 @@ export default function SchedulePage() {
                             return newForm;
                           });
                         }}
-                        placeholder="พิมพ์ รหัส หรือ ชื่อ-สกุล เพื่อค้นหาแบบรวดเร็ว..." 
+                        placeholder="พิมพ์ รหัส หรือ ชื่อ-สกุล เพื่อค้นหาแบบรวดเร็ว..."
                         autoComplete="off"
                       />
                       <datalist id="emp-list">
                         {employees.map(e => (
-                           <option key={e.emp_id} value={`${e.emp_id} - ${e.first_name_th} ${e.last_name_th}`} />
+                          <option key={e.emp_id} value={`${e.emp_id} - ${e.first_name_th} ${e.last_name_th}`} />
                         ))}
                       </datalist>
                     </>
@@ -578,7 +580,7 @@ export default function SchedulePage() {
 
               <div className="sp-modal-btns">
                 {!isEditing && (
-                  <button className="sp-btn-save" style={{background: '#0ea5e9'}} onClick={() => handleSave(true)} disabled={loading} title="บันทึกคนนี้แล้วเคลียร์ชื่อเพื่อกรอกคนถัดไป">
+                  <button className="sp-btn-save" style={{ background: '#0ea5e9' }} onClick={() => handleSave(true)} disabled={loading} title="บันทึกคนนี้แล้วเคลียร์ชื่อเพื่อกรอกคนถัดไป">
                     บันทึก + เพิ่มต่อ
                   </button>
                 )}

@@ -416,7 +416,7 @@ export default function DepartmentAndEmployeePage() {
           {selectedEmp && (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div style={styles.sideHeader}>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>ฟอร์มรายละเอียด</h3>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>ข้อมูลรายละเอียด</h3>
                 <button onClick={() => setSelectedEmpId(null)} style={styles.closeBtn}><X size={20} /></button>
               </div>
 
