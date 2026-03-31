@@ -1,43 +1,19 @@
-import { useState, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchDashboard, type DashboardData } from '@/services/apiService'
 
+export function useDashboard(empId?: string, role?: string) {
+  const queryClient = useQueryClient()
 
+  const { data, isLoading, error, refetch } = useQuery<DashboardData>({
+    queryKey: ['dashboard', empId, role],
+    queryFn: () => fetchDashboard(empId, role),
+    staleTime: 60 * 1000, // 1 minute
+  })
 
-const DEFAULT_DATA: DashboardData = {
-  empCount: 0,
-  leaveTodayCount: 0,
-  vacantCount: 0,
-  professions: [],
-  pendingTransfers: 0,
-  pendingLeaves: 0,
-  expiringLicenses: 0,
-  expiredLicenses: 0,
-  leaveStats: {
-    vacation: { remain: 0, used: 0, raw: 0 },
-    personal: { remain: 0, used: 0, raw: 0 },
-    sick: { remain: 0, used: 0, raw: 0 },
-  },
-  recentLeaves: []
-}
-
-export function useDashboard() {
-  const [dashboardData, setDashboardData] = useState<DashboardData>(DEFAULT_DATA)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadDashboard = useCallback(async (empId?: string, role?: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await fetchDashboard(empId, role)
-      setDashboardData(data)
-    } catch (err) {
-      console.error('useDashboard - loadDashboard:', err)
-      setError(err instanceof Error ? err.message : 'โหลด Dashboard ไม่สำเร็จ')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  return { dashboardData, loading, error, loadDashboard }
+  return { 
+    dashboardData: data, 
+    loading: isLoading, 
+    error: error instanceof Error ? error.message : null, 
+    loadDashboard: refetch 
+  }
 }

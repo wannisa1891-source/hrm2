@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Swal from 'sweetalert2';
 import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -50,7 +51,7 @@ export default function MyProfilePage() {
   const { positions } = usePositions();
 
   // Find the fully details of current user from employees array (contains licenses, address, etc)
-  const fullProfile = employees.find(e => e.emp_id === user?.emp_id) || null;
+  const fullProfile = employees.find((e: any) => e.emp_id === user?.emp_id) || null;
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -235,12 +236,14 @@ export default function MyProfilePage() {
       <div className="profile-container">
         {/* Left Column */}
         <div className="glass-card left-card" style={{ padding: '32px 24px', textAlign: 'center' }}>
-          <div className="profile-avatar-wrap">
-            <img 
+          <div className="profile-avatar-wrap" style={{ overflow: 'hidden' }}>
+            <Image 
               src={profile.image ? `/uploads/${profile.image}` : (profile.photo ? `/uploads/${profile.photo}` : 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png')} 
               alt="avatar" 
               className="profile-avatar"
-              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }}
+              fill
+              unoptimized
+              onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }}
             />
           </div>
           <h2 className="profile-name">{fullName}</h2>
@@ -354,7 +357,7 @@ export default function MyProfilePage() {
                             ไม่มีข้อมูลใบอนุญาตวิชาชีพ
                           </div>
                         ) : (
-                          fullProfile.licenses.map((lic, idx) => (
+                          fullProfile.licenses.map((lic: any, idx: number) => (
                             <div key={idx} style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                               <div>
                                 <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{lic.license_no || 'ไม่ระบุเลขที่'}</div>
@@ -488,7 +491,28 @@ export default function MyProfilePage() {
           {activeTab === 'password' && (
             <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">เปลี่ยนรหัสผ่าน</h3>
-              <div style={{ maxWidth: '500px', background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '12px' }}>
+              
+              {/* Manual Form */}
+              <form onSubmit={handleChangePassword} style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px', background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 12px 0', fontWeight: 600 }}>เปลี่ยนรหัสผ่านด้วยตนเอง</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>รหัสผ่านเดิม (หรือเลขบัตรประชาชนสำหรับเข้าสู่ระบบครั้งแรก)</label>
+                  <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านเดิม..." />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>รหัสผ่านใหม่</label>
+                  <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านใหม่..." />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>ยืนยันรหัสผ่านใหม่</label>
+                  <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านใหม่อีกครั้ง..." />
+                </div>
+                <button type="submit" className="btn-primary" style={{ marginTop: '12px', padding: '12px', width: '100%' }}>
+                  บันทึกรหัสผ่านใหม่
+                </button>
+              </form>
+
+              <div style={{ maxWidth: '500px', background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 12px 0', fontWeight: 600 }}>
                   รีเซ็ตรหัสผ่านแบบอัตโนมัติ
                 </h4>

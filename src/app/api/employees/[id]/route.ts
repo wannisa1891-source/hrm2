@@ -87,24 +87,24 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       const safeVal = (v: any, fallback: any) => (v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') ? fallback : v;
 
       const values: any[] = [
-        safeVal(d.prefix, existing.prefix), 
-        safeVal(d.first_name_th, existing.first_name_th), 
-        safeVal(d.last_name_th, existing.last_name_th), 
-        safeVal(d.first_name_en, existing.first_name_en), 
+        safeVal(d.prefix, existing.prefix),
+        safeVal(d.first_name_th, existing.first_name_th),
+        safeVal(d.last_name_th, existing.last_name_th),
+        safeVal(d.first_name_en, existing.first_name_en),
         safeVal(d.last_name_en, existing.last_name_en),
-        safeVal(d.birth_date, existing.birth_date), 
-        safeVal(d.gender, existing.gender), 
-        safeVal(d.address, existing.address), 
+        safeVal(d.birth_date, existing.birth_date),
+        safeVal(d.gender, existing.gender),
+        safeVal(d.address, existing.address),
         safeVal(d.id_card || d.citizen_id, existing.citizen_id),
-        safeVal(d.phone, existing.phone), 
-        safeVal(d.email, existing.email), 
+        safeVal(d.phone, existing.phone),
+        safeVal(d.email, existing.email),
         safeVal(d.role, existing.role),
-        safeVal(d.emp_type, existing.emp_type), 
-        safeVal(d.dept_id, existing.dept_id), 
-        safeVal(d.pos_id, existing.pos_id), 
+        safeVal(d.emp_type, existing.emp_type),
+        safeVal(d.dept_id, existing.dept_id),
+        safeVal(d.pos_id, existing.pos_id),
         safeVal(d.start_date, existing.start_date),
-        safeVal(d.base_salary, existing.base_salary), 
-        safeVal(d.status, existing.status), 
+        safeVal(d.base_salary, existing.base_salary),
+        safeVal(d.status, existing.status),
         d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : existing.cneu_cme_points
       ];
 
@@ -170,7 +170,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
       await logAudit(req.headers.get('x-user-id'), `แก้ไขข้อมูลพนักงาน: ${empId}`, connection);
       connection.release();
-      return NextResponse.json({ message: '✅ อัปเดตข้อมูลและส่งเมลแจ้งเตือนสำเร็จ!' });
+      return NextResponse.json({ message: '✅ อัปเดตข้อมูลสำเร็จ !' });
 
     } catch (e: any) {
       await connection.rollback();

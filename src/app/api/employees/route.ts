@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
         d.birth_date || null, d.gender || 'ชาย', d.address || '',
         d.id_card || d.citizen_id || '0000000000000', d.phone || '',
         d.email || null, hashedPassword, d.role || 'User',
-        d.emp_type || 'พนักงานประจำ', d.dept_id || null, d.pos_id || null, d.start_date || null,
+        d.emp_type || 'พนักงานประจำ', d.dept_id || '', d.pos_id || '', d.start_date || new Date().toISOString().split('T')[0],
         d.base_salary || 0, imageName,
         d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0
       ];

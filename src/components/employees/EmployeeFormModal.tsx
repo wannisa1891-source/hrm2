@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import type { Employee, ProfessionalLicense } from '@/services/apiService';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -36,28 +37,24 @@ export default function EmployeeFormModal({
   const [previewUrl, setPreviewUrl] = useState<string | null>(employee?.image ? `/uploads/${employee.image}` : null);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(employee || { ...EMPTY_FORM });
+      setPreviewUrl(employee?.image ? `/uploads/${employee.image}` : null);
+      setImageFile(null);
+    }
+  }, [employee, isOpen]);
+
   // Address Data State
   const [thaiAddressData, setThaiAddressData] = useState<any[]>([]);
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/earthchie/jquery.Thailand.js/master/jquery.Thailand.js/database/raw_database/raw_database.json')
-      .then(r => r.json())
-      .then(data => {
-        let expanded: any[] = [];
-        data.forEach((prov: any) => {
-          prov[1].forEach((amp: any) => {
-            amp[1].forEach((dist: any) => {
-              expanded.push({
-                province: prov[0],
-                amphoe: amp[0],
-                district: dist[0],
-                zipcode: dist[1].length > 0 ? dist[1][0] : ''
-              });
-            });
-          });
-        });
-        setThaiAddressData(expanded);
+    fetch('/data/thai_address.json')
+      .then(r => {
+        if (!r.ok) throw new Error('Network response was not ok');
+        return r.json();
       })
-      .catch(() => console.error('Failed to load thai address data'));
+      .then(data => setThaiAddressData(Array.isArray(data) ? data : []))
+      .catch((err) => console.error('Failed to load thai address data', err));
   }, []);
 
   const provinces = Array.from(new Set(thaiAddressData.map((d: any) => d.province))).sort();
@@ -169,8 +166,8 @@ export default function EmployeeFormModal({
 
                 <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '140px', height: '160px', borderRadius: '16px', background: '#ffffff', border: '2px dashed #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.04)' }} onClick={() => document.getElementById('imageUpload')?.click()}>
-                      {previewUrl ? <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#94a3b8' }}><span style={{ fontSize: '12px', fontWeight: 500 }}>อัปโหลดรูปภาพ</span></div>}
+                    <div style={{ width: '140px', height: '160px', position: 'relative', borderRadius: '16px', background: '#ffffff', border: '2px dashed #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.04)' }} onClick={() => document.getElementById('imageUpload')?.click()}>
+                      {previewUrl ? <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#94a3b8' }}><span style={{ fontSize: '12px', fontWeight: 500 }}>อัปโหลดรูปภาพ</span></div>}
                     </div>
                     <input id="imageUpload" type="file" accept="image/*" onChange={e => {
                       const file = e.target.files?.[0];

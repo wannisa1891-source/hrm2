@@ -14,6 +14,7 @@ import { useReactToPrint } from 'react-to-print';
 import Swal from 'sweetalert2';
 import { useAuth } from '@/contexts/AuthContext';
 import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
+import Image from 'next/image';
 
 const EMPTY_FORM: Partial<Employee> = {
   prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '',
@@ -47,7 +48,7 @@ function EmployeesContent() {
   const [filterLicense, setFilterLicense] = useState('all');
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 15;
 
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -123,20 +124,27 @@ function EmployeesContent() {
       // Map Thai headers from our normal export template
       const mappedData = jsonData.map((row, index) => {
         // Fix matching when names have extra spaces
-        const deptName = row['แผนก']?.toString() || '';
-        const dept = departments.find(d => d.dept_name.trim() === deptName);
+        const deptName = row['แผนก']?.toString().trim() || row['แผนก/สังกัด']?.toString().trim() || '';
+        const dept = departments.find(d => d.dept_name.trim() === deptName || d.dept_id === deptName);
 
-        const posName = row['ตำแหน่ง']?.toString() || '';
-        const pos = positions.find(p => p.pos_name.trim() === posName);
+        const posName = row['ตำแหน่ง']?.toString().trim() || '';
+        const pos = positions.find(p => p.pos_name.trim() === posName || p.pos_id === posName);
 
         return {
           emp_id: row['รหัสพนักงาน'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
           first_name_th: row['ชื่อ (TH)'] || row['ชื่อ(TH)'] || row['ชื่อ'] || row['first_name_th'] || '',
           last_name_th: row['นามสกุล (TH)'] || row['นามสกุล(TH)'] || row['นามสกุล'] || row['last_name_th'] || '',
+          first_name_en: row['ชื่อ (EN)'] || row['first_name_en'] || '',
+          last_name_en: row['นามสกุล (EN)'] || row['last_name_en'] || '',
+          gender: row['เพศ'] || row['gender'] || 'ชาย',
+          birth_date: row['วัน/เดือน/ปีเกิด'] || row['วันเกิด'] || row['birth_date'] || null,
           citizen_id: row['บัตรประชาชน'] || row['เลขบัตรประชาชน'] || row['citizen_id'] || '',
           phone: row['เบอร์โทร'] || row['เบอร์โทรศัพท์'] || row['phone'] || '',
           email: row['อีเมล'] || row['อีเมลล์'] || row['email'] || '',
+          address: row['ที่อยู่'] || row['address'] || '',
+          emp_type: row['ประเภทพนักงาน'] || row['ประเภทการจ้างงาน'] || row['emp_type'] || 'พนักงานประจำ',
+          start_date: row['วันที่เริ่มงาน'] || row['start_date'] || null,
           base_salary: row['เงินเดือน'] || row['ฐานเงินเดือน'] || row['base_salary'] || 0,
           dept_id: dept ? dept.dept_id : null,
           pos_id: pos ? pos.pos_id : null,
@@ -317,21 +325,52 @@ function EmployeesContent() {
 
 
   const exportToCSV = () => {
-    const headers = ['รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'แผนก', 'ตำแหน่ง', 'สถานะการทำงาน', 'ข้อมูลใบอนุญาต'];
+    const headers = [
+      'รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อ (EN)', 'นามสกุล (EN)',
+      'เพศ', 'วัน/เดือน/ปีเกิด', 'บัตรประชาชน', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่',
+      'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน', 'เงินเดือน',
+      'สถานะการทำงาน', 'คะแนน CNEU/CME', 'ข้อมูลใบอนุญาต'
+    ];
+    
     const rows = filteredData.map(e => {
-      const licText = e.licenses && e.licenses.length > 0 ? e.licenses.map(l => `${l.license_name || ''} (${l.status || ''})`).join(' | ') : 'ไม่มี';
-      return [
-        e.emp_id, e.prefix, e.first_name_th, e.last_name_th, getDeptName(e.dept_id), getPosName(e.pos_id), e.status, licText
+      const licText = e.licenses && e.licenses.length > 0 ? e.licenses.map(l => `${l.license_name || ''} เลขที่:${l.license_no || '-'} (${l.status || ''})`).join(' | ') : 'ไม่มี';
+      const rowData = [
+        e.emp_id || '',
+        e.prefix || '',
+        e.first_name_th || '',
+        e.last_name_th || '',
+        e.first_name_en || '',
+        e.last_name_en || '',
+        e.gender || '',
+        e.birth_date ? new Date(e.birth_date).toLocaleDateString('en-GB') : '',
+        e.citizen_id || '',
+        e.phone || '',
+        e.email || '',
+        (e.address || '').replace(/"/g, '""'),
+        getDeptName(e.dept_id) || '',
+        getPosName(e.pos_id) || '',
+        e.emp_type || '',
+        e.start_date ? new Date(e.start_date).toLocaleDateString('en-GB') : '',
+        e.base_salary || 0,
+        e.status || '',
+        e.cneu_cme_points || 0,
+        licText.replace(/"/g, '""')
       ];
+      // Wrap each field in quotes to safely handle commas and spaces
+      return rowData.map(value => `"${value}"`);
     });
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
+
+    const csvContent = "\uFEFF" + [headers.map(h => `"${h}"`).join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'employees_list.csv');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'employees_list_full.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (user && !isAdmin) {
@@ -429,8 +468,8 @@ function EmployeesContent() {
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = emp.license_status === 'Expired' ? '#fff5f5' : 'transparent'}
                     >
                       <td style={{ textAlign: 'center' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
-                          {emp.image ? <img src={`/uploads/${emp.image}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <span style={{ color: '#94a3b8', fontSize: '20px' }}>👤</span>}
+                        <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
+                          {emp.image ? <Image fill src={`/uploads/${emp.image}`} alt="" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <span style={{ color: '#94a3b8', fontSize: '20px' }}>👤</span>}
                         </div>
                       </td>
                       <td>
@@ -567,8 +606,8 @@ function EmployeesContent() {
 
                       {/* Image */}
                       <div style={{ position: 'relative', zIndex: 3, marginTop: '4px', display: 'flex', justifyContent: 'center' }}>
-                        <div style={{ width: '130px', height: '130px', borderRadius: '50%', border: '6px solid #ffffff', boxShadow: '0 8px 16px rgba(0,0,0,0.1)', background: '#f1f5f9', overflow: 'hidden' }}>
-                          <img src={empForCard.image ? `/uploads/${empForCard.image}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>`} alt="Employee" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} />
+                        <div style={{ width: '130px', height: '130px', position: 'relative', borderRadius: '50%', border: '6px solid #ffffff', boxShadow: '0 8px 16px rgba(0,0,0,0.1)', background: '#f1f5f9', overflow: 'hidden' }}>
+                          <Image fill src={empForCard.image ? `/uploads/${empForCard.image}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>`} alt="Employee" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} />
                         </div>
                       </div>
 

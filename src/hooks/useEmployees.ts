@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   fetchEmployees,
   createEmployee,
@@ -8,71 +8,68 @@ import {
 } from '@/services/apiService'
 
 export function useEmployees() {
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
-  const loadEmployees = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const { data: employees = [], isLoading: loading, error: queryError, refetch: loadEmployees } = useQuery({
+    queryKey: ['employees'],
+    queryFn: async () => {
       const data = await fetchEmployees()
-      setEmployees(Array.isArray(data) ? data : [])
-    } catch (err) {
-      console.error('useEmployees - loadEmployees:', err)
-      setError(err instanceof Error ? err.message : 'โหลดข้อมูลพนักงานไม่สำเร็จ')
-    } finally {
-      setLoading(false)
+      return Array.isArray(data) ? data : []
+    },
+  })
+
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'โหลดข้อมูลพนักงานไม่สำเร็จ') : null
+
+  const addMutation = useMutation({
+    mutationFn: (formData: FormData) => createEmployee(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] })
+    },
+  })
+
+  const editMutation = useMutation({
+    mutationFn: ({ emp_id, formData }: { emp_id: string; formData: FormData }) => updateEmployee(emp_id, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] })
+    },
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: (emp_id: string) => deleteEmployee(emp_id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] })
+    },
+  })
+
+  const addEmployee = async (formData: FormData): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const res = await addMutation.mutateAsync(formData)
+      return { success: true, message: res.message }
+    } catch (err: any) {
+      console.error('useEmployees - addEmployee:', err)
+      return { success: false, message: err.message || 'เพิ่มพนักงานไม่สำเร็จ' }
     }
-  }, [])
+  }
 
-  const addEmployee = useCallback(
-    async (formData: FormData): Promise<{ success: boolean; message?: string }> => {
-      try {
-        setError(null);
-        const res = await createEmployee(formData);
-        await loadEmployees();
-        return { success: true, message: res.message };
-      } catch (err: any) {
-        console.error('useEmployees - addEmployee:', err);
-        setError(err instanceof Error ? err.message : 'เพิ่มพนักงานไม่สำเร็จ');
-        return { success: false, message: err.message || 'เพิ่มพนักงานไม่สำเร็จ' };
-      }
-    },
-    [loadEmployees]
-  );
+  const editEmployee = async (emp_id: string, formData: FormData): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const res = await editMutation.mutateAsync({ emp_id, formData })
+      return { success: true, message: res.message }
+    } catch (err: any) {
+      console.error('useEmployees - editEmployee:', err)
+      return { success: false, message: err.message || 'แก้ไขข้อมูลไม่สำเร็จ' }
+    }
+  }
 
-  const editEmployee = useCallback(
-    async (emp_id: string, formData: FormData): Promise<{ success: boolean; message?: string }> => {
-      try {
-        setError(null);
-        const res = await updateEmployee(emp_id, formData);
-        await loadEmployees();
-        return { success: true, message: res.message };
-      } catch (err: any) {
-        console.error('useEmployees - editEmployee:', err);
-        setError(err instanceof Error ? err.message : 'แก้ไขข้อมูลไม่สำเร็จ');
-        return { success: false, message: err.message || 'แก้ไขข้อมูลไม่สำเร็จ' };
-      }
-    },
-    [loadEmployees]
-  );
-
-  const removeEmployee = useCallback(
-    async (emp_id: string): Promise<boolean> => {
-      try {
-        setError(null)
-        await deleteEmployee(emp_id)
-        await loadEmployees()
-        return true
-      } catch (err) {
-        console.error('useEmployees - removeEmployee:', err)
-        setError(err instanceof Error ? err.message : 'ลบพนักงานไม่สำเร็จ')
-        return false
-      }
-    },
-    [loadEmployees]
-  )
+  const removeEmployee = async (emp_id: string): Promise<boolean> => {
+    try {
+      await removeMutation.mutateAsync(emp_id)
+      return true
+    } catch (err) {
+      console.error('useEmployees - removeEmployee:', err)
+      return false
+    }
+  }
 
   return {
     employees,
