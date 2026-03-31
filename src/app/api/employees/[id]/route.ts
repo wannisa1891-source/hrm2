@@ -170,7 +170,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
       await logAudit(req.headers.get('x-user-id'), `แก้ไขข้อมูลพนักงาน: ${empId}`, connection);
       connection.release();
-      return NextResponse.json({ message: '✅ อัปเดตข้อมูลสำเร็จ !' });
+      return NextResponse.json({ message: '✅ อัปเดตข้อมูลสำเร็จ !', image: imageName });
 
     } catch (e: any) {
       await connection.rollback();

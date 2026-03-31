@@ -51,10 +51,10 @@ export function useEmployees() {
     }
   }
 
-  const editEmployee = async (emp_id: string, formData: FormData): Promise<{ success: boolean; message?: string }> => {
+  const editEmployee = async (emp_id: string, formData: FormData): Promise<{ success: boolean; message?: string; image?: string | null }> => {
     try {
       const res = await editMutation.mutateAsync({ emp_id, formData })
-      return { success: true, message: res.message }
+      return { success: true, message: res.message, image: res.image }
     } catch (err: any) {
       console.error('useEmployees - editEmployee:', err)
       return { success: false, message: err.message || 'แก้ไขข้อมูลไม่สำเร็จ' }

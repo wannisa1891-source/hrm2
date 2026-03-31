@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 
 interface SearchResult {
@@ -13,7 +14,9 @@ interface SearchResult {
   subtitle: string;
 }
 
-export default function DashboardHeader({ today, userName = "Hospital HRM" }: { today: string, userName?: string }) {
+export default function DashboardHeader({ today }: { today: string }) {
+  const { user } = useAuth();
+  const userName = user?.name || "Hospital HRM";
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -236,9 +239,15 @@ export default function DashboardHeader({ today, userName = "Hospital HRM" }: { 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontWeight: 700
+            fontWeight: 700,
+            overflow: 'hidden'
           }}>
-            {userName.charAt(0).toUpperCase()}
+            {user?.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`/uploads/${user.image}`} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              userName.charAt(0).toUpperCase()
+            )}
           </div>
 
           <div style={{
