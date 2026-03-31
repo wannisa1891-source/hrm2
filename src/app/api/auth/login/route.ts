@@ -28,7 +28,7 @@
 
       // 3. Query จาก tbl_users โดยเช็ค username + password_hash
       const [rows]: any = await pool.query(
-        'SELECT * FROM tbl_users WHERE username = ? AND password_hash = ?',
+        'SELECT u.*, e.image, e.photo, e.first_name_th, e.last_name_th FROM tbl_users u LEFT JOIN tbl_employees e ON u.emp_id = e.emp_id WHERE u.username = ? AND u.password_hash = ?',
         [username, password_hash]
       );
 
@@ -44,9 +44,11 @@
         const payload = { 
           id: userId, 
           emp_id: user.emp_id || '',
-          name: user.username, 
+          username: user.username,
+          name: (user.first_name_th && user.last_name_th) ? `${user.first_name_th} ${user.last_name_th}` : user.username, 
           email: user.email || '', 
-          role: user.role || 'User' 
+          role: user.role || 'User',
+          image: user.image || user.photo || null
         };
         const token = await signJWT(payload, '24h');
         
@@ -68,7 +70,7 @@
 
       // 4. ถ้าไม่พบใน tbl_users ลองค้นหาใน tbl_employees
       const [empRows]: any = await pool.query(
-        'SELECT emp_id, first_name_th, last_name_th, email, role, status, password, citizen_id FROM tbl_employees WHERE emp_id = ? OR email = ?',
+        'SELECT emp_id, first_name_th, last_name_th, email, role, status, password, citizen_id, image, photo FROM tbl_employees WHERE emp_id = ? OR email = ?',
         [username, username]
       );
 
@@ -107,10 +109,11 @@
         const payload = { 
           id: emp.emp_id, 
           emp_id: emp.emp_id, 
-          username: emp.emp_id, // Add username for AuthContext compatibility
+          username: emp.emp_id,
           name: `${emp.first_name_th} ${emp.last_name_th}`, 
           email: emp.email || '', 
-          role: emp.role || 'User' 
+          role: emp.role || 'User',
+          image: emp.image || emp.photo || null
         };
         const token = await signJWT(payload, '24h');
         

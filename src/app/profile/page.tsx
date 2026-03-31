@@ -38,7 +38,7 @@ interface ProfileData {
 }
 
 export default function MyProfilePage() {
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, login } = useAuth();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password'>('info');
@@ -147,6 +147,9 @@ export default function MyProfilePage() {
     if (!fullProfile?.emp_id) return { success: false, message: 'ไม่พบข้อมูลบัญชี' };
     const res = await editEmployee(fullProfile.emp_id, fd);
     if (res.success) {
+      if (user) {
+        login({ ...user, image: res.image || user.image });
+      }
       setShowEditModal(false);
       await fetchProfile(); // Reload local profile API
       await loadEmployees(); // Reload extensive employees array

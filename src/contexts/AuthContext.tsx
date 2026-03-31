@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  user: { username: string; emp_id?: string; role?: string } | null;
-  login: (userData: { username: string; emp_id?: string; role?: string }) => void;
+  user: { username: string; emp_id?: string; role?: string; name?: string; image?: string | null } | null;
+  login: (userData: { username: string; emp_id?: string; role?: string; name?: string; image?: string | null }) => void;
   logout: () => void;
 }
 
@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ username: string; emp_id?: string; role?: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; emp_id?: string; role?: string; name?: string; image?: string | null } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   }, []);
 
-  const login = (userData: { username: string; emp_id?: string; role?: string }) => {
+  const login = (userData: { username: string; emp_id?: string; role?: string; name?: string; image?: string | null }) => {
     localStorage.setItem('hrm_user', JSON.stringify(userData));
     setUser(userData);
     setIsLoggedIn(true);
