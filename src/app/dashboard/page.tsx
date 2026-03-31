@@ -15,11 +15,11 @@ import { useDashboard } from '@/hooks/useDashboard'
 import { useAnnouncements } from '@/hooks/useAnnouncements'
 import Swal from 'sweetalert2'
 import UserDashboard from '@/components/dashboard/UserDashboard'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function DashboardPage() {
   const router = useRouter()
-
-  const [user, setUser] = useState<any>(null)
+  const { user } = useAuth()
   
   // React Query Hooks
   const { dashboardData, loading, error, loadDashboard } = useDashboard(user?.emp_id, user?.role)
@@ -99,19 +99,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    
     if (!token) {
       router.push('/login');
-      return;
     }
-
-    const u = localStorage.getItem('hrm_user')
-    if (u) {
-      setUser(JSON.parse(u))
-    } else {
-      setUser({ role: 'user' })
-    }
-
   }, [router])
 
 

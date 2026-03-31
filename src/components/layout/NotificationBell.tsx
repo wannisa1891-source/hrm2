@@ -12,9 +12,9 @@ export default function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isLoggedIn && user?.username) {
+    if (isLoggedIn && (user?.emp_id || user?.username)) {
       loadNotifications();
-      const interval = setInterval(loadNotifications, 30000); // Poll every 30s
+      const interval = setInterval(loadNotifications, 15000); // Poll every 15s (faster for better UX)
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, user]);
@@ -30,12 +30,20 @@ export default function NotificationBell() {
   }, []);
 
   const loadNotifications = async () => {
-    if (!user?.username) return;
+    const targetId = user?.emp_id || user?.username;
+    if (!targetId) return;
     try {
-      const res = await fetch(`/api/notifications?emp_id=${user.username}`);
+      const res = await fetch(`/api/notifications?emp_id=${targetId}`);
+      if (!res.ok) return;
       const data = await res.json();
-      if (Array.isArray(data)) setNotifications(data);
-    } catch (e) {}
+      if (Array.isArray(data)) {
+        // If count increases, maybe vibrate or play a subtle sound if possible, 
+        // but for now just update state
+        setNotifications(data);
+      }
+    } catch (e) {
+      console.error('Notification Loading Error:', e);
+    }
   };
 
   const markAsRead = async (id: number) => {
@@ -61,8 +69,20 @@ export default function NotificationBell() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
         </svg>
         {unreadCount > 0 && (
-          <span style={{ position: 'absolute', top: '2px', right: '4px', background: '#ef4444', color: '#fff', fontSize: '10px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '10px' }}>
-            {unreadCount}
+          <span style={{ 
+            position: 'absolute', 
+            top: '2px', 
+            right: '4px', 
+            background: '#ef4444', 
+            color: '#fff', 
+            fontSize: '10px', 
+            fontWeight: '900', 
+            padding: '2px 5px', 
+            borderRadius: '10px',
+            boxShadow: '0 0 8px rgba(239, 68, 68, 0.5)',
+            border: '1.5px solid white'
+          }}>
+            {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>

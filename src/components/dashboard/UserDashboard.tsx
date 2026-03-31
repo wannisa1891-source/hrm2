@@ -29,7 +29,7 @@ export default function UserDashboard({
   };
 
   return (
-    <div style={{ padding: '0px 0px 40px', maxWidth: '100%', width: '100%', display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ padding: '0px 24px 40px', maxWidth: '1400px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Inter', sans-serif" }}>
       
       {/* Hero Banner */}
       <div style={{

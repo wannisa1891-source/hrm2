@@ -175,7 +175,7 @@ export const createEmployee = (formData: FormData): Promise<{ message: string }>
 export const updateEmployee = (
   emp_id: string,
   formData: FormData
-): Promise<{ message: string }> =>
+): Promise<{ message: string; image?: string | null }> =>
   apiFetch(`/api/employees/${emp_id}`, { method: 'PUT', body: formData })
 
 export const deleteEmployee = (emp_id: string): Promise<{ message: string }> =>
