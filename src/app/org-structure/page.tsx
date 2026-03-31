@@ -769,29 +769,151 @@ function InfoRow({ label, value, color = '#0f172a', isLong = false, icon = null 
   );
 }
 
-// --- Styles Object ---
-const styles: Record<string, React.CSSProperties> = {
-  leftSidebar: { width: '300px', flexShrink: 0, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', borderRight: '1px solid rgba(255, 255, 255, 0.6)', display: 'flex', flexDirection: 'column', zIndex: 10, boxShadow: '4px 0 24px rgba(0,0,0,0.02)' },
-  deptItem: { padding: '14px 16px', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', marginBottom: '8px', transition: 'all 0.2s ease', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  iconBtn: { background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '6px', transition: 'background 0.2s, color 0.2s' },
-  searchWrapper: { display: 'flex', alignItems: 'center', background: '#ffffff', padding: '0 16px', borderRadius: '16px', border: '1px solid #e2e8f0', transition: 'all 0.2s', width: '280px', gap: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
-  searchInput: { border: 'none', outline: 'none', padding: '14px 0', flex: 1, fontSize: '14px', color: '#0f172a', background: 'transparent' },
-  addBtn: { background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', color: 'white', border: 'none', padding: '0 24px', borderRadius: '16px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)', transition: 'transform 0.2s, boxShadow 0.2s' },
-  tableCard: { background: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(12px)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.6)', overflow: 'hidden', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01)' },
-  th: { padding: '20px 24px', textAlign: 'left', fontSize: '12px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' },
-  tableRow: { cursor: 'pointer', background: '#ffffff' },
-  avatar: { position: 'relative', width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#4f46e5', fontSize: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' },
-  pageBtn: { padding: '8px 16px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', fontSize: '14px', fontWeight: 600, color: '#475569', transition: 'all 0.2s' },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.3)', backdropFilter: 'blur(4px)', zIndex: 999, transition: 'opacity 0.4s ease' },
-  detailSidebar: { position: 'fixed', right: 0, top: 0, width: '460px', height: '100vh', background: '#ffffff', zIndex: 1000, transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)', boxShadow: '-20px 0 40px rgba(0,0,0,0.1)' },
-  sideHeader: { padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  closeBtn: { border: 'none', background: '#f8fafc', width: '36px', height: '36px', borderRadius: '10px', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s, color 0.2s' },
+// --- Styles Object (ฉบับปรับสีตามรูปภาพที่ส่งมา) ---
+const styles: { [key: string]: React.CSSProperties } = {
+  pageContainer: {
+    display: 'flex',
+    height: 'calc(100vh - 64px)',
+    background: '#f8fafc', // สีพื้นหลังเทานวลๆ แบบในรูป
+    overflow: 'hidden',
+    position: 'relative',
+    fontFamily: "'Inter', 'Sarabun', sans-serif"
+  },
+  leftSidebar: {
+    width: '320px',
+    background: '#fff',
+    borderRight: '1px solid #f1f5f9',
+    display: 'flex',
+    flexDirection: 'column',
+    zIndex: 10
+  },
+  sidebarHeader: { padding: '28px 24px 20px', borderBottom: '1px solid #f1f5f9' },
+  sidebarTitle: { fontSize: '20px', fontWeight: 800, color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' },
+  sidebarSubtitle: { fontSize: '13px', color: '#64748b', margin: '6px 0 0 32px' },
+  deptItem: {
+    padding: '14px 16px', margin: '4px 0', borderRadius: '12px', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', transition: 'all 0.2s'
+  },
+  deptLabelContainer: {
+    margin: '24px 0 12px 12px', fontSize: '12px', fontWeight: 700, color: '#94a3b8',
+    textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px'
+  },
+  smallAddBtn: { background: 'transparent', border: 'none', cursor: 'pointer', color: '#3b82f6' },
+  mainContent: { flex: 1, padding: '32px 40px', overflowY: 'auto' },
+  mainHeader: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' },
+  mainTitle: { fontSize: '32px', fontWeight: 800, margin: 0, color: '#1e293b' },
+  countBadge: { display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', margin: '8px 0 0', fontSize: '15px' },
+  iconBox: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '6px', background: '#e2e8f0', color: '#475569' },
+  searchWrapper: {
+    position: 'relative', display: 'flex', alignItems: 'center', background: '#fff',
+    padding: '0 16px', borderRadius: '16px', border: '1px solid #e2e8f0', width: '300px'
+  },
+  searchInput: { border: 'none', padding: '12px 10px', fontSize: '14px', width: '100%', outline: 'none' },
+
+  // ปุ่มเพิ่มพนักงานสีเทาเข้ม (Slate) ตามรูป
+  addBtn: {
+    background: '#94a3b8',
+    color: '#fff',
+    border: 'none',
+    padding: '12px 24px',
+    borderRadius: '12px',
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    cursor: 'pointer'
+  },
+
+  tableCard: { background: '#fff', borderRadius: '24px', border: '1px solid #f1f5f9', overflow: 'hidden' },
+  th: { padding: '20px 24px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#64748b', background: '#fff' },
+  td: { padding: '16px 24px', borderBottom: '1px solid #f8fafc', textAlign: 'center', verticalAlign: 'middle' },
+  tableRow: { transition: '0.2s' },
+
+  avatar: {
+    width: '36px', height: '36px', borderRadius: '50%', background: '#f1f5f9',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', position: 'relative', overflow: 'hidden'
+  },
+
+  // Badge รหัสแผนก (D002) สีเทาอ่อนขอบเส้น
+  deptBadge: {
+    padding: '4px 12px', background: '#f8fafc', border: '1px solid #e2e8f0',
+    borderRadius: '8px', color: '#64748b', fontWeight: 600, fontSize: '12px'
+  },
+
+  // สีสถานะ Active เขียวสว่างตามรูป
+  statusBadge: {
+    padding: '4px 14px', background: '#dcfce7', color: '#22c55e',
+    borderRadius: '20px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center'
+  },
+
+  // --- ชุดสีปุ่มจัดการ 4 สี (Copy ตามรูปภาพเป๊ะๆ) ---
+  actionGroup: { display: 'flex', gap: '8px', justifyContent: 'center' },
+
+  // 1. สีฟ้า (ดูข้อมูล/บัตร)
+  btnBlue: {
+    width: 36, height: 36, borderRadius: '10px', border: 'none',
+    background: '#e0f2fe', color: '#0ea5e9', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center'
+  },
+  // 2. สีเหลือง (กุญแจ/รหัส)
+  btnYellow: {
+    width: 36, height: 36, borderRadius: '10px', border: 'none',
+    background: '#fef3c7', color: '#d97706', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center'
+  },
+  // 3. สีน้ำเงิน/ม่วง (แก้ไข)
+  btnIndigo: {
+    width: 36, height: 36, borderRadius: '10px', border: 'none',
+    background: '#e0e7ff', color: '#4f46e5', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center'
+  },
+  // 4. สีแดง (ลบ)
+  btnRed: {
+    width: 36, height: 36, borderRadius: '10px', border: 'none',
+    background: '#fee2e2', color: '#ef4444', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center'
+  },
+
+  paginationContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px' },
+  pageBtn: { padding: '8px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', cursor: 'pointer', fontWeight: 600, background: '#fff' },
+
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.3)', backdropFilter: 'blur(2px)', zIndex: 40 },
+  detailSidebar: {
+    position: 'fixed', top: 0, right: 0, bottom: 0, width: '420px',
+    background: '#fff', zIndex: 50, boxShadow: '-10px 0 30px rgba(0,0,0,0.05)'
+  },
+  sideHeader: { padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9' },
+  closeBtn: { background: '#f1f5f9', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' },
   sideBody: { flex: 1, overflowY: 'auto', padding: '32px' },
-  largeAvatar: { position: 'relative', width: '100px', height: '100px', borderRadius: '32px', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.3)' },
-  empIdBadge: { display: 'inline-block', padding: '6px 16px', borderRadius: '12px', background: '#f1f5f9', fontSize: '13px', color: '#475569', fontWeight: 700, letterSpacing: '0.05em' },
-  sectionDivider: { fontSize: '13px', color: '#64748b', fontWeight: 700, letterSpacing: '0.05em', marginTop: '32px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' },
-  infoBox: { background: '#f8fafc', borderRadius: '16px', padding: '8px 20px' },
-  sideFooter: { padding: '24px 32px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '16px', background: '#ffffff' },
-  mainEditBtn: { flex: 1, padding: '16px', borderRadius: '16px', border: 'none', background: '#0f172a', color: 'white', fontWeight: 600, fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.2)', transition: 'all 0.2s' },
-  deleteBtn: { width: '56px', borderRadius: '16px', border: '1px solid #fca5a5', background: '#fff', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }
+  largeAvatar: { width: '120px', height: '120px', borderRadius: '50%', background: '#f1f5f9', margin: '0 auto 20px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  empIdBadge: { padding: '4px 12px', background: '#f1f5f9', borderRadius: '8px', fontSize: '13px', fontWeight: 700, color: '#64748b' },
+  sectionDivider: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', margin: '32px 0 16px' },
+  infoBox: { background: '#f8fafc', borderRadius: '20px', padding: '8px 20px', border: '1px solid #f1f5f9' },
+  sideFooter: { padding: '24px 32px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '12px' },
+  mainEditBtn: { flex: 1, padding: '14px', borderRadius: '16px', background: '#1e293b', color: '#fff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none' },
+  deleteBtn: { padding: '14px', borderRadius: '16px', background: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer' },
+
+  modalOverlay: { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  modalContent: { background: '#fff', width: '540px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '32px', padding: '40px' },
+  modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' },
+  deptIconBox: { width: 56, height: 56, borderRadius: '18px', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0ea5e9' },
+  deptIdLabel: { fontSize: '13px', fontWeight: 800, color: '#0ea5e9' },
+  modalTitleText: { margin: 0, fontSize: '24px', fontWeight: 800, color: '#1e293b' },
+  modalCloseBtn: { background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8' },
+  headSection: { background: '#f8fafc', borderRadius: '24px', padding: '24px', marginBottom: '20px', border: '1px solid #f1f5f9' },
+  sectionSmallLabel: { fontSize: '13px', fontWeight: 800, color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' },
+  headAvatar: { width: 64, height: 64, borderRadius: '50%', background: '#fff', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' },
+  noDataBox: { padding: '16px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' },
+  deptEmployeesAccordion: { padding: '16px 20px', background: '#f8fafc', borderRadius: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', border: '1px solid #f1f5f9' },
+  accordionList: { marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' },
+  accordionItem: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', border: '1px solid #f1f5f9', background: '#fff' },
+  smallAvatar: { width: 32, height: 32, borderRadius: '50%', background: '#f1f5f9', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  modalFooter: { display: 'flex', gap: '12px', paddingTop: '24px', borderTop: '1px solid #f1f5f9', marginTop: '20px' },
+  editDeptBtn: { flex: 1, padding: '14px', borderRadius: '16px', background: '#4f46e5', color: '#fff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none' },
+  deleteDeptBtn: { padding: '14px', borderRadius: '16px', background: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer' },
+  inputGroup: { display: 'flex', flexDirection: 'column', gap: '8px' },
+  inputLabel: { fontSize: '14px', fontWeight: 700, color: '#475569' },
+  modalInput: { padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '14px' },
+  cancelBtn: { flex: 1, padding: '14px', borderRadius: '16px', background: '#f1f5f9', border: 'none', fontWeight: 700, cursor: 'pointer', color: '#64748b' },
+  saveBtn: { flex: 2, padding: '14px', borderRadius: '16px', background: '#4f46e5', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }
 };
