@@ -19,7 +19,7 @@ export default function PayrollDashboardPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
   const router = useRouter();
-  
+
   // React Query Hook
   const { data, loading: isLoading, fetchDashboardData } = usePayroll(isAdmin ? undefined : user?.emp_id);
 
@@ -133,8 +133,8 @@ export default function PayrollDashboardPage() {
     const BOM = "\uFEFF";
     let csvContent = BOM + "รหัสพนักงาน,ชื่อ-นามสกุล,แผนก,ฐานเงินเดือน,รายรับ+,รายหัก-,ยอดโอนสุทธิ,สถานะ\n";
     filteredEmployees.forEach((emp: any) => {
-      const row = [ emp.emp_id, `${emp.prefix}${emp.first_name_th} ${emp.last_name_th}`, emp.dept_name || 'ไม่มีแผนก',
-        emp.base_salary, emp.total_allowance, emp.total_deduction, emp.net_salary, emp.status ];
+      const row = [emp.emp_id, `${emp.prefix}${emp.first_name_th} ${emp.last_name_th}`, emp.dept_name || 'ไม่มีแผนก',
+      emp.base_salary, emp.total_allowance, emp.total_deduction, emp.net_salary, emp.status];
       csvContent += row.map(c => `"${c}"`).join(",") + "\n";
     });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -163,8 +163,10 @@ export default function PayrollDashboardPage() {
     if (!addType || !addAmount) return;
     try {
       const endpoint = kind === 'allowance' ? '/api/payroll/allowances' : '/api/payroll/deductions';
-      const body = { payroll_id: selectedRecord.payroll_id, amount: Number(addAmount), remark: addRemark, 
-        ...(kind==='allowance' ? {allowance_type_id: addType} : {deduction_type_id: addType}) };
+      const body = {
+        payroll_id: selectedRecord.payroll_id, amount: Number(addAmount), remark: addRemark,
+        ...(kind === 'allowance' ? { allowance_type_id: addType } : { deduction_type_id: addType })
+      };
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
         setIsAdding(false); setAddType(''); setAddAmount(''); setAddRemark('');
@@ -203,13 +205,13 @@ export default function PayrollDashboardPage() {
 
   const filteredEmployees = useMemo(() => {
     if (!data?.employees) return [];
-    
+
     // First, filter by role (Own-Data for non-admins)
     let baseEmployees = data?.employees || [];
     if (!isAdmin) {
       baseEmployees = user?.emp_id ? baseEmployees.filter((emp: any) => emp.emp_id === user.emp_id) : [];
     }
-    
+
     return baseEmployees.filter((emp: any) => {
       const searchStr = `${emp.first_name_th || ''} ${emp.last_name_th || ''} ${emp.emp_id || ''} ${emp.dept_name || ''}`.toLowerCase();
       const matchSearch = searchStr.includes(searchQuery.toLowerCase());
@@ -238,7 +240,7 @@ export default function PayrollDashboardPage() {
         });
       }
     });
-    return { 
+    return {
       deptDistribution: Object.entries(deptMap).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
       allowBreakdown: Object.entries(allowMap).map(([type_name, total_amount]) => ({ type_name, total_amount })).sort((a, b) => b.total_amount - a.total_amount)
     };
@@ -265,11 +267,11 @@ export default function PayrollDashboardPage() {
           {isAdmin && (
             <div style={{ display: 'flex', gap: '16px' }}>
               <button className="btn-primary" onClick={() => setShowGenerateModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg> 
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
                 เริ่มรอบเงินเดือนใหม่
               </button>
               <button className="btn-secondary" onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> 
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 ส่งออกไฟล์ธนาคาร (CSV)
               </button>
             </div>
@@ -280,19 +282,19 @@ export default function PayrollDashboardPage() {
           <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
             <div style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>ยอดสุทธิประเมิน</div>
-            <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.salary.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+            <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.salary.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
           <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#fffbeb', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
             <div style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>ค่าล่วงเวลารวม</div>
-            <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.ot.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+            <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.ot.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
           <div className="glass-card hover-glow" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#faf5ff', color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></div>
             <div style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>ค่ากะดึกรวม</div>
-            <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.night.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+            <div style={{ fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>฿{stats.night.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
-          
+
           {isAdmin && (
             <div className={`pd-action-card hover-glow ${stats.draftCount === 0 && stats.approvedCount > 0 ? 'paid-ready' : stats.draftCount === 0 && stats.approvedCount === 0 ? 'empty' : ''}`}>
               {stats.draftCount > 0 ? (
@@ -308,10 +310,10 @@ export default function PayrollDashboardPage() {
                   <button className="btn-success" onClick={() => handleBulkStatusUpdate('Approved', 'Paid')} disabled={isUpdatingStatus}>💸 สั่งจ่ายแล้ว (Mark Paid)</button>
                 </>
               ) : (
-                 <div className="ac-empty">
-                   <div className="ac-icon">🎉</div>
-                   <span>จบงานเดือนนี้แล้ว</span>
-                 </div>
+                <div className="ac-empty">
+                  <div className="ac-icon">🎉</div>
+                  <span>จบงานเดือนนี้แล้ว</span>
+                </div>
               )}
             </div>
           )}
@@ -321,31 +323,31 @@ export default function PayrollDashboardPage() {
           <div className="glass-card" style={{ padding: '24px', flex: 2, display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 20px 0', color: '#1e293b' }}>สัดส่วนรายจ่ายแยกลายแผนก</h3>
             <div className="custom-scroll" style={{ flex: 1, minHeight: 0, overflowX: 'auto', overflowY: 'hidden' }}>
-               <div style={{ minWidth: `${Math.max(100, deptDistribution.length * 120)}px`, height: '260px' }}>
-                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={deptDistribution} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#64748b', fontWeight: 500 }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#94a3b8', fontWeight: 500 }} tickFormatter={v => `${v / 1000}k`} />
-                      <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
-                      <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 8, 8]} barSize={48} />
-                    </BarChart>
-                  </ResponsiveContainer>
-               </div>
+              <div style={{ minWidth: `${Math.max(100, deptDistribution.length * 120)}px`, height: '260px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={deptDistribution} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#64748b', fontWeight: 500 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#94a3b8', fontWeight: 500 }} tickFormatter={v => `${v / 1000}k`} />
+                    <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
+                    <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 8, 8]} barSize={48} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
           <div className="glass-card" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-             <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 20px 0', color: '#1e293b' }}>สัดส่วนรายรับพิเศษ</h3>
-             <div style={{ flex: 1, minHeight: 0 }}>
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
-                    <Pie data={allowBreakdown} innerRadius="60%" outerRadius="85%" paddingAngle={4} dataKey="total_amount" nameKey="type_name" stroke="none">
-                      {allowBreakdown.map((_: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: '14px', fontWeight: 500, color: '#475569' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-             </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 20px 0', color: '#1e293b' }}>สัดส่วนรายรับพิเศษ</h3>
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
+                  <Pie data={allowBreakdown} innerRadius="60%" outerRadius="85%" paddingAngle={4} dataKey="total_amount" nameKey="type_name" stroke="none">
+                    {allowBreakdown.map((_: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '14px', fontWeight: 500, color: '#475569' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
@@ -384,35 +386,35 @@ export default function PayrollDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                 {pagedEmployees.map((emp: any) => (
-                    <tr key={emp.payroll_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '16px 24px' }}>
-                         <div style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', fontSize: '15px' }}>{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
-                         <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{emp.emp_id}</div>
-                      </td>
-                      <td style={{ padding: '16px 24px', textAlign:'center' }}>
-                        {isAdmin ? (
-                          <span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569', border: '1px solid #e2e8f0' }}>{emp.dept_name || 'ไม่มี'}</span>
-                        ) : (
-                          <span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#4F46E5', border: '1px solid #e0e7ff' }}>{MONTHS_TH[(emp.pay_month || 1) - 1]} {emp.pay_year}</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '16px 24px', textAlign:'right', fontWeight: 600, color: '#475569' }}>฿{Number(emp.base_salary).toLocaleString()}</td>
-                      <td style={{ padding: '16px 24px', textAlign:'right' }}><span style={{ color: emp.total_allowance > 0 ? '#10b981' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_allowance > 0 ? `+฿${Number(emp.total_allowance).toLocaleString()}` : '-'}</span></td>
-                      <td style={{ padding: '16px 24px', textAlign:'right' }}><span style={{ color: emp.total_deduction > 0 ? '#ef4444' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_deduction > 0 ? `-฿${Number(emp.total_deduction).toLocaleString()}` : '-'}</span></td>
-                      <td style={{ padding: '16px 24px', textAlign:'right', fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>฿{Number(emp.net_salary).toLocaleString()}</td>
-                      <td style={{ padding: '16px 24px', textAlign:'center' }}>
-                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, background: emp.status === 'Paid' ? '#d1fae5' : emp.status === 'Approved' ? '#e0e7ff' : '#f1f5f9', color: emp.status === 'Paid' ? '#059669' : emp.status === 'Approved' ? '#4f46e5' : '#64748b', padding: '6px 12px', borderRadius: '99px', whiteSpace: 'nowrap' }}>
-                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: emp.status === 'Paid' ? '#10b981' : emp.status === 'Approved' ? '#4f46e5' : '#94a3b8' }} />
-                            {emp.status === 'Paid' ? 'จ่ายแล้ว' : emp.status === 'Approved' ? 'อนุมัติ' : 'ยังไม่อนุมัติ'}
-                         </span>
-                      </td>
-                      <td style={{ padding: '16px 24px', textAlign:'center' }}>
-                         <button className="btn-secondary" onClick={() => openDrawer(emp)} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>{isAdmin ? 'แก้สลิป' : 'ดูสลิป'}</button>
-                      </td>
-                    </tr>
-                 ))}
-                 {filteredEmployees.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', fontWeight: 600 }}>ไม่มีข้อมูล</td></tr>}
+                {pagedEmployees.map((emp: any) => (
+                  <tr key={emp.payroll_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '16px 24px' }}>
+                      <div style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', fontSize: '15px' }}>{emp.prefix}{emp.first_name_th} {emp.last_name_th}</div>
+                      <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{emp.emp_id}</div>
+                    </td>
+                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                      {isAdmin ? (
+                        <span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569', border: '1px solid #e2e8f0' }}>{emp.dept_name || 'ไม่มี'}</span>
+                      ) : (
+                        <span style={{ background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#4F46E5', border: '1px solid #e0e7ff' }}>{MONTHS_TH[(emp.pay_month || 1) - 1]} {emp.pay_year}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '16px 24px', textAlign: 'right', fontWeight: 600, color: '#475569' }}>฿{Number(emp.base_salary).toLocaleString()}</td>
+                    <td style={{ padding: '16px 24px', textAlign: 'right' }}><span style={{ color: emp.total_allowance > 0 ? '#10b981' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_allowance > 0 ? `+฿${Number(emp.total_allowance).toLocaleString()}` : '-'}</span></td>
+                    <td style={{ padding: '16px 24px', textAlign: 'right' }}><span style={{ color: emp.total_deduction > 0 ? '#ef4444' : '#cbd5e1', fontWeight: 700, fontSize: '14px' }}>{emp.total_deduction > 0 ? `-฿${Number(emp.total_deduction).toLocaleString()}` : '-'}</span></td>
+                    <td style={{ padding: '16px 24px', textAlign: 'right', fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>฿{Number(emp.net_salary).toLocaleString()}</td>
+                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, background: emp.status === 'Paid' ? '#d1fae5' : emp.status === 'Approved' ? '#e0e7ff' : '#f1f5f9', color: emp.status === 'Paid' ? '#059669' : emp.status === 'Approved' ? '#4f46e5' : '#64748b', padding: '6px 12px', borderRadius: '99px', whiteSpace: 'nowrap' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: emp.status === 'Paid' ? '#10b981' : emp.status === 'Approved' ? '#4f46e5' : '#94a3b8' }} />
+                        {emp.status === 'Paid' ? 'จ่ายแล้ว' : emp.status === 'Approved' ? 'อนุมัติ' : 'ยังไม่อนุมัติ'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                      <button className="btn-secondary" onClick={() => openDrawer(emp)} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>{isAdmin ? 'แก้สลิป' : 'ดูสลิป'}</button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredEmployees.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', fontWeight: 600 }}>ไม่มีข้อมูล</td></tr>}
               </tbody>
             </table>
           </div>
@@ -460,80 +462,80 @@ export default function PayrollDashboardPage() {
               <div className="dr-body custom-scroll">
                 {/* Allowances */}
                 <div className="dr-section">
-                   <div className="dr-sec-title green">
-                     <h4>+ รายรับพิเศษ / โอที</h4>
-                     {(isAdmin && !isAdding) && <button onClick={() => {setIsAdding(true); setAddType(allowanceTypes[0]?.id || '')}}>+ เพิ่ม</button>}
-                   </div>
-                   {isAdding && allowanceTypes.length > 0 && (
-                     <div className="dr-add-form green">
-                        <select value={addType} onChange={e => setAddType(e.target.value)}>
-                          {allowanceTypes.map(t => <option key={t.id} value={t.id}>{t.type_name}</option>)}
-                        </select>
-                        <input type="number" placeholder="ยอดเงิน" value={addAmount} onChange={e => setAddAmount(e.target.value)} />
-                        <input type="text" placeholder="หมายเหตุ" value={addRemark} onChange={e => setAddRemark(e.target.value)} />
-                        <button className="btn-save green" onClick={() => handleAddDetail('allowance')}>{CheckIcon}</button>
-                        <button className="btn-cancel" onClick={() => setIsAdding(false)}>{CloseIcon}</button>
-                     </div>
-                   )}
-                   {allowances.map(a => (
-                     <div key={a.id} className="dr-item">
-                       <div>
-                         <b>{a.type_name}</b>
-                         {a.remark && <span>{a.remark}</span>}
-                       </div>
-                       <div className="dr-item-actions">
-                         <strong className="c-green">+฿{Number(a.amount).toLocaleString()}</strong>
-                         {isAdmin && <button onClick={() => handleDeleteDetail('allowance', a.id)} style={{ cursor: 'pointer' }}>{TrashIcon}</button>}
-                       </div>
-                     </div>
-                   ))}
+                  <div className="dr-sec-title green">
+                    <h4>+ รายรับพิเศษ / โอที</h4>
+                    {(isAdmin && !isAdding) && <button onClick={() => { setIsAdding(true); setAddType(allowanceTypes[0]?.id || '') }}>+ เพิ่ม</button>}
+                  </div>
+                  {isAdding && allowanceTypes.length > 0 && (
+                    <div className="dr-add-form green">
+                      <select value={addType} onChange={e => setAddType(e.target.value)}>
+                        {allowanceTypes.map(t => <option key={t.id} value={t.id}>{t.type_name}</option>)}
+                      </select>
+                      <input type="number" placeholder="ยอดเงิน" value={addAmount} onChange={e => setAddAmount(e.target.value)} />
+                      <input type="text" placeholder="หมายเหตุ" value={addRemark} onChange={e => setAddRemark(e.target.value)} />
+                      <button className="btn-save green" onClick={() => handleAddDetail('allowance')}>{CheckIcon}</button>
+                      <button className="btn-cancel" onClick={() => setIsAdding(false)}>{CloseIcon}</button>
+                    </div>
+                  )}
+                  {allowances.map(a => (
+                    <div key={a.id} className="dr-item">
+                      <div>
+                        <b>{a.type_name}</b>
+                        {a.remark && <span>{a.remark}</span>}
+                      </div>
+                      <div className="dr-item-actions">
+                        <strong className="c-green">+฿{Number(a.amount).toLocaleString()}</strong>
+                        {isAdmin && <button onClick={() => handleDeleteDetail('allowance', a.id)} style={{ cursor: 'pointer' }}>{TrashIcon}</button>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Deductions */}
                 <div className="dr-section">
-                   <div className="dr-sec-title red">
-                     <h4>- รายจ่าย / หักสาย / ภาษี</h4>
-                     {(isAdmin && !isAdding) && <button onClick={() => {setIsAdding(true); setAddType(deductionTypes[0]?.id || '')}}>+ เพิ่ม</button>}
-                   </div>
-                   {isAdding && deductionTypes.length > 0 && (
-                     <div className="dr-add-form red">
-                        <select value={addType} onChange={e => setAddType(e.target.value)}>
-                          {deductionTypes.map(t => <option key={t.id} value={t.id}>{t.type_name}</option>)}
-                        </select>
-                        <input type="number" placeholder="ยอดเงิน" value={addAmount} onChange={e => setAddAmount(e.target.value)} />
-                        <input type="text" placeholder="หมายเหตุ" value={addRemark} onChange={e => setAddRemark(e.target.value)} />
-                        <button className="btn-save red" onClick={() => handleAddDetail('deduction')}>{CheckIcon}</button>
-                        <button className="btn-cancel" onClick={() => setIsAdding(false)}>{CloseIcon}</button>
-                     </div>
-                   )}
-                   {deductions.map(d => (
-                     <div key={d.id} className="dr-item">
-                       <div>
-                         <b>{d.type_name}</b>
-                         {d.remark && <span>{d.remark}</span>}
-                       </div>
-                       <div className="dr-item-actions">
-                         <strong className="c-red">-฿{Number(d.amount).toLocaleString()}</strong>
-                         {isAdmin && <button onClick={() => handleDeleteDetail('deduction', d.id)} style={{ cursor: 'pointer' }}>{TrashIcon}</button>}
-                       </div>
-                     </div>
-                   ))}
+                  <div className="dr-sec-title red">
+                    <h4>- รายจ่าย / หักสาย / ภาษี</h4>
+                    {(isAdmin && !isAdding) && <button onClick={() => { setIsAdding(true); setAddType(deductionTypes[0]?.id || '') }}>+ เพิ่ม</button>}
+                  </div>
+                  {isAdding && deductionTypes.length > 0 && (
+                    <div className="dr-add-form red">
+                      <select value={addType} onChange={e => setAddType(e.target.value)}>
+                        {deductionTypes.map(t => <option key={t.id} value={t.id}>{t.type_name}</option>)}
+                      </select>
+                      <input type="number" placeholder="ยอดเงิน" value={addAmount} onChange={e => setAddAmount(e.target.value)} />
+                      <input type="text" placeholder="หมายเหตุ" value={addRemark} onChange={e => setAddRemark(e.target.value)} />
+                      <button className="btn-save red" onClick={() => handleAddDetail('deduction')}>{CheckIcon}</button>
+                      <button className="btn-cancel" onClick={() => setIsAdding(false)}>{CloseIcon}</button>
+                    </div>
+                  )}
+                  {deductions.map(d => (
+                    <div key={d.id} className="dr-item">
+                      <div>
+                        <b>{d.type_name}</b>
+                        {d.remark && <span>{d.remark}</span>}
+                      </div>
+                      <div className="dr-item-actions">
+                        <strong className="c-red">-฿{Number(d.amount).toLocaleString()}</strong>
+                        {isAdmin && <button onClick={() => handleDeleteDetail('deduction', d.id)} style={{ cursor: 'pointer' }}>{TrashIcon}</button>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div className="dr-footer">
-                 <div className="dr-summary">
-                   <span>ยอดประมวลผลสุทธิ</span>
-                   <strong>฿{(
-                      Number(selectedRecord.base_salary) +
-                      allowances.reduce((s, a) => s + Number(a.amount), 0) -
-                      deductions.reduce((s, d) => s + Number(d.amount), 0)
-                    ).toLocaleString()}</strong>
-                 </div>
-                 <div className="dr-actions">
-                   <button className="btn-outline-indigo" onClick={handlePrint}>{PrintIcon} ดูสลิป (PDF)</button>
-                   <button className="btn-indigo" onClick={closeDrawer}>บันทึกและปิดหน้าต่าง</button>
-                 </div>
+                <div className="dr-summary">
+                  <span>ยอดประมวลผลสุทธิ</span>
+                  <strong>฿{(
+                    Number(selectedRecord.base_salary) +
+                    allowances.reduce((s, a) => s + Number(a.amount), 0) -
+                    deductions.reduce((s, d) => s + Number(d.amount), 0)
+                  ).toLocaleString()}</strong>
+                </div>
+                <div className="dr-actions">
+                  <button className="btn-outline-indigo" onClick={handlePrint}>{PrintIcon} ดูสลิป (PDF)</button>
+                  <button className="btn-indigo" onClick={closeDrawer}>บันทึกและปิดหน้าต่าง</button>
+                </div>
               </div>
               <PayslipTemplate ref={printRef} record={selectedRecord} allowances={allowances} deductions={deductions} month={String(selectedRecord?.pay_month || data?.targetMonth || '')} year={String(selectedRecord?.pay_year || data?.targetYear || '')} />
             </div>
@@ -543,12 +545,12 @@ export default function PayrollDashboardPage() {
         {/* Modal Generator */}
         {showGenerateModal && (
           <div className="modal-overlay" onClick={() => setShowGenerateModal(false)}>
-            <div className="modal-box" onClick={e=>e.stopPropagation()}>
+            <div className="modal-box" onClick={e => e.stopPropagation()}>
               <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a', margin: '0 0 24px 0' }}>เริ่มรอบเงินเดือนใหม่</h2>
               <div className="form-group" style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#64748b', marginBottom: '8px' }}>เดือน</label>
                 <select value={genMonth} onChange={e => setGenMonth(Number(e.target.value))} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
-                  {MONTHS_TH.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
+                  {MONTHS_TH.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
                 </select>
               </div>
               <div className="form-group" style={{ marginBottom: '16px' }}>

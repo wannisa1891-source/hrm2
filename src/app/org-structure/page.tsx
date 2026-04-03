@@ -774,7 +774,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   pageContainer: {
     display: 'flex',
     height: 'calc(100vh - 64px)',
-    background: '#f8fafc', // สีพื้นหลังเทานวลๆ แบบในรูป
+    background: '#a0c1e2ff', // สีพื้นหลังเทานวลๆ แบบในรูป
     overflow: 'hidden',
     position: 'relative',
     fontFamily: "'Inter', 'Sarabun', sans-serif"
@@ -789,7 +789,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   sidebarHeader: { padding: '28px 24px 20px', borderBottom: '1px solid #f1f5f9' },
   sidebarTitle: { fontSize: '20px', fontWeight: 800, color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' },
-  sidebarSubtitle: { fontSize: '13px', color: '#64748b', margin: '6px 0 0 32px' },
+  sidebarSubtitle: { fontSize: '13px', color: '#80a9b1ff', margin: '6px 0 0 32px' },
   deptItem: {
     padding: '14px 16px', margin: '4px 0', borderRadius: '12px', cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', transition: 'all 0.2s'
@@ -802,7 +802,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   mainContent: { flex: 1, padding: '32px 40px', overflowY: 'auto' },
   mainHeader: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' },
   mainTitle: { fontSize: '32px', fontWeight: 800, margin: 0, color: '#1e293b' },
-  countBadge: { display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', margin: '8px 0 0', fontSize: '15px' },
+  countBadge: { display: 'flex', alignItems: 'center', gap: '8px', color: '#87c2c2ff', margin: '8px 0 0', fontSize: '15px' },
   iconBox: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '6px', background: '#e2e8f0', color: '#475569' },
   searchWrapper: {
     position: 'relative', display: 'flex', alignItems: 'center', background: '#fff',

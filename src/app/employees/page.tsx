@@ -30,7 +30,7 @@ function EmployeesContent() {
   const router = useRouter();
   const { user } = useAuth();
   const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
-  
+
   useEffect(() => {
     if (user && !isAdmin) {
       router.push('/dashboard');
@@ -331,7 +331,7 @@ function EmployeesContent() {
       'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน', 'เงินเดือน',
       'สถานะการทำงาน', 'คะแนน CNEU/CME', 'ข้อมูลใบอนุญาต'
     ];
-    
+
     const rows = filteredData.map(e => {
       const licText = e.licenses && e.licenses.length > 0 ? e.licenses.map(l => `${l.license_name || ''} เลขที่:${l.license_no || '-'} (${l.status || ''})`).join(' | ') : 'ไม่มี';
       const rowData = [
@@ -363,7 +363,7 @@ function EmployeesContent() {
     const csvContent = "\uFEFF" + [headers.map(h => `"${h}"`).join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', 'employees_list_full.csv');
@@ -529,7 +529,7 @@ function EmployeesContent() {
                 >
                   หน้าก่อน
                 </button>
-                <div style={{ background: '#f1f5f9', padding: '6px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500 }}>
+                <div style={{ background: '#afceecff', padding: '6px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500 }}>
                   {currentPage} / {totalPages}
                 </div>
                 <button
@@ -561,7 +561,7 @@ function EmployeesContent() {
       {/* ID Card Modal */}
       {showIdCard && (isBulkPrinting ? selectedIds.length > 0 : selectedEmpForCard) && (
         <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 1100 }}>
-          <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', padding: '24px', width: isBulkPrinting ? '700px' : '360px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
+          <div className="modal-box" style={{ background: '#ca8888ff', borderRadius: '24px', padding: '24px', width: isBulkPrinting ? '700px' : '360px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
 
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{isBulkPrinting ? 'บัตรพนักงาน (จำนวนมาก)' : 'บัตรพนักงาน'}</h3>

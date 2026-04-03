@@ -20,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function DashboardPage() {
   const router = useRouter()
   const { user } = useAuth()
-  
+
   // React Query Hooks
   const { dashboardData, loading, error, loadDashboard } = useDashboard(user?.emp_id, user?.role)
   const { announcements, loading: announcementsLoading, refetch: refetchAnnouncements } = useAnnouncements()
@@ -119,15 +119,15 @@ export default function DashboardPage() {
     <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 340, maxHeight: 420, padding: isAdmin ? '24px' : '32px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-           <div className={isAdmin ? '' : 'clay-accent-blue'} style={{ color: isAdmin ? '#3b82f6' : undefined, display: 'flex', width: 56, height: 56, borderRadius: isAdmin ? 14 : '50%', background: isAdmin ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : undefined, alignItems: 'center', justifyContent: 'center', boxShadow: isAdmin ? 'inset 0 2px 4px rgba(255,255,255,0.5)' : undefined }}>
-             <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-             </svg>
-           </div>
-           <div>
-             <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: isAdmin ? '#1e2433' : '#334155' }}>ข่าวสารองค์กร</h3>
-             <div style={{ fontSize: 14, color: '#94a3b8', fontWeight: 600, marginTop: 4 }}>Announcements</div>
-           </div>
+          <div className={isAdmin ? '' : 'clay-accent-blue'} style={{ color: isAdmin ? '#3b82f6' : undefined, display: 'flex', width: 56, height: 56, borderRadius: isAdmin ? 14 : '50%', background: isAdmin ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : undefined, alignItems: 'center', justifyContent: 'center', boxShadow: isAdmin ? 'inset 0 2px 4px rgba(255,255,255,0.5)' : undefined }}>
+            <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+            </svg>
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: isAdmin ? '#1e2433' : '#334155' }}>ข่าวสารองค์กร</h3>
+            <div style={{ fontSize: 14, color: '#94a3b8', fontWeight: 600, marginTop: 4 }}>Announcements</div>
+          </div>
         </div>
         {user?.role === 'admin' && (
           <button onClick={() => {
@@ -160,7 +160,7 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-            
+
             <div style={{ position: 'absolute', bottom: isAdmin ? 12 : 36, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 8 }}>
               {announcements.map((_, idx) => (
                 <div key={idx} onClick={(e) => { e.stopPropagation(); setCurrentSlide(idx); }} style={{ width: currentSlide === idx ? 20 : 8, height: 8, borderRadius: 8, background: currentSlide === idx ? (isAdmin ? '#3b82f6' : '#8fa29e') : (isAdmin ? 'rgba(255,255,255,0.4)' : '#c5c5e8'), transition: 'all 0.3s', cursor: 'pointer', boxShadow: isAdmin ? 'none' : 'inset 1px 1px 2px rgba(0,0,0,0.1)' }} />
@@ -184,88 +184,88 @@ export default function DashboardPage() {
       <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '48px', minHeight: '100%' }}>
         <DashboardHeader today={today} />
 
-      {loading && (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        </div>
-      )}
+        {loading && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          </div>
+        )}
 
-      {!loading && (
-        isAdmin ? (
-          <>
-            <div className="dashboard-grid">
-              <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {!loading && (
+          isAdmin ? (
+            <>
+              <div className="dashboard-grid">
+                <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
-                  <StatCard
-                    label="บุคลากรทั้งหมด"
-                    value={dashboardData?.empCount || 0}
-                    unit="คน"
-                    icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    iconBg="#dcfce7"
-                    iconColor="#16a34a"
-                    trend="↑ 2%"
-                    trendUp={true}
-                    href="/employees"
-                  />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
+                    <StatCard
+                      label="บุคลากรทั้งหมด"
+                      value={dashboardData?.empCount || 0}
+                      unit="คน"
+                      icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      iconBg="#dcfce7"
+                      iconColor="#16a34a"
+                      trend="↑ 2%"
+                      trendUp={true}
+                      href="/employees"
+                    />
 
-                  <StatCard
-                    label="ลางาน/พักร้อน"
-                    value={dashboardData?.leaveTodayCount || 0}
-                    unit="คน"
-                    icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    iconBg="#fee2e2"
-                    iconColor="#ef4444"
-                    trend="วันนี้"
-                    href="/leave"
-                  />
+                    <StatCard
+                      label="ลางาน/พักร้อน"
+                      value={dashboardData?.leaveTodayCount || 0}
+                      unit="คน"
+                      icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      iconBg="#fee2e2"
+                      iconColor="#ef4444"
+                      trend="วันนี้"
+                      href="/leave"
+                    />
 
-                  <StatCard
-                    label="อัตรากำลังว่าง"
-                    value={dashboardData?.vacantCount || 0}
-                    unit="อัตรา"
-                    icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    iconBg="#fef9c3"
-                    iconColor="#ca8a04"
-                    trend="คงเหลือ"
-                    href="/org-structure"
-                  />
+                    <StatCard
+                      label="อัตรากำลังว่าง"
+                      value={dashboardData?.vacantCount || 0}
+                      unit="อัตรา"
+                      icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      iconBg="#fef9c3"
+                      iconColor="#ca8a04"
+                      trend="คงเหลือ"
+                      href="/org-structure"
+                    />
+                  </div>
+
+                  <div style={{ flex: 1, minHeight: 340, display: 'flex', flexDirection: 'column' }}>
+                    <DonutChart data={dashboardData?.professions || []} />
+                  </div>
+
                 </div>
 
-                <div style={{ flex: 1, minHeight: 340, display: 'flex', flexDirection: 'column' }}>
-                  <DonutChart data={dashboardData?.professions || []} />
+                <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                  <PendingList
+                    transfersCount={dashboardData?.pendingTransfers || 0}
+                    leavesCount={dashboardData?.pendingLeaves || 0}
+                  />
+
+                  {newsContent}
+
+                  <SystemAlert
+                    expiringCount={dashboardData?.expiringLicenses || 0}
+                    expiredCount={dashboardData?.expiredLicenses || 0}
+                  />
+
                 </div>
-
               </div>
-
-              <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-                <PendingList
-                  transfersCount={dashboardData?.pendingTransfers || 0}
-                  leavesCount={dashboardData?.pendingLeaves || 0}
-                />
-
-                {newsContent}
-
-                <SystemAlert 
-                  expiringCount={dashboardData?.expiringLicenses || 0} 
-                  expiredCount={dashboardData?.expiredLicenses || 0} 
-                />
-
-              </div>
-            </div>
-          </>
-        ) : (
-          <UserDashboard
-            user={user}
-            leaveStats={dashboardData?.leaveStats || { vacation: { remain: 0, used: 0, raw: 0 }, personal: { remain: 0, used: 0, raw: 0 }, sick: { remain: 0, used: 0, raw: 0 } }}
-            recentLeaves={dashboardData?.recentLeaves || []}
-            newsList={announcements}
-            onSelectNews={setSelectedNews}
-            today={today}
-          />
-        )
-      )}
+            </>
+          ) : (
+            <UserDashboard
+              user={user}
+              leaveStats={dashboardData?.leaveStats || { vacation: { remain: 0, used: 0, raw: 0 }, personal: { remain: 0, used: 0, raw: 0 }, sick: { remain: 0, used: 0, raw: 0 } }}
+              recentLeaves={dashboardData?.recentLeaves || []}
+              newsList={announcements}
+              onSelectNews={setSelectedNews}
+              today={today}
+            />
+          )
+        )}
       </div>
 
       <Modal
@@ -284,7 +284,7 @@ export default function DashboardPage() {
               <h3 style={{ margin: 0, fontSize: 18, color: '#0f172a', fontWeight: 700 }}>{selectedNews.title}</h3>
               <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{selectedNews.date}</div>
             </div>
-            
+
             <div style={{ padding: '16px', borderRadius: '12px', background: '#f8fafc', border: '1px solid #f1f5f9' }}>
               <p style={{ margin: 0, fontSize: 15, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{selectedNews.content}</p>
             </div>
