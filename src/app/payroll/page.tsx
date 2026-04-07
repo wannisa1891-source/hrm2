@@ -321,7 +321,7 @@ export default function PayrollDashboardPage() {
 
         <div style={{ display: 'flex', gap: '24px', height: '340px', marginBottom: '24px' }}>
           <div className="glass-card" style={{ padding: '24px', flex: 2, display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 20px 0', color: '#1e293b' }}>สัดส่วนรายจ่ายแยกลายแผนก</h3>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 20px 0', color: '#1e293b' }}>สัดส่วนรายจ่ายแยกรายแผนก</h3>
             <div className="custom-scroll" style={{ flex: 1, minHeight: 0, overflowX: 'auto', overflowY: 'hidden' }}>
               <div style={{ minWidth: `${Math.max(100, deptDistribution.length * 120)}px`, height: '260px' }}>
                 <ResponsiveContainer width="100%" height="100%">
