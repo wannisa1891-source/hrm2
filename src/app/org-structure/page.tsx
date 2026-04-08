@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -18,7 +18,7 @@ export default function DepartmentAndEmployeePage() {
   const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.role?.toLowerCase() === 'admin';
-  const { employees = [], loadEmployees, removeEmployee } = useEmployees();
+  const { employees = [], loadEmployees, removeEmployee, editEmployee } = useEmployees();
   const { departments = [], loadDepartments, addDepartment, editDepartment, removeDepartment } = useDepartments();
   const { positions = [], loadPositions } = usePositions();
 
@@ -51,6 +51,7 @@ export default function DepartmentAndEmployeePage() {
     description: '', head_emp_id: '', phone: '', org_chart_url: '', sop_url: '', rules_url: ''
   });
   const [showDeptEmployees, setShowDeptEmployees] = useState(false);
+  const [showDeptInterns, setShowDeptInterns] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const perPage = 10;
@@ -63,20 +64,29 @@ export default function DepartmentAndEmployeePage() {
     loadPositions?.();
   }, [loadEmployees, loadDepartments, loadPositions]);
 
-  const filteredEmployees = useMemo(() => {
-    let result = employees;
-    if (selectedDeptId) {
-      result = result.filter(emp => emp.dept_id === selectedDeptId);
+  const { regularStaff, internStaff } = useMemo(() => {
+    let base = employees;
+    if (selectedDeptId === 'interns') {
+      return { regularStaff: [], internStaff: base.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน') };
+    } else if (selectedDeptId) {
+      base = base.filter(emp => emp.dept_id === selectedDeptId);
     }
+
     if (search) {
       const term = search.toLowerCase();
-      result = result.filter(e => {
+      base = base.filter(e => {
         const deptName = departments.find(d => d.dept_id === e.dept_id)?.dept_name || '';
         return `${e.first_name_th || ''} ${e.last_name_th || ''} ${e.first_name_en || ''} ${e.last_name_en || ''} ${e.emp_id || ''} ${deptName}`.toLowerCase().includes(term);
       });
     }
-    return result;
+
+    return {
+      regularStaff: base.filter(emp => emp.emp_type !== 'นักศึกษาฝึกงาน'),
+      internStaff: base.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน')
+    };
   }, [employees, selectedDeptId, search, departments]);
+
+  const filteredEmployees = useMemo(() => [...regularStaff, ...internStaff], [regularStaff, internStaff]);
 
   const selectedEmp = useMemo(() =>
     employees.find(e => e.emp_id === selectedEmpId),
@@ -181,6 +191,7 @@ export default function DepartmentAndEmployeePage() {
       });
     }
     setShowDeptEmployees(false);
+    setShowDeptInterns(false);
     setIsDeptModalOpen(true);
   };
 
@@ -203,21 +214,39 @@ export default function DepartmentAndEmployeePage() {
 
           <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px 12px' }}>
             {!isStandardUser && (
-              <div
-                onClick={() => setSelectedDeptId('')}
-                style={{
-                  ...styles.deptItem,
-                  background: selectedDeptId === '' ? 'linear-gradient(90deg, #eef2ff 0%, #ffffff 100%)' : 'transparent',
-                  color: selectedDeptId === '' ? '#4f46e5' : '#64748b',
-                  fontWeight: selectedDeptId === '' ? 700 : 500,
-                  borderLeft: selectedDeptId === '' ? '4px solid #4f46e5' : '4px solid transparent',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Users size={18} />
-                  <span>พนักงานทั้งหมด</span>
+              <>
+                <div
+                  onClick={() => setSelectedDeptId('')}
+                  style={{
+                    ...styles.deptItem,
+                    background: selectedDeptId === '' ? 'linear-gradient(90deg, #eef2ff 0%, #ffffff 100%)' : 'transparent',
+                    color: selectedDeptId === '' ? '#4f46e5' : '#64748b',
+                    fontWeight: selectedDeptId === '' ? 700 : 500,
+                    borderLeft: selectedDeptId === '' ? '4px solid #4f46e5' : '4px solid transparent',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Users size={18} />
+                    <span>พนักงานทั้งหมด</span>
+                  </div>
                 </div>
-              </div>
+
+                <div
+                  onClick={() => setSelectedDeptId('interns')}
+                  style={{
+                    ...styles.deptItem,
+                    background: selectedDeptId === 'interns' ? 'linear-gradient(90deg, #f0fdf4 0%, #ffffff 100%)' : 'transparent',
+                    color: selectedDeptId === 'interns' ? '#10b981' : '#64748b',
+                    fontWeight: selectedDeptId === 'interns' ? 700 : 500,
+                    borderLeft: selectedDeptId === 'interns' ? '4px solid #10b981' : '4px solid transparent',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Contact size={18} />
+                    <span>นักศึกษาฝึกงาน</span>
+                  </div>
+                </div>
+              </>
             )}
 
             <div style={{ margin: '24px 0 12px 12px', fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
@@ -250,8 +279,14 @@ export default function DepartmentAndEmployeePage() {
                   borderLeft: selectedDeptId === dept.dept_id ? '4px solid #4f46e5' : '4px solid transparent',
                 }}
               >
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {dept.dept_name}
+                  {(() => {
+                    const iCount = employees.filter(e => e.dept_id === dept.dept_id && e.emp_type === 'นักศึกษาฝึกงาน').length;
+                    return iCount > 0 ? (
+                      <span style={{ fontSize: '10px', background: '#dcfce7', color: '#16a34a', padding: '2px 6px', borderRadius: '6px', fontWeight: 800 }}>นศ. {iCount}</span>
+                    ) : null;
+                  })()}
                 </span>
 
                 <div style={{ display: 'flex', gap: '6px', opacity: selectedDeptId === dept.dept_id ? 1 : 0.4, transition: 'opacity 0.2s' }}>
@@ -263,17 +298,23 @@ export default function DepartmentAndEmployeePage() {
         </div>
 
         {/* --- 2. MAIN CONTENT (Employee Table) --- */}
-        <div className="no-scrollbar" style={{ flex: 1, padding: '32px 40px', overflowY: 'auto', overflowX: 'hidden' }}>
+        <div className="no-scrollbar" style={{ flex: 1, padding: '32px 40px 180px', overflowY: 'auto', overflowX: 'hidden' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' }}>
             <div style={{ minWidth: '300px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', wordBreak: 'keep-all', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #1e293b 0%, #4f46e5 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {selectedDeptId ? getDeptName(selectedDeptId) : 'รายชื่อพนักงานทั้งหมด'}
+                {selectedDeptId === 'interns' ? 'รายชื่อนักศึกษาฝึกงานทั้งหมด' : (selectedDeptId ? getDeptName(selectedDeptId) : 'รายชื่อบุคลากรทั้งหมด')}
               </h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', margin: '8px 0 0', fontSize: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '6px', background: '#e2e8f0', color: '#475569' }}>
-                  <Users size={14} strokeWidth={2.5} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#64748b', margin: '8px 0 0', fontSize: '15px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fff', padding: '4px 12px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
+                  <Users size={14} color="#4f46e5" />
+                  <span>พนักงาน: <strong>{regularStaff.length}</strong> ท่าน</span>
                 </div>
-                <span>จำนวนบุคลากรทั้งหมด <strong>{filteredEmployees.length}</strong> ท่าน</span>
+                {internStaff.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f0fdf4', padding: '4px 12px', borderRadius: '10px', border: '1px solid #dcfce7' }}>
+                    <Contact size={14} color="#10b981" />
+                    <span>นศ.ฝึกงาน: <strong>{internStaff.length}</strong> ท่าน</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -296,105 +337,73 @@ export default function DepartmentAndEmployeePage() {
             </div>
           </div>
 
-          <div style={styles.tableCard}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  <th style={styles.th}>โปรไฟล์พนักงาน</th>
-                  <th style={styles.th}>ตำแหน่ง / สายงาน</th>
-                  <th style={styles.th}>สถานะ</th>
-                  <th style={{ ...styles.th, textAlign: 'right' }}>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedEmployees.map((emp) => (
-                  <tr
-                    key={emp.emp_id}
-                    onClick={() => {
-                      const currentDept = departments.find(d => d.dept_id === emp.dept_id);
-                      const canView = isAdmin || (currentDept && user?.emp_id === currentDept.head_emp_id);
-                      if (canView) {
-                        setSelectedEmpId(emp.emp_id);
-                      } else {
-                        Swal.fire({ title: 'ไม่มีสิทธิ์เข้าถึง', text: 'เฉพาะแอดมินหรือหัวหน้าแผนกเท่านั้นที่จะดูข้อมูลได้', icon: 'error' });
-                      }
-                    }}
-                    style={styles.tableRow}
-                  >
-                    <td style={styles.td}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={styles.avatar}>
-                          {emp.image ? (
-                            <Image fill unoptimized src={`/uploads/${emp.image}`} alt="pic" style={{ objectFit: 'cover', borderRadius: '12px' }} />
-                          ) : (
-                            <span>{emp.first_name_th?.[0] || 'U'}</span>
-                          )}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
-                          <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>รหัส: {emp.emp_id}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={{ fontWeight: 600, fontSize: '14px', color: '#334155' }}>{formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}</div>
-                      <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>{getDeptName(emp.dept_id)}</div>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{
-                        padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                        background: emp.status === 'Active' ? '#dcfce7' : '#f1f5f9',
-                        color: emp.status === 'Active' ? '#16a34a' : '#64748b',
-                        display: 'inline-flex', alignItems: 'center', gap: '6px'
-                      }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: emp.status === 'Active' ? '#16a34a' : '#94a3b8' }} />
-                        {emp.status}
-                      </span>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <ChevronRight size={20} color="#cbd5e1" />
-                    </td>
-                  </tr>
-                ))}
-                {pagedEmployees.length === 0 && (
-                  <tr>
-                    <td colSpan={4} style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
-                      <SearchCode size={48} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-                      <p style={{ fontSize: '16px', fontWeight: 500 }}>ไม่พบข้อมูลพนักงาน</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {filteredEmployees.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: 'transparent', marginTop: '16px' }}>
-              <span style={{ fontSize: 14, color: '#64748b', fontWeight: 500 }}>
-                แสดง <span style={{ color: '#0f172a', fontWeight: 700 }}>{(page - 1) * perPage + 1}</span> ถึง <span style={{ color: '#0f172a', fontWeight: 700 }}>{Math.min(page * perPage, filteredEmployees.length)}</span> จากทั้งหมด {filteredEmployees.length} ท่าน
-              </span>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  style={{ ...styles.pageBtn, opacity: page === 1 ? 0.5 : 1, cursor: page === 1 ? 'default' : 'pointer' }}>
-                  ก่อนหน้า
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button key={i} onClick={() => setPage(i + 1)}
-                    style={{
-                      ...styles.pageBtn,
-                      border: page === i + 1 ? 'none' : '1px solid #e2e8f0',
-                      background: page === i + 1 ? '#4f46e5' : 'white',
-                      color: page === i + 1 ? 'white' : '#475569',
-                      boxShadow: page === i + 1 ? '0 4px 6px -1px rgba(79, 70, 229, 0.2)' : 'none'
-                    }}>{i + 1}</button>
-                ))}
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}
-                  style={{ ...styles.pageBtn, opacity: page === totalPages || totalPages === 0 ? 0.5 : 1, cursor: page === totalPages || totalPages === 0 ? 'default' : 'pointer' }}>
-                  ถัดไป
-                </button>
+          {/* --- Regular Staff Section --- */}
+          {(selectedDeptId !== 'interns') && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', marginTop: '8px' }}>
+                <Users size={20} color="#4f46e5" />
+                <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#1e293b', margin: 0 }}>รายชื่อพนักงานประจำ</h2>
               </div>
-            </div>
+              <div style={styles.tableCard}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                      <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
+                      <th style={styles.th}>บุคลากร</th>
+                      <th style={styles.th}>ตำแหน่ง</th>
+                      <th style={styles.th}>แผนก / สังกัด</th>
+                      <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
+                      <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {regularStaff.slice((page - 1) * perPage, page * perPage).map((emp) => (
+                      <EmployeeRow key={emp.emp_id} emp={emp} isAdmin={isAdmin} departments={departments} positions={positions} setSelectedEmpId={setSelectedEmpId} getPosName={getPosName} getDeptName={getDeptName} formatPosName={formatPosName} user={user} editEmployee={editEmployee} />
+                    ))}
+                    {regularStaff.length === 0 && (
+                      <tr>
+                        <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่มีพนักงานในแผนกนี้</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {/* Pagination for regular staff */}
+              {regularStaff.length > perPage && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', marginBottom: '24px' }}>
+                   <Pagination page={page} setPage={setPage} totalItems={regularStaff.length} perPage={perPage} />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* --- Intern Section --- */}
+          {(internStaff.length > 0 || selectedDeptId === 'interns') && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', marginTop: '32px' }}>
+                <Contact size={20} color="#10b981" />
+                <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#1e293b', margin: 0 }}>รายชื่อนักศึกษาฝึกงาน</h2>
+              </div>
+              <div style={{ ...styles.tableCard, borderTop: '4px solid #10b981' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                      <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
+                      <th style={styles.th}>ชื่อ-สกุล</th>
+                      <th style={styles.th}>คณะ / ตำแหน่ง</th>
+                      <th style={styles.th}>สถานศึกษา / แผนก</th>
+                      <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
+                      <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {internStaff.map((emp) => (
+                      <EmployeeRow key={emp.emp_id} emp={emp} isAdmin={isAdmin} departments={departments} positions={positions} setSelectedEmpId={setSelectedEmpId} getPosName={getPosName} getDeptName={getDeptName} formatPosName={formatPosName} user={user} editEmployee={editEmployee} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 
@@ -554,70 +563,145 @@ export default function DepartmentAndEmployeePage() {
                   </div>
 
                   {/* Employee List Section */}
-                  <div style={{ marginBottom: '32px' }}>
-                    <div
-                      onClick={() => setShowDeptEmployees(!showDeptEmployees)}
-                      style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '16px 20px', background: '#f8fafc', borderRadius: '20px', transition: 'all 0.2s', border: '1px solid transparent' }}
-                      onMouseOver={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                      onMouseOut={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'transparent'; }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Users size={20} color="#6366f1" />
-                        <span>ดูรายชื่อพนักงานทั้งหมด ({deptEmployeesList.length} คน)</span>
-                      </div>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                        <ChevronRight size={18} color="#64748b" style={{ transform: showDeptEmployees ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
-                      </div>
-                    </div>
-
-                    {showDeptEmployees && (
-                      <div>
-                        {deptEmployeesList.length > 0 ? (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                            {deptEmployeesList.map(emp => {
-                              const canViewEmployeeDetails = isAdmin || user?.emp_id === deptForm.head_emp_id;
-                              return (
-                                <div
-                                  key={emp.emp_id}
-                                  onClick={() => {
-                                    if (canViewEmployeeDetails) {
-                                      setSelectedEmpId(emp.emp_id);
-                                      setIsDeptModalOpen(false);
-                                    }
-                                  }}
-                                  style={{
-                                    display: 'flex', alignItems: 'center', gap: '16px', background: '#fff', padding: '16px', borderRadius: '20px', border: '1px solid #f1f5f9',
-                                    cursor: canViewEmployeeDetails ? 'pointer' : 'default',
-                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-                                  }}
-                                  onMouseOver={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#e2e8f0'; } }}
-                                  onMouseOut={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = '#f1f5f9'; } }}
-                                >
-                                  <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0 }}>
-                                    {emp.image ? (
-                                      <Image fill unoptimized src={`/uploads/${emp.image}`} alt="emp" style={{ objectFit: 'cover' }} />
-                                    ) : (
-                                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 800, fontSize: '18px' }}>{emp.first_name_th?.[0] || 'U'}</div>
-                                    )}
-                                  </div>
-                                  <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.first_name_th} {emp.last_name_th}</div>
-                                    <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '4px', fontWeight: 500 }}>
-                                      {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix) || 'พนักงาน'} {emp.phone ? ` • โทร: ${emp.phone}` : ''}
-                                    </div>
-                                  </div>
-                                  {canViewEmployeeDetails && <ChevronRight size={18} color="#cbd5e1" />}
-                                </div>
-                              );
-                            })}
+                  <div style={{ marginBottom: '16px' }}>
+                    {(() => {
+                      const regularEmployees = deptEmployeesList.filter(e => e.emp_type !== 'นักศึกษาฝึกงาน');
+                      return (
+                        <>
+                          <div
+                            onClick={() => setShowDeptEmployees(!showDeptEmployees)}
+                            style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '16px 20px', background: '#f8fafc', borderRadius: '20px', transition: 'all 0.2s', border: '1px solid transparent' }}
+                            onMouseOver={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                            onMouseOut={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'transparent'; }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <Users size={20} color="#6366f1" />
+                              <span>ดูรายชื่อพนักงาน ({regularEmployees.length} คน)</span>
+                            </div>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                              <ChevronRight size={18} color="#64748b" style={{ transform: showDeptEmployees ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                            </div>
                           </div>
-                        ) : (
-                          <div style={{ fontSize: '14px', color: '#94a3b8', fontStyle: 'italic', padding: '24px', background: '#f8fafc', borderRadius: '20px', textAlign: 'center' }}>ไม่มีพนักงานในแผนกนี้</div>
+
+                          {showDeptEmployees && (
+                            <div style={{ marginBottom: '12px' }}>
+                              {regularEmployees.length > 0 ? (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                                  {regularEmployees.map(emp => {
+                                    const canViewEmployeeDetails = isAdmin || user?.emp_id === deptForm.head_emp_id;
+                                    return (
+                                      <div
+                                        key={emp.emp_id}
+                                        onClick={() => {
+                                          if (canViewEmployeeDetails) {
+                                            setSelectedEmpId(emp.emp_id);
+                                            setIsDeptModalOpen(false);
+                                          }
+                                        }}
+                                        style={{
+                                          display: 'flex', alignItems: 'center', gap: '16px', background: '#fff', padding: '16px', borderRadius: '20px', border: '1px solid #f1f5f9',
+                                          cursor: canViewEmployeeDetails ? 'pointer' : 'default',
+                                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                          boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                                        }}
+                                        onMouseOver={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#e2e8f0'; } }}
+                                        onMouseOut={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = '#f1f5f9'; } }}
+                                      >
+                                        <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0 }}>
+                                          {emp.image ? (
+                                            <Image fill unoptimized src={`/uploads/${emp.image}`} alt="emp" style={{ objectFit: 'cover' }} />
+                                          ) : (
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 800, fontSize: '18px' }}>{emp.first_name_th?.[0] || 'U'}</div>
+                                          )}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.first_name_th} {emp.last_name_th}</div>
+                                          <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '4px', fontWeight: 500 }}>
+                                            {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix) || 'พนักงาน'} {emp.phone ? ` • โทร: ${emp.phone}` : ''}
+                                          </div>
+                                        </div>
+                                        {canViewEmployeeDetails && <ChevronRight size={18} color="#cbd5e1" />}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <div style={{ fontSize: '14px', color: '#94a3b8', fontStyle: 'italic', padding: '24px', background: '#f8fafc', borderRadius: '20px', textAlign: 'center' }}>ไม่มีพนักงานปกติในแผนกนี้</div>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Interns Section */}
+                  {(() => {
+                    const internsList = deptEmployeesList.filter(e => e.emp_type === 'นักศึกษาฝึกงาน');
+                    if (internsList.length === 0) return null;
+                    return (
+                      <div style={{ marginBottom: '32px' }}>
+                        <div
+                          onClick={() => setShowDeptInterns(!showDeptInterns)}
+                          style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '16px 20px', background: '#f0fdf4', borderRadius: '20px', transition: 'all 0.2s', border: '1px solid transparent' }}
+                          onMouseOver={e => { e.currentTarget.style.background = '#dcfce7'; e.currentTarget.style.borderColor = '#bbf7d0'; }}
+                          onMouseOut={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.borderColor = 'transparent'; }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Contact size={20} color="#10b981" />
+                            <span>ดูรายชื่อนักศึกษาฝึกงาน ({internsList.length} คน)</span>
+                          </div>
+                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                            <ChevronRight size={18} color="#64748b" style={{ transform: showDeptInterns ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                          </div>
+                        </div>
+
+                        {showDeptInterns && (
+                          <div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                              {internsList.map(emp => {
+                                const canViewEmployeeDetails = isAdmin || user?.emp_id === deptForm.head_emp_id;
+                                return (
+                                  <div
+                                    key={emp.emp_id}
+                                    onClick={() => {
+                                      if (canViewEmployeeDetails) {
+                                        setSelectedEmpId(emp.emp_id);
+                                        setIsDeptModalOpen(false);
+                                      }
+                                    }}
+                                    style={{
+                                      display: 'flex', alignItems: 'center', gap: '16px', background: '#fff', padding: '16px', borderRadius: '20px', border: '1px solid #f1f5f9',
+                                      cursor: canViewEmployeeDetails ? 'pointer' : 'default',
+                                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                      boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                                    }}
+                                    onMouseOver={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#e2e8f0'; } }}
+                                    onMouseOut={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = '#f1f5f9'; } }}
+                                  >
+                                    <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0 }}>
+                                      {emp.image ? (
+                                        <Image fill unoptimized src={`/uploads/${emp.image}`} alt="emp" style={{ objectFit: 'cover' }} />
+                                      ) : (
+                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 800, fontSize: '18px' }}>{emp.first_name_th?.[0] || 'U'}</div>
+                                      )}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.first_name_th} {emp.last_name_th}</div>
+                                      <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '4px', fontWeight: 500 }}>
+                                        {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix) || 'นักศึกษาฝึกงาน'} {emp.phone ? ` • โทร: ${emp.phone}` : ''}
+                                      </div>
+                                    </div>
+                                    {canViewEmployeeDetails && <ChevronRight size={18} color="#cbd5e1" />}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
 
                   {isAdmin && (
                     <div style={{ display: 'flex', gap: '12px' }}>
@@ -757,17 +841,7 @@ export default function DepartmentAndEmployeePage() {
   );
 }
 
-// --- Sub-components ---
-function InfoRow({ label, value, color = '#0f172a', isLong = false, icon = null }: any) {
-  return (
-    <div style={{ display: 'flex', flexDirection: isLong ? 'column' : 'row', justifyContent: 'space-between', gap: isLong ? '6px' : '16px', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-      <span style={{ fontSize: '14px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {icon} {label}
-      </span>
-      <span style={{ fontSize: '14px', color: color, fontWeight: 600, textAlign: isLong ? 'left' : 'right', lineHeight: '1.6' }}>{value}</span>
-    </div>
-  );
-}
+
 
 // --- Styles Object (ฉบับปรับสีตามรูปภาพที่ส่งมา) ---
 const styles: { [key: string]: React.CSSProperties } = {
@@ -824,7 +898,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer'
   },
 
-  tableCard: { background: '#fff', borderRadius: '24px', border: '1px solid #f1f5f9', overflow: 'hidden' },
+  tableCard: { background: '#fff', borderRadius: '24px', border: '1px solid #f1f5f9', overflow: 'visible' },
   th: { padding: '20px 24px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#64748b', background: '#fff' },
   td: { padding: '16px 24px', borderBottom: '1px solid #f8fafc', textAlign: 'center', verticalAlign: 'middle' },
   tableRow: { transition: '0.2s' },
@@ -917,3 +991,205 @@ const styles: { [key: string]: React.CSSProperties } = {
   cancelBtn: { flex: 1, padding: '14px', borderRadius: '16px', background: '#f1f5f9', border: 'none', fontWeight: 700, cursor: 'pointer', color: '#64748b' },
   saveBtn: { flex: 2, padding: '14px', borderRadius: '16px', background: '#4f46e5', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }
 };
+
+// --- Sub-components (defined for cleaner code) ---
+
+function EmployeeRow({ 
+  emp, isAdmin, departments, positions, setSelectedEmpId, 
+  getPosName, getDeptName, formatPosName, user, editEmployee
+}: any) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <tr
+      key={emp.emp_id}
+      onClick={() => {
+        const currentDept = departments.find((d: any) => d.dept_id === emp.dept_id);
+        const canView = isAdmin || (currentDept && user?.emp_id === currentDept.head_emp_id);
+        if (canView) {
+          setSelectedEmpId(emp.emp_id);
+        } else {
+          Swal.fire({ title: 'ไม่มีสิทธิ์เข้าถึง', text: 'เฉพาะแอดมินหรือหัวหน้าแผนกเท่านั้นที่จะดูข้อมูลได้', icon: 'error' });
+        }
+      }}
+      style={styles.tableRow}
+    >
+      <td style={{ ...styles.td, fontWeight: 700, color: '#475569' }}>
+        {emp.emp_id}
+      </td>
+      <td style={styles.td}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={styles.avatar}>
+            {emp.image ? (
+              <Image fill unoptimized src={`/uploads/${emp.image}`} alt="pic" style={{ objectFit: 'cover', borderRadius: '12px' }} />
+            ) : (
+              <span>{emp.first_name_th?.[0] || 'U'}</span>
+            )}
+          </div>
+          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
+        </div>
+      </td>
+      <td style={{ ...styles.td, fontWeight: 600, color: '#334155', fontSize: '14px' }}>
+        {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}
+      </td>
+      <td style={{ ...styles.td, color: '#64748b', fontSize: '14px' }}>
+        {getDeptName(emp.dept_id)}
+      </td>
+      <td style={{ ...styles.td, textAlign: 'center', position: 'relative', zIndex: isOpen ? 50 : 1 }}>
+        <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} isOpen={isOpen} setIsOpen={setIsOpen} />
+      </td>
+      <td style={{ ...styles.td, textAlign: 'right' }}>
+        <ChevronRight size={18} color="#cbd5e1" />
+      </td>
+    </tr>
+  );
+}
+
+function Pagination({ page, setPage, totalItems, perPage }: any) {
+  const totalPages = Math.ceil(totalItems / perPage);
+  if (totalPages <= 1) return null;
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <button onClick={() => setPage((p: number) => Math.max(1, p - 1))} disabled={page === 1}
+        style={{ ...styles.pageBtn, opacity: page === 1 ? 0.5 : 1, cursor: page === 1 ? 'default' : 'pointer' }}>
+        ก่อนหน้า
+      </button>
+      {Array.from({ length: totalPages }, (_, i) => (
+        <button key={i} onClick={() => setPage(i + 1)}
+          style={{
+            ...styles.pageBtn,
+            border: page === i + 1 ? 'none' : '1px solid #e2e8f0',
+            background: page === i + 1 ? '#4f46e5' : 'white',
+            color: page === i + 1 ? 'white' : '#475569',
+            boxShadow: page === i + 1 ? '0 4px 6px -1px rgba(79, 70, 229, 0.2)' : 'none'
+          }}>{i + 1}</button>
+      ))}
+      <button onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}
+        style={{ ...styles.pageBtn, opacity: page === totalPages || totalPages === 0 ? 0.5 : 1, cursor: page === totalPages || totalPages === 0 ? 'default' : 'pointer' }}>
+        ถัดไป
+      </button>
+    </div>
+  );
+}
+
+function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [openUp, setOpenUp] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // If less than 250px below, open upwards
+      setOpenUp(spaceBelow < 250);
+    }
+  }, [isOpen]);
+  const statusOptions = [
+    { value: 'Active', label: 'ทำงานปกติ', color: '#16a34a', bg: '#dcfce7' },
+    { value: 'Probation', label: 'ทดลองงาน', color: '#a16207', bg: '#fef9c3' },
+    { value: 'Inactive', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
+    { value: 'Resigned', label: 'ลาออก/พ้นสภาพ', color: '#ef4444', bg: '#fee2e2' },
+    { value: 'Terminated', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
+  ];
+
+  const currentStatus = statusOptions.find(o => o.value === emp.status || o.label === emp.status) || statusOptions[0];
+
+  const handleUpdate = async (newStatus: string) => {
+    if (newStatus === emp.status) {
+      setIsOpen(false);
+      return;
+    }
+    const formData = new FormData();
+    formData.append('status', newStatus);
+    const res = await editEmployee(emp.emp_id, formData);
+    if (res.success) {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
+      <div 
+        onClick={(e) => {
+          if (!isAdmin) return;
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        style={{
+          padding: '6px 14px', borderRadius: '14px', fontSize: '13px', fontWeight: 800,
+          background: currentStatus.bg,
+          color: currentStatus.color,
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          cursor: isAdmin ? 'pointer' : 'default',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          border: '1px solid transparent',
+          userSelect: 'none'
+        }}
+        onMouseOver={e => { if (isAdmin) { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.borderColor = currentStatus.color + '44'; } }}
+        onMouseOut={e => { if (isAdmin) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'transparent'; } }}
+      >
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: currentStatus.color }} />
+        {currentStatus.label}
+      </div>
+
+      {isOpen && (
+        <>
+          <div 
+            onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+            style={{ position: 'fixed', inset: 0, zIndex: 100 }} 
+          />
+          <div style={{
+            position: 'absolute', 
+            [openUp ? 'bottom' : 'top']: '100%', 
+            left: '50%', 
+            transform: `translateX(-50%) ${openUp ? 'translateY(-12px)' : 'translateY(12px)'}`,
+            background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)',
+            borderRadius: '20px', border: '1px solid rgba(241, 245, 249, 1)',
+            boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12)', 
+            padding: '10px', zIndex: 101, width: '180px',
+            animation: openUp ? 'slideDownSelect 0.2s cubic-bezier(0.4, 0, 0.2, 1)' : 'slideUpSelect 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}>
+            <style>{`
+              @keyframes slideUpSelect {
+                from { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.95); }
+                to { opacity: 1; transform: translateX(-50%) translateY(12px) scale(1); }
+              }
+              @keyframes slideDownSelect {
+                from { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.95); }
+                to { opacity: 1; transform: translateX(-50%) translateY(-12px) scale(1); }
+              }
+            `}</style>
+            <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>เลือกสถานะใหม่</div>
+            {statusOptions.map(opt => (
+              <div 
+                key={opt.value}
+                onClick={(e) => { e.stopPropagation(); handleUpdate(opt.value); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  background: emp.status === opt.value ? '#f1f5f9' : 'transparent',
+                  color: emp.status === opt.value ? '#0f172a' : '#64748b'
+                }}
+                onMouseOver={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0f172a'; }}
+                onMouseOut={e => { if (emp.status !== opt.value) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } else { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#0f172a'; } }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: opt.color }} />
+                <span style={{ fontSize: '14px', fontWeight: emp.status === opt.value ? 700 : 500 }}>{opt.label}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function InfoRow({ label, value, color = '#0f172a', isLong = false, icon = null }: any) {
+  return (
+    <div style={{ display: 'flex', flexDirection: isLong ? 'column' : 'row', justifyContent: 'space-between', gap: isLong ? '6px' : '16px', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <span style={{ fontSize: '14px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {icon} {label}
+      </span>
+      <span style={{ fontSize: '14px', color: color, fontWeight: 600, textAlign: isLong ? 'left' : 'right', lineHeight: '1.6' }}>{value}</span>
+    </div>
+  );
+}

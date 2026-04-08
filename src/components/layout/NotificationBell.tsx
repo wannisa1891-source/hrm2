@@ -14,7 +14,7 @@ export default function NotificationBell() {
   useEffect(() => {
     if (isLoggedIn && (user?.emp_id || user?.username)) {
       loadNotifications();
-      const interval = setInterval(loadNotifications, 15000); // Poll every 15s (faster for better UX)
+      const interval = setInterval(loadNotifications, 3000); // 3 seconds for better UX/Real-time
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, user]);
@@ -33,7 +33,8 @@ export default function NotificationBell() {
     const targetId = user?.emp_id || user?.username;
     if (!targetId) return;
     try {
-      const res = await fetch(`/api/notifications?emp_id=${targetId}`);
+      const isAdmin = user?.role?.toLowerCase() === 'admin';
+      const res = await fetch(`/api/notifications?emp_id=${targetId}${isAdmin ? '&is_admin=true' : ''}`);
       if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -55,6 +56,18 @@ export default function NotificationBell() {
       });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
     } catch(e) {}
+  };
+
+  const handleNotificationClick = (n: any) => {
+    markAsRead(n.id);
+    const meta = n.metadata ? (typeof n.metadata === 'string' ? JSON.parse(n.metadata) : n.metadata) : null;
+    
+    // Logic for redirection based on keyword or metadata
+    if (meta?.type === 'leave' && meta?.id) {
+      router.push(`/leave?id=${meta.id}`);
+    } else if (n.title.includes('ลา') || n.message.includes('ลา')) {
+      router.push('/leave');
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -97,7 +110,7 @@ export default function NotificationBell() {
             {notifications.length === 0 ? (
               <div style={{ padding: '32px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>ไม่มีการแจ้งเตือน</div>
             ) : notifications.map(n => (
-              <div key={n.id} onClick={() => markAsRead(n.id)} style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', background: n.is_read ? '#fff' : '#eff6ff', transition: 'background 0.2s' }}>
+              <div key={n.id} onClick={() => handleNotificationClick(n)} style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', background: n.is_read ? '#fff' : '#eff6ff', transition: 'background 0.2s' }}>
                 <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b', marginBottom: '4px' }}>{n.title}</div>
                 <div style={{ fontSize: '13px', color: '#475569', lineHeight: '1.4' }}>{n.message}</div>
                 <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px' }}>{new Date(n.created_at).toLocaleString('th-TH')}</div>

@@ -46,6 +46,8 @@ export interface Employee {
   email?: string
   password?: string
   role?: string
+  staff_no?: number
+  created_at?: string
 }
 
 export interface ProfessionalLicense {
