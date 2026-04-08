@@ -54,11 +54,9 @@ export default function DepartmentAndEmployeePage() {
   const [showDeptInterns, setShowDeptInterns] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [activeTab, setActiveTab] = useState<'staff' | 'interns'>('staff');
   const perPage = 10;
 
-  useEffect(() => { setPage(1); }, [search, selectedDeptId, activeTab]);
-  useEffect(() => { if (selectedDeptId !== 'interns') setActiveTab('staff'); }, [selectedDeptId]);
+  useEffect(() => { setPage(1); }, [search, selectedDeptId]);
 
   useEffect(() => {
     loadEmployees?.();
@@ -66,26 +64,29 @@ export default function DepartmentAndEmployeePage() {
     loadPositions?.();
   }, [loadEmployees, loadDepartments, loadPositions]);
 
-  const filteredEmployees = useMemo(() => {
-    let result = employees;
+  const { regularStaff, internStaff } = useMemo(() => {
+    let base = employees;
     if (selectedDeptId === 'interns') {
-      result = result.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน');
+      return { regularStaff: [], internStaff: base.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน') };
     } else if (selectedDeptId) {
-      if (activeTab === 'staff') {
-        result = result.filter(emp => emp.dept_id === selectedDeptId && emp.emp_type !== 'นักศึกษาฝึกงาน');
-      } else {
-        result = result.filter(emp => emp.dept_id === selectedDeptId && emp.emp_type === 'นักศึกษาฝึกงาน');
-      }
+      base = base.filter(emp => emp.dept_id === selectedDeptId);
     }
+
     if (search) {
       const term = search.toLowerCase();
-      result = result.filter(e => {
+      base = base.filter(e => {
         const deptName = departments.find(d => d.dept_id === e.dept_id)?.dept_name || '';
         return `${e.first_name_th || ''} ${e.last_name_th || ''} ${e.first_name_en || ''} ${e.last_name_en || ''} ${e.emp_id || ''} ${deptName}`.toLowerCase().includes(term);
       });
     }
-    return result;
+
+    return {
+      regularStaff: base.filter(emp => emp.emp_type !== 'นักศึกษาฝึกงาน'),
+      internStaff: base.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน')
+    };
   }, [employees, selectedDeptId, search, departments]);
+
+  const filteredEmployees = useMemo(() => [...regularStaff, ...internStaff], [regularStaff, internStaff]);
 
   const selectedEmp = useMemo(() =>
     employees.find(e => e.emp_id === selectedEmpId),
@@ -278,8 +279,14 @@ export default function DepartmentAndEmployeePage() {
                   borderLeft: selectedDeptId === dept.dept_id ? '4px solid #4f46e5' : '4px solid transparent',
                 }}
               >
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {dept.dept_name}
+                  {(() => {
+                    const iCount = employees.filter(e => e.dept_id === dept.dept_id && e.emp_type === 'นักศึกษาฝึกงาน').length;
+                    return iCount > 0 ? (
+                      <span style={{ fontSize: '10px', background: '#dcfce7', color: '#16a34a', padding: '2px 6px', borderRadius: '6px', fontWeight: 800 }}>นศ. {iCount}</span>
+                    ) : null;
+                  })()}
                 </span>
 
                 <div style={{ display: 'flex', gap: '6px', opacity: selectedDeptId === dept.dept_id ? 1 : 0.4, transition: 'opacity 0.2s' }}>
@@ -295,13 +302,19 @@ export default function DepartmentAndEmployeePage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' }}>
             <div style={{ minWidth: '300px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', wordBreak: 'keep-all', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #1e293b 0%, #4f46e5 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {selectedDeptId === 'interns' ? 'รายชื่อนักศึกษาฝึกงาน' : (selectedDeptId ? getDeptName(selectedDeptId) : 'รายชื่อพนักงานทั้งหมด')}
+                {selectedDeptId === 'interns' ? 'รายชื่อนักศึกษาฝึกงานทั้งหมด' : (selectedDeptId ? getDeptName(selectedDeptId) : 'รายชื่อบุคลากรทั้งหมด')}
               </h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', margin: '8px 0 0', fontSize: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '6px', background: '#e2e8f0', color: '#475569' }}>
-                  <Users size={14} strokeWidth={2.5} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#64748b', margin: '8px 0 0', fontSize: '15px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fff', padding: '4px 12px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
+                  <Users size={14} color="#4f46e5" />
+                  <span>พนักงาน: <strong>{regularStaff.length}</strong> ท่าน</span>
                 </div>
-                <span>จำนวนบุคลากรทั้งหมด <strong>{filteredEmployees.length}</strong> ท่าน</span>
+                {internStaff.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f0fdf4', padding: '4px 12px', borderRadius: '10px', border: '1px solid #dcfce7' }}>
+                    <Contact size={14} color="#10b981" />
+                    <span>นศ.ฝึกงาน: <strong>{internStaff.length}</strong> ท่าน</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -324,142 +337,69 @@ export default function DepartmentAndEmployeePage() {
             </div>
           </div>
 
-          {/* Tab System for Department View */}
-          {selectedDeptId && selectedDeptId !== 'interns' && (
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(255, 255, 255, 0.5)', padding: '6px', borderRadius: '16px', width: 'fit-content', border: '1px solid #e2e8f0', backdropFilter: 'blur(8px)' }}>
-              {(() => {
-                const deptEmps = employees.filter(e => e.dept_id === selectedDeptId);
-                const sCount = deptEmps.filter(e => e.emp_type !== 'นักศึกษาฝึกงาน').length;
-                const iCount = deptEmps.filter(e => e.emp_type === 'นักศึกษาฝึกงาน').length;
-                return (
-                  <>
-                    <button
-                      onClick={() => setActiveTab('staff')}
-                      style={{
-                        padding: '10px 24px', borderRadius: '12px', border: 'none', fontSize: '14px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '8px',
-                        background: activeTab === 'staff' ? '#fff' : 'transparent',
-                        color: activeTab === 'staff' ? '#4f46e5' : '#64748b',
-                        boxShadow: activeTab === 'staff' ? '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)' : 'none'
-                      }}
-                    >
-                      <Users size={16} /> บคุลากรประจำ ({sCount})
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('interns')}
-                      style={{
-                        padding: '10px 24px', borderRadius: '12px', border: 'none', fontSize: '14px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '8px',
-                        background: activeTab === 'interns' ? '#fff' : 'transparent',
-                        color: activeTab === 'interns' ? '#10b981' : '#64748b',
-                        boxShadow: activeTab === 'interns' ? '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)' : 'none'
-                      }}
-                    >
-                      <Contact size={16} /> นักศึกษาฝึกงาน ({iCount})
-                    </button>
-                  </>
-                );
-              })()}
-            </div>
+          {/* --- Regular Staff Section --- */}
+          {(selectedDeptId !== 'interns') && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', marginTop: '8px' }}>
+                <Users size={20} color="#4f46e5" />
+                <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#1e293b', margin: 0 }}>รายชื่อพนักงานประจำ</h2>
+              </div>
+              <div style={styles.tableCard}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                      <th style={styles.th}>โปรไฟล์พนักงาน</th>
+                      <th style={styles.th}>ตำแหน่ง / สายงาน</th>
+                      <th style={styles.th}>สถานะ</th>
+                      <th style={{ ...styles.th, textAlign: 'right' }}>จัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {regularStaff.slice((page - 1) * perPage, page * perPage).map((emp) => (
+                      <EmployeeRow key={emp.emp_id} emp={emp} isAdmin={isAdmin} departments={departments} positions={positions} setSelectedEmpId={setSelectedEmpId} getPosName={getPosName} getDeptName={getDeptName} formatPosName={formatPosName} user={user} />
+                    ))}
+                    {regularStaff.length === 0 && (
+                      <tr>
+                        <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่มีพนักงานในแผนกนี้</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {/* Pagination for regular staff */}
+              {regularStaff.length > perPage && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', marginBottom: '24px' }}>
+                   <Pagination page={page} setPage={setPage} totalItems={regularStaff.length} perPage={perPage} />
+                </div>
+              )}
+            </>
           )}
 
-          <div style={styles.tableCard}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  <th style={styles.th}>โปรไฟล์พนักงาน</th>
-                  <th style={styles.th}>ตำแหน่ง / สายงาน</th>
-                  <th style={styles.th}>สถานะ</th>
-                  <th style={{ ...styles.th, textAlign: 'right' }}>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedEmployees.map((emp) => (
-                  <tr
-                    key={emp.emp_id}
-                    onClick={() => {
-                      const currentDept = departments.find(d => d.dept_id === emp.dept_id);
-                      const canView = isAdmin || (currentDept && user?.emp_id === currentDept.head_emp_id);
-                      if (canView) {
-                        setSelectedEmpId(emp.emp_id);
-                      } else {
-                        Swal.fire({ title: 'ไม่มีสิทธิ์เข้าถึง', text: 'เฉพาะแอดมินหรือหัวหน้าแผนกเท่านั้นที่จะดูข้อมูลได้', icon: 'error' });
-                      }
-                    }}
-                    style={styles.tableRow}
-                  >
-                    <td style={styles.td}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={styles.avatar}>
-                          {emp.image ? (
-                            <Image fill unoptimized src={`/uploads/${emp.image}`} alt="pic" style={{ objectFit: 'cover', borderRadius: '12px' }} />
-                          ) : (
-                            <span>{emp.first_name_th?.[0] || 'U'}</span>
-                          )}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
-                          <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>รหัส: {emp.emp_id}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={{ fontWeight: 600, fontSize: '14px', color: '#334155' }}>{formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}</div>
-                      <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>{getDeptName(emp.dept_id)}</div>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{
-                        padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                        background: emp.status === 'Active' ? '#dcfce7' : '#f1f5f9',
-                        color: emp.status === 'Active' ? '#16a34a' : '#64748b',
-                        display: 'inline-flex', alignItems: 'center', gap: '6px'
-                      }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: emp.status === 'Active' ? '#16a34a' : '#94a3b8' }} />
-                        {emp.status}
-                      </span>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <ChevronRight size={20} color="#cbd5e1" />
-                    </td>
-                  </tr>
-                ))}
-                {pagedEmployees.length === 0 && (
-                  <tr>
-                    <td colSpan={4} style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
-                      <SearchCode size={48} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-                      <p style={{ fontSize: '16px', fontWeight: 500 }}>ไม่พบข้อมูลพนักงาน</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {filteredEmployees.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: 'transparent', marginTop: '16px' }}>
-              <span style={{ fontSize: 14, color: '#64748b', fontWeight: 500 }}>
-                แสดง <span style={{ color: '#0f172a', fontWeight: 700 }}>{(page - 1) * perPage + 1}</span> ถึง <span style={{ color: '#0f172a', fontWeight: 700 }}>{Math.min(page * perPage, filteredEmployees.length)}</span> จากทั้งหมด {filteredEmployees.length} ท่าน
-              </span>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  style={{ ...styles.pageBtn, opacity: page === 1 ? 0.5 : 1, cursor: page === 1 ? 'default' : 'pointer' }}>
-                  ก่อนหน้า
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button key={i} onClick={() => setPage(i + 1)}
-                    style={{
-                      ...styles.pageBtn,
-                      border: page === i + 1 ? 'none' : '1px solid #e2e8f0',
-                      background: page === i + 1 ? '#4f46e5' : 'white',
-                      color: page === i + 1 ? 'white' : '#475569',
-                      boxShadow: page === i + 1 ? '0 4px 6px -1px rgba(79, 70, 229, 0.2)' : 'none'
-                    }}>{i + 1}</button>
-                ))}
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}
-                  style={{ ...styles.pageBtn, opacity: page === totalPages || totalPages === 0 ? 0.5 : 1, cursor: page === totalPages || totalPages === 0 ? 'default' : 'pointer' }}>
-                  ถัดไป
-                </button>
+          {/* --- Intern Section --- */}
+          {(internStaff.length > 0 || selectedDeptId === 'interns') && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', marginTop: '32px' }}>
+                <Contact size={20} color="#10b981" />
+                <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#1e293b', margin: 0 }}>รายชื่อนักศึกษาฝึกงาน</h2>
               </div>
-            </div>
+              <div style={{ ...styles.tableCard, borderTop: '4px solid #10b981' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                      <th style={styles.th}>โปรไฟล์นักศึกษา</th>
+                      <th style={styles.th}>คณะ / สถานศึกษา</th>
+                      <th style={styles.th}>สถานะ</th>
+                      <th style={{ ...styles.th, textAlign: 'right' }}>จัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {internStaff.map((emp) => (
+                      <EmployeeRow key={emp.emp_id} emp={emp} isAdmin={isAdmin} departments={departments} positions={positions} setSelectedEmpId={setSelectedEmpId} getPosName={getPosName} getDeptName={getDeptName} formatPosName={formatPosName} user={user} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 
@@ -1057,3 +997,100 @@ const styles: { [key: string]: React.CSSProperties } = {
   cancelBtn: { flex: 1, padding: '14px', borderRadius: '16px', background: '#f1f5f9', border: 'none', fontWeight: 700, cursor: 'pointer', color: '#64748b' },
   saveBtn: { flex: 2, padding: '14px', borderRadius: '16px', background: '#4f46e5', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }
 };
+
+// --- Sub-components (defined for cleaner code) ---
+
+function EmployeeRow({ 
+  emp, isAdmin, departments, positions, setSelectedEmpId, 
+  getPosName, getDeptName, formatPosName, user 
+}: any) {
+  return (
+    <tr
+      key={emp.emp_id}
+      onClick={() => {
+        const currentDept = departments.find((d: any) => d.dept_id === emp.dept_id);
+        const canView = isAdmin || (currentDept && user?.emp_id === currentDept.head_emp_id);
+        if (canView) {
+          setSelectedEmpId(emp.emp_id);
+        } else {
+          Swal.fire({ title: 'ไม่มีสิทธิ์เข้าถึง', text: 'เฉพาะแอดมินหรือหัวหน้าแผนกเท่านั้นที่จะดูข้อมูลได้', icon: 'error' });
+        }
+      }}
+      style={styles.tableRow}
+    >
+      <td style={styles.td}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={styles.avatar}>
+            {emp.image ? (
+              <Image fill unoptimized src={`/uploads/${emp.image}`} alt="pic" style={{ objectFit: 'cover', borderRadius: '12px' }} />
+            ) : (
+              <span>{emp.first_name_th?.[0] || 'U'}</span>
+            )}
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
+            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>รหัส: {emp.emp_id}</div>
+          </div>
+        </div>
+      </td>
+      <td style={styles.td}>
+        <div style={{ fontWeight: 600, fontSize: '14px', color: '#334155' }}>
+          {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}
+        </div>
+        <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>{getDeptName(emp.dept_id)}</div>
+      </td>
+      <td style={styles.td}>
+        <span style={{
+          padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
+          background: emp.status === 'Active' ? '#dcfce7' : '#f1f5f9',
+          color: emp.status === 'Active' ? '#16a34a' : '#64748b',
+          display: 'inline-flex', alignItems: 'center', gap: '6px'
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: emp.status === 'Active' ? '#16a34a' : '#94a3b8' }} />
+          {emp.status}
+        </span>
+      </td>
+      <td style={{ ...styles.td, textAlign: 'right' }}>
+        <ChevronRight size={20} color="#cbd5e1" />
+      </td>
+    </tr>
+  );
+}
+
+function Pagination({ page, setPage, totalItems, perPage }: any) {
+  const totalPages = Math.ceil(totalItems / perPage);
+  if (totalPages <= 1) return null;
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <button onClick={() => setPage((p: number) => Math.max(1, p - 1))} disabled={page === 1}
+        style={{ ...styles.pageBtn, opacity: page === 1 ? 0.5 : 1, cursor: page === 1 ? 'default' : 'pointer' }}>
+        ก่อนหน้า
+      </button>
+      {Array.from({ length: totalPages }, (_, i) => (
+        <button key={i} onClick={() => setPage(i + 1)}
+          style={{
+            ...styles.pageBtn,
+            border: page === i + 1 ? 'none' : '1px solid #e2e8f0',
+            background: page === i + 1 ? '#4f46e5' : 'white',
+            color: page === i + 1 ? 'white' : '#475569',
+            boxShadow: page === i + 1 ? '0 4px 6px -1px rgba(79, 70, 229, 0.2)' : 'none'
+          }}>{i + 1}</button>
+      ))}
+      <button onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}
+        style={{ ...styles.pageBtn, opacity: page === totalPages || totalPages === 0 ? 0.5 : 1, cursor: page === totalPages || totalPages === 0 ? 'default' : 'pointer' }}>
+        ถัดไป
+      </button>
+    </div>
+  );
+}
+
+function InfoRow({ label, value, color = '#0f172a', isLong = false, icon = null }: any) {
+  return (
+    <div style={{ display: 'flex', flexDirection: isLong ? 'column' : 'row', justifyContent: 'space-between', gap: isLong ? '6px' : '16px', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <span style={{ fontSize: '14px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {icon} {label}
+      </span>
+      <span style={{ fontSize: '14px', color: color, fontWeight: 600, textAlign: isLong ? 'left' : 'right', lineHeight: '1.6' }}>{value}</span>
+    </div>
+  );
+}
