@@ -37,6 +37,24 @@ export default function EmployeeFormModal({
   const [previewUrl, setPreviewUrl] = useState<string | null>(employee?.image ? `/uploads/${employee.image}` : null);
   const [saving, setSaving] = useState(false);
 
+  // License History State
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [historyLicenseName, setHistoryLicenseName] = useState('');
+
+  const fetchLicenseHistory = async (licenseNo: string, licenseName: string) => {
+    if (!licenseNo) return;
+    try {
+      const res = await fetch(`/api/licenses/history/${licenseNo}`);
+      const data = await res.json();
+      setHistoryData(data);
+      setHistoryLicenseName(licenseName);
+      setHistoryModalOpen(true);
+    } catch (err) {
+      console.error('Error fetching license history:', err);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       setFormData(employee || { ...EMPTY_FORM });
@@ -387,7 +405,14 @@ export default function EmployeeFormModal({
                       <div key={index} style={{ padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc', marginBottom: '10px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
                           <span style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>ใบรับรองที่ {index + 1}</span>
-                          <button type="button" onClick={() => handleRemoveLicense(index)} style={{ padding: '4px 8px', fontSize: '12px', color: '#ef4444', background: '#fee2e2', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>ลบทิ้ง</button>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            {lic.license_no && (
+                              <button type="button" onClick={() => fetchLicenseHistory(lic.license_no!, lic.license_name || '')} style={{ padding: '4px 10px', fontSize: '12px', color: '#3b82f6', background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                🕒 ประวัติ
+                              </button>
+                            )}
+                            <button type="button" onClick={() => handleRemoveLicense(index)} style={{ padding: '4px 8px', fontSize: '12px', color: '#ef4444', background: '#fee2e2', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>ลบทิ้ง</button>
+                          </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -450,6 +475,56 @@ export default function EmployeeFormModal({
         </div>
 
       </div>
+
+      {/* --- License History Sub-Modal --- */}
+      {historyModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '700px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ padding: '20px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>ประวัติการต่ออายุ: {historyLicenseName}</h4>
+              <button onClick={() => setHistoryModalOpen(false)} style={{ border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>✕</button>
+            </div>
+            <div style={{ padding: '20px', overflowY: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead style={{ background: '#f8fafc' }}>
+                  <tr>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>ลำดับ</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>เลขที่ใบอนุญาต</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>วันหมดอายุ</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>สถานะ</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>ปรับปรุงเมื่อ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historyData.map((h, i) => (
+                    <tr key={h.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '12px' }}>{historyData.length - i}</td>
+                      <td style={{ padding: '12px' }}>{h.license_no}</td>
+                      <td style={{ padding: '12px' }}>{h.expire_date ? new Date(h.expire_date).toLocaleDateString('th-TH') : '-'}</td>
+                      <td style={{ padding: '12px' }}>
+                        <span style={{ 
+                          padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600,
+                          background: h.status === 'Active' ? '#dcfce7' : h.status === 'Renewed' ? '#dbeafe' : '#fee2e2',
+                          color: h.status === 'Active' ? '#166534' : h.status === 'Renewed' ? '#1e40af' : '#991b1b'
+                        }}>
+                          {h.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', color: '#64748b' }}>{h.created_at ? new Date(h.created_at).toLocaleString('th-TH') : '-'}</td>
+                    </tr>
+                  ))}
+                  {historyData.length === 0 && (
+                    <tr><td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>ไม่พบข้อมูลประวัติ</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ padding: '16px', borderTop: '1px solid #eee', textAlign: 'right' }}>
+              <button onClick={() => setHistoryModalOpen(false)} style={{ padding: '8px 20px', background: '#f1f5f9', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 600 }}>ปิดหน้าต่าง</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

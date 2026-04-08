@@ -8,6 +8,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { Leave } from '@/services/apiService';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
+import { useSearchParams } from 'next/navigation';
 
 const LEAVE_TYPES = [
   { id: 'L01', name: 'ลาป่วย', color: '#f59e0b' },
@@ -23,6 +24,8 @@ export default function LeavePage() {
   const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
   const { leaves, loading, loadLeaves, addLeave, changeLeaveStatus } = useLeaves();
   const { employees, loadEmployees } = useEmployees();
+  const searchParams = useSearchParams();
+  const leaveIdParam = searchParams.get('id');
 
   const visibleLeaves = useMemo(() => {
     if (isAdmin) return leaves;
@@ -48,6 +51,16 @@ export default function LeavePage() {
 
   useEffect(() => { loadLeaves(); loadEmployees(); }, [loadLeaves, loadEmployees]);
   useEffect(() => { setPage(1); }, [filterStatus, searchQuery]);
+
+  useEffect(() => {
+    if (leaveIdParam && leaves.length > 0) {
+      const found = leaves.find(l => String(l.leave_id) === leaveIdParam);
+      if (found) {
+        setSelectedLeave(found);
+        setShowReviewModal(true);
+      }
+    }
+  }, [leaveIdParam, leaves]);
 
   const filtered = useMemo(() => {
     let r = visibleLeaves;

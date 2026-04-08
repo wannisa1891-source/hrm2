@@ -1,10 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
+import { 
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid
+} from 'recharts';
 
+export const dynamic = 'force-dynamic';
+
+// --- Interfaces ---
 interface License {
   id: string;
   license_id: number | null;
@@ -16,54 +23,107 @@ interface License {
   expires: string;
   daysLeft: number;
   points: number;
-  image: string | null;
-  gender: string;
   status: string;
   license_name?: string;
   license_type?: string;
   institution?: string;
   issue_date?: string;
+  expire_date?: string;
+  file_path?: string;
+  dept_name?: string;
+  pos_name?: string;
+  dept_id?: string;
+  pos_id?: string;
+  remarks?: string;
+  verified_status?: string;
 }
 
+interface MonitorData {
+  totalEmployees: number;
+  compliant: number;
+  missing: number;
+  expiring: number;
+  departmentStats: Record<string, { total: number, compliant: number, missing: number, expiring: number }>;
+  details: any[];
+}
+
+interface LicenseConfig {
+  id: number;
+  config_name: string;
+  pos_id: string | null;
+  dept_id: string | null;
+  license_name: string;
+  valid_years: number;
+  warning_days: number;
+}
+
+// --- Helpers ---
 function getStatus(days: number) {
-  if (days < 0) return { label: 'หมดอายุแล้ว', cls: 'status-expired', color: '#dc2626', bg: '#fee2e2' };
-  if (days <= 30) return { label: `ใกล้หมด (ใน ${days} วัน)`, cls: 'status-urgent', color: '#ea580c', bg: '#ffedd5' };
-  if (days <= 90) return { label: `เหลือ ${days} วัน`, cls: 'status-warning', color: '#ca8a04', bg: '#fef9c3' };
-  return { label: 'ปกติ', cls: 'status-normal', color: '#16a34a', bg: '#dcfce7' };
+  if (days < 0) return { label: `หมดอายุ (${Math.abs(days)} วัน)`, color: '#dc2626', bg: '#fee2e2' };
+  if (days <= 30) return { label: `วิกฤต (${days} วัน)`, color: '#ea580c', bg: '#ffedd5' };
+  if (days <= 90) return { label: `ใกล้หมดอายุ (${days} วัน)`, color: '#ca8a04', bg: '#fef9c3' };
+  return { label: `ยังใช้งานได้ (อีก ${days} วัน)`, color: '#16a34a', bg: '#dcfce7' };
 }
 
 export default function LicensePage() {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
-  const [licenses, setLicenses] = useState<License[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'hr';
+  const isDeptHead = user?.role === 'หัวหน้า';
   
-  // Search & Filter State
+  const [activeTab, setActiveTab] = useState<'list' | 'monitor' | 'settings'>('list');
+  const [licenses, setLicenses] = useState<License[]>([]);
+  const [monitorData, setMonitorData] = useState<MonitorData | null>(null);
+  const [configs, setConfigs] = useState<LicenseConfig[]>([]);
+  const [allEmployees, setAllEmployees] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [positions, setPositions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [page, setPage] = useState(1);
-  const perPage = 10;
+  const [searchTermEmp, setSearchTermEmp] = useState('');
 
-  // Modal State
-  const [activeModal, setActiveModal] = useState<'none' | 'renew' | 'edit' | 'add'>('none');
+  const [activeModal, setActiveModal] = useState<'none' | 'renew' | 'edit' | 'add' | 'config'>('none');
   const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
+  const [selectedConfig, setSelectedConfig] = useState<LicenseConfig | null>(null);
+  
   const [formData, setFormData] = useState({
-    license_no: '',
-    expire_date: '',
-    points: 0,
-    emp_id: '',
-    license_name: '',
-    license_type: '',
-    institution: '',
-    issue_date: ''
+    license_no: '', expire_date: '', points: 0, emp_id: '',
+    license_name: '', license_type: '', institution: '', issue_date: '',
+    remarks: '', verified_status: 'Pending'
   });
+  
+  const [configFormData, setConfigFormData] = useState<Partial<LicenseConfig>>({
+    config_name: '', pos_id: null, dept_id: null, license_name: '', valid_years: 5, warning_days: 90
+  });
+  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [historyData, setHistoryData] = useState<License[]>([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchLicenses();
-    setPage(1);
-  }, [searchTerm, statusFilter]);
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'list') fetchLicenses();
+    if (activeTab === 'monitor') fetchMonitorData();
+    if (activeTab === 'settings') fetchConfigs();
+  }, [activeTab, searchTerm, statusFilter]);
+
+  const fetchInitialData = async () => {
+    try {
+      const [deptRes, posRes, empRes] = await Promise.all([
+        fetch('/api/departments'),
+        fetch('/api/positions'),
+        fetch('/api/employees')
+      ]);
+      setDepartments(await deptRes.json());
+      setPositions(await posRes.json());
+      setAllEmployees(await empRes.json());
+    } catch (err) { console.error(err); }
+  };
 
   const fetchLicenses = async () => {
     try {
@@ -71,530 +131,533 @@ export default function LicensePage() {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (statusFilter !== 'all') params.append('status', statusFilter);
-      
       const res = await fetch(`/api/licenses?${params.toString()}`);
-      if (!res.ok) throw new Error('Failed to fetch licenses');
-      const data = await res.json();
-      setLicenses(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+      setLicenses(await res.json());
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  const handleOpenModal = (type: 'renew' | 'edit' | 'add', license?: License) => {
-    setSelectedLicense(license || null);
-    if (license) {
-      setFormData({
-        license_no: license.license_no || '',
-        expire_date: license.expires !== '-' ? license.expires : '',
-        points: license.points || 0,
-        emp_id: license.emp_id,
-        license_name: license.license_name || '',
-        license_type: license.license_type || '',
-        institution: license.institution || '',
-        issue_date: license.issue_date || ''
+  const fetchMonitorData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/licenses/monitor');
+      setMonitorData(await res.json());
+    } catch (err) { console.error(err); } finally { setLoading(false); }
+  };
+
+  const fetchConfigs = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/licenses/configs');
+      setConfigs(await res.json());
+    } catch (err) { console.error(err); } finally { setLoading(false); }
+  };
+
+  const handleConfigSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      const method = selectedConfig ? 'PUT' : 'POST';
+      const res = await fetch('/api/licenses/configs', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...configFormData, id: selectedConfig?.id })
       });
+      if (!res.ok) throw new Error('Failed to save');
+      Swal.fire('สำเร็จ', 'บันทึกเกณฑ์เรียบร้อยแล้ว', 'success');
+      fetchConfigs();
+      setActiveModal('none');
+    } catch (err: any) { Swal.fire('Error', err.message, 'error'); } finally { setSubmitting(false); }
+  };
+
+  const handleLicenseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      const fd = new FormData();
+      fd.append('license_id', selectedLicense?.license_id?.toString() || selectedLicense?.id || '');
+      fd.append('emp_id', activeModal === 'add' ? formData.emp_id : selectedLicense?.emp_id || '');
+      fd.append('expire_date', formData.expire_date);
+      fd.append('license_no', formData.license_no);
+      fd.append('license_name', formData.license_name);
+      fd.append('license_type', formData.license_type);
+      fd.append('institution', formData.institution);
+      fd.append('issue_date', formData.issue_date);
+      fd.append('remarks', formData.remarks);
+      fd.append('verified_status', formData.verified_status);
+      if (selectedFile) fd.append('file', selectedFile);
+
+      const res = await fetch('/api/licenses/renew', {
+        method: 'POST',
+        body: fd
+      });
+      if (res.ok) {
+        Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'บันทึกข้อมูลและอัปโหลดไฟล์เรียบร้อยแล้ว', showConfirmButton: false, timer: 1500 });
+        fetchLicenses();
+        setActiveModal('none');
+        setSelectedFile(null);
+      } else {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to save');
+      }
+    } catch (err: any) { Swal.fire('Error', err.message, 'error'); } finally { setSubmitting(false); }
+  };
+
+  const fetchHistory = async (empId: string) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/licenses/renew?emp_id=${empId}&history=true`);
+      if (res.ok) {
+        setHistoryData(await res.json());
+        setHistoryModalOpen(true);
+      }
+    } catch (err) { console.error(err); } finally { setLoading(false); }
+  };
+
+  const handleOpenModal = (type: any, data?: any) => {
+    if (type === 'config') {
+      setSelectedConfig(data || null);
+      setConfigFormData(data || { config_name: '', pos_id: null, dept_id: null, license_name: '', valid_years: 5, warning_days: 90 });
     } else {
-      setFormData({ license_no: '', expire_date: '', points: 0, emp_id: isAdmin ? '' : (user?.emp_id as string || ''), license_name: '', license_type: '', institution: '', issue_date: '' });
+      setSelectedLicense(data || null);
+      setSearchTermEmp('');
+      if (data) {
+        setFormData({
+          license_no: data.license_no || '',
+          expire_date: data.expire_date || data.expires || '',
+          points: data.points || 0,
+          emp_id: data.emp_id,
+          license_name: data.license_name || '',
+          license_type: data.license_type || '',
+          institution: data.institution || '',
+          issue_date: data.issue_date || '',
+          remarks: data.remarks || '',
+          verified_status: data.verified_status || 'Pending'
+        });
+      } else {
+        setFormData({ license_no: '', expire_date: '', points: 0, emp_id: '', license_name: '', license_type: '', institution: '', issue_date: '', remarks: '', verified_status: 'Pending' });
+      }
     }
     setActiveModal(type);
   };
 
-  const closeModal = () => {
-    setActiveModal('none');
-    setSelectedLicense(null);
+  const COLORS = ['#1e293b', '#3b82f6', '#ef4444'];
+  
+  const checkEmployeeRequirement = (empId: string) => {
+    const emp = allEmployees.find(e => e.emp_id === empId);
+    if (!emp) return null;
+    return configs.find(c => (!c.dept_id || c.dept_id === emp.dept_id) && (!c.pos_id || c.pos_id === emp.pos_id));
   };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.expire_date) {
-      Swal.fire('ข้อความแจ้งเตือน', 'กรุณาระบุวันหมดอายุ', 'warning');
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      let res;
-      if (activeModal === 'renew' || activeModal === 'add') {
-        res = await fetch('/api/licenses/renew', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            license_id: selectedLicense?.license_id,
-            emp_id: activeModal === 'add' ? formData.emp_id : selectedLicense?.emp_id,
-            expire_date: formData.expire_date,
-            license_no: formData.license_no,
-            license_name: formData.license_name,
-            license_type: formData.license_type,
-            institution: formData.institution,
-            issue_date: formData.issue_date
-          }),
-        });
-      } else if (activeModal === 'edit') {
-        res = await fetch(`/api/licenses/${selectedLicense?.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            license_no: formData.license_no,
-            expire_date: formData.expire_date,
-            cneu_cme_points: formData.points,
-            license_name: formData.license_name,
-            license_type: formData.license_type,
-            institution: formData.institution,
-            issue_date: formData.issue_date
-          }),
-        });
-      }
-
-      if (res && !res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Operation failed');
-      }
-
-      await fetchLicenses();
-      closeModal();
-      Swal.fire({ title: 'สำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
-    } catch (err: any) {
-      Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (license: License) => {
-    if (!license.license_id) {
-      Swal.fire('ข้อความแจ้งเตือน', 'ไม่สามารถลบรายการนี้ได้', 'warning');
-      return;
-    }
-    
-    const result = await Swal.fire({
-      title: 'ยืนยันการลบ',
-      text: 'ยืนยันการลบข้อมูลใบประกอบวิชาชีพรายการนี้หรือไม่?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'ลบข้อมูล',
-      cancelButtonText: 'ยกเลิก',
-      confirmButtonColor: '#ef4444'
-    });
-    if (!result.isConfirmed) return;
-
-    try {
-      const res = await fetch(`/api/licenses/${license.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete');
-      Swal.fire({ title: 'ลบสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
-      await fetchLicenses();
-    } catch (err: any) {
-      Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
-    }
-  };
-
-  const visibleLicenses = useMemo(() => {
-    if (isAdmin) return licenses;
-    if (!user?.emp_id) return [];
-    return licenses.filter(l => l.emp_id === user.emp_id);
-  }, [licenses, isAdmin, user?.emp_id]);
-
-  // Summary counts
-  const total = visibleLicenses.length;
-  const expiringCount = visibleLicenses.filter(l => l.daysLeft >= 0 && l.daysLeft <= 90).length;
-  const expiredCount = visibleLicenses.filter(l => l.daysLeft < 0).length;
 
   return (
     <AppLayout>
-      <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
-      {/* Header Section */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">ใบประกอบวิชาชีพ</h1>
-          <p className="page-subtitle">จัดการและติดตามวันหมดอายุใบอนุญาตประกอบวิชาชีพของบุคลากรภายในองค์กร</p>
-        </div>
-          <button 
-            className="btn-primary"
-            onClick={() => handleOpenModal('add')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-            </svg>
-            เพิ่มใบประกอบ
-          </button>
-      </div>
-
-      {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
-        {[
-          { title: 'ทั้งหมด', count: total, color: '#3b82f6', bg: '#eff6ff', filter: 'all', iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-          { title: 'ใกล้หมดอายุ', count: expiringCount, color: '#ca8a04', bg: '#fef9c3', filter: 'expiring', iconPath: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-          { title: 'หมดอายุแล้ว', count: expiredCount, color: '#dc2626', bg: '#fef2f2', filter: 'expired', iconPath: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' }
-        ].map((card, i) => (
-          <div key={i} 
-          className="glass-card hover-glow"
-          onClick={() => setStatusFilter(card.filter)}
-          style={{
-            border: statusFilter === card.filter ? `2px solid ${card.color}` : '1px solid transparent',
-            padding: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '20px',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              width: '64px', height: '64px', borderRadius: '16px', background: card.bg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color
-            }}>
-              <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.iconPath} />
-              </svg>
-            </div>
-            <div>
-              <div style={{ color: '#64748b', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>{card.title}</div>
-              <div style={{ color: '#1e2433', fontSize: '32px', fontWeight: 800, lineHeight: 1 }}>{card.count} <span style={{fontSize: '14px', color: '#94a3b8', fontWeight: 500}}>รายการ</span></div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Main Panel */}
-      <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-        {/* Filter Bar */}
-        <div className="filter-bar" style={{ padding: '24px' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input 
-              type="text" 
-              className="search-input"
-              placeholder="ค้นหาชื่อพนักงาน, รหัส หรือเลขใบรับรอง..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px 16px 12px 48px',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0',
-                background: '#f8fafc',
-                fontSize: '15px',
-                outline: 'none',
-              }}
-            />
-          </div>
-          <select 
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              padding: '12px 20px',
-              borderRadius: '12px',
-              border: '1px solid #e2e8f0',
-              background: '#fff',
-              fontSize: '15px',
-              fontWeight: 500,
-              color: '#334155',
-              outline: 'none',
-              cursor: 'pointer',
-              minWidth: '200px'
-            }}
-          >
-            <option value="all">สถานะทั้งหมด</option>
-            <option value="normal">ปกติ (เหลือเกิน 90 วัน)</option>
-            <option value="expiring">ใกล้หมดอายุ (ภายใน 90 วัน)</option>
-            <option value="expired">หมดอายุแล้ว</option>
-          </select>
-        </div>
-
-        {/* Table */}
-        <div style={{ overflowX: 'auto' }} className="custom-scroll">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>พนักงาน</th>
-                <th>ประเภทใบประกอบ</th>
-                <th>เลขที่ใบอนุญาต</th>
-                <th style={{ textAlign: 'center' }}>คะแนนสะสม</th>
-                <th>วันหมดอายุ</th>
-                <th>สถานะ</th>
-                <th style={{ textAlign: 'center' }}>การจัดการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>กำลังค้นหาข้อมูล...</td></tr>
-              ) : visibleLicenses.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่พบข้อมูลที่ตรงกับการค้นหา</td></tr>
-              ) : (
-                (() => {
-                  const filtered = visibleLicenses;
-                  const totalPages = Math.ceil(filtered.length / perPage);
-                  const paged = filtered.slice((page - 1) * perPage, page * perPage);
-                  return paged.map(l => {
-                    const status = getStatus(l.daysLeft);
-                    return (
-                    <tr key={l.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                      <td style={{ padding: '16px 24px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                          <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#e2e8f0', backgroundImage: `url(${l.image ? `/uploads/${l.image}` : (l.gender === 'หญิง' ? '/avatar2.jpg' : '/avatar1.jpg')})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
-                          <div>
-                            <div style={{ fontWeight: 600, color: '#1e2433', fontSize: '15px' }}>{l.name}</div>
-                            <div style={{ color: '#64748b', fontSize: '13px', marginTop: '2px' }}>รหัส: {l.emp_id}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 24px', color: '#334155', fontSize: '14px', fontWeight: 500 }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', background: '#f1f5f9', padding: '6px 12px', borderRadius: '8px', color: '#475569' }}>
-                          {l.type}
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 24px', fontFamily: '"JetBrains Mono", monospace', fontSize: '14px', color: '#1e293b' }}>
-                        {l.license_no || '-'}
-                      </td>
-                      <td style={{ padding: '16px 24px', textAlign: 'center' }}>
-                        <div style={{ 
-                          display: 'inline-block',
-                          fontWeight: 700, 
-                          fontSize: '15px',
-                          color: l.points >= 50 ? '#16a34a' : '#1e2433',
-                          background: l.points >= 50 ? '#dcfce7' : '#f1f5f9',
-                          padding: '4px 12px',
-                          borderRadius: '20px'
-                        }}>
-                          {l.points}
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 24px', fontSize: '14px', color: '#334155', fontWeight: 500 }}>{l.expires}</td>
-                      <td style={{ padding: '16px 24px' }}>
-                        <span style={{ 
-                          display: 'inline-flex', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                          backgroundColor: status.bg, color: status.color, alignItems: 'center', gap: '6px'
-                        }}>
-                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: status.color }}></span>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                          {(isAdmin || l.emp_id === user?.emp_id) && (
-                            <>
-                              <button 
-                                className="btn-primary"
-                                onClick={() => handleOpenModal('renew', l)}
-                                style={{
-                                  padding: '8px 16px',
-                                  borderRadius: '8px',
-                                  fontSize: '13px',
-                                  fontWeight: 600,
-                                  background: l.daysLeft <= 90 ? '#ef4444' : '#f1f5f9',
-                                  color: l.daysLeft <= 90 ? '#ffffff' : '#475569',
-                                  border: 'none',
-                                  boxShadow: l.daysLeft <= 90 ? '0 4px 6px -1px rgba(239, 68, 68, 0.3)' : 'none'
-                                }}
-                              >
-                                ต่ออายุ
-                              </button>
-                              
-                              <button 
-                                className="btn-secondary"
-                                onClick={() => handleOpenModal('edit', l)}
-                                style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                              >
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                              </button>
-                              
-                              <button 
-                                className="btn-danger"
-                                onClick={() => handleDelete(l)}
-                                style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                              >
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                              </button>
-                            </>
-                          )}
-                          {!(isAdmin || l.emp_id === user?.emp_id) && (
-                            <span style={{ fontSize: '13px', color: '#94a3b8' }}>-</span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              })())}
-            </tbody>
-          </table>
-        </div>
+      <div style={{ padding: '32px', minHeight: '100vh', background: '#f1f5f9', color: '#1e293b', fontFamily: '"Inter", "Prompt", sans-serif' }}>
         
-        {/* Pagination */}
-        {!loading && visibleLicenses.length > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
-            <span style={{ fontSize: 13, color: '#64748b' }}>
-              แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, visibleLicenses.length)} จาก {visibleLicenses.length} รายการ
-            </span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
-                ก่อนหน้า
-              </button>
-              {Array.from({ length: Math.ceil(visibleLicenses.length / perPage) }, (_, i) => (
-                <button key={i} onClick={() => setPage(i + 1)}
-                  style={{
-                    padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                    border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
-                    background: page === i + 1 ? '#3b82f6' : 'white',
-                    color: page === i + 1 ? 'white' : '#334155'
-                  }}>{i + 1}</button>
-              ))}
-              <button onClick={() => setPage(p => Math.min(Math.ceil(visibleLicenses.length / perPage), p + 1))} disabled={page === Math.ceil(visibleLicenses.length / perPage) || Math.ceil(visibleLicenses.length / perPage) === 0}
-                style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.ceil(visibleLicenses.length / perPage) || Math.ceil(visibleLicenses.length / perPage) === 0 ? 'default' : 'pointer', fontSize: 13, color: page === Math.ceil(visibleLicenses.length / perPage) || Math.ceil(visibleLicenses.length / perPage) === 0 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
-                ถัดไป
-              </button>
-            </div>
+        {/* Header Section */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
+          <div>
+            <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+               License Governance System 
+               <span style={{ fontSize: '12px', background: '#0f172a', color: '#fff', padding: '4px 12px', borderRadius: '20px', marginLeft: '12px', verticalAlign: 'middle' }}>V4 ENTERPRISE</span>
+            </h1>
+            <p style={{ color: '#64748b', fontSize: '16px', marginTop: '4px' }}>การจัดการและตรวจสอบใบประกอบวิชาชีพตามมาตรฐานสูงสุด</p>
+          </div>
+          <button 
+            onClick={() => handleOpenModal('add')} 
+            style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 28px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}
+          >
+            + บันทึกข้อมูลใบประกอบ
+          </button>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: '#e2e8f0', padding: '6px', borderRadius: '14px', width: 'fit-content' }}>
+          {[
+             { id: 'list', label: 'ทะเบียนบุคลากร' },
+             { id: 'monitor', label: 'Dashboard สรุปผล' },
+             { id: 'settings', label: 'การตั้งค่าเกณฑ์' }
+          ].filter(t => isAdmin || (isDeptHead && t.id === 'monitor') || t.id === 'list').map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              style={{
+                padding: '12px 32px', borderRadius: '10px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer',
+                background: activeTab === tab.id ? '#fff' : 'transparent',
+                color: activeTab === tab.id ? '#0f172a' : '#64748b',
+                boxShadow: activeTab === tab.id ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'list' && (
+          <div className="fade-in">
+             <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
+                   <input placeholder="ค้นหาชื่อ หรือ เลขใบประกอบ..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ flex: 1, padding: '16px 24px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc' }} />
+                   <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '12px 24px', borderRadius: '12px', border: '1px solid #e2e8f0', fontWeight: 600 }}>
+                      <option value="all">ทุกสถานะ</option>
+                      <option value="expiring">ใกล้หมดอายุ</option>
+                      <option value="expired">หมดอายุ</option>
+                   </select>
+                </div>
+                
+                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+                   <thead>
+                      <tr style={{ textAlign: 'left', color: '#64748b', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' }}>
+                         <th style={{ padding: '0 20px 12px 20px' }}>ชื่อ-นามสกุล / รหัสพนักงาน</th>
+                         <th>วิชาชีพ / เลขที่ใบอนุญาต</th>
+                         <th>วันหมดอายุ</th>
+                         <th>สถานะคงเหลือ</th>
+                         <th style={{ textAlign: 'right', padding: '0 20px 12px 0' }}>ดำเนินการ</th>
+                      </tr>
+                   </thead>
+                   <tbody>
+                      {licenses.map(l => {
+                        const stat = getStatus(l.daysLeft);
+                        return (
+                          <tr key={l.id} style={{ background: '#fff' }}>
+                             <td style={{ padding: '20px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px', border: '1px solid #f1f5f9', borderRight: 'none' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{l.name?.[0]}</div>
+                                   <div>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                         <div style={{ fontWeight: 800, color: '#0f172a' }}>{l.name}</div>
+                                         <button onClick={() => fetchHistory(l.emp_id)} title="ดูประวัติการต่ออายุ" style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '12px' }}>🕒</button>
+                                      </div>
+                                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>ID: {l.emp_id}</div>
+                                   </div>
+                                </div>
+                             </td>
+                             <td style={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
+                                <div style={{ fontWeight: 700 }}>{l.type || l.license_name}</div>
+                                <div style={{ fontSize: '12px', color: '#64748b' }}>{l.license_no || '-'}</div>
+                             </td>
+                             <td style={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', fontWeight: 600 }}>{l.expires || '-'}</td>
+                             <td style={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
+                                <span style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '11px', fontWeight: 800, background: stat.bg, color: stat.color }}>{stat.label}</span>
+                             </td>
+                             <td style={{ padding: '20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px', border: '1px solid #f1f5f9', borderLeft: 'none', textAlign: 'right' }}>
+                                <button onClick={() => handleOpenModal('renew', l)} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>จัดการ / ต่ออายุ</button>
+                             </td>
+                          </tr>
+                        );
+                      })}
+                   </tbody>
+                </table>
+             </div>
           </div>
         )}
-      </div>
 
-      {/* Modals */}
-      {activeModal !== 'none' && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: '#fff', borderRadius: '24px', width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', overflow: 'hidden', animation: 'fadeIn 0.2s ease-out' }}>
-            
-            <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1e2433', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: activeModal === 'renew' ? '#bfdbfe' : activeModal === 'edit' ? '#fef3c7' : '#dcfce7', color: activeModal === 'renew' ? '#2563eb' : activeModal === 'edit' ? '#d97706' : '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {activeModal === 'renew' ? <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> : 
-                   activeModal === 'edit' ? <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg> : 
-                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>}
-                </div>
-                {activeModal === 'renew' ? 'ต่ออายุใบประกอบวิชาชีพ' : activeModal === 'edit' ? 'แก้ไขข้อมูลใบประกอบ' : 'เพิ่มใบประกอบใหม่'}
-              </h3>
-              <button 
-                onClick={closeModal} 
-                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}
-                onMouseOver={(e) => { e.currentTarget.style.color = '#1e2433'; e.currentTarget.style.background = '#e2e8f0'; }}
-                onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'transparent'; }}
-              >
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-
-            <div style={{ padding: '32px' }}>
-              {activeModal !== 'add' && selectedLicense && (
-                <div style={{ marginBottom: '24px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundImage: `url(${selectedLicense.image ? `/uploads/${selectedLicense.image}` : (selectedLicense.gender === 'หญิง' ? '/avatar2.jpg' : '/avatar1.jpg')})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '15px' }}>{selectedLicense.name}</div>
-                    <div style={{ color: '#64748b', fontSize: '13px', marginTop: '2px' }}>{selectedLicense.type}</div>
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {activeModal === 'add' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>รหัสพนักงาน (EMP-ID) <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="เช่น EMP001"
-                      disabled={!isAdmin}
-                      style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: isAdmin ? '#fff' : '#f8fafc', color: isAdmin ? '#000' : '#64748b' }}
-                      value={formData.emp_id} 
-                      onChange={e => setFormData({...formData, emp_id: e.target.value})}
-                      onFocus={(e) => !isAdmin ? null : e.currentTarget.style.borderColor = '#3b82f6'}
-                      onBlur={(e) => !isAdmin ? null : e.currentTarget.style.borderColor = '#cbd5e1'}
-                    />
-                  </div>
-                )}
-                
-
-                
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>ชื่อใบประกอบวิชาชีพ <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="text" required placeholder="เช่น ใบประกอบวิชาชีพเวชกรรม" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.license_name} onChange={e => setFormData({...formData, license_name: e.target.value})} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>ประเภท</label>
-                    <input type="text" placeholder="เช่น แพทยสภา" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.license_type} onChange={e => setFormData({...formData, license_type: e.target.value})} />
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>สถาบันที่ออกให้</label>
-                    <input type="text" placeholder="เช่น สภาการพยาบาล" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.institution} onChange={e => setFormData({...formData, institution: e.target.value})} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>วันที่ออกใบอนุญาต</label>
-                    <input type="date" style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }} value={formData.issue_date} onChange={e => setFormData({...formData, issue_date: e.target.value})} />
-                  </div>
-                </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>เลขที่ใบอนุญาต</label>
-                  <input 
-                    type="text" 
-                    placeholder="กรอกเลขที่ใบรับรอง (ถ้ามี)"
-                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }}
-                    value={formData.license_no} 
-                    onChange={e => setFormData({...formData, license_no: e.target.value})}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
-                  />
-                </div>
-                
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 2 }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>วันหมดอายุ <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input 
-                      type="date" 
-                      required 
-                      style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff' }}
-                      value={formData.expire_date}
-                      onChange={e => setFormData({...formData, expire_date: e.target.value})}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
-                    />
-                  </div>
-                  
-                  {activeModal === 'edit' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                      <label style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>คะแนนสะสม</label>
-                      <input 
-                        type="number" 
-                        placeholder="0"
-                        style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', width: '100%', outline: 'none', transition: 'border 0.2s', background: '#fff', textAlign: 'center' }}
-                        value={formData.points}
-                        onChange={e => setFormData({...formData, points: parseInt(e.target.value) || 0})}
-                        onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
-                      />
+        {/* Dashboard Content */}
+        {activeTab === 'monitor' && monitorData && (
+           <div className="fade-in">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
+                 {[
+                   { label: 'บุคลากรทั้งหมด', val: monitorData.totalEmployees, color: '#0f172a', filter: 'all' },
+                   { label: 'ถูกต้องครบถ้วน', val: monitorData.compliant, color: '#16a34a', filter: 'all' },
+                   { label: 'ใกล้หมดอายุ', val: monitorData.expiring, color: '#ca8a04', filter: 'expiring' },
+                   { label: 'หมดอายุ / ขาดข้อมูล', val: monitorData.missing, color: '#ef4444', filter: 'expired' }
+                 ].map((c, i) => (
+                   <div 
+                     key={i} 
+                     onClick={() => { setStatusFilter(c.filter); setActiveTab('list'); }}
+                     style={{ 
+                       background: '#fff', padding: '32px', borderRadius: '20px', border: '1px solid #e2e8f0', cursor: 'pointer',
+                       transition: 'all 0.2s ease', 
+                       boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                     }}
+                     className="hover-card"
+                   >
+                      <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#64748b' }}>{c.label}</p>
+                      <h2 style={{ margin: '8px 0 0 0', fontSize: '40px', fontWeight: 800, color: c.color }}>{c.val}</h2>
+                   </div>
+                 ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
+                 <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', border: '1px solid #e2e8f0' }}>
+                    <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สถิติตามแผนก (Department Compliance)</h3>
+                    <div style={{ height: '350px' }}>
+                       <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={Object.entries(monitorData.departmentStats).map(([name, s]) => ({ name, compliant: s.compliant, missing: s.missing + s.expiring }))}>
+                             <XAxis dataKey="name" fontSize={10} />
+                             <YAxis fontSize={10} />
+                             <Tooltip />
+                             <Bar dataKey="compliant" fill="#0f172a" stackId="a" radius={[0, 0, 0, 0]} />
+                             <Bar dataKey="missing" fill="#ef4444" stackId="a" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                       </ResponsiveContainer>
                     </div>
-                  )}
-                </div>
+                 </div>
+                 <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
+                    <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สัดส่วนสถานะใบประกอบ</h3>
+                    <div style={{ flex: 1, minHeight: '300px' }}>
+                       <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                             <Pie
+                                data={[
+                                  { name: 'ถูกต้อง', value: monitorData.compliant },
+                                  { name: 'ใกล้หมดอายุ', value: monitorData.expiring },
+                                  { name: 'หมดอายุ/ขาด', value: monitorData.missing }
+                                ]}
+                                cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value"
+                             >
+                                {[
+                                  { color: '#16a34a' },
+                                  { color: '#ca8a04' },
+                                  { color: '#ef4444' }
+                                ].map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                             </Pie>
+                             <Tooltip />
+                             <Legend verticalAlign="bottom" align="center" />
+                          </PieChart>
+                       </ResponsiveContainer>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
-                  <button type="button" onClick={closeModal} disabled={submitting} style={{
-                    padding: '12px 24px', borderRadius: '12px', background: '#f1f5f9', color: '#475569', fontWeight: 600, fontSize: '15px', border: 'none', cursor: 'pointer', transition: 'all 0.2s'
-                  }} onMouseOver={(e) => e.currentTarget.style.background = '#e2e8f0'} onMouseOut={(e) => e.currentTarget.style.background = '#f1f5f9'}>
-                    ยกเลิก
-                  </button>
-                  <button type="submit" disabled={submitting} style={{
-                    padding: '12px 28px', borderRadius: '12px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '15px', border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
-                  }} onMouseOver={(e) => { e.currentTarget.style.background = '#2563eb'; e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(59, 130, 246, 0.4)' }} onMouseOut={(e) => { e.currentTarget.style.background = '#3b82f6'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)' }}>
-                    {submitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+        {/* SETTINGS TAB */}
+        {activeTab === 'settings' && (
+           <div className="fade-in">
+              <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', border: '1px solid #e2e8f0' }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                    <div>
+                       <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>เกณฑ์มาตรฐานตามสายงาน</h3>
+                       <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>กำหนดใบประกอบวิชาชีพที่บังคับสำรับแต่ละแผนกและตำแหน่ง</p>
+                    </div>
+                    <button onClick={() => handleOpenModal('config')} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.1)' }}>+ เพิ่มเกณฑ์มาตรฐาน</button>
+                 </div>
+                 
+                 <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                       <thead>
+                          <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9', color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                             <th style={{ padding: '16px 20px' }}>ชื่อเกณฑ์ / กลุ่มเป้าหมาย</th>
+                             <th>ใบประกอบที่บังคับ</th>
+                             <th>อายุบัตร (ปี)</th>
+                             <th>เตือนล่วงหน้า</th>
+                             <th style={{ textAlign: 'right', paddingRight: '20px' }}>จัดการ</th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                          {configs.map(c => {
+                            const dept = departments.find(d => d.dept_id === c.dept_id)?.dept_name || 'ทุกแผนก';
+                            const pos = positions.find(p => p.pos_id === c.pos_id)?.pos_name || 'ทุกตำแหน่ง';
+                            return (
+                             <tr 
+                               key={c.id} 
+                               onClick={() => handleOpenModal('config', c)}
+                               style={{ borderBottom: '1px solid #f8fafc', cursor: 'pointer', transition: 'background 0.2s' }}
+                               onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                               onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                             >
+                                <td style={{ padding: '16px 20px' }}>
+                                   <div style={{ fontWeight: 800, color: '#0f172a' }}>{c.config_name}</div>
+                                   <div style={{ fontSize: '12px', color: '#64748b' }}>{dept} | {pos}</div>
+                                </td>
+                                <td style={{ fontWeight: 600, color: '#0f172a' }}>{c.license_name}</td>
+                                <td style={{ fontWeight: 700 }}>{c.valid_years}</td>
+                                <td>
+                                   <span style={{ padding: '4px 12px', borderRadius: '6px', background: '#fef9c3', color: '#a16207', fontSize: '12px', fontWeight: 800 }}>{c.warning_days} วัน</span>
+                                </td>
+                                <td style={{ textAlign: 'right', paddingRight: '20px' }}>
+                                   <span style={{ color: '#3b82f6', fontWeight: 800, fontSize: '13px' }}>ดูรายละเอียด/แก้ไข</span>
+                                </td>
+                             </tr>
+                            );
+                          })}
+                       </tbody>
+                    </table>
+                 </div>
+              </div>
+           </div>
+        )}
+
+        {/* Professional License Entry Modal */}
+        {(activeModal === 'renew' || activeModal === 'add' || activeModal === 'edit') && (() => {
+           const selection = formData.emp_id ? checkEmployeeRequirement(formData.emp_id) : null;
+           const employee = allEmployees.find(e => e.emp_id === formData.emp_id);
+           
+           return (
+           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.95)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
+              <div style={{ background: '#fff', width: '1000px', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column' }}>
+                 <div style={{ padding: '32px 40px', background: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                       <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>จัดการข้อมูลใบประกอบวิชาชีพ</h2>
+                       <p style={{ margin: '4px 0 0 0', opacity: 0.6, fontSize: '14px' }}>การบันทึกข้อมูลเพื่อเข้าสู่ระบบประวัติและการกำกับดูแลมาตรฐานสากล</p>
+                    </div>
+                    {selection && <div style={{ background: '#16a34a', padding: '8px 20px', borderRadius: '30px', fontSize: '12px', fontWeight: 800 }}>เกณฑ์บังคับ: {selection.license_name}</div>}
+                 </div>
+
+                 <div style={{ padding: '40px' }}>
+                    <form onSubmit={handleLicenseSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '40px' }}>
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                          <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '12px' }}>1. ข้อมูลบุคลากร</label>
+                             {activeModal === 'add' ? (
+                                <div style={{ position: 'relative' }}>
+                                   <input placeholder="ค้นหาชื่อ หรือ รหัสพนักงาน..." value={searchTermEmp} onChange={e => { setSearchTermEmp(e.target.value); setFormData({...formData, emp_id: ''}); }} style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                   {searchTermEmp && !formData.emp_id && (
+                                      <div style={{ position: 'absolute', top: '100%', left:0, right:0, background:'#fff', border:'1px solid #e2e8f0', borderRadius:'10px', marginTop:'4px', zIndex:100, maxHeight:'200px', overflowY:'auto' }}>
+                                         {allEmployees.filter(e => e.first_name_th?.includes(searchTermEmp) || e.emp_id?.includes(searchTermEmp)).slice(0, 5).map(e => (
+                                            <div key={e.emp_id} onClick={() => {
+                                               const req = checkEmployeeRequirement(e.emp_id);
+                                               setFormData({...formData, emp_id: e.emp_id, license_name: req?.license_name || ''});
+                                               setSearchTermEmp(`${e.first_name_th} ${e.last_name_th} (${e.emp_id})`);
+                                            }} style={{ padding:'12px', cursor:'pointer', borderBottom:'1px solid #f1f5f9' }}>
+                                               <div style={{ fontWeight:700 }}>{e.first_name_th} {e.last_name_th}</div>
+                                               <div style={{ fontSize:'11px', color:'#64748b' }}>{e.pos_name}</div>
+                                            </div>
+                                         ))}
+                                      </div>
+                                   )}
+                                </div>
+                             ) : (
+                                <div style={{ fontWeight: 800, fontSize: '18px' }}>{selectedLicense?.name} ({selectedLicense?.emp_id})</div>
+                             )}
+                          </div>
+                          <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '12px' }}>2. อัปโหลดไฟล์หลักฐาน (PDF/PNG/JPG)</label>
+                             <div 
+                                onClick={() => document.getElementById('fileInput')?.click()}
+                                style={{ height: '150px', border: '2px dashed #cbd5e1', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.2s', background: selectedFile ? '#f0fdf4' : 'transparent' }}
+                             >
+                                <input id="fileInput" type="file" hidden onChange={e => setSelectedFile(e.target.files?.[0] || null)} accept=".pdf,.png,.jpg,.jpeg" />
+                                <div style={{ fontSize: '32px' }}>{selectedFile ? '✅' : '📁'}</div>
+                                <div style={{ fontSize: '12px', marginTop: '8px', textAlign: 'center' }}>
+                                   {selectedFile ? <strong>{selectedFile.name}</strong> : 'คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่'}
+                                </div>
+                             </div>
+                          </div>
+                       </div>
+                       
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                             <div style={{ gridColumn: 'span 2' }}>
+                                <label style={{ fontSize: '13px', fontWeight: 800 }}>ชื่อใบประกอบวิชาชีพ</label>
+                                <input required value={formData.license_name} onChange={e => setFormData({...formData, license_name: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                             </div>
+                             <div>
+                                <label style={{ fontSize: '13px', fontWeight: 800 }}>เลขที่ใบอนุญาต</label>
+                                <input required value={formData.license_no} onChange={e => setFormData({...formData, license_no: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                             </div>
+                             <div>
+                                <label style={{ fontSize: '13px', fontWeight: 800 }}>ประเภท/สาขา</label>
+                                <input value={formData.license_type} onChange={e => setFormData({...formData, license_type: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                             </div>
+                             <div>
+                                <label style={{ fontSize: '13px', fontWeight: 800 }}>วันที่ออกบัตร</label>
+                                <input type="date" value={formData.issue_date} onChange={e => setFormData({...formData, issue_date: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                             </div>
+                             <div>
+                                <label style={{ fontSize: '13px', fontWeight: 800 }}>วันที่หมดอายุ</label>
+                                <input required type="date" value={formData.expire_date} onChange={e => setFormData({...formData, expire_date: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                             </div>
+                          </div>
+                          <div>
+                             <label style={{ fontSize: '13px', fontWeight: 800 }}>สถาบันที่ออกให้</label>
+                             <input value={formData.institution} onChange={e => setFormData({...formData, institution: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                          </div>
+                          <div>
+                             <label style={{ fontSize: '13px', fontWeight: 800 }}>หมายเหตุ (ถ้ามี)</label>
+                             <textarea value={formData.remarks} onChange={e => setFormData({...formData, remarks: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', height: '80px', resize: 'none' }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '20px' }}>
+                             <button type="button" onClick={() => setActiveModal('none')} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '10px 24px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>ยกเลิก</button>
+                             <button type="submit" disabled={submitting} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '10px 40px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>{submitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูลและเก็บประวัติ'}</button>
+                          </div>
+                       </div>
+                    </form>
+                 </div>
+              </div>
+           </div>
+           );
+        })()}
+
+        {/* History Modal */}
+        {historyModalOpen && (
+           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.95)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ background: '#fff', width: '800px', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                 <div style={{ padding: '24px 32px', background: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ margin: 0 }}>ประวัติการถือครองใบประกอบวิชาชีพ</h3>
+                    <button onClick={() => setHistoryModalOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>ปิด</button>
+                 </div>
+                 <div style={{ padding: '32px', maxHeight: '60vh', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                       <thead>
+                          <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
+                             <th style={{ padding: '12px' }}>ช่วงเวลา</th>
+                             <th>วิชาชีพ / เลขที่ใบอนุญาต</th>
+                             <th>สถานะ</th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                          {historyData.map(h => (
+                             <tr key={h.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                <td style={{ padding: '16px' }}>{h.issue_date || '-'} ถึง {h.expire_date || '-'}</td>
+                                <td>{h.license_name}<br/><span style={{ fontSize:'11px', color:'#94a3b8' }}>{h.license_no}</span></td>
+                                <td>
+                                   {h.file_path ? (
+                                      <a href={h.file_path} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontSize: '12px', fontWeight: 800, textDecoration: 'none' }}>เปิดดูเอกสาร</a>
+                                   ) : (
+                                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>ไม่มีไฟล์</span>
+                                   )}
+                                </td>
+                                <td>
+                                   <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 800, background: h.status === 'Active' ? '#dcfce7' : '#f1f5f9', color: h.status === 'Active' ? '#16a34a' : '#64748b' }}>
+                                      {h.status === 'Active' ? 'ใบปัจจุบัน' : 'ประวัติใบเดิม'}
+                                   </span>
+                                </td>
+                             </tr>
+                          ))}
+                       </tbody>
+                    </table>
+                 </div>
+              </div>
+           </div>
+        )}
+
+        {/* Config Modal */}
+        {activeModal === 'config' && (
+           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.95)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ background: '#fff', width: '500px', borderRadius: '24px', padding: '40px' }}>
+                 <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', fontWeight: 800 }}>ตั้งค่าเกณฑ์มาตรฐาน</h2>
+                 <form onSubmit={handleConfigSubmit}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                       <div>
+                          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>ชื่อเกณฑ์</label>
+                          <input required value={configFormData.config_name} onChange={e => setConfigFormData({...configFormData, config_name: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                       </div>
+                       <div>
+                          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>วิชาชีพที่บังคับ</label>
+                          <input required value={configFormData.license_name} onChange={e => setConfigFormData({...configFormData, license_name: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                       </div>
+                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                          <div>
+                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>อายุใบอนุญาต (ปี)</label>
+                             <input type="number" value={configFormData.valid_years} onChange={e => setConfigFormData({...configFormData, valid_years: parseInt(e.target.value)})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                          </div>
+                          <div>
+                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>เตือนล่วงหน้า (วัน)</label>
+                             <input type="number" value={configFormData.warning_days} onChange={e => setConfigFormData({...configFormData, warning_days: parseInt(e.target.value)})} style={{ width: '100', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                          </div>
+                       </div>
+                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                          <button type="button" onClick={() => setActiveModal('none')} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '12px 24px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>ยกเลิก</button>
+                          <button type="submit" style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '12px 32px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>บันทึกเกณฑ์</button>
+                       </div>
+                    </div>
+                 </form>
+              </div>
+           </div>
+        )}
+
+      </div>
     </AppLayout>
   );
 }
