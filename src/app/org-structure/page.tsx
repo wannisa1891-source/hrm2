@@ -837,17 +837,7 @@ export default function DepartmentAndEmployeePage() {
   );
 }
 
-// --- Sub-components ---
-function InfoRow({ label, value, color = '#0f172a', isLong = false, icon = null }: any) {
-  return (
-    <div style={{ display: 'flex', flexDirection: isLong ? 'column' : 'row', justifyContent: 'space-between', gap: isLong ? '6px' : '16px', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-      <span style={{ fontSize: '14px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {icon} {label}
-      </span>
-      <span style={{ fontSize: '14px', color: color, fontWeight: 600, textAlign: isLong ? 'left' : 'right', lineHeight: '1.6' }}>{value}</span>
-    </div>
-  );
-}
+
 
 // --- Styles Object (ฉบับปรับสีตามรูปภาพที่ส่งมา) ---
 const styles: { [key: string]: React.CSSProperties } = {
