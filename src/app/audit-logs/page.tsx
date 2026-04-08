@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +21,10 @@ export default function AuditLogsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
+  // --- ระบบแบ่งหน้า (Pagination) ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   useEffect(() => {
     if (user && !isAdmin) {
       router.push('/dashboard');
@@ -37,19 +41,52 @@ export default function AuditLogsPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  /** * แก้ไขตรงนี้: 
-   * ใช้ .startsWith() แทน .includes() 
-   * เพื่อให้แสดงเฉพาะรายการที่ "ขึ้นต้นด้วย" ตัวอักษรที่พิมพ์เท่านั้น
-   */
-  const filteredLogs = logs.filter((l) => {
+  // ฟิลเตอร์ข้อมูล
+  const filteredLogs = useMemo(() => {
     const searchTerm = search.toLowerCase().trim();
-    if (!searchTerm) return true; // ถ้าไม่ได้พิมพ์อะไรให้โชว์หมด
-
-    return (
+    if (!searchTerm) return logs;
+    return logs.filter((l) =>
       l.action_detail?.toLowerCase().trim().startsWith(searchTerm) ||
       l.user_id?.toLowerCase().trim().startsWith(searchTerm)
     );
-  });
+  }, [logs, search]);
+
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+  const currentLogs = filteredLogs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // --- ฟังก์ชันดึงชื่อแบบไม่ซ้ำ (Helper Function) ---
+  const formatUserName = (userId: string) => {
+    if (!userId) return 'System';
+    // ถ้ามีคอมม่า ให้เอาแค่คำแรก และตัดช่องว่างทิ้ง
+    return userId.split(',')[0].trim();
+  };
+
+  // --- ฟังก์ชัน Export ข้อมูลเป็น CSV ---
+  const handleExport = () => {
+    const BOM = '\uFEFF';
+    const header = ['ID', 'Date', 'Time', 'Operator', 'Action'].join(',');
+    const rows = filteredLogs.map(log => {
+      const d = new Date(log.action_date);
+      return [
+        log.log_id,
+        d.toLocaleDateString('th-TH'),
+        d.toLocaleTimeString('th-TH'),
+        `"${formatUserName(log.user_id)}"`, // แก้ไขชื่อใน CSV
+        `"${log.action_detail}"`
+      ].join(',');
+    });
+
+    const csvContent = BOM + [header, ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `audit_logs_${new Date().getTime()}.csv`);
+    link.click();
+  };
 
   const getActionStyle = (detail: string) => {
     const d = detail.toLowerCase();
@@ -72,16 +109,24 @@ export default function AuditLogsPage() {
         <header className="audit-header">
           <div>
             <h1>System Audit Logs</h1>
-            <p>บันทึกประวัติกิจกรรมที่ขึ้นต้นด้วยคำที่ค้นหา</p>
+            <p>บันทึกประวัติกิจกรรมและระบบการแบ่งหน้า</p>
           </div>
 
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="พิมพ์คำขึ้นต้นเพื่อค้นหา..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="tool-box">
+            <button onClick={handleExport} className="export-btn">
+              📥 Export CSV
+            </button>
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="ค้นหาชื่อผู้ใช้หรือรายละเอียด..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
           </div>
         </header>
 
@@ -97,12 +142,13 @@ export default function AuditLogsPage() {
             <tbody>
               {loading ? (
                 <tr><td colSpan={3} className="status-msg">กำลังโหลดข้อมูล...</td></tr>
-              ) : filteredLogs.length === 0 ? (
-                <tr><td colSpan={3} className="status-msg">ไม่พบข้อมูลที่ขึ้นต้นด้วย "{search}"</td></tr>
+              ) : currentLogs.length === 0 ? (
+                <tr><td colSpan={3} className="status-msg">ไม่พบข้อมูล</td></tr>
               ) : (
-                filteredLogs.map((log, idx) => {
+                currentLogs.map((log, idx) => {
                   const date = new Date(log.action_date);
                   const style = getActionStyle(log.action_detail);
+                  const displayName = formatUserName(log.user_id); // เรียกใช้ฟังก์ชันที่แก้แล้ว
 
                   return (
                     <tr key={log.log_id || idx} className="row-item">
@@ -114,9 +160,9 @@ export default function AuditLogsPage() {
                       <td className="user-col">
                         <div className="user-pill">
                           <div className="avatar-initial" style={{ backgroundColor: style.dot }}>
-                            {log.user_id?.charAt(0).toUpperCase() || 'S'}
+                            {displayName.charAt(0).toUpperCase()}
                           </div>
-                          <span>{log.user_id || 'System'}</span>
+                          <span className="user-name">{displayName}</span>
                         </div>
                       </td>
 
@@ -135,6 +181,24 @@ export default function AuditLogsPage() {
               )}
             </tbody>
           </table>
+
+          {!loading && totalPages > 1 && (
+            <div className="pagination">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => p - 1)}
+              >
+                ก่อนหน้า
+              </button>
+              <span className="page-info">หน้า {currentPage} จาก {totalPages}</span>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(p => p + 1)}
+              >
+                ถัดไป
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -143,11 +207,20 @@ export default function AuditLogsPage() {
         .audit-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
         .audit-header h1 { font-size: 28px; font-weight: 800; color: #1e293b; margin: 0; }
         .audit-header p { color: #64748b; margin: 5px 0 0 0; font-size: 14px; }
+        
+        .tool-box { display: flex; gap: 12px; align-items: center; }
+        .export-btn {
+          background: #0f172a; color: white; border: none; padding: 10px 16px;
+          border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s;
+        }
+        .export-btn:hover { background: #334155; transform: translateY(-1px); }
+
         .search-box input {
-          padding: 12px 20px; width: 300px; border-radius: 12px;
+          padding: 12px 20px; width: 280px; border-radius: 12px;
           border: 2px solid #e2e8f0; outline: none; transition: all 0.2s; font-size: 14px;
         }
         .search-box input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        
         .table-container { background: white; border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); border: 1px solid #edf2f7; overflow: hidden; }
         .audit-table { width: 100%; border-collapse: collapse; }
         .audit-table th {
@@ -156,15 +229,28 @@ export default function AuditLogsPage() {
         }
         .row-item { border-bottom: 1px solid #f1f5f9; transition: background 0.2s; }
         .row-item:hover { background-color: #f8fafc; }
+        
         .time-col { padding: 18px 24px; width: 150px; }
         .main-time { font-weight: 700; color: #1e293b; font-size: 15px; }
         .sub-date { font-size: 12px; color: #94a3b8; }
+        
         .user-col { padding: 18px 24px; }
-        .user-pill { display: flex; align-items: center; gap: 10px; font-weight: 600; color: #334155; font-size: 14px; }
+        .user-pill { display: flex; align-items: center; gap: 10px; }
+        .user-name { font-weight: 600; color: #334155; font-size: 14px; }
         .avatar-initial {
           width: 32px; height: 32px; border-radius: 10px; color: white;
           display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800;
         }
+
+        .pagination { padding: 20px; display: flex; justify-content: center; align-items: center; gap: 15px; border-top: 1px solid #f1f5f9; }
+        .pagination button {
+          padding: 8px 16px; border-radius: 8px; border: 1px solid #e2e8f0; background: white;
+          font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .pagination button:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e0; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-info { font-size: 13px; color: #64748b; font-weight: 500; }
+
         .action-col { padding: 18px 24px; }
         .action-flex { display: flex; align-items: center; gap: 15px; }
         .vivid-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; }
