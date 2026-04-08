@@ -255,7 +255,7 @@ export default function AuditLogsPage() {
         .action-flex { display: flex; align-items: center; gap: 15px; }
         .vivid-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; }
         .vivid-dot { width: 6px; height: 6px; border-radius: 50%; }
-        .detail-text { color: #475569; font-size: 14px; font-weight: 500; }
+        .detail-text { color: #4d5766ff; font-size: 14px; font-weight: 500; }
         .status-msg { padding: 60px; text-align: center; color: #cbd5e0; font-weight: 500; }
       `}</style>
     </AppLayout>
