@@ -11,21 +11,31 @@ export async function GET(request: Request) {
         title VARCHAR(255) NOT NULL,
         message TEXT NOT NULL,
         is_read BOOLEAN DEFAULT FALSE,
+        metadata TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    try {
+      await pool.query("ALTER TABLE tbl_notifications ADD COLUMN metadata TEXT");
+    } catch(e) {}
     try {
       await pool.query("ALTER TABLE tbl_transfers ADD COLUMN status VARCHAR(50) DEFAULT 'Pending'");
     } catch(e) {}
 
     const { searchParams } = new URL(request.url);
     const empId = searchParams.get('emp_id');
+    const isAdmin = searchParams.get('is_admin') === 'true';
 
     let query = 'SELECT * FROM tbl_notifications ORDER BY created_at DESC LIMIT 50';
     let params: any[] = [];
     if (empId) {
-      query = 'SELECT * FROM tbl_notifications WHERE emp_id = ? ORDER BY created_at DESC LIMIT 50';
-      params = [empId];
+      if (isAdmin) {
+        query = "SELECT * FROM tbl_notifications WHERE emp_id = ? OR emp_id = 'admin' ORDER BY created_at DESC LIMIT 50";
+        params = [empId];
+      } else {
+        query = 'SELECT * FROM tbl_notifications WHERE emp_id = ? ORDER BY created_at DESC LIMIT 50';
+        params = [empId];
+      }
     }
 
     const [rows] = await pool.query(query, params);
@@ -49,10 +59,10 @@ export async function PUT(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { emp_id, title, message } = await request.json();
+    const { emp_id, title, message, metadata } = await request.json();
     await pool.query(
-      'INSERT INTO tbl_notifications (emp_id, title, message) VALUES (?, ?, ?)',
-      [emp_id || 'system', title, message]
+      'INSERT INTO tbl_notifications (emp_id, title, message, metadata) VALUES (?, ?, ?, ?)',
+      [emp_id || 'system', title, message, metadata ? JSON.stringify(metadata) : null]
     );
     return NextResponse.json({ success: true });
   } catch (err: any) {
