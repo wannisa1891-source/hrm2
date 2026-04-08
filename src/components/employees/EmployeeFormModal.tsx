@@ -356,8 +356,11 @@ export default function EmployeeFormModal({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สถานะพนักงาน</label>
                     <select value={formData.status || ''} onChange={e => setField('status', e.target.value)} style={inputStyle}>
-                      <option value="Active">ทำงานอยู่ (Active)</option>
-                      <option value="Inactive">พ้นสภาพ (Inactive)</option>
+                      <option value="Active">ทำงานปกติ</option>
+                      <option value="Probation">ทดลองงาน</option>
+                      <option value="Inactive">หยุดปฏิบัติงาน</option>
+                      <option value="Resigned">ลาออก/พ้นสภาพ</option>
+                      <option value="Terminated">ให้ออก</option>
                     </select>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

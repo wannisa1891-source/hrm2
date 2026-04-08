@@ -429,8 +429,11 @@ function EmployeesContent() {
             </select>
             <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
               <option value="all">สถานะการทำงาน: ทั้งหมด</option>
-              <option value="Active">Active (ทำงานอยู่)</option>
-              <option value="Inactive">Inactive (พ้นสภาพ)</option>
+              <option value="Active">ทำงานปกติ (Active)</option>
+              <option value="Probation">ทดลองงาน</option>
+              <option value="Inactive">หยุดปฏิบัติงาน</option>
+              <option value="Resigned">ลาออก/พ้นสภาพ</option>
+              <option value="Terminated">ให้ออก</option>
             </select>
             <select className="form-select" style={{ width: 'auto', minWidth: '160px' }} value={filterLicense} onChange={e => setFilterLicense(e.target.value)}>
               <option value="all">ใบประกอบฯ: ทั้งหมด</option>
