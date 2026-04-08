@@ -54,9 +54,11 @@ export default function DepartmentAndEmployeePage() {
   const [showDeptInterns, setShowDeptInterns] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<'staff' | 'interns'>('staff');
   const perPage = 10;
 
-  useEffect(() => { setPage(1); }, [search, selectedDeptId]);
+  useEffect(() => { setPage(1); }, [search, selectedDeptId, activeTab]);
+  useEffect(() => { if (selectedDeptId !== 'interns') setActiveTab('staff'); }, [selectedDeptId]);
 
   useEffect(() => {
     loadEmployees?.();
@@ -69,7 +71,11 @@ export default function DepartmentAndEmployeePage() {
     if (selectedDeptId === 'interns') {
       result = result.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน');
     } else if (selectedDeptId) {
-      result = result.filter(emp => emp.dept_id === selectedDeptId);
+      if (activeTab === 'staff') {
+        result = result.filter(emp => emp.dept_id === selectedDeptId && emp.emp_type !== 'นักศึกษาฝึกงาน');
+      } else {
+        result = result.filter(emp => emp.dept_id === selectedDeptId && emp.emp_type === 'นักศึกษาฝึกงาน');
+      }
     }
     if (search) {
       const term = search.toLowerCase();
@@ -317,6 +323,43 @@ export default function DepartmentAndEmployeePage() {
               )}
             </div>
           </div>
+
+          {/* Tab System for Department View */}
+          {selectedDeptId && selectedDeptId !== 'interns' && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(255, 255, 255, 0.5)', padding: '6px', borderRadius: '16px', width: 'fit-content', border: '1px solid #e2e8f0', backdropFilter: 'blur(8px)' }}>
+              {(() => {
+                const deptEmps = employees.filter(e => e.dept_id === selectedDeptId);
+                const sCount = deptEmps.filter(e => e.emp_type !== 'นักศึกษาฝึกงาน').length;
+                const iCount = deptEmps.filter(e => e.emp_type === 'นักศึกษาฝึกงาน').length;
+                return (
+                  <>
+                    <button
+                      onClick={() => setActiveTab('staff')}
+                      style={{
+                        padding: '10px 24px', borderRadius: '12px', border: 'none', fontSize: '14px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '8px',
+                        background: activeTab === 'staff' ? '#fff' : 'transparent',
+                        color: activeTab === 'staff' ? '#4f46e5' : '#64748b',
+                        boxShadow: activeTab === 'staff' ? '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)' : 'none'
+                      }}
+                    >
+                      <Users size={16} /> บคุลากรประจำ ({sCount})
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('interns')}
+                      style={{
+                        padding: '10px 24px', borderRadius: '12px', border: 'none', fontSize: '14px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '8px',
+                        background: activeTab === 'interns' ? '#fff' : 'transparent',
+                        color: activeTab === 'interns' ? '#10b981' : '#64748b',
+                        boxShadow: activeTab === 'interns' ? '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)' : 'none'
+                      }}
+                    >
+                      <Contact size={16} /> นักศึกษาฝึกงาน ({iCount})
+                    </button>
+                  </>
+                );
+              })()}
+            </div>
+          )}
 
           <div style={styles.tableCard}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
