@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -18,7 +18,7 @@ export default function DepartmentAndEmployeePage() {
   const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.role?.toLowerCase() === 'admin';
-  const { employees = [], loadEmployees, removeEmployee } = useEmployees();
+  const { employees = [], loadEmployees, removeEmployee, editEmployee } = useEmployees();
   const { departments = [], loadDepartments, addDepartment, editDepartment, removeDepartment } = useDepartments();
   const { positions = [], loadPositions } = usePositions();
 
@@ -298,7 +298,7 @@ export default function DepartmentAndEmployeePage() {
         </div>
 
         {/* --- 2. MAIN CONTENT (Employee Table) --- */}
-        <div className="no-scrollbar" style={{ flex: 1, padding: '32px 40px', overflowY: 'auto', overflowX: 'hidden' }}>
+        <div className="no-scrollbar" style={{ flex: 1, padding: '32px 40px 180px', overflowY: 'auto', overflowX: 'hidden' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' }}>
             <div style={{ minWidth: '300px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', wordBreak: 'keep-all', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #1e293b 0%, #4f46e5 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -348,15 +348,17 @@ export default function DepartmentAndEmployeePage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                      <th style={styles.th}>โปรไฟล์พนักงาน</th>
-                      <th style={styles.th}>ตำแหน่ง / สายงาน</th>
-                      <th style={styles.th}>สถานะ</th>
-                      <th style={{ ...styles.th, textAlign: 'right' }}>จัดการ</th>
+                      <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
+                      <th style={styles.th}>บุคลากร</th>
+                      <th style={styles.th}>ตำแหน่ง</th>
+                      <th style={styles.th}>แผนก / สังกัด</th>
+                      <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
+                      <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {regularStaff.slice((page - 1) * perPage, page * perPage).map((emp) => (
-                      <EmployeeRow key={emp.emp_id} emp={emp} isAdmin={isAdmin} departments={departments} positions={positions} setSelectedEmpId={setSelectedEmpId} getPosName={getPosName} getDeptName={getDeptName} formatPosName={formatPosName} user={user} />
+                      <EmployeeRow key={emp.emp_id} emp={emp} isAdmin={isAdmin} departments={departments} positions={positions} setSelectedEmpId={setSelectedEmpId} getPosName={getPosName} getDeptName={getDeptName} formatPosName={formatPosName} user={user} editEmployee={editEmployee} />
                     ))}
                     {regularStaff.length === 0 && (
                       <tr>
@@ -386,15 +388,17 @@ export default function DepartmentAndEmployeePage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                      <th style={styles.th}>โปรไฟล์นักศึกษา</th>
-                      <th style={styles.th}>คณะ / สถานศึกษา</th>
-                      <th style={styles.th}>สถานะ</th>
-                      <th style={{ ...styles.th, textAlign: 'right' }}>จัดการ</th>
+                      <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
+                      <th style={styles.th}>ชื่อ-สกุล</th>
+                      <th style={styles.th}>คณะ / ตำแหน่ง</th>
+                      <th style={styles.th}>สถานศึกษา / แผนก</th>
+                      <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
+                      <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {internStaff.map((emp) => (
-                      <EmployeeRow key={emp.emp_id} emp={emp} isAdmin={isAdmin} departments={departments} positions={positions} setSelectedEmpId={setSelectedEmpId} getPosName={getPosName} getDeptName={getDeptName} formatPosName={formatPosName} user={user} />
+                      <EmployeeRow key={emp.emp_id} emp={emp} isAdmin={isAdmin} departments={departments} positions={positions} setSelectedEmpId={setSelectedEmpId} getPosName={getPosName} getDeptName={getDeptName} formatPosName={formatPosName} user={user} editEmployee={editEmployee} />
                     ))}
                   </tbody>
                 </table>
@@ -894,7 +898,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer'
   },
 
-  tableCard: { background: '#fff', borderRadius: '24px', border: '1px solid #f1f5f9', overflow: 'hidden' },
+  tableCard: { background: '#fff', borderRadius: '24px', border: '1px solid #f1f5f9', overflow: 'visible' },
   th: { padding: '20px 24px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#64748b', background: '#fff' },
   td: { padding: '16px 24px', borderBottom: '1px solid #f8fafc', textAlign: 'center', verticalAlign: 'middle' },
   tableRow: { transition: '0.2s' },
@@ -992,8 +996,9 @@ const styles: { [key: string]: React.CSSProperties } = {
 
 function EmployeeRow({ 
   emp, isAdmin, departments, positions, setSelectedEmpId, 
-  getPosName, getDeptName, formatPosName, user 
+  getPosName, getDeptName, formatPosName, user, editEmployee
 }: any) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <tr
       key={emp.emp_id}
@@ -1008,8 +1013,11 @@ function EmployeeRow({
       }}
       style={styles.tableRow}
     >
+      <td style={{ ...styles.td, fontWeight: 700, color: '#475569' }}>
+        {emp.emp_id}
+      </td>
       <td style={styles.td}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={styles.avatar}>
             {emp.image ? (
               <Image fill unoptimized src={`/uploads/${emp.image}`} alt="pic" style={{ objectFit: 'cover', borderRadius: '12px' }} />
@@ -1017,31 +1025,20 @@ function EmployeeRow({
               <span>{emp.first_name_th?.[0] || 'U'}</span>
             )}
           </div>
-          <div>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
-            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>รหัส: {emp.emp_id}</div>
-          </div>
+          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
         </div>
       </td>
-      <td style={styles.td}>
-        <div style={{ fontWeight: 600, fontSize: '14px', color: '#334155' }}>
-          {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}
-        </div>
-        <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>{getDeptName(emp.dept_id)}</div>
+      <td style={{ ...styles.td, fontWeight: 600, color: '#334155', fontSize: '14px' }}>
+        {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}
       </td>
-      <td style={styles.td}>
-        <span style={{
-          padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-          background: emp.status === 'Active' ? '#dcfce7' : '#f1f5f9',
-          color: emp.status === 'Active' ? '#16a34a' : '#64748b',
-          display: 'inline-flex', alignItems: 'center', gap: '6px'
-        }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: emp.status === 'Active' ? '#16a34a' : '#94a3b8' }} />
-          {emp.status}
-        </span>
+      <td style={{ ...styles.td, color: '#64748b', fontSize: '14px' }}>
+        {getDeptName(emp.dept_id)}
+      </td>
+      <td style={{ ...styles.td, textAlign: 'center', position: 'relative', zIndex: isOpen ? 50 : 1 }}>
+        <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} isOpen={isOpen} setIsOpen={setIsOpen} />
       </td>
       <td style={{ ...styles.td, textAlign: 'right' }}>
-        <ChevronRight size={20} color="#cbd5e1" />
+        <ChevronRight size={18} color="#cbd5e1" />
       </td>
     </tr>
   );
@@ -1070,6 +1067,118 @@ function Pagination({ page, setPage, totalItems, perPage }: any) {
         style={{ ...styles.pageBtn, opacity: page === totalPages || totalPages === 0 ? 0.5 : 1, cursor: page === totalPages || totalPages === 0 ? 'default' : 'pointer' }}>
         ถัดไป
       </button>
+    </div>
+  );
+}
+
+function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [openUp, setOpenUp] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // If less than 250px below, open upwards
+      setOpenUp(spaceBelow < 250);
+    }
+  }, [isOpen]);
+  const statusOptions = [
+    { value: 'Active', label: 'ทำงานปกติ', color: '#16a34a', bg: '#dcfce7' },
+    { value: 'Probation', label: 'ทดลองงาน', color: '#a16207', bg: '#fef9c3' },
+    { value: 'Inactive', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
+    { value: 'Resigned', label: 'ลาออก/พ้นสภาพ', color: '#ef4444', bg: '#fee2e2' },
+    { value: 'Terminated', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
+  ];
+
+  const currentStatus = statusOptions.find(o => o.value === emp.status || o.label === emp.status) || statusOptions[0];
+
+  const handleUpdate = async (newStatus: string) => {
+    if (newStatus === emp.status) {
+      setIsOpen(false);
+      return;
+    }
+    const formData = new FormData();
+    formData.append('status', newStatus);
+    const res = await editEmployee(emp.emp_id, formData);
+    if (res.success) {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
+      <div 
+        onClick={(e) => {
+          if (!isAdmin) return;
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        style={{
+          padding: '6px 14px', borderRadius: '14px', fontSize: '13px', fontWeight: 800,
+          background: currentStatus.bg,
+          color: currentStatus.color,
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          cursor: isAdmin ? 'pointer' : 'default',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          border: '1px solid transparent',
+          userSelect: 'none'
+        }}
+        onMouseOver={e => { if (isAdmin) { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.borderColor = currentStatus.color + '44'; } }}
+        onMouseOut={e => { if (isAdmin) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'transparent'; } }}
+      >
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: currentStatus.color }} />
+        {currentStatus.label}
+      </div>
+
+      {isOpen && (
+        <>
+          <div 
+            onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+            style={{ position: 'fixed', inset: 0, zIndex: 100 }} 
+          />
+          <div style={{
+            position: 'absolute', 
+            [openUp ? 'bottom' : 'top']: '100%', 
+            left: '50%', 
+            transform: `translateX(-50%) ${openUp ? 'translateY(-12px)' : 'translateY(12px)'}`,
+            background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)',
+            borderRadius: '20px', border: '1px solid rgba(241, 245, 249, 1)',
+            boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12)', 
+            padding: '10px', zIndex: 101, width: '180px',
+            animation: openUp ? 'slideDownSelect 0.2s cubic-bezier(0.4, 0, 0.2, 1)' : 'slideUpSelect 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}>
+            <style>{`
+              @keyframes slideUpSelect {
+                from { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.95); }
+                to { opacity: 1; transform: translateX(-50%) translateY(12px) scale(1); }
+              }
+              @keyframes slideDownSelect {
+                from { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.95); }
+                to { opacity: 1; transform: translateX(-50%) translateY(-12px) scale(1); }
+              }
+            `}</style>
+            <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>เลือกสถานะใหม่</div>
+            {statusOptions.map(opt => (
+              <div 
+                key={opt.value}
+                onClick={(e) => { e.stopPropagation(); handleUpdate(opt.value); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  background: emp.status === opt.value ? '#f1f5f9' : 'transparent',
+                  color: emp.status === opt.value ? '#0f172a' : '#64748b'
+                }}
+                onMouseOver={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0f172a'; }}
+                onMouseOut={e => { if (emp.status !== opt.value) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } else { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#0f172a'; } }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: opt.color }} />
+                <span style={{ fontSize: '14px', fontWeight: emp.status === opt.value ? 700 : 500 }}>{opt.label}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
