@@ -323,12 +323,13 @@ export default function EmployeeFormModal({
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
-                    <select value={formData.emp_type || ''} onChange={e => setField('emp_type', e.target.value)} style={inputStyle}>
-                      <option value="ข้าราชการ">ข้าราชการ</option>
-                      <option value="พนักงานประจำ">พนักงานประจำ</option>
-                      <option value="พาร์ทไทม์">พาร์ทไทม์</option>
-                      <option value="สัญญาจ้าง">สัญญาจ้าง</option>
-                    </select>
+                      <select value={formData.emp_type || ''} onChange={e => setField('emp_type', e.target.value)} style={inputStyle}>
+                        <option value="ข้าราชการ">ข้าราชการ</option>
+                        <option value="พนักงานประจำ">พนักงานประจำ</option>
+                        <option value="พาร์ทไทม์">พาร์ทไทม์</option>
+                        <option value="สัญญาจ้าง">สัญญาจ้าง</option>
+                        <option value="นักศึกษาฝึกงาน">นักศึกษาฝึกงาน</option>
+                      </select>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สถานะพนักงาน</label>

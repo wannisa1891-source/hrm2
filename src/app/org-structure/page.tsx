@@ -65,7 +65,9 @@ export default function DepartmentAndEmployeePage() {
 
   const filteredEmployees = useMemo(() => {
     let result = employees;
-    if (selectedDeptId) {
+    if (selectedDeptId === 'interns') {
+      result = result.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน');
+    } else if (selectedDeptId) {
       result = result.filter(emp => emp.dept_id === selectedDeptId);
     }
     if (search) {
@@ -203,21 +205,39 @@ export default function DepartmentAndEmployeePage() {
 
           <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px 12px' }}>
             {!isStandardUser && (
-              <div
-                onClick={() => setSelectedDeptId('')}
-                style={{
-                  ...styles.deptItem,
-                  background: selectedDeptId === '' ? 'linear-gradient(90deg, #eef2ff 0%, #ffffff 100%)' : 'transparent',
-                  color: selectedDeptId === '' ? '#4f46e5' : '#64748b',
-                  fontWeight: selectedDeptId === '' ? 700 : 500,
-                  borderLeft: selectedDeptId === '' ? '4px solid #4f46e5' : '4px solid transparent',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Users size={18} />
-                  <span>พนักงานทั้งหมด</span>
+              <>
+                <div
+                  onClick={() => setSelectedDeptId('')}
+                  style={{
+                    ...styles.deptItem,
+                    background: selectedDeptId === '' ? 'linear-gradient(90deg, #eef2ff 0%, #ffffff 100%)' : 'transparent',
+                    color: selectedDeptId === '' ? '#4f46e5' : '#64748b',
+                    fontWeight: selectedDeptId === '' ? 700 : 500,
+                    borderLeft: selectedDeptId === '' ? '4px solid #4f46e5' : '4px solid transparent',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Users size={18} />
+                    <span>พนักงานทั้งหมด</span>
+                  </div>
                 </div>
-              </div>
+
+                <div
+                  onClick={() => setSelectedDeptId('interns')}
+                  style={{
+                    ...styles.deptItem,
+                    background: selectedDeptId === 'interns' ? 'linear-gradient(90deg, #f0fdf4 0%, #ffffff 100%)' : 'transparent',
+                    color: selectedDeptId === 'interns' ? '#10b981' : '#64748b',
+                    fontWeight: selectedDeptId === 'interns' ? 700 : 500,
+                    borderLeft: selectedDeptId === 'interns' ? '4px solid #10b981' : '4px solid transparent',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Contact size={18} />
+                    <span>นักศึกษาฝึกงาน</span>
+                  </div>
+                </div>
+              </>
             )}
 
             <div style={{ margin: '24px 0 12px 12px', fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
@@ -267,7 +287,7 @@ export default function DepartmentAndEmployeePage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' }}>
             <div style={{ minWidth: '300px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', wordBreak: 'keep-all', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #1e293b 0%, #4f46e5 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {selectedDeptId ? getDeptName(selectedDeptId) : 'รายชื่อพนักงานทั้งหมด'}
+                {selectedDeptId === 'interns' ? 'รายชื่อนักศึกษาฝึกงาน' : (selectedDeptId ? getDeptName(selectedDeptId) : 'รายชื่อพนักงานทั้งหมด')}
               </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', margin: '8px 0 0', fontSize: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '6px', background: '#e2e8f0', color: '#475569' }}>
