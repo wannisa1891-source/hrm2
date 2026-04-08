@@ -51,6 +51,7 @@ export default function DepartmentAndEmployeePage() {
     description: '', head_emp_id: '', phone: '', org_chart_url: '', sop_url: '', rules_url: ''
   });
   const [showDeptEmployees, setShowDeptEmployees] = useState(false);
+  const [showDeptInterns, setShowDeptInterns] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const perPage = 10;
@@ -183,6 +184,7 @@ export default function DepartmentAndEmployeePage() {
       });
     }
     setShowDeptEmployees(false);
+    setShowDeptInterns(false);
     setIsDeptModalOpen(true);
   };
 
@@ -574,70 +576,145 @@ export default function DepartmentAndEmployeePage() {
                   </div>
 
                   {/* Employee List Section */}
-                  <div style={{ marginBottom: '32px' }}>
-                    <div
-                      onClick={() => setShowDeptEmployees(!showDeptEmployees)}
-                      style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '16px 20px', background: '#f8fafc', borderRadius: '20px', transition: 'all 0.2s', border: '1px solid transparent' }}
-                      onMouseOver={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                      onMouseOut={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'transparent'; }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Users size={20} color="#6366f1" />
-                        <span>ดูรายชื่อพนักงานทั้งหมด ({deptEmployeesList.length} คน)</span>
-                      </div>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                        <ChevronRight size={18} color="#64748b" style={{ transform: showDeptEmployees ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
-                      </div>
-                    </div>
-
-                    {showDeptEmployees && (
-                      <div>
-                        {deptEmployeesList.length > 0 ? (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                            {deptEmployeesList.map(emp => {
-                              const canViewEmployeeDetails = isAdmin || user?.emp_id === deptForm.head_emp_id;
-                              return (
-                                <div
-                                  key={emp.emp_id}
-                                  onClick={() => {
-                                    if (canViewEmployeeDetails) {
-                                      setSelectedEmpId(emp.emp_id);
-                                      setIsDeptModalOpen(false);
-                                    }
-                                  }}
-                                  style={{
-                                    display: 'flex', alignItems: 'center', gap: '16px', background: '#fff', padding: '16px', borderRadius: '20px', border: '1px solid #f1f5f9',
-                                    cursor: canViewEmployeeDetails ? 'pointer' : 'default',
-                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-                                  }}
-                                  onMouseOver={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#e2e8f0'; } }}
-                                  onMouseOut={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = '#f1f5f9'; } }}
-                                >
-                                  <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0 }}>
-                                    {emp.image ? (
-                                      <Image fill unoptimized src={`/uploads/${emp.image}`} alt="emp" style={{ objectFit: 'cover' }} />
-                                    ) : (
-                                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 800, fontSize: '18px' }}>{emp.first_name_th?.[0] || 'U'}</div>
-                                    )}
-                                  </div>
-                                  <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.first_name_th} {emp.last_name_th}</div>
-                                    <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '4px', fontWeight: 500 }}>
-                                      {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix) || 'พนักงาน'} {emp.phone ? ` • โทร: ${emp.phone}` : ''}
-                                    </div>
-                                  </div>
-                                  {canViewEmployeeDetails && <ChevronRight size={18} color="#cbd5e1" />}
-                                </div>
-                              );
-                            })}
+                  <div style={{ marginBottom: '16px' }}>
+                    {(() => {
+                      const regularEmployees = deptEmployeesList.filter(e => e.emp_type !== 'นักศึกษาฝึกงาน');
+                      return (
+                        <>
+                          <div
+                            onClick={() => setShowDeptEmployees(!showDeptEmployees)}
+                            style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '16px 20px', background: '#f8fafc', borderRadius: '20px', transition: 'all 0.2s', border: '1px solid transparent' }}
+                            onMouseOver={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                            onMouseOut={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'transparent'; }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <Users size={20} color="#6366f1" />
+                              <span>ดูรายชื่อพนักงาน ({regularEmployees.length} คน)</span>
+                            </div>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                              <ChevronRight size={18} color="#64748b" style={{ transform: showDeptEmployees ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                            </div>
                           </div>
-                        ) : (
-                          <div style={{ fontSize: '14px', color: '#94a3b8', fontStyle: 'italic', padding: '24px', background: '#f8fafc', borderRadius: '20px', textAlign: 'center' }}>ไม่มีพนักงานในแผนกนี้</div>
+
+                          {showDeptEmployees && (
+                            <div style={{ marginBottom: '12px' }}>
+                              {regularEmployees.length > 0 ? (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                                  {regularEmployees.map(emp => {
+                                    const canViewEmployeeDetails = isAdmin || user?.emp_id === deptForm.head_emp_id;
+                                    return (
+                                      <div
+                                        key={emp.emp_id}
+                                        onClick={() => {
+                                          if (canViewEmployeeDetails) {
+                                            setSelectedEmpId(emp.emp_id);
+                                            setIsDeptModalOpen(false);
+                                          }
+                                        }}
+                                        style={{
+                                          display: 'flex', alignItems: 'center', gap: '16px', background: '#fff', padding: '16px', borderRadius: '20px', border: '1px solid #f1f5f9',
+                                          cursor: canViewEmployeeDetails ? 'pointer' : 'default',
+                                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                          boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                                        }}
+                                        onMouseOver={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#e2e8f0'; } }}
+                                        onMouseOut={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = '#f1f5f9'; } }}
+                                      >
+                                        <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0 }}>
+                                          {emp.image ? (
+                                            <Image fill unoptimized src={`/uploads/${emp.image}`} alt="emp" style={{ objectFit: 'cover' }} />
+                                          ) : (
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 800, fontSize: '18px' }}>{emp.first_name_th?.[0] || 'U'}</div>
+                                          )}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.first_name_th} {emp.last_name_th}</div>
+                                          <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '4px', fontWeight: 500 }}>
+                                            {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix) || 'พนักงาน'} {emp.phone ? ` • โทร: ${emp.phone}` : ''}
+                                          </div>
+                                        </div>
+                                        {canViewEmployeeDetails && <ChevronRight size={18} color="#cbd5e1" />}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <div style={{ fontSize: '14px', color: '#94a3b8', fontStyle: 'italic', padding: '24px', background: '#f8fafc', borderRadius: '20px', textAlign: 'center' }}>ไม่มีพนักงานปกติในแผนกนี้</div>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Interns Section */}
+                  {(() => {
+                    const internsList = deptEmployeesList.filter(e => e.emp_type === 'นักศึกษาฝึกงาน');
+                    if (internsList.length === 0) return null;
+                    return (
+                      <div style={{ marginBottom: '32px' }}>
+                        <div
+                          onClick={() => setShowDeptInterns(!showDeptInterns)}
+                          style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '16px 20px', background: '#f0fdf4', borderRadius: '20px', transition: 'all 0.2s', border: '1px solid transparent' }}
+                          onMouseOver={e => { e.currentTarget.style.background = '#dcfce7'; e.currentTarget.style.borderColor = '#bbf7d0'; }}
+                          onMouseOut={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.borderColor = 'transparent'; }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Contact size={20} color="#10b981" />
+                            <span>ดูรายชื่อนักศึกษาฝึกงาน ({internsList.length} คน)</span>
+                          </div>
+                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                            <ChevronRight size={18} color="#64748b" style={{ transform: showDeptInterns ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                          </div>
+                        </div>
+
+                        {showDeptInterns && (
+                          <div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                              {internsList.map(emp => {
+                                const canViewEmployeeDetails = isAdmin || user?.emp_id === deptForm.head_emp_id;
+                                return (
+                                  <div
+                                    key={emp.emp_id}
+                                    onClick={() => {
+                                      if (canViewEmployeeDetails) {
+                                        setSelectedEmpId(emp.emp_id);
+                                        setIsDeptModalOpen(false);
+                                      }
+                                    }}
+                                    style={{
+                                      display: 'flex', alignItems: 'center', gap: '16px', background: '#fff', padding: '16px', borderRadius: '20px', border: '1px solid #f1f5f9',
+                                      cursor: canViewEmployeeDetails ? 'pointer' : 'default',
+                                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                      boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                                    }}
+                                    onMouseOver={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#e2e8f0'; } }}
+                                    onMouseOut={e => { if (canViewEmployeeDetails) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = '#f1f5f9'; } }}
+                                  >
+                                    <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0 }}>
+                                      {emp.image ? (
+                                        <Image fill unoptimized src={`/uploads/${emp.image}`} alt="emp" style={{ objectFit: 'cover' }} />
+                                      ) : (
+                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 800, fontSize: '18px' }}>{emp.first_name_th?.[0] || 'U'}</div>
+                                      )}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.first_name_th} {emp.last_name_th}</div>
+                                      <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '4px', fontWeight: 500 }}>
+                                        {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix) || 'นักศึกษาฝึกงาน'} {emp.phone ? ` • โทร: ${emp.phone}` : ''}
+                                      </div>
+                                    </div>
+                                    {canViewEmployeeDetails && <ChevronRight size={18} color="#cbd5e1" />}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
 
                   {isAdmin && (
                     <div style={{ display: 'flex', gap: '12px' }}>
