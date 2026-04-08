@@ -134,18 +134,7 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Forgot password link */}
-        <div style={{ textAlign: 'right', marginBottom: 16 }}>
-          <a
-            href="#"
-            onClick={e => { e.preventDefault(); router.push('/forgot-password'); }}
-            style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', transition: 'color 0.2s' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#93c5fd'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
-          >
-            ลืมรหัสผ่าน?
-          </a>
-        </div>
+        {/* Forgot password link was here *}
 
         {/* แสดง Error Message ถ้ามี */}
         {errorMessage && (
@@ -183,62 +172,7 @@ export default function LoginPage() {
           {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
         </button>
 
-        {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', margin: '18px 0', gap: 12 }}>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.25)' }} />
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>หรือ</span>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.25)' }} />
-        </div>
-
-        {/* Sign Up / สมัครสมาชิก Button */}
-        <button
-          onClick={() => router.push('/register')}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.18)';
-            e.currentTarget.style.borderColor = 'rgba(96,165,250,0.5)';
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 8px 20px rgba(96,165,250,0.2)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-          style={{
-            width: '100%',
-            padding: '13px',
-            border: '2px solid rgba(255,255,255,0.25)',
-            borderRadius: 12,
-            background: 'rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(6px)',
-            color: 'white',
-            fontWeight: 600,
-            fontSize: 15,
-            cursor: 'pointer',
-            fontFamily: 'Sarabun, sans-serif',
-            transition: 'all 0.3s ease',
-            letterSpacing: 0.5,
-          }}
-        >
-          Sign Up / สมัครสมาชิก
-        </button>
-
-        {/* Register Link */}
-        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
-          <p style={{ margin: 0 }}>
-            ยังไม่มีบัญชี?{' '}
-            <a
-              href="#"
-              onClick={(e) => { e.preventDefault(); router.push('/register'); }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#93c5fd'; e.currentTarget.style.textDecoration = 'underline'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#60a5fa'; e.currentTarget.style.textDecoration = 'none'; }}
-              style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}
-            >
-              สมัครสมาชิกที่นี่
-            </a>
-          </p>
-        </div>
+        {/* Registration links were here */}
 
         <p style={{ marginTop: 20, fontSize: 12, opacity: 0.7 }}>Hospital Management Platform</p>
         

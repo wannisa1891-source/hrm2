@@ -103,9 +103,9 @@ export default function TransferPage() {
   const loadTransfers = async () => {
     setLoadingList(true);
     try {
-      const res = await fetch('/api/transfers');
-      const data = await res.json();
-      setTransfers(Array.isArray(data) ? data : []);
+      const res = await fetch('/api/transfers?limit=1000');
+      const result = await res.json();
+      setTransfers(result.data || (Array.isArray(result) ? result : []));
     } catch { setTransfers([]); }
     setLoadingList(false);
   };
@@ -627,11 +627,9 @@ export default function TransferPage() {
 
         {/* ── FORM (3 sections) ── */}
         {showForm && (
-          <div className="glass-card" style={{ padding: 0 }}>
-
-            {/* ─── SECTION 1: ข้อมูลคำสั่ง ─── */}
+          <div className="glass-card" style={{ padding: 0 }}>           
             <div className="tr-section-header tr-section-1">
-              1. ข้อมูลคำสั่ง
+              ข้อมูลคำสั่ง
             </div>
             <div className="tr-section-body">
               <div className="tr-form-row tri">
@@ -666,7 +664,7 @@ export default function TransferPage() {
 
             {/* ─── SECTION 2: รายละเอียดการเปลี่ยนแปลง ─── */}
             <div className="tr-section-header tr-section-2">
-              2. รายละเอียดการเปลี่ยนแปลง
+            รายละเอียดการเปลี่ยนแปลง
             </div>
             <div className="tr-section-body">
 
@@ -754,7 +752,7 @@ export default function TransferPage() {
 
             {/* ─── SECTION 3: เอกสารแนบ ─── */}
             <div className="tr-section-header tr-section-3">
-              3. เอกสารแนบ
+            เอกสารแนบ
             </div>
             <div className="tr-section-body">
               <div className="tr-form-row single">
