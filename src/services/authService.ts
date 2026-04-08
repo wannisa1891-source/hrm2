@@ -35,28 +35,3 @@ export const loginUser = async (username: string, password: string) => {
   }
 };
 
-export const registerUser = async (formData: Record<string, string>) => {
-  try {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      return { success: true, message: data.message, user_id: data.user_id };
-    } else {
-      const errorData = await res.json().catch(() => ({}));
-      return { 
-        success: false, 
-        message: errorData.message || 'การสมัครสมาชิกไม่สำเร็จ' 
-      };
-    }
-  } catch (error) {
-    console.error('Register Error:', error);
-    return { success: false, message: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้' };
-  }
-};
