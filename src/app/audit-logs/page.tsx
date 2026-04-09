@@ -247,7 +247,7 @@ export default function AuditLogsPage() {
           padding: 8px 16px; border-radius: 8px; border: 1px solid #e2e8f0; background: white;
           font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
         }
-        .pagination button:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e0; }
+        .pagination button:hover:not(:disabled) { background: #a7aeb4ff; border-color: #cbd5e0; }
         .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 13px; color: #64748b; font-weight: 500; }
 
