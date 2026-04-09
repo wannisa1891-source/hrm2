@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
         l.file_path
       FROM tbl_employees e
       JOIN tbl_employee_licenses l ON e.emp_id = l.emp_id
-      WHERE 1=1
+      WHERE l.id IN (SELECT MAX(id) FROM tbl_employee_licenses GROUP BY emp_id, license_name)
     `;
 
     const queryParams: any[] = [];
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
       queryParams.push(searchVal, searchVal, searchVal, searchVal, searchVal);
     }
 
-    query += ` ORDER BY l.expire_date ASC`;
+    query += ` ORDER BY l.id DESC`;
     
     const [rows]: any = await pool.query(query, queryParams);
 

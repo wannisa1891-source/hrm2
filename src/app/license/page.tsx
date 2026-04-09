@@ -251,6 +251,11 @@ export default function LicensePage() {
    const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
    const [isDetailExpanded, setIsDetailExpanded] = useState(true);
 
+   // Quick Edit State for View Modal
+   const [quickPoints, setQuickPoints] = useState(0);
+   const [quickVerified, setQuickVerified] = useState(false);
+   const [updatingQuick, setUpdatingQuick] = useState(false);
+
    useEffect(() => {
       fetchInitialData();
    }, []);
@@ -372,6 +377,41 @@ export default function LicensePage() {
       } finally { setSubmitting(false); }
    };
 
+   const handleQuickUpdate = async () => {
+      if (!selectedLicense) return;
+      setUpdatingQuick(true);
+      try {
+         const licenseId = selectedLicense.license_id.toString();
+         const res = await fetch(`/api/licenses/L${licenseId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+               cneu_cme_points: quickPoints,
+               verified_status: quickVerified ? 'Verified' : 'Pending'
+            })
+         });
+
+         if (res.ok) {
+            Swal.fire({ icon: 'success', title: 'อัปเดตสถานะสำเร็จ', showConfirmButton: false, timer: 1000 });
+            await fetchLicenses();
+            // Also update the local selectedLicense to reflect changes immediately
+            setSelectedLicense({
+               ...selectedLicense,
+               points: quickPoints,
+               verified_status: quickVerified ? 'Verified' : 'Pending'
+            });
+         } else {
+            const err = await res.json();
+            throw new Error(err.error || 'Failed to update');
+         }
+      } catch (err: any) {
+         console.error('Quick Update Error:', err);
+         Swal.fire('Error', err.message, 'error');
+      } finally {
+         setUpdatingQuick(false);
+      }
+   };
+
    const fetchHistoryData = async (empId: string, openModal = true) => {
       try {
          const v = Date.now();
@@ -411,6 +451,8 @@ export default function LicensePage() {
                verified_status: data.verified_status || 'Pending',
                psv_checked: data.verified_status === 'Verified'
             });
+            setQuickPoints(data.points || 0);
+            setQuickVerified(data.verified_status === 'Verified');
          } else {
             setFormData({ license_no: '', expire_date: '', points: 0, emp_id: '', license_name: '', license_type: '', institution: '', issuer: '', issue_date: '', remarks: '', warning_days_override: 30, verified_status: 'Pending', psv_checked: false });
          }
@@ -1121,6 +1163,11 @@ export default function LicensePage() {
 
                                  {isHistoryExpanded && (
                                     <div style={{ marginTop: '24px', animation: 'fadeIn 0.4s ease-out' }}>
+                                          <button onClick={() => handleOpenModal('renew', selectedLicense)} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 48px', borderRadius: '16px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.2)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>ต่ออายุใบอนุญาต</button>
+                                          <button onClick={() => setActiveModal('none')} style={{ background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', padding: '14px 28px', borderRadius: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg>
+                                             กลับไปหน้าค้นหา
+                                          </button>
                                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 10px' }}>
                                           <thead>
                                              <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
