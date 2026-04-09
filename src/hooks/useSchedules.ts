@@ -39,7 +39,7 @@ export function useSchedules() {
       } catch (err) {
         console.error('useSchedules - addSchedule:', err)
         setError(err instanceof Error ? err.message : 'เพิ่มเวรไม่สำเร็จ')
-        return false
+        throw err
       }
     },
     [loadSchedules]
@@ -56,7 +56,7 @@ export function useSchedules() {
       } catch (err) {
         console.error('useSchedules - editSchedule:', err)
         setError(err instanceof Error ? err.message : 'แก้ไขเวรไม่สำเร็จ')
-        return false
+        throw err
       }
     },
     [loadSchedules]
@@ -73,7 +73,7 @@ export function useSchedules() {
       } catch (err) {
         console.error('useSchedules - removeSchedule:', err)
         setError(err instanceof Error ? err.message : 'ลบเวรไม่สำเร็จ')
-        return false
+        throw err
       }
     },
     [loadSchedules]

@@ -139,9 +139,13 @@ export default function SchedulePage() {
       cancelButtonText: 'ยกเลิก'
     });
     if (result.isConfirmed) {
-      removeSchedule(id, toMonthKey(currentDate))
-      closeModal()
-      Swal.fire({ title: 'ลบเวรสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+      try {
+        await removeSchedule(id, toMonthKey(currentDate));
+        closeModal();
+        Swal.fire({ title: 'ลบเวรสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+      } catch (err: any) {
+        Swal.fire('ลบเวรไม่สำเร็จ', err.message || 'Error deleting schedule', 'error');
+      }
     }
   }
 
@@ -557,7 +561,7 @@ export default function SchedulePage() {
                           color: form.shift === st.value ? '#1e293b' : ''
                         }}
                         onClick={() => setForm((f: ScheduleForm) => ({ ...f, shift: st.value }))}>
-                        {st.value}
+                        {st.label}
                       </button>
                     ))}
                   </div>
