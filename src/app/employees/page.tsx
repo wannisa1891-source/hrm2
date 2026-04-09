@@ -42,7 +42,9 @@ function EmployeesContent() {
   const { positions, loadPositions } = usePositions();
 
   const [search, setSearch] = useState(searchParams.get('q') || '');
-  const [filterDept, setFilterDept] = useState('all');
+  const [filterDiv, setFilterDiv] = useState('all');
+  const [filterGrp, setFilterGrp] = useState('all');
+  const [filterSub, setFilterSub] = useState('all');
   const [filterPos, setFilterPos] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterLicense, setFilterLicense] = useState('all');
@@ -222,13 +224,20 @@ function EmployeesContent() {
     loadPositions();
   }, [loadEmployees, loadDepartments, loadPositions]);
 
-  const getDeptName = (id: string) => departments.find(d => d.dept_name === id)?.dept_name || id;
+  const getDeptName = (id: string) => {
+    const dept = departments.find(d => String(d.dept_id) === String(id));
+    if (!dept) return id || '-';
+    return `${dept.division} > ${dept.dept_name}${dept.sub_dept ? ` > ${dept.sub_dept}` : ''}`;
+  };
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
 
   const filteredData = useMemo(() => {
     return employees.filter(e => {
       const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
-      const matchDept = filterDept === 'all' || e.dept_id === filterDept;
+      const dept = departments.find(d => d.dept_id === e.dept_id);
+      const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
+                        (filterGrp === 'all' || dept?.dept_name === filterGrp) &&
+                        (filterSub === 'all' || e.dept_id === filterSub);
       const matchPos = filterPos === 'all' || e.pos_id === filterPos;
       const matchStatus = filterStatus === 'all' || e.status === filterStatus;
 
@@ -237,7 +246,7 @@ function EmployeesContent() {
 
       return matchSearch && matchDept && matchPos && matchStatus && matchLicense;
     });
-  }, [employees, search, filterDept, filterPos, filterStatus, filterLicense]);
+  }, [employees, search, filterDiv, filterGrp, filterSub, filterPos, filterStatus, filterLicense, departments]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -419,10 +428,28 @@ function EmployeesContent() {
               <input type="text" placeholder="ค้นหาชื่อหรือรหัสพนักงาน..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
 
-            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterDept} onChange={e => setFilterDept(e.target.value)}>
-              <option value="all">ทุกแผนก</option>
-              {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
-            </select>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterDiv} onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); setFilterSub('all'); }}>
+                <option value="all">ทุกฝ่าย</option>
+                {Array.from(new Set(departments.map(d => d.division?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th')).map(div => (
+                  <option key={div as string} value={div as string}>{div as string}</option>
+                ))}
+              </select>
+
+              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterGrp} onChange={e => { setFilterGrp(e.target.value); setFilterSub('all'); }} disabled={filterDiv === 'all'}>
+                <option value="all">ทุกกลุ่มงาน</option>
+                {Array.from(new Set(departments.filter(d => d.division?.trim() === filterDiv).map(d => d.dept_name?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th')).map(grp => (
+                  <option key={grp as string} value={grp as string}>{grp as string}</option>
+                ))}
+              </select>
+
+              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterSub} onChange={e => setFilterSub(e.target.value)} disabled={filterGrp === 'all'}>
+                <option value="all">ทุกแผนกย่อย</option>
+                {departments.filter(d => d.division?.trim() === filterDiv && d.dept_name?.trim() === filterGrp).sort((a, b) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th')).map(d => (
+                  <option key={d.dept_id} value={d.dept_id}>{d.sub_dept || '(ไม่มีแผนกย่อย)'}</option>
+                ))}
+              </select>
+            </div>
             <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterPos} onChange={e => setFilterPos(e.target.value)}>
               <option value="all">ทุกตำแหน่ง</option>
               {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
@@ -448,7 +475,8 @@ function EmployeesContent() {
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
                   <th>ตำแหน่ง</th>
-                  <th>แผนก/งาน</th>
+                  <th>สังกัด (ฝ่าย)</th>
+                  <th>กลุ่มงาน / หน่วยงาน</th>
                   <th style={{ textAlign: 'center' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
@@ -480,10 +508,15 @@ function EmployeesContent() {
                         <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>รหัส: {emp.emp_id}</div>
                       </td>
                       <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
+                      <td style={{ color: '#4f46e5', fontWeight: 600 }}>
+                        {departments.find(d => String(d.dept_id) === String(emp.dept_id))?.division || '-'}
+                      </td>
                       <td style={{ color: '#334155' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', background: '#f8fafc', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }}>
-                          {getDeptName(emp.dept_id)}
-                        </span>
+                        {(() => {
+                          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+                          if (!dept) return '-';
+                          return `${dept.dept_name}${dept.sub_dept ? ` > ${dept.sub_dept}` : ''}`;
+                        })()}
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         <span className={`badge ${emp.status === 'Active' ? 'badge-green' : 'badge-gray'}`}>

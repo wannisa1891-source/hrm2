@@ -17,6 +17,7 @@ interface UserDashboardProps {
   newsList: any[];
   onSelectNews: (news: any) => void;
   today: string;
+  licenseStats?: { expiring: number, expired: number };
 }
 
 export default function UserDashboard({
@@ -26,7 +27,8 @@ export default function UserDashboard({
   recentLeaves,
   newsList,
   onSelectNews,
-  today
+  today,
+  licenseStats = { expiring: 0, expired: 0 }
 }: UserDashboardProps) {
   const [showSalary, setShowSalary] = useState(false);
 
@@ -118,6 +120,48 @@ export default function UserDashboard({
             </div>
           </div>
         </div>
+
+        {/* License Alert Card (New) */}
+        {(licenseStats.expiring > 0 || licenseStats.expired > 0) && (
+          <div style={{ 
+            background: licenseStats.expired > 0 ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', 
+            borderRadius: 24, 
+            padding: 28, 
+            color: 'white', 
+            boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.9 }}>การแจ้งเตือนใบประกอบ</div>
+               <div style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" /></svg>
+               </div>
+            </div>
+            <div style={{ marginTop: 12 }}>
+               <div style={{ fontSize: 20, fontWeight: 800 }}>
+                 {licenseStats.expired > 0 ? 'พบใบประกอบหมดอายุ!' : 'ใบประกอบใกล้หมดอายุ'}
+               </div>
+               <div style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>
+                 {licenseStats.expired > 0 ? `จำนวน ${licenseStats.expired} รายการ` : `ต้องต่ออายุภายใน 90 วัน (${licenseStats.expiring} รายการ)`}
+               </div>
+            </div>
+            <Link href="/license" style={{ 
+              marginTop: 20, 
+              background: 'white', 
+              color: licenseStats.expired > 0 ? '#ef4444' : '#f59e0b', 
+              padding: '10px 0', 
+              borderRadius: '12px', 
+              textAlign: 'center', 
+              fontWeight: 800, 
+              fontSize: 14, 
+              textDecoration: 'none' 
+            }}>
+              จัดการใบประกอบ
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Main Content Grid */}

@@ -109,7 +109,21 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         return acc;
       }
 
-      if (item.id === 'personnel' || item.id === 'audit') return acc;
+      if (item.id === 'personnel' || item.id === 'audit') {
+        // For non-admins, we still want them to see 'License'
+        if (item.id === 'personnel') {
+          const licenseChild = item.children?.find(c => c.id === 'license');
+          if (licenseChild) {
+            acc.push({
+              id: licenseChild.id,
+              label: licenseChild.label,
+              icon: icons.idCard, // Using idCard icon for license
+              href: licenseChild.href
+            });
+          }
+        }
+        return acc;
+      }
 
       if (item.children) {
         item.children.forEach(child => {

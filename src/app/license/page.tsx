@@ -282,9 +282,9 @@ export default function LicensePage() {
    const getPosName = (id: string) => positions.find(p => String(p.pos_id) === String(id))?.pos_name || id || '-';
 
    // Hierarchical Helpers
-   const divisions = Array.from(new Set(departments.map(d => d.division))).filter(Boolean) as string[];
-   const getGroupsByDiv = (div: string) => Array.from(new Set(departments.filter(d => d.division === div).map(d => d.dept_name)));
-   const getSubsByGrp = (div: string, grp: string) => departments.filter(d => d.division === div && d.dept_name === grp);
+   const divisions = (Array.from(new Set(departments.map(d => d.division?.trim()))).filter(Boolean) as string[]).sort((a, b) => a.localeCompare(b, 'th'));
+   const getGroupsByDiv = (div: string) => Array.from(new Set(departments.filter(d => d.division?.trim() === div).map(d => d.dept_name?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th'));
+   const getSubsByGrp = (div: string, grp: string) => departments.filter(d => d.division?.trim() === div && d.dept_name?.trim() === grp).sort((a, b) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th'));
 
    useEffect(() => {
       fetchInitialData();

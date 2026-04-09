@@ -23,27 +23,55 @@ export default function DepartmentAndEmployeePage() {
   const { positions = [], loadPositions } = usePositions();
 
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
+  const [selectedDiv, setSelectedDiv] = useState<string>('');
+  const [selectedGrp, setSelectedGrp] = useState<string>('');
   const [selectedEmpId, setSelectedEmpId] = useState<string | null>(null);
+
+  // Accordion State
+  const [expandedDivs, setExpandedDivs] = useState<string[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
 
   const isHead = user?.role?.toLowerCase() === 'head';
   const isStandardUser = !isAdmin && !isHead;
   const userEmp = useMemo(() => employees.find(e => e.emp_id === user?.emp_id), [employees, user?.emp_id]);
   const userDeptId = userEmp?.dept_id;
 
+  // Hierarchical Data Structure
+  const hierarchy = useMemo(() => {
+    const tree: any = {};
+    departments.forEach(dept => {
+      const div = dept.division?.trim() || 'ชุดอื่นๆ';
+      const grp = dept.dept_name?.trim() || 'ทั่วไป';
+      if (!tree[div]) tree[div] = {};
+      if (!tree[div][grp]) tree[div][grp] = [];
+      tree[div][grp].push(dept);
+    });
+    return tree;
+  }, [departments]);
+
+  const toggleDiv = (div: string) => {
+    setExpandedDivs(prev => prev.includes(div) ? prev.filter(d => d !== div) : [...prev, div]);
+  };
+
+  const toggleGrp = (grp: string) => {
+    setExpandedGroups(prev => prev.includes(grp) ? prev.filter(g => g !== grp) : [...prev, grp]);
+  };
+
   // Auto-select user's department for standard users
   useEffect(() => {
     if (isStandardUser && userDeptId && !selectedDeptId) {
-      setSelectedDeptId(userDeptId);
+      const dept = departments.find(d => d.dept_id === userDeptId);
+      if (dept) {
+        setSelectedDiv(dept.division || '');
+        setSelectedGrp(dept.dept_name || '');
+        setSelectedDeptId(userDeptId);
+        setExpandedDivs([dept.division || '']);
+        setExpandedGroups([dept.dept_name || '']);
+      }
     }
-  }, [isStandardUser, userDeptId, selectedDeptId]);
+  }, [isStandardUser, userDeptId, selectedDeptId, departments]);
 
-  const displayDepartments = useMemo(() => {
-    if (isAdmin || isHead) return departments;
-    if (userDeptId) return departments.filter(d => d.dept_id === userDeptId);
-    return [];
-  }, [departments, isAdmin, isHead, userDeptId]);
-
-  // Department Modal State
+  // Dept Modal State
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>('view');
   const [deptForm, setDeptForm] = useState({
@@ -56,7 +84,7 @@ export default function DepartmentAndEmployeePage() {
   const [page, setPage] = useState(1);
   const perPage = 10;
 
-  useEffect(() => { setPage(1); }, [search, selectedDeptId]);
+  useEffect(() => { setPage(1); }, [search, selectedDeptId, selectedDiv, selectedGrp]);
 
   useEffect(() => {
     loadEmployees?.();
@@ -68,15 +96,25 @@ export default function DepartmentAndEmployeePage() {
     let base = employees;
     if (selectedDeptId === 'interns') {
       return { regularStaff: [], internStaff: base.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน') };
-    } else if (selectedDeptId) {
-      base = base.filter(emp => emp.dept_id === selectedDeptId);
+    } else if (selectedDeptId || selectedGrp || selectedDiv) {
+      base = base.filter(emp => {
+        const dept = departments.find(d => d.dept_id === emp.dept_id);
+        if (!dept) return false;
+        if (selectedDeptId) return emp.dept_id === selectedDeptId;
+        if (selectedGrp) return dept.dept_name?.trim() === selectedGrp && (dept.division?.trim() === selectedDiv);
+        if (selectedDiv) return dept.division?.trim() === selectedDiv;
+        return true;
+      });
     }
 
     if (search) {
       const term = search.toLowerCase();
       base = base.filter(e => {
-        const deptName = departments.find(d => d.dept_id === e.dept_id)?.dept_name || '';
-        return `${e.first_name_th || ''} ${e.last_name_th || ''} ${e.first_name_en || ''} ${e.last_name_en || ''} ${e.emp_id || ''} ${deptName}`.toLowerCase().includes(term);
+        const dept = departments.find(d => d.dept_id === e.dept_id);
+        const deptName = dept?.dept_name || '';
+        const divName = dept?.division || '';
+        const subDept = dept?.sub_dept || '';
+        return `${e.first_name_th || ''} ${e.last_name_th || ''} ${e.first_name_en || ''} ${e.last_name_en || ''} ${e.emp_id || ''} ${deptName} ${divName} ${subDept}`.toLowerCase().includes(term);
       });
     }
 
@@ -84,7 +122,7 @@ export default function DepartmentAndEmployeePage() {
       regularStaff: base.filter(emp => emp.emp_type !== 'นักศึกษาฝึกงาน'),
       internStaff: base.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน')
     };
-  }, [employees, selectedDeptId, search, departments]);
+  }, [employees, selectedDeptId, selectedDiv, selectedGrp, search, departments]);
 
   const filteredEmployees = useMemo(() => [...regularStaff, ...internStaff], [regularStaff, internStaff]);
 
@@ -93,7 +131,11 @@ export default function DepartmentAndEmployeePage() {
     [selectedEmpId, employees]
   );
 
-  const getDeptName = (id: string) => departments.find(d => d.dept_id === id)?.dept_name || 'ไม่ระบุคะ';
+  const getDeptName = (id: string) => {
+    const dept = departments.find(d => String(d.dept_id) === String(id));
+    if (!dept) return id || '-';
+    return `${dept.division} > ${dept.dept_name}${dept.sub_dept ? ` > ${dept.sub_dept}` : ''}`;
+  };
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
   const formatPosName = (posName: string, gender?: string, prefix?: string) => {
     if (posName.includes(' / ') && (gender || prefix)) {
@@ -264,36 +306,94 @@ export default function DepartmentAndEmployeePage() {
               )}
             </div>
 
-            {displayDepartments.map(dept => (
-              <div
-                key={dept.dept_id}
-                onClick={() => {
-                  setSelectedDeptId(dept.dept_id);
-                  openDeptModal(dept);
-                }}
-                style={{
-                  ...styles.deptItem,
-                  background: selectedDeptId === dept.dept_id ? 'linear-gradient(90deg, #eef2ff 0%, #ffffff 100%)' : 'transparent',
-                  color: selectedDeptId === dept.dept_id ? '#4f46e5' : '#64748b',
-                  fontWeight: selectedDeptId === dept.dept_id ? 700 : 500,
-                  borderLeft: selectedDeptId === dept.dept_id ? '4px solid #4f46e5' : '4px solid transparent',
-                }}
-              >
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {dept.dept_name}
-                  {(() => {
-                    const iCount = employees.filter(e => e.dept_id === dept.dept_id && e.emp_type === 'นักศึกษาฝึกงาน').length;
-                    return iCount > 0 ? (
-                      <span style={{ fontSize: '10px', background: '#dcfce7', color: '#16a34a', padding: '2px 6px', borderRadius: '6px', fontWeight: 800 }}>นศ. {iCount}</span>
-                    ) : null;
-                  })()}
-                </span>
+            {Object.keys(hierarchy).sort().map(divName => {
+              const isDivExpanded = expandedDivs.includes(divName);
+              const groups = hierarchy[divName];
+              
+              return (
+                <div key={divName} style={{ marginBottom: '8px' }}>
+                  <div
+                    onClick={() => {
+                      toggleDiv(divName);
+                      setSelectedDiv(divName);
+                      setSelectedGrp('');
+                      setSelectedDeptId('');
+                    }}
+                    style={{
+                      ...styles.divHeader,
+                      background: selectedDiv === divName && !selectedGrp ? 'linear-gradient(90deg, #eef2ff 0%, #ffffff 100%)' : 'transparent',
+                      color: selectedDiv === divName ? '#4f46e5' : '#475569',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Building size={16} />
+                      <span style={{ fontWeight: 700 }}>{divName}</span>
+                    </div>
+                    <ChevronRight size={16} style={{ transform: isDivExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                  </div>
 
-                <div style={{ display: 'flex', gap: '6px', opacity: selectedDeptId === dept.dept_id ? 1 : 0.4, transition: 'opacity 0.2s' }}>
-                  <ChevronRight size={16} />
+                  {isDivExpanded && (
+                    <div style={{ paddingLeft: '12px', marginTop: '4px' }}>
+                      {Object.keys(groups).sort().map(grpName => {
+                        const isGrpExpanded = expandedGroups.includes(`${divName}-${grpName}`);
+                        const units = groups[grpName];
+                        const hasSubDepts = units.some((u: any) => u.sub_dept);
+
+                        return (
+                          <div key={grpName} style={{ marginBottom: '4px' }}>
+                            <div
+                              onClick={() => {
+                                toggleGrp(`${divName}-${grpName}`);
+                                setSelectedDiv(divName);
+                                setSelectedGrp(grpName);
+                                setSelectedDeptId('');
+                              }}
+                              style={{
+                                ...styles.grpHeader,
+                                background: selectedGrp === grpName && selectedDiv === divName && !selectedDeptId ? '#f8fafc' : 'transparent',
+                                color: selectedGrp === grpName && selectedDiv === divName ? '#4f46e5' : '#64748b',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                <Users size={14} />
+                                <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{grpName}</span>
+                              </div>
+                              {hasSubDepts && (
+                                <ChevronRight size={14} style={{ transform: isGrpExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }} />
+                              )}
+                            </div>
+
+                            {isGrpExpanded && hasSubDepts && (
+                              <div style={{ paddingLeft: '20px', marginTop: '2px' }}>
+                                {units.sort((a: any, b: any) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th')).map((unit: any) => (
+                                  <div
+                                    key={unit.dept_id}
+                                    onClick={() => {
+                                      setSelectedDiv(divName);
+                                      setSelectedGrp(grpName);
+                                      setSelectedDeptId(unit.dept_id);
+                                      openDeptModal(unit);
+                                    }}
+                                    style={{
+                                      ...styles.unitItem,
+                                      background: selectedDeptId === unit.dept_id ? '#eff6ff' : 'transparent',
+                                      color: selectedDeptId === unit.dept_id ? '#2563eb' : '#94a3b8',
+                                    }}
+                                  >
+                                    <MapPin size={12} />
+                                    <span style={{ fontSize: '12px' }}>{unit.sub_dept || 'ฝ่ายบริหาร'}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -302,7 +402,7 @@ export default function DepartmentAndEmployeePage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' }}>
             <div style={{ minWidth: '300px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', wordBreak: 'keep-all', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #1e293b 0%, #4f46e5 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {selectedDeptId === 'interns' ? 'รายชื่อนักศึกษาฝึกงานทั้งหมด' : (selectedDeptId ? getDeptName(selectedDeptId) : 'รายชื่อบุคลากรทั้งหมด')}
+                {selectedDeptId === 'interns' ? 'รายชื่อนักศึกษาฝึกงานทั้งหมด' : (selectedDeptId ? `${getDeptName(selectedDeptId)} (${departments.find(d => d.dept_id === selectedDeptId)?.sub_dept || ''})` : selectedGrp ? selectedGrp : selectedDiv ? selectedDiv : 'รายชื่อบุคลากรทั้งหมด')}
               </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#64748b', margin: '8px 0 0', fontSize: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fff', padding: '4px 12px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
@@ -351,7 +451,8 @@ export default function DepartmentAndEmployeePage() {
                       <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
                       <th style={styles.th}>บุคลากร</th>
                       <th style={styles.th}>ตำแหน่ง</th>
-                      <th style={styles.th}>แผนก / สังกัด</th>
+                      <th style={styles.th}>สังกัด (ฝ่าย)</th>
+                      <th style={styles.th}>กลุ่มงาน / หน่วยงาน</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
                       <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
                     </tr>
@@ -391,7 +492,8 @@ export default function DepartmentAndEmployeePage() {
                       <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
                       <th style={styles.th}>ชื่อ-สกุล</th>
                       <th style={styles.th}>คณะ / ตำแหน่ง</th>
-                      <th style={styles.th}>สถานศึกษา / แผนก</th>
+                      <th style={styles.th}>สังกัด (ฝ่าย)</th>
+                      <th style={styles.th}>กลุ่มงาน / หน่วยงาน</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
                       <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
                     </tr>
@@ -873,6 +975,18 @@ const styles: { [key: string]: React.CSSProperties } = {
     textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px'
   },
   smallAddBtn: { background: 'transparent', border: 'none', cursor: 'pointer', color: '#3b82f6' },
+  divHeader: {
+    padding: '12px 16px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+    justifyContent: 'space-between', fontSize: '15px', transition: 'all 0.2s', marginBottom: '4px'
+  },
+  grpHeader: {
+    padding: '10px 12px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+    justifyContent: 'space-between', fontSize: '14px', transition: 'all 0.2s', fontWeight: 600
+  },
+  unitItem: {
+    padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+    gap: '8px', fontSize: '13px', transition: 'all 0.2s', fontWeight: 500
+  },
   mainContent: { flex: 1, padding: '32px 40px', overflowY: 'auto' },
   mainHeader: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' },
   mainTitle: { fontSize: '32px', fontWeight: 800, margin: 0, color: '#1e293b' },
@@ -1031,8 +1145,15 @@ function EmployeeRow({
       <td style={{ ...styles.td, fontWeight: 600, color: '#334155', fontSize: '14px' }}>
         {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}
       </td>
+      <td style={{ ...styles.td, color: '#4f46e5', fontSize: '14px', fontWeight: 600 }}>
+        {departments.find(d => String(d.dept_id) === String(emp.dept_id))?.division || '-'}
+      </td>
       <td style={{ ...styles.td, color: '#64748b', fontSize: '14px' }}>
-        {getDeptName(emp.dept_id)}
+        {(() => {
+          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+          if (!dept) return '-';
+          return `${dept.dept_name}${dept.sub_dept ? ` > ${dept.sub_dept}` : ''}`;
+        })()}
       </td>
       <td style={{ ...styles.td, textAlign: 'center', position: 'relative', zIndex: isOpen ? 50 : 1 }}>
         <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} isOpen={isOpen} setIsOpen={setIsOpen} />
