@@ -15,7 +15,9 @@ export async function GET(req: NextRequest) {
     `);
     const [licensesResult] = await pool.query(`
       SELECT * FROM tbl_employee_licenses 
-      WHERE status = 'Active'
+      WHERE id IN (
+        SELECT MAX(id) FROM tbl_employee_licenses GROUP BY emp_id, license_name
+      )
     `);
 
     const configs = configsResult as any[];
@@ -42,10 +44,19 @@ export async function GET(req: NextRequest) {
       const empLicensesNeeded: any[] = [];
 
       relevantConfigs.forEach(config => {
-        const found = licenses.find(l => 
-          l.emp_id === emp.emp_id && 
-          (l.license_name === config.license_name || l.license_type === config.config_name)
-        );
+        const found = licenses.find(l => {
+          if (l.emp_id !== emp.emp_id) return false;
+          
+          const dbName = (l.license_name || '').toLowerCase().trim();
+          const configLicense = (config.license_name || '').toLowerCase().trim();
+          const configType = (config.config_name || '').toLowerCase().trim();
+
+          // Match if exact OR if one contains the other (robust matching)
+          return (
+            (dbName && configLicense && (dbName.includes(configLicense) || configLicense.includes(dbName))) ||
+            (dbName && configType && (dbName.includes(configType) || configType.includes(dbName)))
+          );
+        });
 
         if (!found) {
           if (config.is_mandatory) {
@@ -54,11 +65,23 @@ export async function GET(req: NextRequest) {
           }
         } else {
           const expDate = found.expire_date ? new Date(found.expire_date) : null;
-          if (expDate) {
+          const isVerified = found.verified_status === 'Verified';
+
+          if (!isVerified) {
+            // Found but not audited yet
+            if (empStatus !== 'Missing') empStatus = 'PendingAudit';
+            empLicensesNeeded.push({ name: config.license_name, status: 'PendingAudit' });
+          } else if (expDate) {
             const today = new Date();
             const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            if (diffDays <= config.warning_days) {
-              if (empStatus !== 'Missing') empStatus = 'Expiring';
+            
+            if (diffDays <= 0) {
+              empStatus = 'Expired';
+              empLicensesNeeded.push({ name: config.license_name, status: 'Expired', daysLeft: diffDays });
+            } else if (diffDays <= config.warning_days) {
+              if (empStatus !== 'Missing' && empStatus !== 'Expired' && empStatus !== 'PendingAudit') {
+                empStatus = 'Expiring';
+              }
               empLicensesNeeded.push({ name: config.license_name, status: 'Expiring', daysLeft: diffDays });
             } else {
               empLicensesNeeded.push({ name: config.license_name, status: 'Active', daysLeft: diffDays });
@@ -71,7 +94,7 @@ export async function GET(req: NextRequest) {
 
       // Update summary
       if (empStatus === 'Compliant') summary.compliant++;
-      if (empStatus === 'Missing') summary.missing++;
+      if (empStatus === 'Missing' || empStatus === 'PendingAudit' || empStatus === 'Expired') summary.missing++;
       if (empStatus === 'Expiring') summary.expiring++;
 
       // Dept Stats
@@ -81,7 +104,7 @@ export async function GET(req: NextRequest) {
       }
       summary.departmentStats[deptName].total++;
       if (empStatus === 'Compliant') summary.departmentStats[deptName].compliant++;
-      if (empStatus === 'Missing') summary.departmentStats[deptName].missing++;
+      if (empStatus === 'Missing' || empStatus === 'PendingAudit' || empStatus === 'Expired') summary.departmentStats[deptName].missing++;
       if (empStatus === 'Expiring') summary.departmentStats[deptName].expiring++;
 
       summary.details.push({

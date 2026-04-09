@@ -94,8 +94,8 @@ interface LicenseConfig {
 
 // --- Helpers ---
 function getStatus(l: License) {
-   if (l.verified_status === 'Pending') return { label: 'รอการตรวจสอบ', color: '#7c3aed', bg: '#f5f3ff' };
    if (l.daysLeft < 0) return { label: `หมดอายุแล้ว (${Math.abs(l.daysLeft)} วัน)`, color: '#dc2626', bg: '#fee2e2' };
+   if (l.verified_status !== 'Verified') return { label: 'รอการตรวจสอบ', color: '#7c3aed', bg: '#f5f3ff' };
    if (l.daysLeft <= 30) return { label: `วิกฤต (${l.daysLeft} วัน)`, color: '#ca8a04', bg: '#fef9c3' };
    if (l.daysLeft <= 90) return { label: `ใกล้หมดอายุ (${l.daysLeft} วัน)`, color: '#ea580c', bg: '#ffedd5' };
    return { label: 'ตรวจสอบแล้ว', color: '#16a34a', bg: '#dcfce7' };
@@ -394,6 +394,7 @@ export default function LicensePage() {
          if (res.ok) {
             Swal.fire({ icon: 'success', title: 'อัปเดตสถานะสำเร็จ', showConfirmButton: false, timer: 1000 });
             await fetchLicenses();
+            await fetchMonitorData();
             // Also update the local selectedLicense to reflect changes immediately
             setSelectedLicense({
                ...selectedLicense,

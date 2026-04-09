@@ -51,7 +51,7 @@ export async function PUT(
           institution || null, 
           issue_date || null, 
           cneu_cme_points !== undefined ? cneu_cme_points : null,
-          verified_status || null,
+          verified_status !== undefined ? verified_status : null,
           licenseId
         ]);
 

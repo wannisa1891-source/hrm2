@@ -27,7 +27,9 @@ export async function GET(req: NextRequest) {
         l.issue_date,
         l.expire_date,
         l.status as license_status,
-        l.file_path
+        l.file_path,
+        l.verified_status,
+        l.points
       FROM tbl_employees e
       JOIN tbl_employee_licenses l ON e.emp_id = l.emp_id
       WHERE l.id IN (SELECT MAX(id) FROM tbl_employee_licenses GROUP BY emp_id, license_name)
