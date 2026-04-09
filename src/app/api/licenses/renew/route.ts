@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 
 export async function POST(req: NextRequest) {
@@ -33,13 +33,20 @@ export async function POST(req: NextRequest) {
       try {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
+        const uploadDir = join(process.cwd(), 'public', 'uploads', 'licenses');
+        
+        // Ensure directory exists
+        await mkdir(uploadDir, { recursive: true });
+        
         const fileName = `${emp_id || 'unknown'}_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-        const path = join(process.cwd(), 'public', 'uploads', 'licenses', fileName);
+        const path = join(uploadDir, fileName);
         await writeFile(path, buffer);
         filePath = `/uploads/licenses/${fileName}`;
-        console.log('File saved to:', filePath);
-      } catch (fileErr) {
-        console.error('File Upload Error:', fileErr);
+        console.log('File saved successfully to:', filePath);
+      } catch (fileErr: any) {
+        console.error('File Upload ERROR:', fileErr);
+        // Throw error to trigger catch block and stop DB transaction
+        throw new Error(`ไม่สามารถบันทึกไฟล์ได้: ${fileErr.message}`);
       }
     }
 
