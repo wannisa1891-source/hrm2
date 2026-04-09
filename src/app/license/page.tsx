@@ -248,6 +248,8 @@ export default function LicensePage() {
    const [submitting, setSubmitting] = useState(false);
    const [historyData, setHistoryData] = useState<License[]>([]);
    const [historyOpen, setHistoryOpen] = useState(false);
+   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
+   const [isDetailExpanded, setIsDetailExpanded] = useState(true);
 
    useEffect(() => {
       fetchInitialData();
@@ -370,19 +372,21 @@ export default function LicensePage() {
       } finally { setSubmitting(false); }
    };
 
-   const fetchHistoryData = async (empId: string) => {
+   const fetchHistoryData = async (empId: string, openModal = true) => {
       try {
          const v = Date.now();
          const res = await fetch(`/api/licenses/renew?emp_id=${empId}&history=true&v=${v}`, { cache: 'no-store' });
          if (res.ok) {
             const data = await res.json();
             setHistoryData(data);
-            setHistoryOpen(true);
+            if (openModal) setHistoryOpen(true);
          }
       } catch (err) { console.error('Fetch History Error:', err); }
    };
 
    const handleOpenModal = (type: any, data?: any) => {
+      setIsHistoryExpanded(false); // Reset history expansion when opening modal
+      setIsDetailExpanded(true); // Open details by default
       if (type === 'config') {
          setSelectedConfig(data || null);
          setConfigFormData(data || { config_name: '', pos_id: null, dept_id: null, license_name: '', valid_years: 5, warning_days: 90 });
@@ -391,6 +395,7 @@ export default function LicensePage() {
          setSearchTermEmp('');
          setSelectedFile(null);
          if (data) {
+            fetchHistoryData(data.emp_id, false); // Auto fetch history without opening standalone modal
             setFormData({
                license_no: data.license_no || '',
                expire_date: data.expire_date || data.expires || '',
@@ -711,7 +716,7 @@ export default function LicensePage() {
                            <div style={{ width: '340px', background: '#fff', borderRight: '1px solid #e2e8f0', padding: '48px 32px', display: 'flex', flexDirection: 'column', gap: '28px', overflowY: 'auto' }}>
                               <div style={{ marginBottom: '8px' }}>
                                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#0d9488', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px' }}>รายละเอียดผู้ประกอบ</div>
-                                 <div style={{ width: '120px', height: '120px', borderRadius: '32px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', border: '4px solid #fff', boxShadow: '0 8px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                                 <div style={{ width: '120px', height: '120px', borderRadius: '32px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', overflow: 'hidden', border: '4px solid #fff', boxShadow: '0 8px 20px rgba(0,0,0,0.05)' }}>
                                     {currentEmp?.image || currentEmp?.photo ? (
                                        <img
                                           src={`/uploads/${currentEmp.image || currentEmp.photo}`}
@@ -862,6 +867,69 @@ export default function LicensePage() {
                                     {submitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูลและยืนยัน'}
                                  </button>
                               </div>
+
+                              {/* Embedded History Section */}
+                              {formData.emp_id && (
+                                 <div style={{ marginTop: '40px', borderTop: '2px solid #f1f5f9', paddingTop: '40px' }}>
+                                    <div 
+                                       onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+                                       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', padding: '20px', background: '#f8fafc', borderRadius: '20px', border: '1px solid #e2e8f0' }}
+                                    >
+                                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                          <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                          </div>
+                                          <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 900 }}>ประวัติการต่ออายุย้อยหลัง</h4>
+                                       </div>
+                                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="3" style={{ transition: 'transform 0.3s', transform: isHistoryExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>
+                                          <path d="m6 9 6 6 6-6"/>
+                                       </svg>
+                                    </div>
+
+                                    {isHistoryExpanded && (
+                                       <div style={{ marginTop: '20px', animation: 'fadeIn 0.4s ease-out' }}>
+                                          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+                                             <thead>
+                                                <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase' }}>
+                                                   <th style={{ padding: '0 16px' }}>เลขใบอนุญาต</th>
+                                                   <th>วิชาชีพ</th>
+                                                   <th>หมดอายุ</th>
+                                                   <th style={{ textAlign: 'right', paddingRight: '16px' }}>ไฟล์</th>
+                                                </tr>
+                                             </thead>
+                                             <tbody>
+                                                {historyData.map((h, idx) => {
+                                                   const dExp = h.expire_date ? new Date(h.expire_date) : null;
+                                                   const expStr = dExp ? dExp.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                                                   const isImage = h.file_path?.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+
+                                                   return (
+                                                      <tr key={idx} style={{ background: '#fff', borderRadius: '14px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+                                                         <td style={{ padding: '16px', fontWeight: 800, fontFamily: 'monospace', fontSize: '14px', borderTopLeftRadius: '14px', borderBottomLeftRadius: '14px' }}>{h.license_no}</td>
+                                                         <td style={{ fontWeight: 800, fontSize: '13px' }}>{h.license_name}</td>
+                                                         <td style={{ fontWeight: 800, fontSize: '13px', color: '#dc2626' }}>{expStr}</td>
+                                                         <td style={{ textAlign: 'right', paddingRight: '16px', borderTopRightRadius: '14px', borderBottomRightRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', padding: '10px' }}>
+                                                            {h.file_path && (
+                                                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                                  {isImage && (
+                                                                     <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                                                        <img src={h.file_path} alt="license preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                     </div>
+                                                                  )}
+                                                                  <a href={h.file_path} target="_blank" rel="noreferrer" style={{ color: '#2563eb', fontWeight: 900, fontSize: '12px', background: '#eff6ff', padding: '6px 12px', borderRadius: '8px', textDecoration: 'none' }}>เปิดดู</a>
+                                                               </div>
+                                                            )}
+                                                         </td>
+                                                      </tr>
+                                                   );
+                                                })}
+                                                {historyData.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', background: '#fff', borderRadius: '16px' }}>ไม่พบประวัติย้อนหลัง</td></tr>}
+                                             </tbody>
+                                          </table>
+                                       </div>
+                                    )}
+                                 </div>
+                              )}
                            </div>
 
                         </div>
@@ -901,8 +969,19 @@ export default function LicensePage() {
                               <div style={{ textAlign: 'center' }}>
                                  <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.first_name_th} {currentEmp?.last_name_th}</h3>
                                  <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#64748b', fontWeight: 600 }}>
-                                    {currentEmp?.image || currentEmp?.photo ? 'รูปภาพโปรไฟล์ผู้ประกอบวิชาชีพ' : 'ไม่พบรูปภาพในระบบฐานข้อมูล'}
+                                    {currentEmp?.image || currentEmp?.photo ? 'รูปภาพโปรไฟล์ผู้ประกอบวิชาชีพ' : 'ไม่พบรูปภาพในกะบบ'}
                                  </p>
+                              </div>
+
+                              <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: '#f8fafc', padding: '20px', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
+                                 <div>
+                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>รหัสพนักงาน</div>
+                                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.emp_id || '-'}</div>
+                                 </div>
+                                 <div>
+                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>ตำแหน่ง</div>
+                                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.position_name || '-'}</div>
+                                 </div>
                               </div>
 
                               <div style={{ marginTop: 'auto', background: '#ecfdf5', padding: '20px', borderRadius: '24px', border: '1px solid #def7ec' }}>
@@ -960,6 +1039,122 @@ export default function LicensePage() {
                                     <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>แหล่งข้อมูล</div>
                                     <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>{selectedLicense.issuer || 'สำนักงานปลัดกระทรวงสาธารณสุข'}</div>
                                  </div>
+                              </div>
+
+                              <div style={{ marginTop: '32px' }}>
+                                 <div 
+                                    onClick={() => setIsDetailExpanded(!isDetailExpanded)}
+                                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', padding: '16px 0', borderBottom: '1px solid #e2e8f0', marginBottom: '24px' }}
+                                 >
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#0f172a' }}>รายละเอียดใบอนุญาตเพิ่มเติม</h3>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="3" style={{ transition: 'transform 0.3s', transform: isDetailExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>
+                                       <path d="m6 9 6 6 6-6"/>
+                                    </svg>
+                                 </div>
+
+                                 {isDetailExpanded && (
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', animation: 'fadeIn 0.3s ease-out' }}>
+                                       <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
+                                          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>สถาบัน/ผู้ออกใบประกาศ</div>
+                                          <div style={{ fontSize: '16px', fontWeight: 800, color: '#475569' }}>{selectedLicense.institution || '-'}</div>
+                                       </div>
+                                       <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
+                                          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>คะแนนสะสม (CNEU/CME)</div>
+                                          <div style={{ fontSize: '20px', fontWeight: 900, color: '#2563eb' }}>{selectedLicense.points || '0.00'}</div>
+                                       </div>
+                                       <div style={{ gridColumn: 'span 2', background: '#f8fafc', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
+                                          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>หมายเหตุ / ข้อความเพิ่มเติม</div>
+                                          <div style={{ fontSize: '15px', fontWeight: 600, color: '#475569', lineHeight: '1.6' }}>{selectedLicense.remarks || 'ไม่มีบันทึกเพิ่มเติมในระบบ'}</div>
+                                       </div>
+
+                                       {selectedLicense.file_path && (
+                                          <div style={{ gridColumn: 'span 2' }}>
+                                             <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '16px' }}>เอกสารใบอนุญาต</div>
+                                             <div style={{ padding: '8px', background: '#fff', borderRadius: '24px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                                {selectedLicense.file_path.match(/\.(jpg|jpeg|png|webp|gif)$/i) ? (
+                                                   <img src={selectedLicense.file_path} alt="License" style={{ width: '100%', borderRadius: '20px', display: 'block' }} />
+                                                ) : (
+                                                   <div style={{ padding: '60px', textAlign: 'center' }}>
+                                                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                      <div style={{ marginTop: '16px', fontWeight: 800, color: '#64748b' }}>เอกสารไฟล์ PDF</div>
+                                                      <a href={selectedLicense.file_path} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: '12px', color: '#2563eb', fontWeight: 900, textDecoration: 'none', background: '#eff6ff', padding: '10px 24px', borderRadius: '12px' }}>เปิดดูเอกสาร</a>
+                                                   </div>
+                                                )}
+                                             </div>
+                                          </div>
+                                       )}
+                                    </div>
+                                 )}
+                              </div>
+
+                              {/* Embedded History Section for View Modal */}
+                              <div style={{ marginTop: '40px', borderTop: '2px solid #f1f5f9', paddingTop: '40px' }}>
+                                 <div 
+                                    onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+                                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', padding: '24px', background: '#fff', borderRadius: '24px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}
+                                 >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                       <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                       </div>
+                                       <div>
+                                          <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 900 }}>ประวัติการขึ้นทะเบียนย้อนหลัง</h4>
+                                          <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Employee track record & past credentials</p>
+                                       </div>
+                                    </div>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="3" style={{ transition: 'transform 0.3s', transform: isHistoryExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>
+                                       <path d="m6 9 6 6 6-6"/>
+                                    </svg>
+                                 </div>
+
+                                 {isHistoryExpanded && (
+                                    <div style={{ marginTop: '24px', animation: 'fadeIn 0.4s ease-out' }}>
+                                       <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 10px' }}>
+                                          <thead>
+                                             <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                <th style={{ padding: '0 24px' }}>เลขใบอนุญาต</th>
+                                                <th>ประเภทวิชาชีพ</th>
+                                                <th>วันหมดอายุ</th>
+                                                <th>สถานะ</th>
+                                                <th style={{ textAlign: 'right', paddingRight: '24px' }}>เอกสาร</th>
+                                             </tr>
+                                          </thead>
+                                          <tbody>
+                                             {historyData.map((h, idx) => {
+                                                const dExp = h.expire_date ? new Date(h.expire_date) : null;
+                                                const expStr = dExp ? dExp.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                                                const isImage = h.file_path?.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+
+                                                return (
+                                                   <tr key={idx} style={{ background: '#fff', borderRadius: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+                                                      <td style={{ padding: '20px 24px', fontWeight: 900, fontFamily: 'monospace', fontSize: '15px', color: '#0f172a', borderTopLeftRadius: '18px', borderBottomLeftRadius: '18px' }}>{h.license_no}</td>
+                                                      <td style={{ fontWeight: 800, color: '#475569' }}>{h.license_name}</td>
+                                                      <td style={{ fontWeight: 800, color: '#dc2626' }}>{expStr}</td>
+                                                      <td>
+                                                         <span style={{ padding: '6px 14px', borderRadius: '50px', fontSize: '10px', fontWeight: 900, background: h.verified_status === 'Verified' ? '#dcfce7' : '#f1f5f9', color: h.verified_status === 'Verified' ? '#16a34a' : '#64748b' }}>
+                                                            {h.verified_status === 'Verified' ? 'Verified' : 'Pending'}
+                                                         </span>
+                                                      </td>
+                                                      <td style={{ textAlign: 'right', paddingRight: '24px', borderTopRightRadius: '18px', borderBottomRightRadius: '18px' }}>
+                                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px' }}>
+                                                            {h.file_path && isImage && (
+                                                               <div style={{ width: '48px', height: '48px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                                                  <img src={h.file_path} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                               </div>
+                                                            )}
+                                                            {h.file_path && (
+                                                               <a href={h.file_path} target="_blank" rel="noreferrer" style={{ background: '#f8fafc', color: '#2563eb', padding: '8px 16px', borderRadius: '10px', fontWeight: 900, textDecoration: 'none', fontSize: '12px', border: '1px solid #e2e8f0' }}>เปิดไฟล์</a>
+                                                            )}
+                                                         </div>
+                                                      </td>
+                                                   </tr>
+                                                );
+                                             })}
+                                             {historyData.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8', background: '#fff', borderRadius: '24px', fontWeight: 800 }}>ไม่พบประวัติการขึ้นทะเบียนสำหรับพนักงานท่านนี้</td></tr>}
+                                          </tbody>
+                                       </table>
+                                    </div>
+                                 )}
                               </div>
 
                               <div style={{ marginTop: '40px', display: 'flex', gap: '16px' }}>

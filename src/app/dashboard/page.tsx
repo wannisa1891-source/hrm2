@@ -46,20 +46,14 @@ export default function DashboardPage() {
     }
   }, [announcements.length])
 
-
-
-
   const submitNews = async () => {
-
     if (!newNewsForm.title || !newNewsForm.content) {
       Swal.fire('ข้อความแจ้งเตือน', 'กรอกข้อมูลให้ครบ', 'warning')
       return
     }
 
     try {
-
       const method = newNewsForm.id ? 'PUT' : 'POST'
-
       const res = await fetch('/api/announcements', {
         method: method,
         headers: {
@@ -69,13 +63,9 @@ export default function DashboardPage() {
       })
 
       const data = await res.json()
-
       if (data.success) {
-
         await refetchAnnouncements()
-
         setIsAddingNews(false)
-
         setNewNewsForm({
           id: null,
           title: '',
@@ -83,19 +73,11 @@ export default function DashboardPage() {
           image: ''
         })
         Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false })
-
       }
-
     } catch (err) {
-
       console.error(err)
-
     }
-
   }
-
-
-
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -112,8 +94,6 @@ export default function DashboardPage() {
   })
 
   const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
-
-
 
   const newsContent = (
     <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 340, maxHeight: 420, padding: isAdmin ? '24px' : '32px' }}>
@@ -179,7 +159,6 @@ export default function DashboardPage() {
   );
 
   return (
-
     <AppLayout hideScrollbar={false}>
       <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '48px', minHeight: '100%' }}>
         <DashboardHeader today={today} />
@@ -195,7 +174,6 @@ export default function DashboardPage() {
             <>
               <div className="dashboard-grid">
                 <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 16 }}>
-
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
                     <StatCard
                       label="บุคลากรทั้งหมด"
@@ -235,11 +213,9 @@ export default function DashboardPage() {
                   <div style={{ flex: 1, minHeight: 340, display: 'flex', flexDirection: 'column' }}>
                     <DonutChart data={dashboardData?.professions || []} />
                   </div>
-
                 </div>
 
                 <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 16 }}>
-
                   <PendingList
                     transfersCount={dashboardData?.pendingTransfers || 0}
                     leavesCount={dashboardData?.pendingLeaves || 0}
@@ -251,7 +227,6 @@ export default function DashboardPage() {
                     expiringCount={dashboardData?.expiringLicenses || 0}
                     expiredCount={dashboardData?.expiredLicenses || 0}
                   />
-
                 </div>
               </div>
             </>
@@ -267,6 +242,7 @@ export default function DashboardPage() {
                 expiring: dashboardData?.expiringLicenses || 0, 
                 expired: dashboardData?.expiredLicenses || 0 
               }}
+              payrollData={dashboardData?.payrollData || { currentNetSalary: 0, paymentDate: '-', history: [] }}
             />
           )
         )}
@@ -310,7 +286,6 @@ export default function DashboardPage() {
           </div>
         )}
       </Modal>
-
 
       <Modal
         isOpen={isAddingNews}
@@ -381,9 +356,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </Modal>
-
     </AppLayout>
-
   )
-
 }
