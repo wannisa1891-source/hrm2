@@ -84,45 +84,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       if (!isAdmin) {
         if (item.id === 'personnel' || item.id === 'finance' || item.id === 'audit') return acc;
 
-<<<<<<< HEAD
-      // For Users
-      if (item.id === 'finance') {
-        acc.push({
-          ...item,
-          label: 'เงินเดือนของฉัน'
-        });
-        return acc;
-      }
-
-      if (item.id === 'employee-card') {
-        acc.push(item);
-        return acc;
-      }
-
-      if (item.id === 'personnel' || item.id === 'audit') {
-        // For non-admins, we still want them to see 'License'
-        if (item.id === 'personnel') {
-          const licenseChild = item.children?.find(c => c.id === 'license');
-          if (licenseChild) {
-            acc.push({
-              id: licenseChild.id,
-              label: licenseChild.label,
-              icon: icons.idCard, // Using idCard icon for license
-              href: licenseChild.href
-            });
-          }
-        }
-        return acc;
-      }
-
-      if (item.children) {
-        item.children.forEach(child => {
-          acc.push({
-            id: child.id,
-            label: child.label,
-            icon: child.icon || item.icon,
-            href: child.href
-=======
         if (item.children) {
           item.children.forEach(child => {
             acc.push({
@@ -131,7 +92,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               icon: child.icon || item.icon,
               href: child.href
             });
->>>>>>> a7fcff3e2cb9b3aa2375803a6a37a277d3dbdb34
           });
           return acc;
         }

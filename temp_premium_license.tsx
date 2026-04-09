@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
@@ -13,32 +13,32 @@ export const dynamic = 'force-dynamic';
 
 // --- Constants ---
 const ISSUERS = [
-   'สภาการพยาบาล',
-   'แพทยสภา',
-   'สภาเทคนิคการแพทย์',
-   'สภาเภสัชกรรม',
-   'สภากายภาพบำบัด',
-   'ทันตแพทยสภา',
-   'สภาการแพทย์แผนไทย',
-   'คณะกรรมการวิชาชีพสาขารังสีเทคนิค',
-   'คุรุสภา',
-   'สภาวิศวกร',
-   'สถาบันการแพทย์ฉุกเฉินแห่งชาติ (สพฉ.)',
-   'กรมสนับสนุนบริการสุขภาพ'
+   'เธชเธ เธฒเธเธฒเธฃเธเธขเธฒเธเธฒเธฅ',
+   'เนเธเธ—เธขเธชเธ เธฒ',
+   'เธชเธ เธฒเน€เธ—เธเธเธดเธเธเธฒเธฃเนเธเธ—เธขเน',
+   'เธชเธ เธฒเน€เธ เธชเธฑเธเธเธฃเธฃเธก',
+   'เธชเธ เธฒเธเธฒเธขเธ เธฒเธเธเธณเธเธฑเธ”',
+   'เธ—เธฑเธเธ•เนเธเธ—เธขเธชเธ เธฒ',
+   'เธชเธ เธฒเธเธฒเธฃเนเธเธ—เธขเนเนเธเธเนเธ—เธข',
+   'เธเธ“เธฐเธเธฃเธฃเธกเธเธฒเธฃเธงเธดเธเธฒเธเธตเธเธชเธฒเธเธฒเธฃเธฑเธเธชเธตเน€เธ—เธเธเธดเธ',
+   'เธเธธเธฃเธธเธชเธ เธฒ',
+   'เธชเธ เธฒเธงเธดเธจเธงเธเธฃ',
+   'เธชเธ–เธฒเธเธฑเธเธเธฒเธฃเนเธเธ—เธขเนเธเธธเธเน€เธเธดเธเนเธซเนเธเธเธฒเธ•เธด (เธชเธเธ.)',
+   'เธเธฃเธกเธชเธเธฑเธเธชเธเธธเธเธเธฃเธดเธเธฒเธฃเธชเธธเธเธ เธฒเธ'
 ];
 
 const COUNCIL_LINKS: Record<string, string> = {
-   'สภาการพยาบาล': 'https://services.tnmc.or.th/',
-   'แพทยสภา': 'https://checkmd.tmc.or.th/',
-   'สภาเทคนิคการแพทย์': 'https://www.mtcouncil.org/',
-   'สภาเภสัชกรรม': 'https://www.pharmacycouncil.org/',
-   'สภากายภาพบำบัด': 'https://www.pt.or.th/',
-   'ทันตแพทยสภา': 'https://www.dentalcouncil.or.th/check_list/',
-   'คุรุสภา': 'https://www.ksp.or.th/service/license_search.php',
-   'สภาวิศวกร': 'https://service.coe.or.th/verify_license',
-   'สถาบันการแพทย์ฉุกเฉินแห่งชาติ (สพฉ.)': 'https://www.niems.go.th/',
-   'กรมสนับสนุนบริการสุขภาพ': 'https://hss-db.hss.moph.go.th/',
-   'คณะกรรมการวิชาชีพสาขารังสีเทคนิค': 'https://mrd.hss.moph.go.th/mrd1_hss/?cat=66'
+   'เธชเธ เธฒเธเธฒเธฃเธเธขเธฒเธเธฒเธฅ': 'https://services.tnmc.or.th/',
+   'เนเธเธ—เธขเธชเธ เธฒ': 'https://checkmd.tmc.or.th/',
+   'เธชเธ เธฒเน€เธ—เธเธเธดเธเธเธฒเธฃเนเธเธ—เธขเน': 'https://www.mtcouncil.org/',
+   'เธชเธ เธฒเน€เธ เธชเธฑเธเธเธฃเธฃเธก': 'https://www.pharmacycouncil.org/',
+   'เธชเธ เธฒเธเธฒเธขเธ เธฒเธเธเธณเธเธฑเธ”': 'https://www.pt.or.th/',
+   'เธ—เธฑเธเธ•เนเธเธ—เธขเธชเธ เธฒ': 'https://www.dentalcouncil.or.th/check_list/',
+   'เธเธธเธฃเธธเธชเธ เธฒ': 'https://www.ksp.or.th/service/license_search.php',
+   'เธชเธ เธฒเธงเธดเธจเธงเธเธฃ': 'https://service.coe.or.th/verify_license',
+   'เธชเธ–เธฒเธเธฑเธเธเธฒเธฃเนเธเธ—เธขเนเธเธธเธเน€เธเธดเธเนเธซเนเธเธเธฒเธ•เธด (เธชเธเธ.)': 'https://www.niems.go.th/',
+   'เธเธฃเธกเธชเธเธฑเธเธชเธเธธเธเธเธฃเธดเธเธฒเธฃเธชเธธเธเธ เธฒเธ': 'https://hss-db.hss.moph.go.th/',
+   'เธเธ“เธฐเธเธฃเธฃเธกเธเธฒเธฃเธงเธดเธเธฒเธเธตเธเธชเธฒเธเธฒเธฃเธฑเธเธชเธตเน€เธ—เธเธเธดเธ': 'https://mrd.hss.moph.go.th/mrd1_hss/?cat=66'
 };
 
 // --- Interfaces ---
@@ -94,11 +94,11 @@ interface LicenseConfig {
 
 // --- Helpers ---
 function getStatus(l: License) {
-   if (l.verified_status === 'Pending') return { label: 'รอการตรวจสอบ', color: '#7c3aed', bg: '#f5f3ff' };
-   if (l.daysLeft < 0) return { label: `หมดอายุแล้ว (${Math.abs(l.daysLeft)} วัน)`, color: '#dc2626', bg: '#fee2e2' };
-   if (l.daysLeft <= 30) return { label: `วิกฤต (${l.daysLeft} วัน)`, color: '#ca8a04', bg: '#fef9c3' };
-   if (l.daysLeft <= 90) return { label: `ใกล้หมดอายุ (${l.daysLeft} วัน)`, color: '#ea580c', bg: '#ffedd5' };
-   return { label: 'ตรวจสอบแล้ว', color: '#16a34a', bg: '#dcfce7' };
+   if (l.verified_status === 'Pending') return { label: 'เธฃเธญเธเธฒเธฃเธ•เธฃเธงเธเธชเธญเธ', color: '#7c3aed', bg: '#f5f3ff' };
+   if (l.daysLeft < 0) return { label: `เธซเธกเธ”เธญเธฒเธขเธธเนเธฅเนเธง (${Math.abs(l.daysLeft)} เธงเธฑเธ)`, color: '#dc2626', bg: '#fee2e2' };
+   if (l.daysLeft <= 30) return { label: `เธงเธดเธเธคเธ• (${l.daysLeft} เธงเธฑเธ)`, color: '#ca8a04', bg: '#fef9c3' };
+   if (l.daysLeft <= 90) return { label: `เนเธเธฅเนเธซเธกเธ”เธญเธฒเธขเธธ (${l.daysLeft} เธงเธฑเธ)`, color: '#ea580c', bg: '#ffedd5' };
+   return { label: 'เธ•เธฃเธงเธเธชเธญเธเนเธฅเนเธง', color: '#16a34a', bg: '#dcfce7' };
 }
 
 function addYears(dateStr: string, years: number) {
@@ -111,19 +111,19 @@ function addYears(dateStr: string, years: number) {
 // Helper to find issuer link based on license string
 function findIssuerLink(licenseName: string) {
    const name = licenseName.toLowerCase();
-   if (name.includes('พยาบาล')) return COUNCIL_LINKS['สภาการพยาบาล'];
-   if ((name.includes('แพทย์') || name.includes('เวชกรรม')) && !name.includes('เทคนิค') && !name.includes('รังสี') && !name.includes('แผนไทย')) return COUNCIL_LINKS['แพทยสภา'];
-   if (name.includes('เภสัช')) return COUNCIL_LINKS['สภาเภสัชกรรม'];
-   if (name.includes('เทคนิคการแพทย์')) return COUNCIL_LINKS['สภาเทคนิคการแพทย์'];
-   if (name.includes('กายภาพบำบัด')) return COUNCIL_LINKS['สภากายภาพบำบัด'];
-   if (name.includes('ทันต') || name.includes('ทันตกรรม')) return COUNCIL_LINKS['ทันตแพทยสภา'];
-   if (name.includes('วิศวกร')) return COUNCIL_LINKS['สภาวิศวกร'];
-   if (name.includes('ครู') || name.includes('สอน')) return COUNCIL_LINKS['คุรุสภา'];
-   if (name.includes('รังสี')) return COUNCIL_LINKS['คณะกรรมการวิชาชีพสาขารังสีเทคนิค'];
-   if (name.includes('ฉุกเฉิน') || name.includes('สพฉ')) return COUNCIL_LINKS['สถาบันการแพทย์ฉุกเฉินแห่งชาติ (สพฉ.)'];
+   if (name.includes('เธเธขเธฒเธเธฒเธฅ')) return COUNCIL_LINKS['เธชเธ เธฒเธเธฒเธฃเธเธขเธฒเธเธฒเธฅ'];
+   if ((name.includes('เนเธเธ—เธขเน') || name.includes('เน€เธงเธเธเธฃเธฃเธก')) && !name.includes('เน€เธ—เธเธเธดเธ') && !name.includes('เธฃเธฑเธเธชเธต') && !name.includes('เนเธเธเนเธ—เธข')) return COUNCIL_LINKS['เนเธเธ—เธขเธชเธ เธฒ'];
+   if (name.includes('เน€เธ เธชเธฑเธ')) return COUNCIL_LINKS['เธชเธ เธฒเน€เธ เธชเธฑเธเธเธฃเธฃเธก'];
+   if (name.includes('เน€เธ—เธเธเธดเธเธเธฒเธฃเนเธเธ—เธขเน')) return COUNCIL_LINKS['เธชเธ เธฒเน€เธ—เธเธเธดเธเธเธฒเธฃเนเธเธ—เธขเน'];
+   if (name.includes('เธเธฒเธขเธ เธฒเธเธเธณเธเธฑเธ”')) return COUNCIL_LINKS['เธชเธ เธฒเธเธฒเธขเธ เธฒเธเธเธณเธเธฑเธ”'];
+   if (name.includes('เธ—เธฑเธเธ•') || name.includes('เธ—เธฑเธเธ•เธเธฃเธฃเธก')) return COUNCIL_LINKS['เธ—เธฑเธเธ•เนเธเธ—เธขเธชเธ เธฒ'];
+   if (name.includes('เธงเธดเธจเธงเธเธฃ')) return COUNCIL_LINKS['เธชเธ เธฒเธงเธดเธจเธงเธเธฃ'];
+   if (name.includes('เธเธฃเธน') || name.includes('เธชเธญเธ')) return COUNCIL_LINKS['เธเธธเธฃเธธเธชเธ เธฒ'];
+   if (name.includes('เธฃเธฑเธเธชเธต')) return COUNCIL_LINKS['เธเธ“เธฐเธเธฃเธฃเธกเธเธฒเธฃเธงเธดเธเธฒเธเธตเธเธชเธฒเธเธฒเธฃเธฑเธเธชเธตเน€เธ—เธเธเธดเธ'];
+   if (name.includes('เธเธธเธเน€เธเธดเธ') || name.includes('เธชเธเธ')) return COUNCIL_LINKS['เธชเธ–เธฒเธเธฑเธเธเธฒเธฃเนเธเธ—เธขเนเธเธธเธเน€เธเธดเธเนเธซเนเธเธเธฒเธ•เธด (เธชเธเธ.)'];
 
    for (const [key, url] of Object.entries(COUNCIL_LINKS)) {
-      if (licenseName.includes(key.replace('สภา', '')) || licenseName.includes(key)) return url;
+      if (licenseName.includes(key.replace('เธชเธ เธฒ', '')) || licenseName.includes(key)) return url;
    }
    return null;
 }
@@ -133,7 +133,7 @@ function ModernSelect({
    value,
    onChange,
    options,
-   placeholder = 'เลือก...',
+   placeholder = 'เน€เธฅเธทเธญเธ...',
    style = {}
 }: {
    value: string | number,
@@ -237,7 +237,7 @@ export default function LicensePage() {
    const { user } = useAuth();
 
    const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'hr';
-   const isDeptHead = user?.role === 'หัวหน้า';
+   const isDeptHead = user?.role === 'เธซเธฑเธงเธซเธเนเธฒ';
    const isRegularUser = !isAdmin && !isDeptHead;
 
    const [activeTab, setActiveTab] = useState<'list' | 'monitor' | 'settings'>('list');
@@ -356,7 +356,7 @@ export default function LicensePage() {
             body: JSON.stringify({ ...configFormData, id: selectedConfig?.id })
          });
          if (!res.ok) throw new Error('Failed to save');
-         Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'บันทึกเกณฑ์เรียบร้อยแล้ว', showConfirmButton: false, timer: 1000 });
+         Swal.fire({ icon: 'success', title: 'เธชเธณเน€เธฃเนเธ', text: 'เธเธฑเธเธ—เธถเธเน€เธเธ“เธ‘เนเน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง', showConfirmButton: false, timer: 1000 });
          await fetchConfigs();
          setActiveModal('none');
       } catch (err: any) { Swal.fire('Error', err.message, 'error'); } finally { setSubmitting(false); }
@@ -365,7 +365,7 @@ export default function LicensePage() {
    const handleLicenseSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!formData.psv_checked && activeModal === 'renew') {
-         Swal.fire('คำเตือน', 'กรุณายืนยันว่าได้ตรวจสอบข้อมูลกับสภาวิชาชีพเรียบร้อยแล้ว', 'warning');
+         Swal.fire('เธเธณเน€เธ•เธทเธญเธ', 'เธเธฃเธธเธ“เธฒเธขเธทเธเธขเธฑเธเธงเนเธฒเนเธ”เนเธ•เธฃเธงเธเธชเธญเธเธเนเธญเธกเธนเธฅเธเธฑเธเธชเธ เธฒเธงเธดเธเธฒเธเธตเธเน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง', 'warning');
          return;
       }
 
@@ -393,7 +393,7 @@ export default function LicensePage() {
             body: fd
          });
          if (res.ok) {
-            Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'บันทึกข้อมูลเรียบร้อยแล้ว', showConfirmButton: false, timer: 1000 });
+            Swal.fire({ icon: 'success', title: 'เธชเธณเน€เธฃเนเธ', text: 'เธเธฑเธเธ—เธถเธเธเนเธญเธกเธนเธฅเน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง', showConfirmButton: false, timer: 1000 });
             await fetchLicenses();
             if (activeTab === 'monitor') await fetchMonitorData();
             setActiveModal('none');
@@ -492,15 +492,15 @@ export default function LicensePage() {
             {/* Main Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                <div>
-                  <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', margin: 0 }}>ทะเบียนใบประกอบวิชาชีพ</h1>
-                  <p style={{ color: '#64748b', fontWeight: 600, marginTop: '4px' }}>การจัดการทะเบียน การต่ออายุ และการตรวจสอบความถูกต้องสากล</p>
+                  <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', margin: 0 }}>เธ—เธฐเน€เธเธตเธขเธเนเธเธเธฃเธฐเธเธญเธเธงเธดเธเธฒเธเธตเธ</h1>
+                  <p style={{ color: '#64748b', fontWeight: 600, marginTop: '4px' }}>เธเธฒเธฃเธเธฑเธ”เธเธฒเธฃเธ—เธฐเน€เธเธตเธขเธ เธเธฒเธฃเธ•เนเธญเธญเธฒเธขเธธ เนเธฅเธฐเธเธฒเธฃเธ•เธฃเธงเธเธชเธญเธเธเธงเธฒเธกเธ–เธนเธเธ•เนเธญเธเธชเธฒเธเธฅ</p>
                </div>
                 {isAdmin && (
                    <button
                       onClick={() => handleOpenModal('add')}
                       style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 28px', borderRadius: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.2)' }}
                    >
-                      บันทึกข้อมูลใบประกอบ
+                      เธเธฑเธเธ—เธถเธเธเนเธญเธกเธนเธฅเนเธเธเธฃเธฐเธเธญเธ
                    </button>
                 )}
              </div>
@@ -508,9 +508,9 @@ export default function LicensePage() {
              {(isAdmin || isDeptHead) && (
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: '#e2e8f0', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
                    {[
-                      { id: 'list', label: 'ทะเบียนบุคลากร' },
-                      { id: 'monitor', label: 'สรุปผลภาพรวม' },
-                      { id: 'settings', label: 'การตั้งค่าเกณฑ์' }
+                      { id: 'list', label: 'เธ—เธฐเน€เธเธตเธขเธเธเธธเธเธฅเธฒเธเธฃ' },
+                      { id: 'monitor', label: 'เธชเธฃเธธเธเธเธฅเธ เธฒเธเธฃเธงเธก' },
+                      { id: 'settings', label: 'เธเธฒเธฃเธ•เธฑเนเธเธเนเธฒเน€เธเธ“เธ‘เน' }
                    ].filter(t => isAdmin || (isDeptHead && t.id === 'monitor') || t.id === 'list').map(tab => (
                       <button
                          key={tab.id}
@@ -533,13 +533,13 @@ export default function LicensePage() {
                <div style={cardStyle}>
                   <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
                      <div style={{ flex: 1, position: 'relative' }}>
-                        <input placeholder="ค้นหาชื่อพนักงาน หรือ เลขที่ใบประกอบ..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '16px 24px', borderRadius: '14px', border: '1px solid #e2e8f0', background: '#f8fafc', outline: 'none', fontSize: '15px' }} />
+                        <input placeholder="เธเนเธเธซเธฒเธเธทเนเธญเธเธเธฑเธเธเธฒเธ เธซเธฃเธทเธญ เน€เธฅเธเธ—เธตเนเนเธเธเธฃเธฐเธเธญเธ..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '16px 24px', borderRadius: '14px', border: '1px solid #e2e8f0', background: '#f8fafc', outline: 'none', fontSize: '15px' }} />
                      </div>
                      <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '0 24px', borderRadius: '14px', border: '1px solid #e2e8f0', fontWeight: 700, background: '#fff', cursor: 'pointer', outline: 'none', minWidth: '180px' }}>
-                        <option value="all">สถานะทั้งหมด</option>
-                        <option value="expiring">ใกล้หมดอายุ</option>
-                        <option value="expired">หมดอายุแล้ว</option>
-                        <option value="Pending">รอการตรวจสอบ</option>
+                        <option value="all">เธชเธ–เธฒเธเธฐเธ—เธฑเนเธเธซเธกเธ”</option>
+                        <option value="expiring">เนเธเธฅเนเธซเธกเธ”เธญเธฒเธขเธธ</option>
+                        <option value="expired">เธซเธกเธ”เธญเธฒเธขเธธเนเธฅเนเธง</option>
+                        <option value="Pending">เธฃเธญเธเธฒเธฃเธ•เธฃเธงเธเธชเธญเธ</option>
                      </select>
                   </div>
 
@@ -547,13 +547,13 @@ export default function LicensePage() {
                      <table style={{ width: '100%', minWidth: '1200px', borderCollapse: 'collapse' }}>
                         <thead>
                            <tr style={{ textAlign: 'left', color: '#64748b', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>
-                               <th style={{ padding: '20px 16px', width: '120px', whiteSpace: 'nowrap' }}>รหัสพนักงาน</th>
-                               <th style={{ padding: "20px 16px", width: "220px", whiteSpace: "nowrap" }}>ชื่อ-นามสกุล</th>
-                               <th style={{ padding: "20px 16px", width: "250px", whiteSpace: "nowrap" }}>วิชาชีพ</th>
-                               <th style={{ padding: "20px 16px", width: "150px", whiteSpace: "nowrap" }}>เลขใบอนุญาต</th>
-                               <th style={{ padding: "20px 16px", width: "140px", whiteSpace: "nowrap" }}>วันหมดอายุ</th>
-                               <th style={{ padding: "20px 16px", width: "160px", whiteSpace: "nowrap" }}>สถานะ</th>
-                               <th style={{ textAlign: 'right', padding: '20px 16px', width: '160px', whiteSpace: 'nowrap' }}>ดำเนินการ</th>
+                               <th style={{ padding: '20px 16px', width: '120px', whiteSpace: 'nowrap' }}>เธฃเธซเธฑเธชเธเธเธฑเธเธเธฒเธ</th>
+                               <th style={{ padding: "20px 16px", width: "220px", whiteSpace: "nowrap" }}>เธเธทเนเธญ-เธเธฒเธกเธชเธเธธเธฅ</th>
+                               <th style={{ padding: "20px 16px", width: "250px", whiteSpace: "nowrap" }}>เธงเธดเธเธฒเธเธตเธ</th>
+                               <th style={{ padding: "20px 16px", width: "150px", whiteSpace: "nowrap" }}>เน€เธฅเธเนเธเธญเธเธธเธเธฒเธ•</th>
+                               <th style={{ padding: "20px 16px", width: "140px", whiteSpace: "nowrap" }}>เธงเธฑเธเธซเธกเธ”เธญเธฒเธขเธธ</th>
+                               <th style={{ padding: "20px 16px", width: "160px", whiteSpace: "nowrap" }}>เธชเธ–เธฒเธเธฐ</th>
+                               <th style={{ textAlign: 'right', padding: '20px 16px', width: '160px', whiteSpace: 'nowrap' }}>เธ”เธณเน€เธเธดเธเธเธฒเธฃ</th>
                            </tr>
                         </thead>
                         <tbody>
@@ -586,7 +586,7 @@ export default function LicensePage() {
                                                 setIsProfileExpanded(false);
                                                 fetchHistoryData(l.emp_id);
                                              }}
-                                             title="ดูประวัติการต่ออายุ"
+                                             title="เธ”เธนเธเธฃเธฐเธงเธฑเธ•เธดเธเธฒเธฃเธ•เนเธญเธญเธฒเธขเธธ"
                                              style={{ background: '#f1f5f9', color: '#64748b', border: 'none', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
                                              onMouseOver={e => e.currentTarget.style.background = '#e2e8f0'}
                                              onMouseOut={e => e.currentTarget.style.background = '#f1f5f9'}
@@ -596,7 +596,7 @@ export default function LicensePage() {
                                           <button onClick={() => {
                                              setIsProfileExpanded(false);
                                              handleOpenModal('renew', l);
-                                          }} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>จัดการ</button>
+                                          }} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>เธเธฑเธ”เธเธฒเธฃ</button>
                                        </div>
                                     </td>
                                  </tr>
@@ -611,15 +611,15 @@ export default function LicensePage() {
             {activeTab === 'monitor' && (
                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                   {loading && !monitorData ? (
-                     <div style={cardStyle}>กำลังโหลดข้อมูลสรุปผล...</div>
+                     <div style={cardStyle}>เธเธณเธฅเธฑเธเนเธซเธฅเธ”เธเนเธญเธกเธนเธฅเธชเธฃเธธเธเธเธฅ...</div>
                   ) : monitorData ? (
                      <>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
                            {[
-                              { label: 'พนักงานทั้งหมด', val: monitorData.totalEmployees, color: '#0f172a' },
-                              { label: 'ถูกต้องครบถ้วน', val: monitorData.compliant, color: '#16a34a' },
-                              { label: 'ใกล้หมดอายุ', val: monitorData.expiring, color: '#ca8a04' },
-                              { label: 'รอตรวจสอบ / หมดอายุ', val: monitorData.missing, color: '#dc2626' }
+                              { label: 'เธเธเธฑเธเธเธฒเธเธ—เธฑเนเธเธซเธกเธ”', val: monitorData.totalEmployees, color: '#0f172a' },
+                              { label: 'เธ–เธนเธเธ•เนเธญเธเธเธฃเธเธ–เนเธงเธ', val: monitorData.compliant, color: '#16a34a' },
+                              { label: 'เนเธเธฅเนเธซเธกเธ”เธญเธฒเธขเธธ', val: monitorData.expiring, color: '#ca8a04' },
+                              { label: 'เธฃเธญเธ•เธฃเธงเธเธชเธญเธ / เธซเธกเธ”เธญเธฒเธขเธธ', val: monitorData.missing, color: '#dc2626' }
                            ].map((c, i) => (
                               <div key={i} style={cardStyle}>
                                  <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>{c.label}</p>
@@ -630,15 +630,15 @@ export default function LicensePage() {
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '32px' }}>
                            <div style={cardStyle}>
-                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สัดส่วนพนักงานตามสถานะ</h3>
+                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>เธชเธฑเธ”เธชเนเธงเธเธเธเธฑเธเธเธฒเธเธ•เธฒเธกเธชเธ–เธฒเธเธฐ</h3>
                               <div style={{ height: '300px' }}>
                                  <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                        <Pie
                                           data={[
-                                             { name: 'ครบถ้วน', value: monitorData.compliant, color: '#16a34a' },
-                                             { name: 'ใกล้หมดอายุ', value: monitorData.expiring, color: '#ca8a04' },
-                                             { name: 'รอตรวจสอบ/หมดอายุ', value: monitorData.missing, color: '#dc2626' }
+                                             { name: 'เธเธฃเธเธ–เนเธงเธ', value: monitorData.compliant, color: '#16a34a' },
+                                             { name: 'เนเธเธฅเนเธซเธกเธ”เธญเธฒเธขเธธ', value: monitorData.expiring, color: '#ca8a04' },
+                                             { name: 'เธฃเธญเธ•เธฃเธงเธเธชเธญเธ/เธซเธกเธ”เธญเธฒเธขเธธ', value: monitorData.missing, color: '#dc2626' }
                                           ]}
                                           innerRadius={60}
                                           outerRadius={80}
@@ -657,23 +657,23 @@ export default function LicensePage() {
                            </div>
 
                            <div style={cardStyle}>
-                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สถานะแยกตามภาคส่วน (5 อันดับแรก)</h3>
+                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>เธชเธ–เธฒเธเธฐเนเธขเธเธ•เธฒเธกเธ เธฒเธเธชเนเธงเธ (5 เธญเธฑเธเธ”เธฑเธเนเธฃเธ)</h3>
                               <div style={{ height: '300px' }}>
                                  <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={Object.entries(monitorData.departmentStats).slice(0, 5).map(([dept, stats]) => ({
                                        name: dept,
-                                       ครบถ้วน: stats.compliant,
-                                       ใกล้หมดอายุ: stats.expiring,
-                                       หมดอายุ: stats.missing
+                                       เธเธฃเธเธ–เนเธงเธ: stats.compliant,
+                                       เนเธเธฅเนเธซเธกเธ”เธญเธฒเธขเธธ: stats.expiring,
+                                       เธซเธกเธ”เธญเธฒเธขเธธ: stats.missing
                                     }))}>
                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                        <XAxis dataKey="name" fontSize={10} interval={0} />
                                        <YAxis fontSize={10} />
                                        <Tooltip />
                                        <Legend />
-                                       <Bar dataKey="ครบถ้วน" stackId="a" fill="#16a34a" />
-                                       <Bar dataKey="ใกล้หมดอายุ" stackId="a" fill="#ca8a04" />
-                                       <Bar dataKey="หมดอายุ" stackId="a" fill="#dc2626" />
+                                       <Bar dataKey="เธเธฃเธเธ–เนเธงเธ" stackId="a" fill="#16a34a" />
+                                       <Bar dataKey="เนเธเธฅเนเธซเธกเธ”เธญเธฒเธขเธธ" stackId="a" fill="#ca8a04" />
+                                       <Bar dataKey="เธซเธกเธ”เธญเธฒเธขเธธ" stackId="a" fill="#dc2626" />
                                     </BarChart>
                                  </ResponsiveContainer>
                               </div>
@@ -681,7 +681,7 @@ export default function LicensePage() {
                         </div>
                      </>
                   ) : (
-                     <div style={cardStyle}>ไม่พบข้อมูลสำหรับการวิเคราะห์</div>
+                     <div style={cardStyle}>เนเธกเนเธเธเธเนเธญเธกเธนเธฅเธชเธณเธซเธฃเธฑเธเธเธฒเธฃเธงเธดเน€เธเธฃเธฒเธฐเธซเน</div>
                   )}
                </div>
             )}
@@ -692,43 +692,43 @@ export default function LicensePage() {
                      <div style={{ background: '#f0f9ff', padding: '24px', borderRadius: '24px', border: '1px solid #bae6fd' }}>
                         <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 800, color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                           มาตรฐานใบอนุญาต (อายุ 5 ปี)
+                           เธกเธฒเธ•เธฃเธเธฒเธเนเธเธญเธเธธเธเธฒเธ• (เธญเธฒเธขเธธ 5 เธเธต)
                         </h4>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '10px 20px', fontSize: '13px', color: '#0c4a6e' }}>
-                           <div style={{ fontWeight: 800 }}>พยาบาลวิชาชีพ:</div> <div><a href={COUNCIL_LINKS['สภาการพยาบาล']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>สภาการพยาบาล</a></div>
-                           <div style={{ fontWeight: 800 }}>แพทย์ (หมอ):</div> <div><a href={COUNCIL_LINKS['แพทยสภา']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>แพทยสภา</a></div>
-                           <div style={{ fontWeight: 800 }}>เภสัชกร:</div> <div><a href={COUNCIL_LINKS['สภาเภสัชกรรม']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>สภาเภสัชกรรม</a></div>
-                           <div style={{ fontWeight: 800 }}>นักเทคนิคการแพทย์:</div> <div><a href={COUNCIL_LINKS['สภาเทคนิคการแพทย์']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>สภาเทคนิคการแพทย์</a></div>
-                           <div style={{ fontWeight: 800 }}>นักกายภาพบำบัด:</div> <div><a href={COUNCIL_LINKS['สภากายภาพบำบัด']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>สภากายภาพบำบัด</a></div>
-                           <div style={{ fontWeight: 800 }}>นักรังสีการแพทย์:</div> <div><a href={COUNCIL_LINKS['คณะกรรมการวิชาชีพสาขารังสีเทคนิค']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>คณะกรรมการวิชาชีพสาขารังสีเทคนิค</a></div>
+                           <div style={{ fontWeight: 800 }}>เธเธขเธฒเธเธฒเธฅเธงเธดเธเธฒเธเธตเธ:</div> <div><a href={COUNCIL_LINKS['เธชเธ เธฒเธเธฒเธฃเธเธขเธฒเธเธฒเธฅ']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>เธชเธ เธฒเธเธฒเธฃเธเธขเธฒเธเธฒเธฅ</a></div>
+                           <div style={{ fontWeight: 800 }}>เนเธเธ—เธขเน (เธซเธกเธญ):</div> <div><a href={COUNCIL_LINKS['เนเธเธ—เธขเธชเธ เธฒ']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>เนเธเธ—เธขเธชเธ เธฒ</a></div>
+                           <div style={{ fontWeight: 800 }}>เน€เธ เธชเธฑเธเธเธฃ:</div> <div><a href={COUNCIL_LINKS['เธชเธ เธฒเน€เธ เธชเธฑเธเธเธฃเธฃเธก']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>เธชเธ เธฒเน€เธ เธชเธฑเธเธเธฃเธฃเธก</a></div>
+                           <div style={{ fontWeight: 800 }}>เธเธฑเธเน€เธ—เธเธเธดเธเธเธฒเธฃเนเธเธ—เธขเน:</div> <div><a href={COUNCIL_LINKS['เธชเธ เธฒเน€เธ—เธเธเธดเธเธเธฒเธฃเนเธเธ—เธขเน']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>เธชเธ เธฒเน€เธ—เธเธเธดเธเธเธฒเธฃเนเธเธ—เธขเน</a></div>
+                           <div style={{ fontWeight: 800 }}>เธเธฑเธเธเธฒเธขเธ เธฒเธเธเธณเธเธฑเธ”:</div> <div><a href={COUNCIL_LINKS['เธชเธ เธฒเธเธฒเธขเธ เธฒเธเธเธณเธเธฑเธ”']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>เธชเธ เธฒเธเธฒเธขเธ เธฒเธเธเธณเธเธฑเธ”</a></div>
+                           <div style={{ fontWeight: 800 }}>เธเธฑเธเธฃเธฑเธเธชเธตเธเธฒเธฃเนเธเธ—เธขเน:</div> <div><a href={COUNCIL_LINKS['เธเธ“เธฐเธเธฃเธฃเธกเธเธฒเธฃเธงเธดเธเธฒเธเธตเธเธชเธฒเธเธฒเธฃเธฑเธเธชเธตเน€เธ—เธเธเธดเธ']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>เธเธ“เธฐเธเธฃเธฃเธกเธเธฒเธฃเธงเธดเธเธฒเธเธตเธเธชเธฒเธเธฒเธฃเธฑเธเธชเธตเน€เธ—เธเธเธดเธ</a></div>
                         </div>
                      </div>
                      <div style={{ background: '#f5f3ff', padding: '24px', borderRadius: '24px', border: '1px solid #ddd6fe' }}>
                         <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 800, color: '#5b21b6', display: 'flex', alignItems: 'center', gap: '8px' }}>
                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                           การตรวจสอบและคะแนน (CNEU/CME)
+                           เธเธฒเธฃเธ•เธฃเธงเธเธชเธญเธเนเธฅเธฐเธเธฐเนเธเธ (CNEU/CME)
                         </h4>
                         <p style={{ margin: 0, fontSize: '13px', color: '#4c1d95', lineHeight: '1.6', fontWeight: 500 }}>
-                           โปรดตรวจสอบคะแนนสะสมหน่วยกิตวิชาชีพให้ครบตามเกณฑ์ของแต่ละสภาฯ ก่อนดำเนินการต่ออายุ <br/><br/>
-                           ท่านสามารถคลิกที่ <strong>"ชื่อวิชาชีพ"</strong> ในตารางด้านล่าง หรือกดปุ่ม <strong>"ตรวจสอบสภาฯ"</strong> ในหน้าบันทึกข้อมูล เพื่อลิงก์ไปยังเว็บไซต์ตรวจสอบสถานะใบอนุญาตของสภาวิชาชีพโดยตรง
+                           เนเธเธฃเธ”เธ•เธฃเธงเธเธชเธญเธเธเธฐเนเธเธเธชเธฐเธชเธกเธซเธเนเธงเธขเธเธดเธ•เธงเธดเธเธฒเธเธตเธเนเธซเนเธเธฃเธเธ•เธฒเธกเน€เธเธ“เธ‘เนเธเธญเธเนเธ•เนเธฅเธฐเธชเธ เธฒเธฏ เธเนเธญเธเธ”เธณเน€เธเธดเธเธเธฒเธฃเธ•เนเธญเธญเธฒเธขเธธ <br/><br/>
+                           เธ—เนเธฒเธเธชเธฒเธกเธฒเธฃเธ–เธเธฅเธดเธเธ—เธตเน <strong>"เธเธทเนเธญเธงเธดเธเธฒเธเธตเธ"</strong> เนเธเธ•เธฒเธฃเธฒเธเธ”เนเธฒเธเธฅเนเธฒเธ เธซเธฃเธทเธญเธเธ”เธเธธเนเธก <strong>"เธ•เธฃเธงเธเธชเธญเธเธชเธ เธฒเธฏ"</strong> เนเธเธซเธเนเธฒเธเธฑเธเธ—เธถเธเธเนเธญเธกเธนเธฅ เน€เธเธทเนเธญเธฅเธดเธเธเนเนเธเธขเธฑเธเน€เธงเนเธเนเธเธ•เนเธ•เธฃเธงเธเธชเธญเธเธชเธ–เธฒเธเธฐเนเธเธญเธเธธเธเธฒเธ•เธเธญเธเธชเธ เธฒเธงเธดเธเธฒเธเธตเธเนเธ”เธขเธ•เธฃเธ
                         </p>
                      </div>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                     <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>เกณฑ์มาตรฐานตามสายวิชาชีพ</h3>
-                     <button onClick={() => handleOpenModal('config')} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>+ เพิ่มเกณฑ์</button>
+                     <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>เน€เธเธ“เธ‘เนเธกเธฒเธ•เธฃเธเธฒเธเธ•เธฒเธกเธชเธฒเธขเธงเธดเธเธฒเธเธตเธ</h3>
+                     <button onClick={() => handleOpenModal('config')} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>+ เน€เธเธดเนเธกเน€เธเธ“เธ‘เน</button>
                   </div>
                   <div style={{ overflowX: 'auto', paddingBottom: '12px' }}>
                      <table style={{ width: '100%', minWidth: '1200px', borderCollapse: 'collapse' }}>
                         <thead>
                            <tr style={{ textAlign: 'left', borderBottom: '1px solid #f1f5f9', color: '#64748b', fontSize: '12px', textTransform: 'uppercase' }}>
-                              <th style={{ padding: '16px' }}>ชื่อเกณฑ์</th>
-                               <th style={{ padding: "20px 16px", width: "250px", whiteSpace: "nowrap" }}>วิชาชีพ</th>
-                              <th>บังคับแผนก/ตำแหน่ง</th>
-                              <th>อายุบัตร (ปี)</th>
-                              <th>เตือน (วัน)</th>
-                              <th style={{ textAlign: 'right' }}>ดำเนินการ</th>
+                              <th style={{ padding: '16px' }}>เธเธทเนเธญเน€เธเธ“เธ‘เน</th>
+                               <th style={{ padding: "20px 16px", width: "250px", whiteSpace: "nowrap" }}>เธงเธดเธเธฒเธเธตเธ</th>
+                              <th>เธเธฑเธเธเธฑเธเนเธเธเธ/เธ•เธณเนเธซเธเนเธ</th>
+                              <th>เธญเธฒเธขเธธเธเธฑเธ•เธฃ (เธเธต)</th>
+                              <th>เน€เธ•เธทเธญเธ (เธงเธฑเธ)</th>
+                              <th style={{ textAlign: 'right' }}>เธ”เธณเน€เธเธดเธเธเธฒเธฃ</th>
                            </tr>
                         </thead>
                         <tbody>
@@ -744,15 +744,15 @@ export default function LicensePage() {
                                     </td>
                                     <td style={{ fontSize: '13px' }}>
                                        {(!c.dept_id && !c.pos_id) ? (
-                                          <div style={{ fontWeight: 800, color: '#0f172a' }}>บุคลากรทุกคน (ทุกภาคส่วน)</div>
+                                          <div style={{ fontWeight: 800, color: '#0f172a' }}>เธเธธเธเธฅเธฒเธเธฃเธ—เธธเธเธเธ (เธ—เธธเธเธ เธฒเธเธชเนเธงเธ)</div>
                                        ) : (
                                           <>
                                              <div style={{ fontWeight: 800, color: '#0f172a' }}>
-                                                {positions.find(p => p.pos_id === c.pos_id)?.pos_name || 'พนักงานทุกตำแหน่ง'}
+                                                {positions.find(p => p.pos_id === c.pos_id)?.pos_name || 'เธเธเธฑเธเธเธฒเธเธ—เธธเธเธ•เธณเนเธซเธเนเธ'}
                                              </div>
                                              <div style={{ color: '#64748b', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                                {departments.find(d => d.dept_id === c.dept_id)?.dept_name || 'ทุกแผนกในโรงพยาบาล'}
+                                                {departments.find(d => d.dept_id === c.dept_id)?.dept_name || 'เธ—เธธเธเนเธเธเธเนเธเนเธฃเธเธเธขเธฒเธเธฒเธฅ'}
                                              </div>
                                           </>
                                        )}
@@ -760,14 +760,14 @@ export default function LicensePage() {
                                     <td style={{ fontWeight: 700 }}>{c.valid_years}</td>
                                     <td style={{ color: '#ea580c', fontWeight: 700 }}>{c.warning_days}</td>
                                     <td style={{ textAlign: 'right' }}>
-                                       <button onClick={() => handleOpenModal('config', c)} style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 800, cursor: 'pointer' }}>แก้ไข</button>
+                                       <button onClick={() => handleOpenModal('config', c)} style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 800, cursor: 'pointer' }}>เนเธเนเนเธ</button>
                                     </td>
                                  </tr>
                               );
                            })}
                            {configs.length === 0 && (
                               <tr>
-                                 <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>ยังไม่มีการตั้งค่าเกณฑ์มาตรฐาน</td>
+                                 <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>เธขเธฑเธเนเธกเนเธกเธตเธเธฒเธฃเธ•เธฑเนเธเธเนเธฒเน€เธเธ“เธ‘เนเธกเธฒเธ•เธฃเธเธฒเธ</td>
                               </tr>
                            )}
                         </tbody>
@@ -788,10 +788,10 @@ export default function LicensePage() {
 
                         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-                           {/* Sidebar (Left) - ข้อมูลบุคลากรและข้อมูลเดิม */}
+                           {/* Sidebar (Left) - เธเนเธญเธกเธนเธฅเธเธธเธเธฅเธฒเธเธฃเนเธฅเธฐเธเนเธญเธกเธนเธฅเน€เธ”เธดเธก */}
                            <div style={{ width: '340px', background: '#fff', borderRight: '1px solid #e2e8f0', padding: '48px 32px', display: 'flex', flexDirection: 'column', gap: '28px', overflowY: 'auto' }}>
                               <div style={{ marginBottom: '8px' }}>
-                                 <div style={{ fontSize: '13px', fontWeight: 800, color: '#0d9488', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px' }}>รายละเอียดผู้ประกอบ</div>
+                                 <div style={{ fontSize: '13px', fontWeight: 800, color: '#0d9488', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px' }}>เธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”เธเธนเนเธเธฃเธฐเธเธญเธ</div>
                                  <div style={{ width: '120px', height: '120px', borderRadius: '32px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', border: '4px solid #fff', boxShadow: '0 8px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                                     {currentEmp?.image || currentEmp?.photo ? (
                                        <img
@@ -807,7 +807,7 @@ export default function LicensePage() {
                                  {activeModal === 'add' && !formData.emp_id ? (
                                     <div style={{ position: 'relative' }}>
                                        <input
-                                          placeholder="พิมพ์ชื่อหรือรหัสพนักงานเพื่อค้นหา..."
+                                          placeholder="เธเธดเธกเธเนเธเธทเนเธญเธซเธฃเธทเธญเธฃเธซเธฑเธชเธเธเธฑเธเธเธฒเธเน€เธเธทเนเธญเธเนเธเธซเธฒ..."
                                           value={searchTermEmp}
                                           onChange={e => setSearchTermEmp(e.target.value)}
                                           style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', fontWeight: 700, outline: 'none', background: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
@@ -821,7 +821,7 @@ export default function LicensePage() {
                                                    setSearchTermEmp(`${e.first_name_th} ${e.last_name_th} (${e.emp_id})`);
                                                 }} style={{ padding: '12px 20px', cursor: 'pointer', borderRadius: '16px', fontSize: '13px', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#f8fafc'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
                                                    <div style={{ fontWeight: 800 }}>{e.first_name_th} {e.last_name_th}</div>
-                                                   <div style={{ fontSize: '11px', color: '#64748b' }}>{getDeptName(e.dept_id)} • {e.emp_id}</div>
+                                                   <div style={{ fontSize: '11px', color: '#64748b' }}>{getDeptName(e.dept_id)} โ€ข {e.emp_id}</div>
                                                 </div>
                                              ))}
                                           </div>
@@ -838,18 +838,18 @@ export default function LicensePage() {
                                           onClick={() => setIsProfileExpanded(!isProfileExpanded)}
                                           style={{ width: '100%', background: '#fff', border: '1px solid #e2e8f0', padding: '10px', borderRadius: '15px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#64748b' }}
                                        >
-                                          {isProfileExpanded ? 'ซ่อนข้อมูลส่วนตัว' : 'ดูข้อมูลเพิ่มเติม'}
+                                          {isProfileExpanded ? 'เธเนเธญเธเธเนเธญเธกเธนเธฅเธชเนเธงเธเธ•เธฑเธง' : 'เธ”เธนเธเนเธญเธกเธนเธฅเน€เธเธดเนเธกเน€เธ•เธดเธก'}
                                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ transition: 'transform 0.3s', transform: isProfileExpanded ? 'rotate(180deg)' : 'none' }}><path d="m6 9 6 6 6-6"/></svg>
                                        </button>
 
                                        {isProfileExpanded && (
                                           <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px dashed #e2e8f0', paddingTop: '16px' }}>
                                              {[
-                                                { label: 'แผนก/สังกัด', val: getDeptName(currentEmp?.dept_id) },
-                                                { label: 'ตำแหน่ง', val: getPosName(currentEmp?.pos_id) },
-                                                { label: 'เบอร์โทรศัพท์', val: currentEmp?.phone || '-' },
-                                                { label: 'อีเมล', val: currentEmp?.email || '-' },
-                                                { label: 'คะแนน CNEU', val: currentEmp?.cneu_cme_points || '0.00' }
+                                                { label: 'เนเธเธเธ/เธชเธฑเธเธเธฑเธ”', val: getDeptName(currentEmp?.dept_id) },
+                                                { label: 'เธ•เธณเนเธซเธเนเธ', val: getPosName(currentEmp?.pos_id) },
+                                                { label: 'เน€เธเธญเธฃเนเนเธ—เธฃเธจเธฑเธเธ—เน', val: currentEmp?.phone || '-' },
+                                                { label: 'เธญเธตเน€เธกเธฅ', val: currentEmp?.email || '-' },
+                                                { label: 'เธเธฐเนเธเธ CNEU', val: currentEmp?.cneu_cme_points || '0.00' }
                                              ].map((item, idx) => (
                                                 <div key={idx}>
                                                    <div style={{ fontSize: '10px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>{item.label}</div>
@@ -865,19 +865,19 @@ export default function LicensePage() {
                               {activeModal !== 'add' && selectedLicense && (
                                  <div style={{ background: '#fffbeb', padding: '24px', borderRadius: '24px', border: '1px solid #fde68a' }}>
                                     <div style={{ fontSize: '13px', fontWeight: 800, color: '#b45309', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                       <span>ข้อมูลปัจจุบันในระบบ</span>
+                                       <span>เธเนเธญเธกเธนเธฅเธเธฑเธเธเธธเธเธฑเธเนเธเธฃเธฐเธเธ</span>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                        <div>
-                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>สภาวิชาชีพเดิม</div>
+                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>เธชเธ เธฒเธงเธดเธเธฒเธเธตเธเน€เธ”เธดเธก</div>
                                           <div style={{ fontSize: '14px', fontWeight: 700 }}>{selectedLicense.issuer || selectedLicense.institution || '-'}</div>
                                        </div>
                                        <div>
-                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>เลขที่ใบอนุญาต</div>
+                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>เน€เธฅเธเธ—เธตเนเนเธเธญเธเธธเธเธฒเธ•</div>
                                           <div style={{ fontSize: '16px', fontWeight: 900, fontFamily: 'monospace' }}>{selectedLicense.license_no}</div>
                                        </div>
                                        <div>
-                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>วันหมดอายุ</div>
+                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>เธงเธฑเธเธซเธกเธ”เธญเธฒเธขเธธ</div>
                                           <div style={{ fontSize: '15px', fontWeight: 800 }}>{selectedLicense.expires || '-'}</div>
                                        </div>
                                     </div>
@@ -887,73 +887,73 @@ export default function LicensePage() {
                               <div style={{ background: '#f0f9ff', padding: '24px', borderRadius: '24px', border: '1px solid #bae6fd', marginTop: 'auto' }}>
                                  <div style={{ fontSize: '12px', fontWeight: 800, color: '#0369a1', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                    ตารางอ้างอิงมาตรฐาน (5 ปี)
+                                    เธ•เธฒเธฃเธฒเธเธญเนเธฒเธเธญเธดเธเธกเธฒเธ•เธฃเธเธฒเธ (5 เธเธต)
                                  </div>
                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#0c4a6e' }}>
-                                    <div style={{ fontWeight: 800 }}>พยาบาล:</div> <div>สภาการพยาบาล</div>
-                                    <div style={{ fontWeight: 800 }}>แพทย์:</div> <div>แพทยสภา</div>
-                                    <div style={{ fontWeight: 800 }}>เภสัช:</div> <div>สภาเภสัชกรรม</div>
-                                    <div style={{ fontWeight: 800 }}>เทคนิคการแพทย์:</div> <div>สภาเทคนิคฯ</div>
-                                    <div style={{ fontWeight: 800 }}>กายภาพ:</div> <div>สภากายภาพฯ</div>
-                                    <div style={{ fontWeight: 800 }}>รังสี:</div> <div>คณะกรรมการวิชาชีพฯ</div>
+                                    <div style={{ fontWeight: 800 }}>เธเธขเธฒเธเธฒเธฅ:</div> <div>เธชเธ เธฒเธเธฒเธฃเธเธขเธฒเธเธฒเธฅ</div>
+                                    <div style={{ fontWeight: 800 }}>เนเธเธ—เธขเน:</div> <div>เนเธเธ—เธขเธชเธ เธฒ</div>
+                                    <div style={{ fontWeight: 800 }}>เน€เธ เธชเธฑเธ:</div> <div>เธชเธ เธฒเน€เธ เธชเธฑเธเธเธฃเธฃเธก</div>
+                                    <div style={{ fontWeight: 800 }}>เน€เธ—เธเธเธดเธเธเธฒเธฃเนเธเธ—เธขเน:</div> <div>เธชเธ เธฒเน€เธ—เธเธเธดเธเธฏ</div>
+                                    <div style={{ fontWeight: 800 }}>เธเธฒเธขเธ เธฒเธ:</div> <div>เธชเธ เธฒเธเธฒเธขเธ เธฒเธเธฏ</div>
+                                    <div style={{ fontWeight: 800 }}>เธฃเธฑเธเธชเธต:</div> <div>เธเธ“เธฐเธเธฃเธฃเธกเธเธฒเธฃเธงเธดเธเธฒเธเธตเธเธฏ</div>
                                  </div>
                               </div>
                            </div>
 
-                           {/* Main Content (Right) - ฟอร์มกรอกข้อมูลใหม่ */}
+                           {/* Main Content (Right) - เธเธญเธฃเนเธกเธเธฃเธญเธเธเนเธญเธกเธนเธฅเนเธซเธกเน */}
                            <div style={{ flex: 1, padding: '48px 64px', overflowY: 'auto', background: '#f8fafc', position: 'relative' }}>
-                              <button onClick={() => setActiveModal('none')} style={{ position: 'absolute', top: '32px', right: '32px', background: '#fff', border: '1px solid #e2e8f0', width: '36px', height: '36px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>×</button>
+                              <button onClick={() => setActiveModal('none')} style={{ position: 'absolute', top: '32px', right: '32px', background: '#fff', border: '1px solid #e2e8f0', width: '36px', height: '36px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>ร—</button>
 
                               <div style={{ marginBottom: '40px' }}>
-                                 <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>บันทึกข้อมูลใบอนุญาตใหม่</h2>
-                                 <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '15px', fontWeight: 500 }}>กรุณากรอกข้อมูลและอัปโหลดหลักฐานตามจริงเพื่อดำเนินการตรวจสอบสถานะ</p>
+                                 <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>เธเธฑเธเธ—เธถเธเธเนเธญเธกเธนเธฅเนเธเธญเธเธธเธเธฒเธ•เนเธซเธกเน</h2>
+                                 <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '15px', fontWeight: 500 }}>เธเธฃเธธเธ“เธฒเธเธฃเธญเธเธเนเธญเธกเธนเธฅเนเธฅเธฐเธญเธฑเธเนเธซเธฅเธ”เธซเธฅเธฑเธเธเธฒเธเธ•เธฒเธกเธเธฃเธดเธเน€เธเธทเนเธญเธ”เธณเน€เธเธดเธเธเธฒเธฃเธ•เธฃเธงเธเธชเธญเธเธชเธ–เธฒเธเธฐ</p>
                               </div>
 
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px', marginBottom: '32px' }}>
                                  <div style={{ gridColumn: 'span 2' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>หน่วยงานสภาวิชาชีพ / ผู้ออกใบอนุญาต</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>เธซเธเนเธงเธขเธเธฒเธเธชเธ เธฒเธงเธดเธเธฒเธเธตเธ / เธเธนเนเธญเธญเธเนเธเธญเธเธธเธเธฒเธ•</label>
                                     <div style={{ display: 'flex', gap: '12px' }}>
                                        <ModernSelect
                                           value={formData.issuer}
                                           onChange={val => setFormData({ ...formData, issuer: val })}
                                           options={ISSUERS.map(i => ({ value: i, label: i }))}
-                                          placeholder="เลือกสภาวิชาชีพ..."
+                                          placeholder="เน€เธฅเธทเธญเธเธชเธ เธฒเธงเธดเธเธฒเธเธตเธ..."
                                        />
                                        {checkLink && (
-                                          <a href={checkLink} target="_blank" rel="noreferrer" style={{ background: '#3b82f6', color: '#fff', padding: '0 32px', borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}>ตรวจสอบสภาฯ</a>
+                                          <a href={checkLink} target="_blank" rel="noreferrer" style={{ background: '#3b82f6', color: '#fff', padding: '0 32px', borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}>เธ•เธฃเธงเธเธชเธญเธเธชเธ เธฒเธฏ</a>
                                        )}
                                     </div>
                                  </div>
                                  <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>เลขที่ใบอนุญาตใหม่</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>เน€เธฅเธเธ—เธตเนเนเธเธญเธเธธเธเธฒเธ•เนเธซเธกเน</label>
                                     <input required value={formData.license_no} onChange={e => setFormData({ ...formData, license_no: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', fontWeight: 900, fontSize: '16px', outline: 'none', background: '#fff' }} />
                                  </div>
                                  <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>หน่วยกิตสะสมล่าสุด</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>เธซเธเนเธงเธขเธเธดเธ•เธชเธฐเธชเธกเธฅเนเธฒเธชเธธเธ”</label>
                                     <input type="number" step="0.01" value={formData.points} onChange={e => setFormData({ ...formData, points: parseFloat(e.target.value) })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', fontWeight: 900, fontSize: '16px', outline: 'none', background: '#fff' }} />
                                  </div>
                                  <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>วันที่ได้รับใบอนุญาต / วันออกบัตร</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>เธงเธฑเธเธ—เธตเนเนเธ”เนเธฃเธฑเธเนเธเธญเธเธธเธเธฒเธ• / เธงเธฑเธเธญเธญเธเธเธฑเธ•เธฃ</label>
                                     <input type="date" value={formData.issue_date} onChange={e => setFormData({ ...formData, issue_date: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', outline: 'none', background: '#fff', fontWeight: 700 }} />
                                  </div>
                                  <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>วันหมดอายุใหม่</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>เธงเธฑเธเธซเธกเธ”เธญเธฒเธขเธธเนเธซเธกเน</label>
                                     <div style={{ display: 'flex', gap: '12px' }}>
                                        <input required type="date" value={formData.expire_date} onChange={e => setFormData({ ...formData, expire_date: e.target.value })} style={{ flex: 1, padding: '14px 24px', borderRadius: '40px', border: '2px solid #0f172a', fontWeight: 900, outline: 'none', background: '#fff' }} />
-                                       <button type="button" onClick={() => setFormData({ ...formData, expire_date: addYears(formData.issue_date || new Date().toISOString(), 5) })} style={{ padding: '0 24px', borderRadius: '40px', background: '#0f172a', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>+ 5 ปี</button>
+                                       <button type="button" onClick={() => setFormData({ ...formData, expire_date: addYears(formData.issue_date || new Date().toISOString(), 5) })} style={{ padding: '0 24px', borderRadius: '40px', background: '#0f172a', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>+ 5 เธเธต</button>
                                     </div>
                                  </div>
 
                                  <div style={{ gridColumn: 'span 2' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>ไฟล์หลักฐาน/ใบอนุญาต (PDF, JPG, PNG)</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>เนเธเธฅเนเธซเธฅเธฑเธเธเธฒเธ/เนเธเธญเธเธธเธเธฒเธ• (PDF, JPG, PNG)</label>
                                     <div onClick={() => document.getElementById('fileX')?.click()} style={{ border: '2px dashed #e2e8f0', borderRadius: '32px', padding: '40px', textAlign: 'center', cursor: 'pointer', background: '#fff', transition: 'all 0.2s' }} onMouseOver={e => e.currentTarget.style.borderColor = '#cbd5e1'} onMouseOut={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
                                        <input id="fileX" type="file" hidden onChange={e => setSelectedFile(e.target.files?.[0] || null)} />
                                        {selectedFile ? (
-                                          <div style={{ fontWeight: 800, color: '#0d9488', fontSize: '16px' }}>✅ {selectedFile.name}</div>
+                                          <div style={{ fontWeight: 800, color: '#0d9488', fontSize: '16px' }}>โ… {selectedFile.name}</div>
                                        ) : (
                                           <div>
-                                             <div style={{ color: '#64748b', fontWeight: 700, fontSize: '15px' }}>คลิกเพื่อเลือกไฟล์ หรือ ลากไฟล์มาวางที่นี่</div>
-                                             <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>ขนาดไม่เกิน 10MB</div>
+                                             <div style={{ color: '#64748b', fontWeight: 700, fontSize: '15px' }}>เธเธฅเธดเธเน€เธเธทเนเธญเน€เธฅเธทเธญเธเนเธเธฅเน เธซเธฃเธทเธญ เธฅเธฒเธเนเธเธฅเนเธกเธฒเธงเธฒเธเธ—เธตเนเธเธตเน</div>
+                                             <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>เธเธเธฒเธ”เนเธกเนเน€เธเธดเธ 10MB</div>
                                           </div>
                                        )}
                                     </div>
@@ -962,15 +962,15 @@ export default function LicensePage() {
                                  <div style={{ gridColumn: 'span 2', background: '#f5f3ff', padding: '24px', borderRadius: '24px', border: '1px solid #ddd6fe' }}>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
                                        <input type="checkbox" checked={formData.psv_checked} onChange={e => setFormData({ ...formData, psv_checked: e.target.checked })} style={{ width: '22px', height: '22px', border: '2px solid #7c3aed' }} />
-                                       <span style={{ fontWeight: 800, color: '#5b21b6', fontSize: '15px' }}>ยืนยันว่าข้อมูลถูกต้องและได้ตรวจสอบกับสภาวิชาชีพแล้ว</span>
+                                       <span style={{ fontWeight: 800, color: '#5b21b6', fontSize: '15px' }}>เธขเธทเธเธขเธฑเธเธงเนเธฒเธเนเธญเธกเธนเธฅเธ–เธนเธเธ•เนเธญเธเนเธฅเธฐเนเธ”เนเธ•เธฃเธงเธเธชเธญเธเธเธฑเธเธชเธ เธฒเธงเธดเธเธฒเธเธตเธเนเธฅเนเธง</span>
                                     </label>
                                  </div>
                               </div>
 
                               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
-                                 <button onClick={() => setActiveModal('none')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '14px 32px', borderRadius: '40px', fontWeight: 800, color: '#64748b', cursor: 'pointer' }}>ยกเลิก</button>
+                                 <button onClick={() => setActiveModal('none')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '14px 32px', borderRadius: '40px', fontWeight: 800, color: '#64748b', cursor: 'pointer' }}>เธขเธเน€เธฅเธดเธ</button>
                                  <button onClick={handleLicenseSubmit} disabled={submitting} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 48px', borderRadius: '40px', fontWeight: 800, boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.2)', cursor: 'pointer' }}>
-                                    {submitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูลและยืนยัน'}
+                                    {submitting ? 'เธเธณเธฅเธฑเธเธเธฑเธเธ—เธถเธ...' : 'เธเธฑเธเธ—เธถเธเธเนเธญเธกเธนเธฅเนเธฅเธฐเธขเธทเธเธขเธฑเธ'}
                                  </button>
                               </div>
                            </div>
@@ -1012,7 +1012,7 @@ export default function LicensePage() {
                               <div style={{ textAlign: 'center' }}>
                                  <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.first_name_th} {currentEmp?.last_name_th}</h3>
                                  <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#64748b', fontWeight: 600 }}>
-                                    {currentEmp?.image || currentEmp?.photo ? 'รูปภาพโปรไฟล์ผู้ประกอบวิชาชีพ' : 'ไม่พบรูปภาพในระบบฐานข้อมูล'}
+                                    {currentEmp?.image || currentEmp?.photo ? 'เธฃเธนเธเธ เธฒเธเนเธเธฃเนเธเธฅเนเธเธนเนเธเธฃเธฐเธเธญเธเธงเธดเธเธฒเธเธตเธ' : 'เนเธกเนเธเธเธฃเธนเธเธ เธฒเธเนเธเธฃเธฐเธเธเธเธฒเธเธเนเธญเธกเธนเธฅ'}
                                  </p>
                               </div>
 
@@ -1021,10 +1021,10 @@ export default function LicensePage() {
                                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }}></div>
                                     </div>
-                                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#065f46' }}>ข้อมูลจากระบบตรวจสอบสารสนเทศสโมสร</span>
+                                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#065f46' }}>เธเนเธญเธกเธนเธฅเธเธฒเธเธฃเธฐเธเธเธ•เธฃเธงเธเธชเธญเธเธชเธฒเธฃเธชเธเน€เธ—เธจเธชเนเธกเธชเธฃ</span>
                                  </div>
                                  <p style={{ margin: 0, fontSize: '12px', color: '#047857', lineHeight: '1.6', fontWeight: 500 }}>
-                                    ใช้สำหรับยืนยันข้อมูลเบื้องต้นของผู้ประกอบวิชาชีพ {selectedLicense.type || selectedLicense.license_name} จากฐานข้อมูลปัจจุบันที่ได้รับรายงาน
+                                    เนเธเนเธชเธณเธซเธฃเธฑเธเธขเธทเธเธขเธฑเธเธเนเธญเธกเธนเธฅเน€เธเธทเนเธญเธเธ•เนเธเธเธญเธเธเธนเนเธเธฃเธฐเธเธญเธเธงเธดเธเธฒเธเธตเธ {selectedLicense.type || selectedLicense.license_name} เธเธฒเธเธเธฒเธเธเนเธญเธกเธนเธฅเธเธฑเธเธเธธเธเธฑเธเธ—เธตเนเนเธ”เนเธฃเธฑเธเธฃเธฒเธขเธเธฒเธ
                                  </p>
                               </div>
                            </div>
@@ -1033,43 +1033,43 @@ export default function LicensePage() {
                            <div style={{ flex: 1, padding: '48px 64px', overflowY: 'auto', background: '#f8fafc', position: 'relative' }}>
 
                               {/* Close Button */}
-                              <button onClick={() => setActiveModal('none')} style={{ position: 'absolute', top: '32px', right: '32px', background: '#fff', border: '1px solid #e2e8f0', width: '36px', height: '36px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>×</button>
+                              <button onClick={() => setActiveModal('none')} style={{ position: 'absolute', top: '32px', right: '32px', background: '#fff', border: '1px solid #e2e8f0', width: '36px', height: '36px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>ร—</button>
 
                               <div style={{ marginBottom: '40px' }}>
                                  <div style={{ color: '#0d9488', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>Professional Credential</div>
-                                 <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>รายละเอียดการขึ้นทะเบียนและใบอนุญาต</h2>
-                                 <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '15px', fontWeight: 500 }}>ข้อมูลด้านล่างแสดงชื่อผู้ประกอบวิชาชีพ หมายเลขใบอนุญาต ช่วงเวลาที่ใบอนุญาตมีผล และสถานะล่าสุด</p>
+                                 <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>เธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”เธเธฒเธฃเธเธถเนเธเธ—เธฐเน€เธเธตเธขเธเนเธฅเธฐเนเธเธญเธเธธเธเธฒเธ•</h2>
+                                 <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '15px', fontWeight: 500 }}>เธเนเธญเธกเธนเธฅเธ”เนเธฒเธเธฅเนเธฒเธเนเธชเธ”เธเธเธทเนเธญเธเธนเนเธเธฃเธฐเธเธญเธเธงเธดเธเธฒเธเธตเธ เธซเธกเธฒเธขเน€เธฅเธเนเธเธญเธเธธเธเธฒเธ• เธเนเธงเธเน€เธงเธฅเธฒเธ—เธตเนเนเธเธญเธเธธเธเธฒเธ•เธกเธตเธเธฅ เนเธฅเธฐเธชเธ–เธฒเธเธฐเธฅเนเธฒเธชเธธเธ”</p>
                               </div>
 
                               {/* Status Badge Top Right */}
                               <div style={{ position: 'absolute', top: '104px', right: '64px', background: '#fff', padding: '12px 24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', textAlign: 'center' }}>
-                                 <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, marginBottom: '4px' }}>สถานะใบอนุญาต</div>
+                                 <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, marginBottom: '4px' }}>เธชเธ–เธฒเธเธฐเนเธเธญเธเธธเธเธฒเธ•</div>
                                  <div style={{ color: stat.color, fontWeight: 900, fontSize: '14px' }}>{stat.label}</div>
                               </div>
 
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                                  <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
-                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>ชื่อ - นามสกุล</div>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>เธเธทเนเธญ - เธเธฒเธกเธชเธเธธเธฅ</div>
                                     <div style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.first_name_th} {currentEmp?.last_name_th}</div>
                                  </div>
                                  <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
-                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>หมายเลขใบอนุญาตประกอบวิชาชีพ</div>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>เธซเธกเธฒเธขเน€เธฅเธเนเธเธญเธเธธเธเธฒเธ•เธเธฃเธฐเธเธญเธเธงเธดเธเธฒเธเธตเธ</div>
                                     <div style={{ fontSize: '20px', fontWeight: 900, color: '#0f172a', fontFamily: 'monospace' }}>{selectedLicense.license_no || '-'}</div>
                                  </div>
 
                                  <div style={{ gridColumn: 'span 2', background: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
-                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>ระยะเวลาที่ใบอนุญาตมีผล</div>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>เธฃเธฐเธขเธฐเน€เธงเธฅเธฒเธ—เธตเนเนเธเธญเธเธธเธเธฒเธ•เธกเธตเธเธฅ</div>
                                     <div style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a' }}>{selectedLicense.issue_date || '-'} - {selectedLicense.expires || '-'}</div>
-                                    <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#64748b', fontWeight: 500 }}>โปรดตรวจสอบสถานะใบอนุญาตควบคู่กับช่วงวันที่ใบอนุญาตเพื่อยืนยันความถูกต้องล่าสุด</p>
+                                    <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#64748b', fontWeight: 500 }}>เนเธเธฃเธ”เธ•เธฃเธงเธเธชเธญเธเธชเธ–เธฒเธเธฐเนเธเธญเธเธธเธเธฒเธ•เธเธงเธเธเธนเนเธเธฑเธเธเนเธงเธเธงเธฑเธเธ—เธตเนเนเธเธญเธเธธเธเธฒเธ•เน€เธเธทเนเธญเธขเธทเธเธขเธฑเธเธเธงเธฒเธกเธ–เธนเธเธ•เนเธญเธเธฅเนเธฒเธชเธธเธ”</p>
                                  </div>
 
                                  <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
-                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>สถานะในระบบ</div>
-                                    <div style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>ปกติ</div>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>เธชเธ–เธฒเธเธฐเนเธเธฃเธฐเธเธ</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>เธเธเธ•เธด</div>
                                  </div>
                                  <div style={{ background: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
-                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>แหล่งข้อมูล</div>
-                                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>{selectedLicense.issuer || 'สำนักงานปลัดกระทรวงสาธารณสุข'}</div>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 800, marginBottom: '8px' }}>เนเธซเธฅเนเธเธเนเธญเธกเธนเธฅ</div>
+                                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>{selectedLicense.issuer || 'เธชเธณเธเธฑเธเธเธฒเธเธเธฅเธฑเธ”เธเธฃเธฐเธ—เธฃเธงเธเธชเธฒเธเธฒเธฃเธ“เธชเธธเธ'}</div>
                                  </div>
                               </div>
 
@@ -1077,12 +1077,12 @@ export default function LicensePage() {
                                  {councilLink && (
                                     <a href={councilLink} target="_blank" rel="noreferrer" style={{ background: '#0d9488', color: '#fff', padding: '14px 28px', borderRadius: '16px', textDecoration: 'none', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 10px 15px -3px rgba(13, 148, 136, 0.2)' }}>
                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-                                       ค้นหาผู้ประกอบวิชาชีพเพิ่มเติม
+                                       เธเนเธเธซเธฒเธเธนเนเธเธฃเธฐเธเธญเธเธงเธดเธเธฒเธเธตเธเน€เธเธดเนเธกเน€เธ•เธดเธก
                                     </a>
                                  )}
                                  <button onClick={() => setActiveModal('none')} style={{ background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', padding: '14px 28px', borderRadius: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg>
-                                    กลับไปหน้าค้นหา
+                                    เธเธฅเธฑเธเนเธเธซเธเนเธฒเธเนเธเธซเธฒ
                                  </button>
                               </div>
                            </div>
@@ -1100,23 +1100,23 @@ export default function LicensePage() {
                      <div style={{ padding: '32px 48px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
                         <div>
                            <div style={{ color: '#0d9488', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Audit Log History</div>
-                           <h3 style={{ margin: 0, fontSize: '24px', fontWeight: 900, color: '#0f172a' }}>ประวัติและผลการตรวจสอบย้อนหลัง</h3>
+                           <h3 style={{ margin: 0, fontSize: '24px', fontWeight: 900, color: '#0f172a' }}>เธเธฃเธฐเธงเธฑเธ•เธดเนเธฅเธฐเธเธฅเธเธฒเธฃเธ•เธฃเธงเธเธชเธญเธเธขเนเธญเธเธซเธฅเธฑเธ</h3>
                         </div>
-                        <button onClick={() => setHistoryOpen(false)} style={{ border: '1px solid #e2e8f0', background: '#fff', width: '40px', height: '40px', borderRadius: '15px', cursor: 'pointer', fontSize: '20px', fontWeight: 300, color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                        <button onClick={() => setHistoryOpen(false)} style={{ border: '1px solid #e2e8f0', background: '#fff', width: '40px', height: '40px', borderRadius: '15px', cursor: 'pointer', fontSize: '20px', fontWeight: 300, color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>ร—</button>
                      </div>
                      
                      <div style={{ padding: '48px', overflowY: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
                            <thead>
                               <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase' }}>
-                                 <th style={{ padding: '0 20px', width: '60px' }}>ลำดับ</th>
-                                 <th style={{ width: '150px' }}>เลขที่ใบอนุญาต</th>
-                                 <th style={{ padding: '20px 16px', width: '250px', whiteSpace: 'nowrap' }}>วิชาชีพ</th>
-                                 <th>วันที่ออกบัตร/ต่ออายุ</th>
-                                 <th style={{ padding: '20px 16px', width: '140px', whiteSpace: 'nowrap' }}>วันหมดอายุ</th>
-                                 <th>คะแนนสะสม</th>
-                                 <th style={{ padding: '20px 16px', width: '160px', whiteSpace: 'nowrap' }}>สถานะ</th>
-                                 <th style={{ textAlign: 'right', paddingRight: '20px' }}>หลักฐาน</th>
+                                 <th style={{ padding: '0 20px', width: '60px' }}>เธฅเธณเธ”เธฑเธ</th>
+                                 <th style={{ width: '150px' }}>เน€เธฅเธเธ—เธตเนเนเธเธญเธเธธเธเธฒเธ•</th>
+                                 <th style={{ padding: '20px 16px', width: '250px', whiteSpace: 'nowrap' }}>เธงเธดเธเธฒเธเธตเธ</th>
+                                 <th>เธงเธฑเธเธ—เธตเนเธญเธญเธเธเธฑเธ•เธฃ/เธ•เนเธญเธญเธฒเธขเธธ</th>
+                                 <th style={{ padding: '20px 16px', width: '140px', whiteSpace: 'nowrap' }}>เธงเธฑเธเธซเธกเธ”เธญเธฒเธขเธธ</th>
+                                 <th>เธเธฐเนเธเธเธชเธฐเธชเธก</th>
+                                 <th style={{ padding: '20px 16px', width: '160px', whiteSpace: 'nowrap' }}>เธชเธ–เธฒเธเธฐ</th>
+                                 <th style={{ textAlign: 'right', paddingRight: '20px' }}>เธซเธฅเธฑเธเธเธฒเธ</th>
                               </tr>
                            </thead>
                            <tbody>
@@ -1140,20 +1140,20 @@ export default function LicensePage() {
                                           {h.verified_status === 'Verified' ? (
                                              <span style={{ padding: '8px 16px', borderRadius: '50px', fontSize: '11px', background: '#dcfce7', color: '#16a34a', fontWeight: 900, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                                                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }}></div>
-                                                ตรวจสอบแล้ว
+                                                เธ•เธฃเธงเธเธชเธญเธเนเธฅเนเธง
                                              </span>
                                           ) : (
                                              <span style={{ padding: '8px 16px', borderRadius: '50px', fontSize: '11px', background: '#f1f5f9', color: '#64748b', fontWeight: 900, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                                                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#94a3b8' }}></div>
-                                                รอตรวจสอบ
+                                                เธฃเธญเธ•เธฃเธงเธเธชเธญเธ
                                              </span>
                                           )}
                                        </td>
                                        <td style={{ textAlign: 'right', paddingRight: '20px', borderRadius: '0 20px 20px 0' }}>
                                           {h.file_path ? (
-                                             <a href={h.file_path} target="_blank" rel="noreferrer" style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0f172a', padding: '8px 16px', borderRadius: '12px', fontWeight: 800, textDecoration: 'none', fontSize: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>เปิดดูไฟล์</a>
+                                             <a href={h.file_path} target="_blank" rel="noreferrer" style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0f172a', padding: '8px 16px', borderRadius: '12px', fontWeight: 800, textDecoration: 'none', fontSize: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>เน€เธเธดเธ”เธ”เธนเนเธเธฅเน</a>
                                           ) : (
-                                             <span style={{ fontSize: '12px', color: '#cbd5e1', fontWeight: 500 }}>ไม่มีไฟล์</span>
+                                             <span style={{ fontSize: '12px', color: '#cbd5e1', fontWeight: 500 }}>เนเธกเนเธกเธตเนเธเธฅเน</span>
                                           )}
                                        </td>
                                     </tr>
@@ -1165,8 +1165,8 @@ export default function LicensePage() {
                         {historyData.length === 0 && (
                            <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
                               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginBottom: '16px', opacity: 0.5 }}><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-                              <div style={{ fontWeight: 800, fontSize: '16px' }}>ไม่พบประวัติการขึ้นทะเบียนในอดีต</div>
-                              <div style={{ fontSize: '14px', marginTop: '4px' }}>ข้อมูลประวัติจะแสดงเมื่อมีการอัปเดตข้อมูลในระบบ</div>
+                              <div style={{ fontWeight: 800, fontSize: '16px' }}>เนเธกเนเธเธเธเธฃเธฐเธงเธฑเธ•เธดเธเธฒเธฃเธเธถเนเธเธ—เธฐเน€เธเธตเธขเธเนเธเธญเธ”เธตเธ•</div>
+                              <div style={{ fontSize: '14px', marginTop: '4px' }}>เธเนเธญเธกเธนเธฅเธเธฃเธฐเธงเธฑเธ•เธดเธเธฐเนเธชเธ”เธเน€เธกเธทเนเธญเธกเธตเธเธฒเธฃเธญเธฑเธเน€เธ”เธ•เธเนเธญเธกเธนเธฅเนเธเธฃเธฐเธเธ</div>
                            </div>
                         )}
                      </div>
@@ -1178,23 +1178,23 @@ export default function LicensePage() {
             {activeModal === 'config' && (
                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ background: '#fff', width: '600px', borderRadius: '24px', padding: '40px' }}>
-                     <h2 style={{ margin: '0 0 32px 0', fontSize: '24px', fontWeight: 900 }}>ตั้งค่าเกณฑ์มาตรฐาน</h2>
+                     <h2 style={{ margin: '0 0 32px 0', fontSize: '24px', fontWeight: 900 }}>เธ•เธฑเนเธเธเนเธฒเน€เธเธ“เธ‘เนเธกเธฒเธ•เธฃเธเธฒเธ</h2>
                      <form onSubmit={handleConfigSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div>
-                           <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>ชื่อเกณฑ์มาตรฐาน</label>
-                           <input required value={configFormData.config_name} onChange={e => setConfigFormData({ ...configFormData, config_name: e.target.value })} placeholder="เช่น เกณฑ์สำหรับ พยาบาลวิภาชีพ ER" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+                           <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>เธเธทเนเธญเน€เธเธ“เธ‘เนเธกเธฒเธ•เธฃเธเธฒเธ</label>
+                           <input required value={configFormData.config_name} onChange={e => setConfigFormData({ ...configFormData, config_name: e.target.value })} placeholder="เน€เธเนเธ เน€เธเธ“เธ‘เนเธชเธณเธซเธฃเธฑเธ เธเธขเธฒเธเธฒเธฅเธงเธดเธ เธฒเธเธตเธ ER" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
                         </div>
                         <div>
-                           <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>รายการวิชาชีพ</label>
-                           <input required value={configFormData.license_name} onChange={e => setConfigFormData({ ...configFormData, license_name: e.target.value })} placeholder="ระบุชื่อเต็มของใบประกอบ..." style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+                           <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>เธฃเธฒเธขเธเธฒเธฃเธงเธดเธเธฒเธเธตเธ</label>
+                           <input required value={configFormData.license_name} onChange={e => setConfigFormData({ ...configFormData, license_name: e.target.value })} placeholder="เธฃเธฐเธเธธเธเธทเนเธญเน€เธ•เนเธกเธเธญเธเนเธเธเธฃเธฐเธเธญเธ..." style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                         <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                           <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>ขอบเขตหน่วยงานที่บังคับใช้</label>
+                           <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>เธเธญเธเน€เธเธ•เธซเธเนเธงเธขเธเธฒเธเธ—เธตเนเธเธฑเธเธเธฑเธเนเธเน</label>
                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                               <div>
-                                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>ฝ่าย</label>
+                                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>เธเนเธฒเธข</label>
                                  <select 
                                     value={departments.find(d => d.dept_id === configFormData.dept_id)?.division || ''} 
                                     onChange={e => {
@@ -1207,12 +1207,12 @@ export default function LicensePage() {
                                     }}
                                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
                                  >
-                                    <option value="">-- ไม่ระบุ (Global) --</option>
+                                    <option value="">-- เนเธกเนเธฃเธฐเธเธธ (Global) --</option>
                                     {divisions.map(d => <option key={d} value={d}>{d}</option>)}
                                  </select>
                               </div>
                               <div>
-                                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>กลุ่มงาน</label>
+                                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>เธเธฅเธธเนเธกเธเธฒเธ</label>
                                  <select 
                                     value={departments.find(d => d.dept_id === configFormData.dept_id)?.dept_name || ''} 
                                     onChange={e => {
@@ -1223,31 +1223,31 @@ export default function LicensePage() {
                                     }}
                                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
                                  >
-                                    <option value="">-- ทั้งฝ่าย --</option>
+                                    <option value="">-- เธ—เธฑเนเธเธเนเธฒเธข --</option>
                                     {getGroupsByDiv(departments.find(d => d.dept_id === configFormData.dept_id)?.division || '').map(g => <option key={g} value={g}>{g}</option>)}
                                  </select>
                               </div>
                               <div>
-                                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>แผนกย่อย/หน่วยงาน</label>
+                                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>เนเธเธเธเธขเนเธญเธข/เธซเธเนเธงเธขเธเธฒเธ</label>
                                  <select 
                                     value={configFormData.dept_id || ''} 
                                     onChange={e => setConfigFormData({ ...configFormData, dept_id: e.target.value || null })} 
                                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
                                  >
-                                    <option value="">-- ทั้งกลุ่มงาน --</option>
+                                    <option value="">-- เธ—เธฑเนเธเธเธฅเธธเนเธกเธเธฒเธ --</option>
                                     {getSubsByGrp(
                                         departments.find(d => d.dept_id === configFormData.dept_id)?.division || '',
                                         departments.find(d => d.dept_id === configFormData.dept_id)?.dept_name || ''
-                                    ).map(s => <option key={s.dept_id} value={s.dept_id}>{s.sub_dept || '(ไม่มีแผนกย่อย)'}</option>)}
+                                    ).map(s => <option key={s.dept_id} value={s.dept_id}>{s.sub_dept || '(เนเธกเนเธกเธตเนเธเธเธเธขเนเธญเธข)'}</option>)}
                                  </select>
                               </div>
                            </div>
                         </div>
 
                         <div>
-                           <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>ตำแหน่งที่บังคับใช้</label>
+                           <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>เธ•เธณเนเธซเธเนเธเธ—เธตเนเธเธฑเธเธเธฑเธเนเธเน</label>
                            <select value={configFormData.pos_id || ''} onChange={e => setConfigFormData({ ...configFormData, pos_id: e.target.value || null })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#fff' }}>
-                              <option value="">-- พนักงานทุกตำแหน่ง --</option>
+                              <option value="">-- เธเธเธฑเธเธเธฒเธเธ—เธธเธเธ•เธณเนเธซเธเนเธ --</option>
                               {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
                            </select>
                         </div>
@@ -1255,18 +1255,18 @@ export default function LicensePage() {
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                            <div>
-                              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>อายุบัตร (ปี)</label>
+                              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>เธญเธฒเธขเธธเธเธฑเธ•เธฃ (เธเธต)</label>
                               <input type="number" required value={isNaN(configFormData.valid_years!) ? '' : configFormData.valid_years} onChange={e => setConfigFormData({ ...configFormData, valid_years: e.target.value === '' ? 0 : parseInt(e.target.value) })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
                            </div>
                            <div>
-                              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>เตือนล่วงหน้า (วัน)</label>
+                              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>เน€เธ•เธทเธญเธเธฅเนเธงเธเธซเธเนเธฒ (เธงเธฑเธ)</label>
                               <input type="number" required value={isNaN(configFormData.warning_days!) ? '' : configFormData.warning_days} onChange={e => setConfigFormData({ ...configFormData, warning_days: e.target.value === '' ? 0 : parseInt(e.target.value) })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
                            </div>
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: 12 }}>
-                           <button type="button" onClick={() => setActiveModal('none')} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '14px 28px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer' }}>ยกเลิก</button>
-                           <button type="submit" style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 32px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer' }}>บันทึกเกณฑ์</button>
+                           <button type="button" onClick={() => setActiveModal('none')} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '14px 28px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer' }}>เธขเธเน€เธฅเธดเธ</button>
+                           <button type="submit" style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 32px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer' }}>เธเธฑเธเธ—เธถเธเน€เธเธ“เธ‘เน</button>
                         </div>
                      </form>
                   </div>

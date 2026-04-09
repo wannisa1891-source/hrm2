@@ -42,7 +42,7 @@ export async function GET() {
 
     let rows: any[] = [];
     try {
-      [rows] = await pool.query(query, [target90, target30, target7]);
+      [rows] = await pool.query(query, [target90, target30, target7]) as any;
     } catch (dbErr: any) {
       if (dbErr.code === 'ER_BAD_FIELD_ERROR' && dbErr.message.includes('email')) {
          // Fallback if no email column exists yet
@@ -55,12 +55,14 @@ export async function GET() {
       return NextResponse.json({ message: 'No licenses expiring on the target dates. No emails sent.', count: 0 });
     }
 
-    // Configure Nodemailer
+    // Configure Nodemailer using settings from .env.local
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false, // true for 465, false for other ports
       auth: {
-        user: process.env.EMAIL_SENDER || 'yourcompany.hr@gmail.com',
-        pass: process.env.EMAIL_PASSWORD || 'your-app-password-here'
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
       }
     });
 
@@ -75,7 +77,7 @@ export async function GET() {
       const typeStr = row.license_name || row.license_type || 'ใบประกอบวิชาชีพ';
       
       const mailOptions = {
-        from: `"HRM System " <${process.env.EMAIL_SENDER || 'yourcompany.hr@gmail.com'}>`,
+        from: `"${process.env.SMTP_FROM_NAME || 'HRM System'}" <${process.env.SMTP_USER}>`,
         to: row.email,
         subject: `⚠️ แจ้งเตือน: ${typeStr} ของคุณกำลังจะหมดอายุในอีก ${daysLeft} วัน`,
         html: `
