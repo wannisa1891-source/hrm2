@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
+import { sendMail } from '@/lib/mail';
 
 // Helper to map UI shift strings to DB shift_type_ids
 const shiftMap: Record<string, number> = {
@@ -7,6 +8,11 @@ const shiftMap: Record<string, number> = {
   'Afternoon': 2,
   'Night': 3
 };
+
+async function getEmployeeEmail(empId: string) {
+    const [rows]: any = await pool.query('SELECT email, first_name_th, last_name_th FROM tbl_employees WHERE emp_id = ?', [empId]);
+    return rows[0] || null;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +67,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { nurseName, shift, department, date, note } = await req.json();
+    const changer = decodeURIComponent(req.headers.get('x-user-id') || 'Unknown');
 
     if (!nurseName || !shift || !department || !date) {
       return NextResponse.json({ error: 'กรุณากรอกข้อมูลให้ครบ' }, { status: 400 });
@@ -83,6 +90,33 @@ export async function POST(req: NextRequest) {
       'INSERT INTO tbl_schedules (emp_id, shift_type_id, role, schedule_date, notes, status) VALUES (?,?,?,?,?,?)',
       [nurseName.trim(), shift_type_id, department, dateStrSafe(date), note || '', 'Published']
     );
+
+    // Notify if assigned by someone else
+    if (nurseName.trim() !== changer) {
+        const emp = await getEmployeeEmail(nurseName.trim());
+        if (emp && emp.email) {
+            const dateStr = new Date(date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            await sendMail({
+                to: emp.email,
+                subject: `[HRM] แจ้งเตือนการได้รับมอบหมายเวรใหม่วันที่ ${dateStr}`,
+                html: `
+                    <div style="font-family: sans-serif; line-height: 1.6;">
+                        <h2>แจ้งเตือนการได้รับมอบหมายเวรใหม่</h2>
+                        <p>เรียนคุณ ${emp.first_name_th} ${emp.last_name_th},</p>
+                        <p>คุณได้รับมอบหมายเวรใหม่ในวันที่ <b>${dateStr}</b> โดย <b>${changer}</b></p>
+                        <hr/>
+                        <p><b>รายละเอียด:</b></p>
+                        <ul>
+                            <li><b>ประเภทเวร:</b> ${shift}</li>
+                            <li><b>แผนก:</b> ${department}</li>
+                            <li><b>หมายเหตุ:</b> ${note || '-'}</li>
+                        </ul>
+                        <p>กรุณากรวจสอบตารางเวรของคุณในระบบ HRM</p>
+                    </div>
+                `
+            }).catch(e => console.error('Email failed:', e));
+        }
+    }
 
     return NextResponse.json({ success: true, id: result.insertId.toString() });
   } catch (err: unknown) {
