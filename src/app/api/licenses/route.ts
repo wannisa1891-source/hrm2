@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
+    const empId = searchParams.get('emp_id') || '';
     const status = searchParams.get('status') || ''; // 'expiring', 'expired', 'normal'
 
     let query = `
@@ -32,6 +33,12 @@ export async function GET(req: NextRequest) {
     `;
 
     const queryParams: any[] = [];
+
+    if (empId) {
+      query += ` AND l.emp_id = ?`;
+      queryParams.push(empId);
+    }
+
 
     if (search) {
       query += ` AND (e.first_name_th LIKE ? OR e.last_name_th LIKE ? OR e.emp_id LIKE ? OR l.license_no LIKE ? OR l.license_name LIKE ?)`;

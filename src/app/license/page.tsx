@@ -112,11 +112,11 @@ function addYears(dateStr: string, years: number) {
 function findIssuerLink(licenseName: string) {
    const name = licenseName.toLowerCase();
    if (name.includes('พยาบาล')) return COUNCIL_LINKS['สภาการพยาบาล'];
-   if (name.includes('แพทย์') && !name.includes('เทคนิค') && !name.includes('รังสี') && !name.includes('แผนไทย')) return COUNCIL_LINKS['แพทยสภา'];
+   if ((name.includes('แพทย์') || name.includes('เวชกรรม')) && !name.includes('เทคนิค') && !name.includes('รังสี') && !name.includes('แผนไทย')) return COUNCIL_LINKS['แพทยสภา'];
    if (name.includes('เภสัช')) return COUNCIL_LINKS['สภาเภสัชกรรม'];
    if (name.includes('เทคนิคการแพทย์')) return COUNCIL_LINKS['สภาเทคนิคการแพทย์'];
    if (name.includes('กายภาพบำบัด')) return COUNCIL_LINKS['สภากายภาพบำบัด'];
-   if (name.includes('ทันต')) return COUNCIL_LINKS['ทันตแพทยสภา'];
+   if (name.includes('ทันต') || name.includes('ทันตกรรม')) return COUNCIL_LINKS['ทันตแพทยสภา'];
    if (name.includes('วิศวกร')) return COUNCIL_LINKS['สภาวิศวกร'];
    if (name.includes('ครู') || name.includes('สอน')) return COUNCIL_LINKS['คุรุสภา'];
    if (name.includes('รังสี')) return COUNCIL_LINKS['คณะกรรมการวิชาชีพสาขารังสีเทคนิค'];
@@ -210,11 +210,35 @@ function ModernSelect({
    );
 }
 
+
+// --- Styles ---
+const cardStyle = {
+   background: '#fff',
+   borderRadius: '24px',
+   padding: '32px',
+   boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+   border: '1px solid #f1f5f9'
+};
+
+const sectionHeaderStyle = {
+   fontSize: '14px',
+   fontWeight: 800,
+   color: '#64748b',
+   paddingBottom: '12px',
+   borderBottom: '2px solid #f1f5f9',
+   marginBottom: '24px',
+   display: 'flex',
+   alignItems: 'center',
+   gap: '8px'
+};
+
 export default function LicensePage() {
+
    const { user } = useAuth();
 
    const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'hr';
    const isDeptHead = user?.role === 'หัวหน้า';
+   const isRegularUser = !isAdmin && !isDeptHead;
 
    const [activeTab, setActiveTab] = useState<'list' | 'monitor' | 'settings'>('list');
    const [licenses, setLicenses] = useState<License[]>([]);
@@ -248,6 +272,19 @@ export default function LicensePage() {
    const [submitting, setSubmitting] = useState(false);
    const [historyData, setHistoryData] = useState<License[]>([]);
    const [historyOpen, setHistoryOpen] = useState(false);
+   const [isProfileExpanded, setIsProfileExpanded] = useState(false);
+
+   const getDeptName = (id: string) => {
+      const dept = departments.find(d => String(d.dept_id) === String(id));
+      if (!dept) return id || '-';
+      return `${dept.division} > ${dept.dept_name}${dept.sub_dept ? ` > ${dept.sub_dept}` : ''}`;
+   };
+   const getPosName = (id: string) => positions.find(p => String(p.pos_id) === String(id))?.pos_name || id || '-';
+
+   // Hierarchical Helpers
+   const divisions = Array.from(new Set(departments.map(d => d.division))).filter(Boolean) as string[];
+   const getGroupsByDiv = (div: string) => Array.from(new Set(departments.filter(d => d.division === div).map(d => d.dept_name)));
+   const getSubsByGrp = (div: string, grp: string) => departments.filter(d => d.division === div && d.dept_name === grp);
 
    useEffect(() => {
       fetchInitialData();
@@ -279,6 +316,7 @@ export default function LicensePage() {
          const params = new URLSearchParams();
          if (searchTerm) params.append('search', searchTerm);
          if (statusFilter !== 'all') params.append('status', statusFilter);
+         if (isRegularUser && user?.emp_id) params.append('emp_id', user.emp_id);
          params.append('v', Date.now().toString());
 
          const res = await fetch(`/api/licenses?${params.toString()}`, { cache: 'no-store' });
@@ -417,47 +455,39 @@ export default function LicensePage() {
       const emp = allEmployees.find(e => e.emp_id === empId);
       if (!emp) return null;
 
-      // Intelligent Matching Priority:
-      // 1. Match both Dept and Pos
-      // 2. Match Dept only
-      // 3. Match Pos only
-      // 4. Match fallback
-      const matchBoth = configs.find(c => c.dept_id === emp.dept_id && c.pos_id === emp.pos_id);
-      if (matchBoth) return matchBoth;
+      const empDept = departments.find(d => d.dept_id === emp.dept_id);
+      if (!empDept) return null;
 
-      const matchDept = configs.find(c => c.dept_id === emp.dept_id && !c.pos_id);
-      if (matchDept) return matchDept;
+      // Hierarchical Matching Priority:
+      // 1. Exact Unit Match (dept_id)
+      const matchExact = configs.find(c => c.dept_id === emp.dept_id && (!c.pos_id || c.pos_id === emp.pos_id));
+      if (matchExact) return matchExact;
 
+      // 2. Group Level Match
+      const matchGroup = configs.find(c => {
+         const cDept = departments.find(d => d.dept_id === c.dept_id);
+         return cDept && cDept.division === empDept.division && cDept.dept_name === empDept.dept_name && !cDept.sub_dept && (!c.pos_id || c.pos_id === emp.pos_id);
+      });
+      if (matchGroup) return matchGroup;
+
+      // 3. Division Level Match
+      const matchDiv = configs.find(c => {
+         const cDept = departments.find(d => d.dept_id === c.dept_id);
+         return cDept && cDept.division === empDept.division && !cDept.dept_name && (!c.pos_id || c.pos_id === emp.pos_id);
+      });
+      if (matchDiv) return matchDiv;
+
+      // 4. Position only Match (Global)
       const matchPos = configs.find(c => c.pos_id === emp.pos_id && !c.dept_id);
       if (matchPos) return matchPos;
 
       return null;
    };
 
-   // Styles
-   const cardStyle = {
-      background: '#fff',
-      borderRadius: '24px',
-      padding: '32px',
-      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-      border: '1px solid #f1f5f9'
-   };
-
-   const sectionHeaderStyle = {
-      fontSize: '14px',
-      fontWeight: 800,
-      color: '#64748b',
-      paddingBottom: '12px',
-      borderBottom: '2px solid #f1f5f9',
-      marginBottom: '24px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-   };
-
    return (
       <AppLayout>
          <div style={{ padding: '32px', minHeight: '100vh', background: '#f8fafc', color: '#1e293b', fontFamily: '"Anuphan", "Prompt", sans-serif' }}>
+             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
 
             {/* Main Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
@@ -465,35 +495,39 @@ export default function LicensePage() {
                   <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', margin: 0 }}>ทะเบียนใบประกอบวิชาชีพ</h1>
                   <p style={{ color: '#64748b', fontWeight: 600, marginTop: '4px' }}>การจัดการทะเบียน การต่ออายุ และการตรวจสอบความถูกต้องสากล</p>
                </div>
-               <button
-                  onClick={() => handleOpenModal('add')}
-                  style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 28px', borderRadius: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.2)' }}
-               >
-                  บันทึกข้อมูลใบประกอบ
-               </button>
-            </div>
+                {isAdmin && (
+                   <button
+                      onClick={() => handleOpenModal('add')}
+                      style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 28px', borderRadius: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.2)' }}
+                   >
+                      บันทึกข้อมูลใบประกอบ
+                   </button>
+                )}
+             </div>
 
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: '#e2e8f0', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
-               {[
-                  { id: 'list', label: 'ทะเบียนบุคลากร' },
-                  { id: 'monitor', label: 'สรุปผลภาพรวม' },
-                  { id: 'settings', label: 'การตั้งค่าเกณฑ์' }
-               ].filter(t => isAdmin || (isDeptHead && t.id === 'monitor') || t.id === 'list').map(tab => (
-                  <button
-                     key={tab.id}
-                     onClick={() => setActiveTab(tab.id as any)}
-                     style={{
-                        padding: '12px 28px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer',
-                        background: activeTab === tab.id ? '#fff' : 'transparent',
-                        color: activeTab === tab.id ? '#0f172a' : '#64748b',
-                        boxShadow: activeTab === tab.id ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
-                        transition: 'all 0.2s'
-                     }}
-                  >
-                     {tab.label}
-                  </button>
-               ))}
-            </div>
+             {(isAdmin || isDeptHead) && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: '#e2e8f0', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
+                   {[
+                      { id: 'list', label: 'ทะเบียนบุคลากร' },
+                      { id: 'monitor', label: 'สรุปผลภาพรวม' },
+                      { id: 'settings', label: 'การตั้งค่าเกณฑ์' }
+                   ].filter(t => isAdmin || (isDeptHead && t.id === 'monitor') || t.id === 'list').map(tab => (
+                      <button
+                         key={tab.id}
+                         onClick={() => setActiveTab(tab.id as any)}
+                         style={{
+                            padding: '12px 28px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer',
+                            background: activeTab === tab.id ? '#fff' : 'transparent',
+                            color: activeTab === tab.id ? '#0f172a' : '#64748b',
+                            boxShadow: activeTab === tab.id ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
+                            transition: 'all 0.2s'
+                         }}
+                      >
+                         {tab.label}
+                      </button>
+                   ))}
+                </div>
+             )}
 
             {activeTab === 'list' && (
                <div style={cardStyle}>
@@ -509,17 +543,17 @@ export default function LicensePage() {
                      </select>
                   </div>
 
-                  <div style={{ overflowX: 'auto' }}>
-                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <div style={{ overflowX: 'auto', paddingBottom: '12px' }}>
+                     <table style={{ width: '100%', minWidth: '1200px', borderCollapse: 'collapse' }}>
                         <thead>
                            <tr style={{ textAlign: 'left', color: '#64748b', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>
-                              <th style={{ padding: '16px' }}>รหัสพนักงาน</th>
-                              <th>ชื่อ-นามสกุล</th>
-                              <th>วิชาชีพ</th>
-                              <th>เลขใบอนุญาต</th>
-                              <th>วันหมดอายุ</th>
-                              <th>สถานะ</th>
-                              <th style={{ textAlign: 'right', paddingRight: '16px' }}>ดำเนินการ</th>
+                               <th style={{ padding: '20px 16px', width: '120px', whiteSpace: 'nowrap' }}>รหัสพนักงาน</th>
+                               <th style={{ padding: "20px 16px", width: "220px", whiteSpace: "nowrap" }}>ชื่อ-นามสกุล</th>
+                               <th style={{ padding: "20px 16px", width: "250px", whiteSpace: "nowrap" }}>วิชาชีพ</th>
+                               <th style={{ padding: "20px 16px", width: "150px", whiteSpace: "nowrap" }}>เลขใบอนุญาต</th>
+                               <th style={{ padding: "20px 16px", width: "140px", whiteSpace: "nowrap" }}>วันหมดอายุ</th>
+                               <th style={{ padding: "20px 16px", width: "160px", whiteSpace: "nowrap" }}>สถานะ</th>
+                               <th style={{ textAlign: 'right', padding: '20px 16px', width: '160px', whiteSpace: 'nowrap' }}>ดำเนินการ</th>
                            </tr>
                         </thead>
                         <tbody>
@@ -527,25 +561,31 @@ export default function LicensePage() {
                               const stat = getStatus(l);
                               return (
                                  <tr key={l.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.2s' }}>
-                                    <td style={{ padding: '20px 16px', color: '#64748b', fontWeight: 700 }}>{l.emp_id}</td>
+                                    <td style={{ padding: '20px 16px', width: '120px', color: '#64748b', fontWeight: 700, whiteSpace: 'nowrap' }}>{l.emp_id}</td>
                                     <td
-                                       onClick={() => handleOpenModal('view', l)}
-                                       style={{ fontWeight: 800, color: '#0f172a', cursor: 'pointer', transition: 'color 0.2s' }}
+                                       onClick={() => {
+                                          setIsProfileExpanded(false);
+                                          handleOpenModal('view', l);
+                                       }}
+                                       style={{ padding: '20px 16px', width: '220px', fontWeight: 800, color: '#0f172a', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                                        onMouseOver={e => e.currentTarget.style.color = '#2563eb'}
                                        onMouseOut={e => e.currentTarget.style.color = '#0f172a'}
                                     >
                                        {l.name}
                                     </td>
-                                    <td style={{ fontWeight: 700 }}>{l.type || l.license_name}</td>
-                                    <td style={{ color: '#64748b', fontFamily: 'monospace' }}>{l.license_no || '-'}</td>
-                                    <td style={{ fontWeight: 700 }}>{l.expires || '-'}</td>
-                                    <td>
-                                       <span style={{ padding: '8px 20px', borderRadius: '50px', fontSize: '11px', fontWeight: 900, background: stat.bg, color: stat.color }}>{stat.label}</span>
+                                    <td style={{ padding: '20px 16px', width: '250px', fontWeight: 700 }}>{l.type || l.license_name}</td>
+                                    <td style={{ padding: '20px 16px', width: '150px', color: '#64748b', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{l.license_no || '-'}</td>
+                                    <td style={{ padding: '20px 16px', width: '140px', fontWeight: 700, whiteSpace: 'nowrap' }}>{l.expires || '-'}</td>
+                                    <td style={{ padding: '20px 16px', width: '140px' }}>
+                                       <span style={{ padding: '8px 20px', borderRadius: '50px', fontSize: '11px', fontWeight: 900, background: stat.bg, color: stat.color, whiteSpace: 'nowrap' }}>{stat.label}</span>
                                     </td>
-                                    <td style={{ textAlign: 'right', paddingRight: '16px' }}>
+                                    <td style={{ textAlign: 'right', padding: '20px 16px', width: '160px' }}>
                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                           <button
-                                             onClick={() => fetchHistoryData(l.emp_id)}
+                                             onClick={() => {
+                                                setIsProfileExpanded(false);
+                                                fetchHistoryData(l.emp_id);
+                                             }}
                                              title="ดูประวัติการต่ออายุ"
                                              style={{ background: '#f1f5f9', color: '#64748b', border: 'none', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
                                              onMouseOver={e => e.currentTarget.style.background = '#e2e8f0'}
@@ -553,7 +593,10 @@ export default function LicensePage() {
                                           >
                                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
                                           </button>
-                                          <button onClick={() => handleOpenModal('renew', l)} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>จัดการ</button>
+                                          <button onClick={() => {
+                                             setIsProfileExpanded(false);
+                                             handleOpenModal('renew', l);
+                                          }} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>จัดการ</button>
                                        </div>
                                     </td>
                                  </tr>
@@ -645,16 +688,43 @@ export default function LicensePage() {
 
             {activeTab === 'settings' && (
                <div style={cardStyle}>
+                  <div style={{ marginBottom: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+                     <div style={{ background: '#f0f9ff', padding: '24px', borderRadius: '24px', border: '1px solid #bae6fd' }}>
+                        <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 800, color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                           มาตรฐานใบอนุญาต (อายุ 5 ปี)
+                        </h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '10px 20px', fontSize: '13px', color: '#0c4a6e' }}>
+                           <div style={{ fontWeight: 800 }}>พยาบาลวิชาชีพ:</div> <div><a href={COUNCIL_LINKS['สภาการพยาบาล']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>สภาการพยาบาล</a></div>
+                           <div style={{ fontWeight: 800 }}>แพทย์ (หมอ):</div> <div><a href={COUNCIL_LINKS['แพทยสภา']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>แพทยสภา</a></div>
+                           <div style={{ fontWeight: 800 }}>เภสัชกร:</div> <div><a href={COUNCIL_LINKS['สภาเภสัชกรรม']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>สภาเภสัชกรรม</a></div>
+                           <div style={{ fontWeight: 800 }}>นักเทคนิคการแพทย์:</div> <div><a href={COUNCIL_LINKS['สภาเทคนิคการแพทย์']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>สภาเทคนิคการแพทย์</a></div>
+                           <div style={{ fontWeight: 800 }}>นักกายภาพบำบัด:</div> <div><a href={COUNCIL_LINKS['สภากายภาพบำบัด']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>สภากายภาพบำบัด</a></div>
+                           <div style={{ fontWeight: 800 }}>นักรังสีการแพทย์:</div> <div><a href={COUNCIL_LINKS['คณะกรรมการวิชาชีพสาขารังสีเทคนิค']} target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>คณะกรรมการวิชาชีพสาขารังสีเทคนิค</a></div>
+                        </div>
+                     </div>
+                     <div style={{ background: '#f5f3ff', padding: '24px', borderRadius: '24px', border: '1px solid #ddd6fe' }}>
+                        <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 800, color: '#5b21b6', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                           การตรวจสอบและคะแนน (CNEU/CME)
+                        </h4>
+                        <p style={{ margin: 0, fontSize: '13px', color: '#4c1d95', lineHeight: '1.6', fontWeight: 500 }}>
+                           โปรดตรวจสอบคะแนนสะสมหน่วยกิตวิชาชีพให้ครบตามเกณฑ์ของแต่ละสภาฯ ก่อนดำเนินการต่ออายุ <br/><br/>
+                           ท่านสามารถคลิกที่ <strong>"ชื่อวิชาชีพ"</strong> ในตารางด้านล่าง หรือกดปุ่ม <strong>"ตรวจสอบสภาฯ"</strong> ในหน้าบันทึกข้อมูล เพื่อลิงก์ไปยังเว็บไซต์ตรวจสอบสถานะใบอนุญาตของสภาวิชาชีพโดยตรง
+                        </p>
+                     </div>
+                  </div>
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                      <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>เกณฑ์มาตรฐานตามสายวิชาชีพ</h3>
                      <button onClick={() => handleOpenModal('config')} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>+ เพิ่มเกณฑ์</button>
                   </div>
-                  <div style={{ overflowX: 'auto' }}>
-                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <div style={{ overflowX: 'auto', paddingBottom: '12px' }}>
+                     <table style={{ width: '100%', minWidth: '1200px', borderCollapse: 'collapse' }}>
                         <thead>
                            <tr style={{ textAlign: 'left', borderBottom: '1px solid #f1f5f9', color: '#64748b', fontSize: '12px', textTransform: 'uppercase' }}>
                               <th style={{ padding: '16px' }}>ชื่อเกณฑ์</th>
-                              <th>วิชาชีพ</th>
+                               <th style={{ padding: "20px 16px", width: "250px", whiteSpace: "nowrap" }}>วิชาชีพ</th>
                               <th>บังคับแผนก/ตำแหน่ง</th>
                               <th>อายุบัตร (ปี)</th>
                               <th>เตือน (วัน)</th>
@@ -673,8 +743,19 @@ export default function LicensePage() {
                                        ) : c.license_name}
                                     </td>
                                     <td style={{ fontSize: '13px' }}>
-                                       <div style={{ fontWeight: 800 }}>{departments.find(d => d.dept_id === c.dept_id)?.dept_name || 'ทุกแผนก'}</div>
-                                       <div style={{ color: '#64748b', fontSize: '11px' }}>{positions.find(p => p.pos_id === c.pos_id)?.pos_name || 'ทุกตำแหน่ง'}</div>
+                                       {(!c.dept_id && !c.pos_id) ? (
+                                          <div style={{ fontWeight: 800, color: '#0f172a' }}>บุคลากรทุกคน (ทุกภาคส่วน)</div>
+                                       ) : (
+                                          <>
+                                             <div style={{ fontWeight: 800, color: '#0f172a' }}>
+                                                {positions.find(p => p.pos_id === c.pos_id)?.pos_name || 'พนักงานทุกตำแหน่ง'}
+                                             </div>
+                                             <div style={{ color: '#64748b', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                {departments.find(d => d.dept_id === c.dept_id)?.dept_name || 'ทุกแผนกในโรงพยาบาล'}
+                                             </div>
+                                          </>
+                                       )}
                                     </td>
                                     <td style={{ fontWeight: 700 }}>{c.valid_years}</td>
                                     <td style={{ color: '#ea580c', fontWeight: 700 }}>{c.warning_days}</td>
@@ -740,29 +821,44 @@ export default function LicensePage() {
                                                    setSearchTermEmp(`${e.first_name_th} ${e.last_name_th} (${e.emp_id})`);
                                                 }} style={{ padding: '12px 20px', cursor: 'pointer', borderRadius: '16px', fontSize: '13px', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#f8fafc'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
                                                    <div style={{ fontWeight: 800 }}>{e.first_name_th} {e.last_name_th}</div>
-                                                   <div style={{ fontSize: '11px', color: '#64748b' }}>{e.dept_name} • {e.emp_id}</div>
+                                                   <div style={{ fontSize: '11px', color: '#64748b' }}>{getDeptName(e.dept_id)} • {e.emp_id}</div>
                                                 </div>
                                              ))}
                                           </div>
                                        )}
                                     </div>
                                  ) : (
-                                    <>
-                                       <div style={{ marginBottom: '16px' }}>
-                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', marginBottom: '4px' }}>ชื่อ-นามสกุล</div>
-                                          <div style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.first_name_th} {currentEmp?.last_name_th}</div>
+                                    <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
+                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                          <div style={{ fontWeight: 900, color: '#0f172a', fontSize: '18px' }}>{currentEmp?.first_name_th} {currentEmp?.last_name_th}</div>
+                                          <div style={{ fontSize: '12px', fontWeight: 800, background: '#0f172a', color: '#fff', padding: '4px 12px', borderRadius: '50px' }}>{currentEmp?.emp_id}</div>
                                        </div>
-                                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                                          <div>
-                                             <div style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', marginBottom: '4px' }}>รหัสพนักงาน</div>
-                                             <div style={{ fontSize: '15px', fontWeight: 800 }}>{formData.emp_id || selectedLicense?.emp_id}</div>
+                                       
+                                       <button 
+                                          onClick={() => setIsProfileExpanded(!isProfileExpanded)}
+                                          style={{ width: '100%', background: '#fff', border: '1px solid #e2e8f0', padding: '10px', borderRadius: '15px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#64748b' }}
+                                       >
+                                          {isProfileExpanded ? 'ซ่อนข้อมูลส่วนตัว' : 'ดูข้อมูลเพิ่มเติม'}
+                                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ transition: 'transform 0.3s', transform: isProfileExpanded ? 'rotate(180deg)' : 'none' }}><path d="m6 9 6 6 6-6"/></svg>
+                                       </button>
+
+                                       {isProfileExpanded && (
+                                          <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px dashed #e2e8f0', paddingTop: '16px' }}>
+                                             {[
+                                                { label: 'แผนก/สังกัด', val: getDeptName(currentEmp?.dept_id) },
+                                                { label: 'ตำแหน่ง', val: getPosName(currentEmp?.pos_id) },
+                                                { label: 'เบอร์โทรศัพท์', val: currentEmp?.phone || '-' },
+                                                { label: 'อีเมล', val: currentEmp?.email || '-' },
+                                                { label: 'คะแนน CNEU', val: currentEmp?.cneu_cme_points || '0.00' }
+                                             ].map((item, idx) => (
+                                                <div key={idx}>
+                                                   <div style={{ fontSize: '10px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>{item.label}</div>
+                                                   <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>{item.val}</div>
+                                                </div>
+                                             ))}
                                           </div>
-                                          <div>
-                                             <div style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', marginBottom: '4px' }}>ตำแหน่ง</div>
-                                             <div style={{ fontSize: '14px', fontWeight: 800 }}>{currentEmp?.pos_name || '-'}</div>
-                                          </div>
-                                       </div>
-                                    </>
+                                       )}
+                                    </div>
                                  )}
                               </div>
 
@@ -787,6 +883,21 @@ export default function LicensePage() {
                                     </div>
                                  </div>
                               )}
+
+                              <div style={{ background: '#f0f9ff', padding: '24px', borderRadius: '24px', border: '1px solid #bae6fd', marginTop: 'auto' }}>
+                                 <div style={{ fontSize: '12px', fontWeight: 800, color: '#0369a1', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                    ตารางอ้างอิงมาตรฐาน (5 ปี)
+                                 </div>
+                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#0c4a6e' }}>
+                                    <div style={{ fontWeight: 800 }}>พยาบาล:</div> <div>สภาการพยาบาล</div>
+                                    <div style={{ fontWeight: 800 }}>แพทย์:</div> <div>แพทยสภา</div>
+                                    <div style={{ fontWeight: 800 }}>เภสัช:</div> <div>สภาเภสัชกรรม</div>
+                                    <div style={{ fontWeight: 800 }}>เทคนิคการแพทย์:</div> <div>สภาเทคนิคฯ</div>
+                                    <div style={{ fontWeight: 800 }}>กายภาพ:</div> <div>สภากายภาพฯ</div>
+                                    <div style={{ fontWeight: 800 }}>รังสี:</div> <div>คณะกรรมการวิชาชีพฯ</div>
+                                 </div>
+                              </div>
                            </div>
 
                            {/* Main Content (Right) - ฟอร์มกรอกข้อมูลใหม่ */}
@@ -1000,11 +1111,11 @@ export default function LicensePage() {
                               <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase' }}>
                                  <th style={{ padding: '0 20px', width: '60px' }}>ลำดับ</th>
                                  <th style={{ width: '150px' }}>เลขที่ใบอนุญาต</th>
-                                 <th>วิชาชีพ</th>
+                                 <th style={{ padding: '20px 16px', width: '250px', whiteSpace: 'nowrap' }}>วิชาชีพ</th>
                                  <th>วันที่ออกบัตร/ต่ออายุ</th>
-                                 <th>วันหมดอายุ</th>
+                                 <th style={{ padding: '20px 16px', width: '140px', whiteSpace: 'nowrap' }}>วันหมดอายุ</th>
                                  <th>คะแนนสะสม</th>
-                                 <th>สถานะ</th>
+                                 <th style={{ padding: '20px 16px', width: '160px', whiteSpace: 'nowrap' }}>สถานะ</th>
                                  <th style={{ textAlign: 'right', paddingRight: '20px' }}>หลักฐาน</th>
                               </tr>
                            </thead>
@@ -1079,30 +1190,77 @@ export default function LicensePage() {
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                           <div>
-                              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>บังคับแผนก</label>
-                              <select value={configFormData.dept_id || ''} onChange={e => setConfigFormData({ ...configFormData, dept_id: e.target.value || null })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#fff' }}>
-                                 <option value="">ทุกแผนก</option>
-                                 {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
-                              </select>
+                        <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                           <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>ขอบเขตหน่วยงานที่บังคับใช้</label>
+                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                              <div>
+                                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>ฝ่าย</label>
+                                 <select 
+                                    value={departments.find(d => d.dept_id === configFormData.dept_id)?.division || ''} 
+                                    onChange={e => {
+                                        const div = e.target.value;
+                                        if (!div) setConfigFormData({ ...configFormData, dept_id: null });
+                                        else {
+                                            const firstDept = departments.find(d => d.division === div);
+                                            setConfigFormData({ ...configFormData, dept_id: firstDept?.dept_id });
+                                        }
+                                    }}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
+                                 >
+                                    <option value="">-- ไม่ระบุ (Global) --</option>
+                                    {divisions.map(d => <option key={d} value={d}>{d}</option>)}
+                                 </select>
+                              </div>
+                              <div>
+                                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>กลุ่มงาน</label>
+                                 <select 
+                                    value={departments.find(d => d.dept_id === configFormData.dept_id)?.dept_name || ''} 
+                                    onChange={e => {
+                                        const grp = e.target.value;
+                                        const div = departments.find(d => d.dept_id === configFormData.dept_id)?.division;
+                                        const firstDept = departments.find(d => d.division === div && d.dept_name === grp);
+                                        setConfigFormData({ ...configFormData, dept_id: firstDept?.dept_id });
+                                    }}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
+                                 >
+                                    <option value="">-- ทั้งฝ่าย --</option>
+                                    {getGroupsByDiv(departments.find(d => d.dept_id === configFormData.dept_id)?.division || '').map(g => <option key={g} value={g}>{g}</option>)}
+                                 </select>
+                              </div>
+                              <div>
+                                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>แผนกย่อย/หน่วยงาน</label>
+                                 <select 
+                                    value={configFormData.dept_id || ''} 
+                                    onChange={e => setConfigFormData({ ...configFormData, dept_id: e.target.value || null })} 
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
+                                 >
+                                    <option value="">-- ทั้งกลุ่มงาน --</option>
+                                    {getSubsByGrp(
+                                        departments.find(d => d.dept_id === configFormData.dept_id)?.division || '',
+                                        departments.find(d => d.dept_id === configFormData.dept_id)?.dept_name || ''
+                                    ).map(s => <option key={s.dept_id} value={s.dept_id}>{s.sub_dept || '(ไม่มีแผนกย่อย)'}</option>)}
+                                 </select>
+                              </div>
                            </div>
-                           <div>
-                              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>บังคับตำแหน่ง</label>
-                              <select value={configFormData.pos_id || ''} onChange={e => setConfigFormData({ ...configFormData, pos_id: e.target.value || null })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#fff' }}>
-                                 <option value="">ทุกตำแหน่ง</option>
-                                 {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
-                              </select>
-                           </div>
+                        </div>
+
+                        <div>
+                           <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>ตำแหน่งที่บังคับใช้</label>
+                           <select value={configFormData.pos_id || ''} onChange={e => setConfigFormData({ ...configFormData, pos_id: e.target.value || null })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#fff' }}>
+                              <option value="">-- พนักงานทุกตำแหน่ง --</option>
+                              {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
+                           </select>
+                        </div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                            <div>
                               <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>อายุบัตร (ปี)</label>
-                              <input type="number" required value={configFormData.valid_years} onChange={e => setConfigFormData({ ...configFormData, valid_years: parseInt(e.target.value) })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+                              <input type="number" required value={isNaN(configFormData.valid_years!) ? '' : configFormData.valid_years} onChange={e => setConfigFormData({ ...configFormData, valid_years: e.target.value === '' ? 0 : parseInt(e.target.value) })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
                            </div>
                            <div>
                               <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, color: '#475569', fontSize: '13px' }}>เตือนล่วงหน้า (วัน)</label>
-                              <input type="number" required value={configFormData.warning_days} onChange={e => setConfigFormData({ ...configFormData, warning_days: parseInt(e.target.value) })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+                              <input type="number" required value={isNaN(configFormData.warning_days!) ? '' : configFormData.warning_days} onChange={e => setConfigFormData({ ...configFormData, warning_days: e.target.value === '' ? 0 : parseInt(e.target.value) })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
                            </div>
                         </div>
 
@@ -1115,6 +1273,7 @@ export default function LicensePage() {
                </div>
             )}
          </div>
+             </div>
       </AppLayout>
    );
 }
