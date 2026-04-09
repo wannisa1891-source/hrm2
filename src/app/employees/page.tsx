@@ -227,7 +227,7 @@ function EmployeesContent() {
 
   const filteredData = useMemo(() => {
     return employees.filter(e => {
-      const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id} ${e.staff_no || ''}`.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
       const matchDept = filterDept === 'all' || e.dept_id === filterDept;
       const matchPos = filterPos === 'all' || e.pos_id === filterPos;
       const matchStatus = filterStatus === 'all' || e.status === filterStatus;
@@ -429,11 +429,8 @@ function EmployeesContent() {
             </select>
             <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
               <option value="all">สถานะการทำงาน: ทั้งหมด</option>
-              <option value="Active">ทำงานปกติ (Active)</option>
-              <option value="Probation">ทดลองงาน</option>
-              <option value="Inactive">หยุดปฏิบัติงาน</option>
-              <option value="Resigned">ลาออก/พ้นสภาพ</option>
-              <option value="Terminated">ให้ออก</option>
+              <option value="Active">Active (ทำงานอยู่)</option>
+              <option value="Inactive">Inactive (พ้นสภาพ)</option>
             </select>
             <select className="form-select" style={{ width: 'auto', minWidth: '160px' }} value={filterLicense} onChange={e => setFilterLicense(e.target.value)}>
               <option value="all">ใบประกอบฯ: ทั้งหมด</option>
@@ -449,11 +446,9 @@ function EmployeesContent() {
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
-                  <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
                   <th>ตำแหน่ง</th>
                   <th>แผนก/งาน</th>
-                  <th style={{ textAlign: 'center' }}>วันที่บันทึก</th>
                   <th style={{ textAlign: 'center' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
@@ -477,26 +472,17 @@ function EmployeesContent() {
                           {emp.image ? <Image fill src={`/uploads/${emp.image}`} alt="" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <span style={{ color: '#94a3b8', fontSize: '20px' }}>👤</span>}
                         </div>
                       </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
-                          {emp.emp_id}
-                        </div>
-                      </td>
                       <td>
                         <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>
                           {emp.prefix}{emp.first_name_th} {emp.last_name_th}
                           {emp.license_status === 'Expired' && <span className="badge badge-red" title="ใบประกอบวิชาชีพหมดอายุ">หมดอายุ</span>}
                         </div>
+                        <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>รหัส: {emp.emp_id}</div>
                       </td>
                       <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
                       <td style={{ color: '#334155' }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', background: '#f8fafc', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }}>
                           {getDeptName(emp.dept_id)}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span style={{ fontSize: '13px', color: '#64748b' }}>
-                          {emp.created_at ? new Date(emp.created_at).toLocaleDateString('th-TH') : '-'}
                         </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>
