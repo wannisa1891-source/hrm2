@@ -27,9 +27,9 @@ export async function GET(req: NextRequest) {
         l.issue_date,
         l.expire_date,
         l.status as license_status
-      FROM tbl_employee_licenses l
-      LEFT JOIN tbl_employees e ON l.emp_id = e.emp_id
-      WHERE l.status = 'Active'
+      FROM tbl_employees e
+      JOIN tbl_employee_licenses l ON e.emp_id = l.emp_id
+      WHERE 1=1
     `;
 
     const queryParams: any[] = [];
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       queryParams.push(searchVal, searchVal, searchVal, searchVal, searchVal);
     }
 
-    query += ` ORDER BY l.id DESC, l.expire_date ASC`;
+    query += ` ORDER BY l.expire_date ASC`;
     
     const [rows]: any = await pool.query(query, queryParams);
 

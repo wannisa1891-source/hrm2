@@ -22,10 +22,10 @@ export async function GET(req: NextRequest) {
       queryParams.push(empId);
     }
 
+    // Employee-specific queries for Dashboard
     let employeeQuotaQuery: Promise<any> = Promise.resolve([[]]);
     let employeeUsedLeavesQuery: Promise<any> = Promise.resolve([[]]);
     let employeeRecentLeavesQuery: Promise<any> = Promise.resolve([[]]);
-    let employeePayrollQuery: Promise<any> = Promise.resolve([[]]);
 
     if (empId) {
       employeeQuotaQuery = pool.query('SELECT quota_vacation, quota_personal, quota_sick FROM tbl_employees WHERE emp_id = ?', [empId]);
@@ -41,12 +41,6 @@ export async function GET(req: NextRequest) {
         ORDER BY start_date DESC 
         LIMIT 5
       `, [empId]);
-      employeePayrollQuery = pool.query(`
-        SELECT net_salary as currentNetSalary, pay_month, pay_year, status, payroll_id
-        FROM tbl_payroll
-        WHERE emp_id = ?
-        ORDER BY pay_year DESC, pay_month DESC
-      `, [empId]);
     }
 
     // Execute all queries in parallel
@@ -59,8 +53,7 @@ export async function GET(req: NextRequest) {
       licenseResult,
       userQuotaResult,
       userUsedResult,
-      userRecentResult,
-      userPayrollResult
+      userRecentResult
     ] = await Promise.all([
       pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status = 'Active'"),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE ? >= start_date AND ? <= end_date", [today, today]),
@@ -76,8 +69,7 @@ export async function GET(req: NextRequest) {
       pool.query(licenseQuery, queryParams),
       employeeQuotaQuery,
       employeeUsedLeavesQuery,
-      employeeRecentLeavesQuery,
-      employeePayrollQuery
+      employeeRecentLeavesQuery
     ]);
 
     const empCount = (empResult[0] as any[])[0].count;
@@ -144,33 +136,6 @@ export async function GET(req: NextRequest) {
       recentLeaves = userRecentResult[0] as any[];
     }
 
-    const MONTHS_TH = [
-      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
-    ];
-
-    let payrollSummary = null;
-    if (empId) {
-      const payrollRows = userPayrollResult[0] as any[];
-      if (payrollRows.length > 0) {
-        payrollSummary = {
-          currentNetSalary: Number(payrollRows[0].currentNetSalary || 0),
-          paymentDate: payrollRows[0].status === 'Paid' ? 'โอนเข้าบัญชีสำเร็จ' : 'รอสั่งจ่าย',
-          history: payrollRows.slice(0, 3).map((r: any) => ({
-            month: `${MONTHS_TH[r.pay_month - 1]} ${r.pay_year}`,
-            amount: Number(r.currentNetSalary || 0),
-            date: r.status === 'Paid' ? 'โอนเงินแล้ว' : 'ยังไม่ระบุ'
-          }))
-        };
-      } else {
-        payrollSummary = {
-          currentNetSalary: 0,
-          paymentDate: '-',
-          history: []
-        };
-      }
-    }
-
     return NextResponse.json({
       empCount,
       leaveTodayCount,
@@ -181,8 +146,7 @@ export async function GET(req: NextRequest) {
       expiringLicenses,
       expiredLicenses,
       leaveStats,
-      recentLeaves,
-      payrollData: payrollSummary
+      recentLeaves
     });
 
   } catch (err: unknown) {

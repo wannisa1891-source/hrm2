@@ -259,7 +259,6 @@ export default function DashboardPage() {
             <UserDashboard
               user={user}
               leaveStats={dashboardData?.leaveStats || { vacation: { remain: 0, used: 0, raw: 0 }, personal: { remain: 0, used: 0, raw: 0 }, sick: { remain: 0, used: 0, raw: 0 } }}
-              payrollData={dashboardData?.payrollData}
               recentLeaves={dashboardData?.recentLeaves || []}
               newsList={announcements}
               onSelectNews={setSelectedNews}

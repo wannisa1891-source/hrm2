@@ -18,7 +18,7 @@ export async function GET() {
       pool.query(`
         SELECT e.* 
         FROM tbl_employees e
-        ORDER BY e.emp_id DESC
+        ORDER BY e.emp_id ASC
       `),
       pool.query(`
         SELECT * FROM tbl_employee_licenses
