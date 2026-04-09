@@ -1205,14 +1205,25 @@ function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
     }
   }, [isOpen]);
   const statusOptions = [
-    { value: 'Active', label: 'ทำงานปกติ', color: '#16a34a', bg: '#dcfce7' },
-    { value: 'Probation', label: 'ทดลองงาน', color: '#a16207', bg: '#fef9c3' },
-    { value: 'Inactive', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
-    { value: 'Resigned', label: 'ลาออก/พ้นสภาพ', color: '#ef4444', bg: '#fee2e2' },
-    { value: 'Terminated', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
+    { value: 'ทำงานปกติ', label: 'ทำงานปกติ', color: '#16a34a', bg: '#dcfce7' },
+    { value: 'ทดลองงาน', label: 'ทดลองงาน', color: '#a16207', bg: '#fef9c3' },
+    { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
+    { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ', color: '#ef4444', bg: '#fee2e2' },
+    { value: 'ให้ออก', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
   ];
 
-  const currentStatus = statusOptions.find(o => o.value === emp.status || o.label === emp.status) || statusOptions[0];
+  // Map legacy English values to Thai labels for display
+  const statusMapping: { [key: string]: string } = {
+    'Active': 'ทำงานปกติ',
+    'Probation': 'ทดลองงาน',
+    'Inactive': 'หยุดปฏิบัติงาน',
+    'Resigned': 'ลาออก/พ้นสภาพ',
+    'Terminated': 'ให้ออก'
+  };
+
+  const currentStatus = statusOptions.find(o => o.value === emp.status || o.label === emp.status) || 
+                        statusOptions.find(o => o.value === statusMapping[emp.status]) || 
+                        statusOptions[0];
 
   const handleUpdate = async (newStatus: string) => {
     if (newStatus === emp.status) {

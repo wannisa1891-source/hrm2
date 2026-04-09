@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
@@ -108,24 +108,150 @@ function addYears(dateStr: string, years: number) {
    return d.toISOString().split('T')[0];
 }
 
-// Helper to find issuer link based on license string
-function findIssuerLink(licenseName: string) {
-   const name = licenseName.toLowerCase();
-   if (name.includes('พยาบาล')) return COUNCIL_LINKS['สภาการพยาบาล'];
-   if (name.includes('แพทย์') && !name.includes('เทคนิค') && !name.includes('รังสี') && !name.includes('แผนไทย')) return COUNCIL_LINKS['แพทยสภา'];
-   if (name.includes('เภสัช')) return COUNCIL_LINKS['สภาเภสัชกรรม'];
-   if (name.includes('เทคนิคการแพทย์')) return COUNCIL_LINKS['สภาเทคนิคการแพทย์'];
-   if (name.includes('กายภาพบำบัด')) return COUNCIL_LINKS['สภากายภาพบำบัด'];
-   if (name.includes('ทันต')) return COUNCIL_LINKS['ทันตแพทยสภา'];
-   if (name.includes('วิศวกร')) return COUNCIL_LINKS['สภาวิศวกร'];
-   if (name.includes('ครู') || name.includes('สอน')) return COUNCIL_LINKS['คุรุสภา'];
-   if (name.includes('รังสี')) return COUNCIL_LINKS['คณะกรรมการวิชาชีพสาขารังสีเทคนิค'];
-   if (name.includes('ฉุกเฉิน') || name.includes('สพฉ')) return COUNCIL_LINKS['สถาบันการแพทย์ฉุกเฉินแห่งชาติ (สพฉ.)'];
+// --- Sub-components (Internal) ---
 
-   for (const [key, url] of Object.entries(COUNCIL_LINKS)) {
-      if (licenseName.includes(key.replace('สภา', '')) || licenseName.includes(key)) return url;
+function findIssuerLink(licenseName: string) {
+   if (!licenseName) return null;
+   for (let key in COUNCIL_LINKS) {
+      if (licenseName.includes(key) || key.includes(licenseName)) return COUNCIL_LINKS[key];
    }
    return null;
+}
+
+// --- Sub-components (Internal) ---
+function StatusBadge({ label, color, bg, fontSize = '11px', padding = '8px 20px' }: { label: string, color: string, bg: string, fontSize?: string, padding?: string }) {
+   return (
+      <span style={{ 
+         padding, 
+         borderRadius: '50px', 
+         fontSize, 
+         fontWeight: 900, 
+         background: bg, 
+         color, 
+         display: 'inline-flex', 
+         alignItems: 'center', 
+         gap: '6px',
+         whiteSpace: 'nowrap'
+      }}>
+         {label}
+      </span>
+   );
+}
+
+function EmployeeSidebar({ emp, license, isView = false }: { emp: any, license?: License, isView?: boolean }) {
+   if (!emp) return null;
+   return (
+      <div style={{ width: isView ? '320px' : '340px', background: '#fff', borderRight: '1px solid #e2e8f0', padding: '48px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', overflowY: 'auto' }}>
+         <div style={{ width: isView ? '160px' : '120px', height: isView ? '160px' : '120px', borderRadius: isView ? '40px' : '32px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: isView ? '8px solid #fff' : '4px solid #fff', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+            {emp.image || emp.photo ? (
+               <img
+                  src={`/uploads/${emp.image || emp.photo}`}
+                  alt="profile"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'; }}
+               />
+            ) : (
+               <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+            )}
+         </div>
+
+         <div style={{ textAlign: 'center', width: '100%' }}>
+            <h3 style={{ margin: 0, fontSize: isView ? '22px' : '18px', fontWeight: 800, color: '#0f172a' }}>{emp.first_name_th} {emp.last_name_th}</h3>
+            <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#64748b', fontWeight: 600 }}>{emp.emp_id}</p>
+         </div>
+
+         <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px', background: '#f8fafc', padding: '24px', borderRadius: '28px', border: '1px solid #e2e8f0' }}>
+            <div>
+               <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>ตำแหน่ง</div>
+               <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{emp.position_name || emp.pos_name || '-'}</div>
+            </div>
+            <div>
+               <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>แผนก</div>
+               <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{emp.dept_name || '-'}</div>
+            </div>
+            {isView && (
+               <div style={{ gridColumn: 'span 2', marginTop: '4px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
+                  <div style={{ fontSize: '11px', color: '#2563eb', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>คะแนนสะสม CNEU/CME (Global)</div>
+                  <div style={{ fontSize: '20px', fontWeight: 900, color: '#1e40af' }}>{emp.cneu_cme_points || '0.00'}</div>
+               </div>
+            )}
+         </div>
+
+         {!isView && license && (
+            <div style={{ background: '#fffbeb', padding: '24px', borderRadius: '24px', border: '1px solid #fde68a', width: '100%' }}>
+               <div style={{ fontSize: '13px', fontWeight: 800, color: '#b45309', marginBottom: '16px' }}>ข้อมูลปัจจุบันในระบบ</div>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                     <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>เลขที่ใบอนุญาต</div>
+                     <div style={{ fontSize: '16px', fontWeight: 900, fontFamily: 'monospace' }}>{license.license_no}</div>
+                  </div>
+                  <div>
+                     <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>วันหมดอายุเดิม</div>
+                     <div style={{ fontSize: '15px', fontWeight: 800 }}>{license.expires || '-'}</div>
+                  </div>
+               </div>
+            </div>
+         )}
+         
+         {isView && license && (
+            <div style={{ marginTop: 'auto', background: '#ecfdf5', padding: '20px', borderRadius: '24px', border: '1px solid #def7ec', width: '100%' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }}></div>
+                  </div>
+                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#065f46' }}>ข้อมูลยืนยันจากส่วนกลาง</span>
+               </div>
+               <p style={{ margin: 0, fontSize: '12px', color: '#047857', lineHeight: '1.6', fontWeight: 500 }}>
+                  ใช้สำหรับตรวจสอบข้อมูลของ {license.type || license.license_name} จากฐานข้อมูลวิชาชีพ
+               </p>
+            </div>
+         )}
+      </div>
+   );
+}
+
+function HistoryTable({ data, emptyText = 'ไม่พบประวัติย้อนหลัง' }: { data: License[], emptyText?: string }) {
+   return (
+      <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+         <thead>
+            <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase' }}>
+               <th style={{ padding: '0 16px' }}>เลขใบอนุญาต</th>
+               <th style={{ width: '220px', whiteSpace: 'nowrap' }}>วิชาชีพ</th>
+               <th>หมดอายุ</th>
+               <th style={{ textAlign: 'right', paddingRight: '16px' }}>ไฟล์</th>
+            </tr>
+         </thead>
+         <tbody>
+            {data.map((h, idx) => {
+               const dExp = h.expire_date ? new Date(h.expire_date) : null;
+               const expStr = dExp ? dExp.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+               const isImage = h.file_path?.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+               const hStat = getStatus(h);
+
+               return (
+                  <tr key={idx} style={{ background: '#fff', borderRadius: '14px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+                     <td style={{ padding: '16px', fontWeight: 800, fontFamily: 'monospace', fontSize: '14px', borderTopLeftRadius: '14px', borderBottomLeftRadius: '14px' }}>{h.license_no}</td>
+                     <td style={{ fontWeight: 800, fontSize: '13px' }}>{h.license_name || h.type}</td>
+                     <td style={{ fontWeight: 800, fontSize: '13px', color: '#dc2626' }}>{expStr}</td>
+                     <td style={{ textAlign: 'right', paddingRight: '16px', borderTopRightRadius: '14px', borderBottomRightRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', padding: '10px' }}>
+                        {h.file_path && (
+                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              {isImage && (
+                                 <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                    <img src={h.file_path} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                 </div>
+                              )}
+                              <a href={h.file_path} target="_blank" rel="noreferrer" style={{ color: '#2563eb', fontWeight: 900, fontSize: '12px', background: '#eff6ff', padding: '6px 12px', borderRadius: '8px', textDecoration: 'none' }}>เปิดดู</a>
+                           </div>
+                        )}
+                     </td>
+                  </tr>
+               );
+            })}
+            {data.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', background: '#fff', borderRadius: '16px' }}>{emptyText}</td></tr>}
+         </tbody>
+      </table>
+   );
 }
 
 // --- Custom UI Components ---
@@ -505,7 +631,7 @@ export default function LicensePage() {
 
    return (
       <AppLayout>
-         <div style={{ padding: '32px', minHeight: '100vh', background: '#f8fafc', color: '#1e293b', fontFamily: '"Anuphan", "Prompt", sans-serif' }}>
+         <div style={{ padding: '32px', minHeight: '100vh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Anuphan, Prompt, sans-serif' }}>
 
             {/* Main Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
@@ -588,7 +714,7 @@ export default function LicensePage() {
                                     <td style={{ color: '#64748b', fontFamily: 'monospace' }}>{l.license_no || '-'}</td>
                                     <td style={{ fontWeight: 700 }}>{l.expires || '-'}</td>
                                     <td>
-                                       <span style={{ padding: '8px 20px', borderRadius: '50px', fontSize: '11px', fontWeight: 900, background: stat.bg, color: stat.color }}>{stat.label}</span>
+                                       <StatusBadge {...stat} />
                                     </td>
                                     <td style={{ textAlign: 'right', paddingRight: '16px' }}>
                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -755,87 +881,12 @@ export default function LicensePage() {
 
                         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-                           {/* Sidebar (Left) - ข้อมูลบุคลากรและข้อมูลเดิม */}
-                           <div style={{ width: '340px', background: '#fff', borderRight: '1px solid #e2e8f0', padding: '48px 32px', display: 'flex', flexDirection: 'column', gap: '28px', overflowY: 'auto' }}>
-                              <div style={{ marginBottom: '8px' }}>
-                                 <div style={{ fontSize: '13px', fontWeight: 800, color: '#0d9488', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px' }}>รายละเอียดผู้ประกอบ</div>
-                                 <div style={{ width: '120px', height: '120px', borderRadius: '32px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', overflow: 'hidden', border: '4px solid #fff', boxShadow: '0 8px 20px rgba(0,0,0,0.05)' }}>
-                                    {currentEmp?.image || currentEmp?.photo ? (
-                                       <img
-                                          src={`/uploads/${currentEmp.image || currentEmp.photo}`}
-                                          alt="profile"
-                                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                          onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'; }}
-                                       />
-                                    ) : (
-                                       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                                    )}
-                                 </div>
-                                 {activeModal === 'add' && !formData.emp_id ? (
-                                    <div style={{ position: 'relative' }}>
-                                       <input
-                                          placeholder="พิมพ์ชื่อหรือรหัสพนักงานเพื่อค้นหา..."
-                                          value={searchTermEmp}
-                                          onChange={e => setSearchTermEmp(e.target.value)}
-                                          style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', fontWeight: 700, outline: 'none', background: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
-                                       />
-                                       {searchTermEmp && !formData.emp_id && filteredEmp.length > 0 && (
-                                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', borderRadius: '24px', boxShadow: '0 15px 35px rgba(0,0,0,0.1)', zIndex: 10, marginTop: '8px', overflow: 'hidden', border: '1px solid #f1f5f9', padding: '8px' }}>
-                                             {filteredEmp.map(e => (
-                                                <div key={e.emp_id} onClick={() => {
-                                                   const req = checkRequirement(e.emp_id);
-                                                   setFormData({ ...formData, emp_id: e.emp_id, license_name: req?.license_name || '' });
-                                                   setSearchTermEmp(`${e.first_name_th} ${e.last_name_th} (${e.emp_id})`);
-                                                }} style={{ padding: '12px 20px', cursor: 'pointer', borderRadius: '16px', fontSize: '13px', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#f8fafc'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
-                                                   <div style={{ fontWeight: 800 }}>{e.first_name_th} {e.last_name_th}</div>
-                                                   <div style={{ fontSize: '11px', color: '#64748b' }}>{e.dept_name} • {e.emp_id}</div>
-                                                </div>
-                                             ))}
-                                          </div>
-                                       )}
-                                    </div>
-                                 ) : (
-                                    <>
-                                       <div style={{ marginBottom: '16px' }}>
-                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', marginBottom: '4px' }}>ชื่อ-นามสกุล</div>
-                                          <div style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.first_name_th} {currentEmp?.last_name_th}</div>
-                                       </div>
-                                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                                          <div>
-                                             <div style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', marginBottom: '4px' }}>รหัสพนักงาน</div>
-                                             <div style={{ fontSize: '15px', fontWeight: 800 }}>{formData.emp_id || selectedLicense?.emp_id}</div>
-                                          </div>
-                                          <div>
-                                             <div style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', marginBottom: '4px' }}>ตำแหน่ง</div>
-                                             <div style={{ fontSize: '14px', fontWeight: 800 }}>{currentEmp?.pos_name || '-'}</div>
-                                          </div>
-                                       </div>
-                                    </>
-                                 )}
-                              </div>
-
-                              {activeModal !== 'add' && selectedLicense && (
-                                 <div style={{ background: '#fffbeb', padding: '24px', borderRadius: '24px', border: '1px solid #fde68a' }}>
-                                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#b45309', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                       <span>ข้อมูลปัจจุบันในระบบ</span>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                       <div>
-                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>สภาวิชาชีพเดิม</div>
-                                          <div style={{ fontSize: '14px', fontWeight: 700 }}>{selectedLicense.issuer || selectedLicense.institution || '-'}</div>
-                                       </div>
-                                       <div>
-                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>เลขที่ใบอนุญาต</div>
-                                          <div style={{ fontSize: '16px', fontWeight: 900, fontFamily: 'monospace' }}>{selectedLicense.license_no}</div>
-                                       </div>
-                                       <div>
-                                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', marginBottom: '4px' }}>วันหมดอายุ</div>
-                                          <div style={{ fontSize: '15px', fontWeight: 800 }}>{selectedLicense.expires || '-'}</div>
-                                       </div>
-                                    </div>
-                                 </div>
-                              )}
-                           </div>
+                           {/* Sidebar (Left) */}
+                           <EmployeeSidebar
+                              emp={currentEmp}
+                              license={selectedLicense || undefined}
+                              isView={false}
+                           />
 
                            {/* Main Content (Right) - ฟอร์มกรอกข้อมูลใหม่ */}
                            <div style={{ flex: 1, padding: '48px 64px', overflowY: 'auto', background: '#f8fafc', position: 'relative' }}>
@@ -931,44 +982,7 @@ export default function LicensePage() {
 
                                     {isHistoryExpanded && (
                                        <div style={{ marginTop: '20px', animation: 'fadeIn 0.4s ease-out' }}>
-                                          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
-                                             <thead>
-                                                <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase' }}>
-                                                   <th style={{ padding: '0 16px' }}>เลขใบอนุญาต</th>
-                                                   <th style={{ width: '220px', whiteSpace: 'nowrap' }}>วิชาชีพ</th>
-                                                   <th>หมดอายุ</th>
-                                                   <th style={{ textAlign: 'right', paddingRight: '16px' }}>ไฟล์</th>
-                                                </tr>
-                                             </thead>
-                                             <tbody>
-                                                {historyData.map((h, idx) => {
-                                                   const dExp = h.expire_date ? new Date(h.expire_date) : null;
-                                                   const expStr = dExp ? dExp.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
-                                                   const isImage = h.file_path?.match(/\.(jpg|jpeg|png|webp|gif)$/i);
-
-                                                   return (
-                                                      <tr key={idx} style={{ background: '#fff', borderRadius: '14px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
-                                                         <td style={{ padding: '16px', fontWeight: 800, fontFamily: 'monospace', fontSize: '14px', borderTopLeftRadius: '14px', borderBottomLeftRadius: '14px' }}>{h.license_no}</td>
-                                                         <td style={{ fontWeight: 800, fontSize: '13px' }}>{h.license_name}</td>
-                                                         <td style={{ fontWeight: 800, fontSize: '13px', color: '#dc2626' }}>{expStr}</td>
-                                                         <td style={{ textAlign: 'right', paddingRight: '16px', borderTopRightRadius: '14px', borderBottomRightRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', padding: '10px' }}>
-                                                            {h.file_path && (
-                                                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                                  {isImage && (
-                                                                     <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                                                                        <img src={h.file_path} alt="license preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                                     </div>
-                                                                  )}
-                                                                  <a href={h.file_path} target="_blank" rel="noreferrer" style={{ color: '#2563eb', fontWeight: 900, fontSize: '12px', background: '#eff6ff', padding: '6px 12px', borderRadius: '8px', textDecoration: 'none' }}>เปิดดู</a>
-                                                               </div>
-                                                            )}
-                                                         </td>
-                                                      </tr>
-                                                   );
-                                                })}
-                                                {historyData.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', background: '#fff', borderRadius: '16px' }}>ไม่พบประวัติย้อนหลัง</td></tr>}
-                                             </tbody>
-                                          </table>
+                                          <HistoryTable data={historyData} />
                                        </div>
                                     )}
                                  </div>
@@ -994,63 +1008,13 @@ export default function LicensePage() {
                         {/* Content Body (No Header Banner as requested) */}
                         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-                           {/* Sidebar (Left) */}
-                           <div style={{ width: '320px', background: '#fff', borderRight: '1px solid #e2e8f0', padding: '48px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
-                              <div style={{ width: '160px', height: '160px', borderRadius: '40px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: '8px solid #fff', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                                 {currentEmp?.image || currentEmp?.photo ? (
-                                    <img
-                                       src={`/uploads/${currentEmp.image || currentEmp.photo}`}
-                                       alt="profile"
-                                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                       onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'; }}
-                                    />
-                                 ) : (
-                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                                 )}
-                              </div>
+                           <EmployeeSidebar
+                              emp={currentEmp}
+                              license={selectedLicense}
+                              isView={true}
+                           />
 
-                              <div style={{ textAlign: 'center' }}>
-                                 <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.first_name_th} {currentEmp?.last_name_th}</h3>
-                                 <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#64748b', fontWeight: 600 }}>
-                                    {currentEmp?.image || currentEmp?.photo ? 'รูปภาพโปรไฟล์ผู้ประกอบวิชาชีพ' : 'ไม่พบรูปภาพในกะบบ'}
-                                 </p>
-                              </div>
 
-                              <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px', background: '#f8fafc', padding: '24px', borderRadius: '28px', border: '1px solid #e2e8f0' }}>
-                                 <div>
-                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>รหัสพนักงาน</div>
-                                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.emp_id || '-'}</div>
-                                 </div>
-                                 <div>
-                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>ตำแหน่ง</div>
-                                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.position_name || currentEmp?.pos_name || '-'}</div>
-                                 </div>
-                                 <div>
-                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>แผนก</div>
-                                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.dept_name || '-'}</div>
-                                 </div>
-                                 <div>
-                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>ประเภทการจ้าง</div>
-                                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.emp_type || '-'}</div>
-                                 </div>
-                                 <div style={{ gridColumn: 'span 2', marginTop: '4px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
-                                    <div style={{ fontSize: '11px', color: '#2563eb', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>คะแนนสะสม CNEU/CME (Global)</div>
-                                    <div style={{ fontSize: '20px', fontWeight: 900, color: '#1e40af' }}>{currentEmp?.cneu_cme_points || '0.00'}</div>
-                                 </div>
-                              </div>
-
-                              <div style={{ marginTop: 'auto', background: '#ecfdf5', padding: '20px', borderRadius: '24px', border: '1px solid #def7ec' }}>
-                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }}></div>
-                                    </div>
-                                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#065f46' }}>ข้อมูลจากระบบตรวจสอบสารสนเทศสโมสร</span>
-                                 </div>
-                                 <p style={{ margin: 0, fontSize: '12px', color: '#047857', lineHeight: '1.6', fontWeight: 500 }}>
-                                    ใช้สำหรับยืนยันข้อมูลเบื้องต้นของผู้ประกอบวิชาชีพ {selectedLicense.type || selectedLicense.license_name} จากฐานข้อมูลปัจจุบันที่ได้รับรายงาน
-                                 </p>
-                              </div>
-                           </div>
 
                            {/* Main Content (Right) */}
                            <div style={{ flex: 1, padding: '48px 64px', overflowY: 'auto', background: '#f8fafc', position: 'relative' }}>
@@ -1066,7 +1030,7 @@ export default function LicensePage() {
                                  </div>
                                  <div style={{ background: '#fff', padding: '12px 24px', borderRadius: '18px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', textAlign: 'right', flexShrink: 0, marginTop: '8px' }}>
                                     <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>สถานะใบอนุญาต</div>
-                                    <div style={{ color: stat.color, fontWeight: 900, fontSize: '14px', padding: '4px 12px', borderRadius: '8px', background: stat.bg, display: 'inline-block' }}>{stat.label}</div>
+                                    <StatusBadge {...stat} fontSize="14px" padding="4px 12px" />
                                  </div>
                               </div>
 
@@ -1164,55 +1128,10 @@ export default function LicensePage() {
 
                                  {isHistoryExpanded && (
                                     <div style={{ marginTop: '24px', animation: 'fadeIn 0.4s ease-out' }}>
+                                       <div style={{ marginBottom: '24px', display: 'flex', gap: '12px' }}>
                                           <button onClick={() => handleOpenModal('renew', selectedLicense)} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 48px', borderRadius: '16px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.2)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>ต่ออายุใบอนุญาต</button>
-                                          <button onClick={() => setActiveModal('none')} style={{ background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', padding: '14px 28px', borderRadius: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg>
-                                             กลับไปหน้าค้นหา
-                                          </button>
-                                       <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 10px' }}>
-                                          <thead>
-                                             <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                <th style={{ padding: '0 24px', whiteSpace: 'nowrap' }}>เลขใบอนุญาต</th>
-                                                <th style={{ whiteSpace: 'nowrap' }}>ประเภทวิชาชีพ</th>
-                                                <th style={{ whiteSpace: 'nowrap' }}>วันหมดอายุ</th>
-                                                <th style={{ whiteSpace: 'nowrap' }}>สถานะ</th>
-                                                <th style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>เอกสาร</th>
-                                             </tr>
-                                          </thead>
-                                          <tbody>
-                                             {historyData.map((h, idx) => {
-                                                const dExp = h.expire_date ? new Date(h.expire_date) : null;
-                                                const expStr = dExp ? dExp.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
-                                                const isImage = h.file_path?.match(/\.(jpg|jpeg|png|webp|gif)$/i);
-
-                                                return (
-                                                   <tr key={idx} style={{ background: '#fff', borderRadius: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                                                      <td style={{ padding: '20px 24px', fontWeight: 900, fontFamily: 'monospace', fontSize: '15px', color: '#0f172a', borderTopLeftRadius: '18px', borderBottomLeftRadius: '18px' }}>{h.license_no}</td>
-                                                      <td style={{ fontWeight: 800, color: '#475569', whiteSpace: 'nowrap' }}>{h.license_name}</td>
-                                                      <td style={{ fontWeight: 800, color: '#dc2626' }}>{expStr}</td>
-                                                      <td>
-                                                         <span style={{ padding: '6px 14px', borderRadius: '50px', fontSize: '10px', fontWeight: 900, background: h.verified_status === 'Verified' ? '#dcfce7' : '#f1f5f9', color: h.verified_status === 'Verified' ? '#16a34a' : '#64748b' }}>
-                                                            {h.verified_status === 'Verified' ? 'ตรวจสอบแล้ว' : 'รอตรวจสอบ'}
-                                                         </span>
-                                                      </td>
-                                                      <td style={{ textAlign: 'right', paddingRight: '24px', borderTopRightRadius: '18px', borderBottomRightRadius: '18px' }}>
-                                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px' }}>
-                                                            {h.file_path && isImage && (
-                                                               <div style={{ width: '48px', height: '48px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                                                                  <img src={h.file_path} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                               </div>
-                                                            )}
-                                                            {h.file_path && (
-                                                               <a href={h.file_path} target="_blank" rel="noreferrer" style={{ background: '#f8fafc', color: '#2563eb', padding: '8px 16px', borderRadius: '10px', fontWeight: 900, textDecoration: 'none', fontSize: '12px', border: '1px solid #e2e8f0' }}>เปิดไฟล์</a>
-                                                            )}
-                                                         </div>
-                                                      </td>
-                                                   </tr>
-                                                );
-                                             })}
-                                             {historyData.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8', background: '#fff', borderRadius: '24px', fontWeight: 800 }}>ไม่พบประวัติการขึ้นทะเบียนสำหรับพนักงานท่านนี้</td></tr>}
-                                          </tbody>
-                                       </table>
+                                       </div>
+                                       <HistoryTable data={historyData} emptyText="ไม่พบประวัติการขึ้นทะเบียนสำหรับพนักงานท่านนี้" />
                                     </div>
                                  )}
                               </div>

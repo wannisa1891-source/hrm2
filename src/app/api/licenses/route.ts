@@ -29,7 +29,9 @@ export async function GET(req: NextRequest) {
         l.status as license_status,
         l.file_path,
         l.verified_status,
-        l.points
+        l.points,
+        l.remarks,
+        l.warning_days_override
       FROM tbl_employees e
       JOIN tbl_employee_licenses l ON e.emp_id = l.emp_id
       WHERE l.id IN (SELECT MAX(id) FROM tbl_employee_licenses GROUP BY emp_id, license_name)
@@ -78,8 +80,9 @@ export async function GET(req: NextRequest) {
         issued: row.issue_date ? new Date(row.issue_date).toLocaleDateString('en-CA') : '-',
         expires: row.expire_date ? new Date(row.expire_date).toLocaleDateString('en-CA') : '-',
         daysLeft: daysLeft ?? 9999,
-        points: row.cneu_cme_points || 0,
+        points: row.points || row.cneu_cme_points || 0,
         status: row.license_status || 'Active',
+        verified_status: row.verified_status || 'Pending',
         license_name: row.license_name || '',
         license_type: row.license_type || '',
         institution: row.institution || '',
