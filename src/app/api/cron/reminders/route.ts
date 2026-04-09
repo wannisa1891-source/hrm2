@@ -62,37 +62,37 @@ export async function GET() {
         console.log(`Notifying ${row.emp_id} - ${row.license_name} - ${diffDays} days left`);
         
         const mailOptions = {
-          from: `"HR Compliance System" <${process.env.SMTP_USER}>`,
+          from: `"ฝ่ายทรัพยากรบุคคล (HR)" <${process.env.SMTP_USER}>`,
           to: row.email,
-          subject: `Formal Notification: Professional License Expiration in ${diffDays} Days`,
+          subject: `แจ้งเตือน: ใบประกอบวิชาชีพของคุณจะหมดอายุในอีก ${diffDays} วัน`,
           html: `
-            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+            <div style="font-family: 'Prompt', 'Inter', sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
               <div style="background: #0f172a; padding: 32px; color: #fff; text-align: center;">
-                <h1 style="margin: 0; font-size: 24px;">Professional Compliance Notification</h1>
-                <p style="margin: 8px 0 0 0; opacity: 0.7;">Automated Surveillance Engine</p>
+                <h1 style="margin: 0; font-size: 24px;">แจ้งเตือนการตรวจสอบใบประกอบวิชาชีพ</h1>
+                <p style="margin: 8px 0 0 0; opacity: 0.7;">ระบบตรวจสอบและจัดการข้อมูลอัตโนมัติ</p>
               </div>
               <div style="padding: 40px; color: #1e293b; line-height: 1.6;">
-                <p>Dear <strong>${row.first_name_th} ${row.last_name_th}</strong>,</p>
-                <p>Our records indicate that your professional license is approaching its expiration date. This is an automated notification to ensure you remain compliant with institutional and regulatory standards.</p>
+                <p>เรียน คุณ <strong>${row.first_name_th} ${row.last_name_th}</strong>,</p>
+                <p>จากการตรวจสอบข้อมูลในระบบบริหารจัดการทรัพยากรบุคคล พบว่าใบประกอบวิชาชีพของคุณกำลังจะหมดอายุลง เพื่อให้การปฏิบัติงานเป็นไปตามมาตรฐานวิชาชีพและกฎระเบียบขององค์กร โปรดดำเนินการตรวจสอบรายละเอียดดังนี้:</p>
                 
                 <div style="background: #f8fafc; padding: 24px; border-radius: 8px; margin: 24px 0; border: 1px solid #e2e8f0;">
-                  <h3 style="margin: 0 0 16px 0; color: #0f172a;">License Compliance Details</h3>
+                  <h3 style="margin: 0 0 16px 0; color: #0f172a;">รายละเอียดข้อมูลใบประกอบ</h3>
                   <table style="width: 100%; border-collapse: collapse;">
-                    <tr><td style="padding: 8px 0; color: #64748b;">License:</td><td style="font-weight: 700;">${row.license_name}</td></tr>
-                    <tr><td style="padding: 8px 0; color: #64748b;">License No:</td><td style="font-weight: 700;">${row.license_no}</td></tr>
-                    <tr><td style="padding: 8px 0; color: #64748b;">Expiry Date:</td><td style="font-weight: 700; color: #dc2626;">${row.expire_date}</td></tr>
-                    <tr><td style="padding: 8px 0; color: #64748b;">Status:</td><td style="font-weight: 700; color: #ca8a04;">Expires in ${diffDays} days</td></tr>
+                    <tr><td style="padding: 8px 0; color: #64748b;">ชื่อใบประกอบ:</td><td style="font-weight: 700;">${row.license_name}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #64748b;">เลขที่ใบอนุญาต:</td><td style="font-weight: 700;">${row.license_no}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #64748b;">วันที่หมดอายุ:</td><td style="font-weight: 700; color: #dc2626;">${row.expire_date}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #64748b;">สถานะ:</td><td style="font-weight: 700; color: #ca8a04;">เหลืออีก ${diffDays} วัน</td></tr>
                   </table>
                 </div>
 
-                <p>Please initiate the renewal process immediately. Once renewed, please upload the new certificate to the HR portal to maintain your active status.</p>
+                <p>ขอความกรุณาให้คุณเริ่มดำเนินการต่ออายุใบอนุญาตดังกล่าวโดยเร็ว และเมื่อดำเนินการเสร็จเรียบร้อยแล้ว โปรดแนบไฟล์เอกสารใบใหม่เข้าระบบเพื่อปรับปรุงฐานข้อมูลให้เป็นปัจจุบันด้วยครับ/ค่ะ</p>
                 
                 <div style="text-align: center; margin-top: 32px;">
-                  <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/license" style="background: #0f172a; color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 800; display: inline-block;">Upload New License Data</a>
+                  <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/license" style="background: #0f172a; color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 800; display: inline-block;">คลิกเพื่ออัปเดตข้อมูลใบประกอบ</a>
                 </div>
               </div>
               <div style="background: #f1f5f9; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0;">
-                Institutional Compliance Management - Human Resources Division
+                ระบบบริหารจัดการความสอดคล้องทางวิชาชีพ - ฝ่ายทรัพยากรบุคคล
               </div>
             </div>
           `,

@@ -15,8 +15,10 @@ export async function POST(req: NextRequest) {
     const license_name = formData.get('license_name') as string;
     const license_type = formData.get('license_type') as string;
     const institution = formData.get('institution') as string;
+    const issuer = formData.get('issuer') as string;
     const issue_date = formData.get('issue_date') as string;
     const remarks = formData.get('remarks') as string;
+    const warning_days_override = formData.get('warning_days_override') as string;
     const verified_status = formData.get('verified_status') as string;
     const file = formData.get('file') as File;
 
@@ -49,9 +51,14 @@ export async function POST(req: NextRequest) {
       
       const missing = [];
       if (!columnNames.includes('institution')) missing.push("ADD COLUMN institution VARCHAR(255) AFTER license_no");
-      if (!columnNames.includes('issue_date')) missing.push("ADD COLUMN issue_date DATE AFTER institution");
+      if (!columnNames.includes('issuer')) missing.push("ADD COLUMN issuer VARCHAR(255) AFTER institution");
+      if (!columnNames.includes('issue_date')) missing.push("ADD COLUMN issue_date DATE AFTER issuer");
+      if (!columnNames.includes('points')) missing.push("ADD COLUMN points DECIMAL(10,2) DEFAULT 0.00 AFTER issue_date");
       if (!columnNames.includes('verified_status')) missing.push("ADD COLUMN verified_status VARCHAR(50) DEFAULT 'Pending' AFTER expire_date");
-      if (!columnNames.includes('remarks')) missing.push("ADD COLUMN remarks TEXT AFTER verified_status");
+      if (!columnNames.includes('verified_at')) missing.push("ADD COLUMN verified_at DATETIME AFTER verified_status");
+      if (!columnNames.includes('verified_by')) missing.push("ADD COLUMN verified_by VARCHAR(100) AFTER verified_at");
+      if (!columnNames.includes('remarks')) missing.push("ADD COLUMN remarks TEXT AFTER verified_by");
+      if (!columnNames.includes('warning_days_override')) missing.push("ADD COLUMN warning_days_override INT AFTER remarks");
 
       if (missing.length > 0) {
         console.log(`Self-healing: Adding ${missing.length} missing columns...`);
@@ -59,6 +66,8 @@ export async function POST(req: NextRequest) {
       }
 
       await connection.beginTransaction();
+
+      const points = formData.get('points') as string;
 
       if (license_id) {
         console.log('Action: Renewal for License ID', license_id);
@@ -68,26 +77,26 @@ export async function POST(req: NextRequest) {
         // 2. Insert NEW record as Active
         const insertQuery = `
           INSERT INTO tbl_employee_licenses 
-          (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, verified_status, remarks, file_path)
-          SELECT emp_id, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?
+          (emp_id, license_name, license_type, license_no, institution, issuer, issue_date, points, expire_date, status, verified_status, remarks, warning_days_override, file_path)
+          SELECT emp_id, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?
           FROM tbl_employee_licenses WHERE id = ?
         `;
         
         const values = [
-          license_name, license_type, license_no, institution, issue_date, expire_date, 
-          verified_status || 'Pending', remarks, filePath || null, license_id
+          license_name, license_type, license_no, institution, issuer, issue_date, points || 0, expire_date, 
+          verified_status || 'Pending', remarks, warning_days_override || null, filePath || null, license_id
         ];
         await connection.query(insertQuery, values);
       } else {
         console.log('Action: Initial Create for EMP', emp_id);
         const insertQuery = `
           INSERT INTO tbl_employee_licenses 
-          (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, verified_status, remarks, file_path)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?)
+          (emp_id, license_name, license_type, license_no, institution, issuer, issue_date, points, expire_date, status, verified_status, remarks, warning_days_override, file_path)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?)
         `;
         const values = [
-          emp_id, license_name, license_type, license_no, institution, issue_date, expire_date,
-          verified_status || 'Pending', remarks, filePath || null
+          emp_id, license_name, license_type, license_no, institution, issuer, issue_date, points || 0, expire_date,
+          verified_status || 'Pending', remarks, warning_days_override || null, filePath || null
         ];
         await connection.query(insertQuery, values);
       }
