@@ -128,6 +128,88 @@ function findIssuerLink(licenseName: string) {
   return null;
 }
 
+// --- Custom UI Components ---
+function ModernSelect({ 
+  value, 
+  onChange, 
+  options, 
+  placeholder = 'เลือก...', 
+  style = {} 
+}: { 
+  value: string | number, 
+  onChange: (val: any) => void, 
+  options: { value: string | number, label: string }[], 
+  placeholder?: string,
+  style?: React.CSSProperties
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedOption = options.find(o => String(o.value) === String(value));
+
+  return (
+    <div style={{ position: 'relative', flex: 1, ...style }}>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ 
+          padding: '14px 24px', 
+          borderRadius: '40px', 
+          background: '#fff', 
+          border: '1px solid #e2e8f0', 
+          cursor: 'pointer', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          fontWeight: 700,
+          fontSize: '14px',
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+          transition: 'all 0.2s',
+          minHeight: '48px'
+        }}
+      >
+        <span style={{ color: selectedOption ? '#0f172a' : '#94a3b8' }}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <svg 
+          width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" 
+          style={{ transition: 'transform 0.3s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0)' }}
+        >
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </div>
+      
+      {isOpen && (
+        <>
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 3999 }} 
+            onClick={() => setIsOpen(false)} 
+          />
+          <div style={{ 
+            position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, 
+            background: '#fff', borderRadius: '24px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.15)', 
+            zIndex: 4000, overflow: 'hidden', padding: '10px', border: '1px solid #f1f5f9',
+            maxHeight: '300px', overflowY: 'auto'
+          }}>
+            {options.map((opt, i) => (
+              <div 
+                key={i}
+                onClick={() => { onChange(opt.value); setIsOpen(false); }}
+                style={{ 
+                  padding: '12px 16px', borderRadius: '14px', cursor: 'pointer', fontSize: '14px', 
+                  fontWeight: 600, color: String(opt.value) === String(value) ? '#2563eb' : '#475569',
+                  background: String(opt.value) === String(value) ? '#eff6ff' : 'transparent',
+                }}
+                onMouseOver={e => e.currentTarget.style.background = String(opt.value) === String(value) ? '#eff6ff' : '#f8fafc'}
+                onMouseOut={e => e.currentTarget.style.background = String(opt.value) === String(value) ? '#eff6ff' : 'transparent'}
+              >
+                {opt.label}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function LicensePage() {
   const { user } = useAuth();
   
@@ -606,6 +688,7 @@ export default function LicensePage() {
            const selection = formData.emp_id ? checkRequirement(formData.emp_id) : null;
            const currentEmp = allEmployees.find(e => e.emp_id === (activeModal === 'add' ? formData.emp_id : selectedLicense?.emp_id));
            const checkLink = COUNCIL_LINKS[formData.issuer] || '';
+           const filteredEmp = allEmployees.filter(e => e.first_name_th?.includes(searchTermEmp) || e.emp_id?.includes(searchTermEmp));
            
            return (
               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
@@ -631,22 +714,27 @@ export default function LicensePage() {
                              </div>
                              {activeModal === 'add' && !formData.emp_id ? (
                                 <div style={{ position: 'relative' }}>
-                                   <input placeholder="ค้นหาพนักงาน..." value={searchTermEmp} onChange={e => { setSearchTermEmp(e.target.value); setFormData({...formData, emp_id: ''}); }} style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', outline: 'none', fontWeight: 700, fontSize: '14px' }} />
-                                   {searchTermEmp && (
-                                      <div style={{ position: 'absolute', top: '100%', left:0, right:0, background:'#fff', border:'1px solid #e2e8f0', borderRadius:'12px', marginTop:8, zIndex:100, boxShadow: '0 10px 15px rgba(0,0,0,0.1)' }}>
-                                         {allEmployees.filter(e => e.first_name_th?.includes(searchTermEmp) || e.emp_id?.includes(searchTermEmp)).slice(0, 5).map(e => (
-                                            <div key={e.emp_id} onClick={() => {
-                                               const req = checkRequirement(e.emp_id);
-                                               setFormData({...formData, emp_id: e.emp_id, license_name: req?.license_name || ''});
-                                               setSearchTermEmp(`${e.first_name_th} ${e.last_name_th} (${e.emp_id})`);
-                                            }} style={{ padding: '12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: '13px' }}>
-                                               <div style={{ fontWeight: 800 }}>{e.first_name_th} {e.last_name_th}</div>
-                                               <div style={{ fontSize: '11px', color: '#64748b' }}>{e.dept_name}</div>
-                                            </div>
-                                         ))}
-                                      </div>
-                                   )}
-                                </div>
+                                    <input 
+                                       placeholder="พิมพ์ชื่อหรือรหัสพนักงานเพื่อค้นหา..." 
+                                       value={searchTermEmp} 
+                                       onChange={e => setSearchTermEmp(e.target.value)} 
+                                       style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', fontWeight: 700, outline: 'none', background: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} 
+                                    />
+                                    {searchTermEmp && !formData.emp_id && filteredEmp.length > 0 && (
+                                       <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', borderRadius: '24px', boxShadow: '0 15px 35px rgba(0,0,0,0.1)', zIndex: 10, marginTop: '8px', overflow: 'hidden', border: '1px solid #f1f5f9', padding: '8px' }}>
+                                          {filteredEmp.map(e => (
+                                             <div key={e.emp_id} onClick={() => {
+                                                const req = checkRequirement(e.emp_id);
+                                                setFormData({...formData, emp_id: e.emp_id, license_name: req?.license_name || ''});
+                                                setSearchTermEmp(`${e.first_name_th} ${e.last_name_th} (${e.emp_id})`);
+                                             }} style={{ padding: '12px 20px', cursor: 'pointer', borderRadius: '16px', fontSize: '13px', transition: 'background 0.2s' }} onMouseOver={e=>e.currentTarget.style.background='#f8fafc'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                                                <div style={{ fontWeight: 800 }}>{e.first_name_th} {e.last_name_th}</div>
+                                                <div style={{ fontSize: '11px', color: '#64748b' }}>{e.dept_name} • {e.emp_id}</div>
+                                             </div>
+                                          ))}
+                                       </div>
+                                    )}
+                                 </div>
                              ) : (
                                 <>
                                    <div style={{ marginBottom: '16px' }}>
@@ -700,52 +788,54 @@ export default function LicensePage() {
                           </div>
 
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px', marginBottom: '32px' }}>
-                             <div style={{ gridColumn: 'span 2' }}>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>หน่วยงานสภาวิชาชีพ / ผู้ออกใบอนุญาต</label>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                   <select required value={formData.issuer} onChange={e => setFormData({...formData, issuer: e.target.value})} style={{ flex: 1, padding: '14px 20px', borderRadius: '16px', border: '1px solid #cbd5e1', background: '#fff', fontWeight: 700, fontSize: '14px', outline: 'none' }}>
-                                      <option value="">เลือกหน่วยงาน...</option>
-                                      {ISSUERS.map(i => <option key={i} value={i}>{i}</option>)}
-                                   </select>
-                                   {checkLink && (
-                                     <a href={checkLink} target="_blank" rel="noreferrer" style={{ background: '#3b82f6', color: '#fff', padding: '0 25px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap' }}>ตรวจสอบสภาฯ</a>
-                                   )}
-                                </div>
-                             </div>
-                             <div>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>เลขที่ใบอนุญาตใหม่</label>
-                                <input required value={formData.license_no} onChange={e => setFormData({...formData, license_no: e.target.value})} style={{ width: '100%', padding: '14px 20px', borderRadius: '16px', border: '1px solid #cbd5e1', fontWeight: 900, fontSize: '16px', outline: 'none' }} />
-                             </div>
-                             <div>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>หน่วยกิตสะสมล่าสุด</label>
-                                <input type="number" step="0.01" value={formData.points} onChange={e => setFormData({...formData, points: parseFloat(e.target.value)})} style={{ width: '100%', padding: '14px 20px', borderRadius: '16px', border: '1px solid #cbd5e1', fontWeight: 900, fontSize: '16px', outline: 'none' }} />
-                             </div>
-                             <div>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>วันที่ได้รับใบอนุญาต / วันออกบัตร</label>
-                                <input type="date" value={formData.issue_date} onChange={e => setFormData({...formData, issue_date: e.target.value})} style={{ width: '100%', padding: '14px 20px', borderRadius: '16px', border: '1px solid #cbd5e1', outline: 'none' }} />
-                             </div>
-                             <div>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>วันหมดอายุใหม่</label>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                   <input required type="date" value={formData.expire_date} onChange={e => setFormData({...formData, expire_date: e.target.value})} style={{ flex: 1, padding: '14px 20px', borderRadius: '16px', border: '2px solid #0f172a', fontWeight: 900, outline: 'none' }} />
-                                   <button type="button" onClick={() => setFormData({...formData, expire_date: addYears(formData.issue_date || new Date().toISOString(), 5)})} style={{ padding: '0 20px', borderRadius: '16px', background: '#0f172a', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 800 }}>+ 5 ปี</button>
-                                </div>
-                             </div>
-                             
-                             <div style={{ gridColumn: 'span 2' }}>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>ไฟล์หลักฐาน/ใบอนุญาต (PDF, JPG, PNG)</label>
-                                <div onClick={() => document.getElementById('fileX')?.click()} style={{ border: '2px dashed #cbd5e1', borderRadius: '24px', padding: '32px', textAlign: 'center', cursor: 'pointer', background: '#fff', transition: 'all 0.2s' }}>
-                                   <input id="fileX" type="file" hidden onChange={e => setSelectedFile(e.target.files?.[0] || null)} />
-                                   {selectedFile ? (
-                                      <div style={{ fontWeight: 800, color: '#0d9488' }}>✅ {selectedFile.name}</div>
-                                   ) : (
-                                      <div>
-                                         <div style={{ color: '#64748b', fontWeight: 600 }}>คลิกเพื่อเลือกไฟล์ หรือ ลากไฟล์มาวางที่นี่</div>
-                                         <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>ขนาดไม่เกิน 10MB</div>
-                                      </div>
-                                   )}
-                                </div>
-                             </div>
+                              <div style={{ gridColumn: 'span 2' }}>
+                                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>หน่วยงานสภาวิชาชีพ / ผู้ออกใบอนุญาต</label>
+                                 <div style={{ display: 'flex', gap: '12px' }}>
+                                    <ModernSelect 
+                                       value={formData.issuer} 
+                                       onChange={val => setFormData({...formData, issuer: val})}
+                                       options={ISSUERS.map(i => ({ value: i, label: i }))}
+                                       placeholder="เลือกสภาวิชาชีพ..."
+                                    />
+                                    {checkLink && (
+                                      <a href={checkLink} target="_blank" rel="noreferrer" style={{ background: '#3b82f6', color: '#fff', padding: '0 32px', borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}>ตรวจสอบสภาฯ</a>
+                                    )}
+                                 </div>
+                              </div>
+                              <div>
+                                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>เลขที่ใบอนุญาตใหม่</label>
+                                 <input required value={formData.license_no} onChange={e => setFormData({...formData, license_no: e.target.value})} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', fontWeight: 900, fontSize: '16px', outline: 'none', background: '#fff' }} />
+                              </div>
+                              <div>
+                                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>หน่วยกิตสะสมล่าสุด</label>
+                                 <input type="number" step="0.01" value={formData.points} onChange={e => setFormData({...formData, points: parseFloat(e.target.value)})} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', fontWeight: 900, fontSize: '16px', outline: 'none', background: '#fff' }} />
+                              </div>
+                              <div>
+                                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>วันที่ได้รับใบอนุญาต / วันออกบัตร</label>
+                                 <input type="date" value={formData.issue_date} onChange={e => setFormData({...formData, issue_date: e.target.value})} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', outline: 'none', background: '#fff', fontWeight: 700 }} />
+                              </div>
+                              <div>
+                                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>วันหมดอายุใหม่</label>
+                                 <div style={{ display: 'flex', gap: '12px' }}>
+                                    <input required type="date" value={formData.expire_date} onChange={e => setFormData({...formData, expire_date: e.target.value})} style={{ flex: 1, padding: '14px 24px', borderRadius: '40px', border: '2px solid #0f172a', fontWeight: 900, outline: 'none', background: '#fff' }} />
+                                    <button type="button" onClick={() => setFormData({...formData, expire_date: addYears(formData.issue_date || new Date().toISOString(), 5)})} style={{ padding: '0 24px', borderRadius: '40px', background: '#0f172a', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>+ 5 ปี</button>
+                                 </div>
+                              </div>
+                              
+                              <div style={{ gridColumn: 'span 2' }}>
+                                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>ไฟล์หลักฐาน/ใบอนุญาต (PDF, JPG, PNG)</label>
+                                 <div onClick={() => document.getElementById('fileX')?.click()} style={{ border: '2px dashed #e2e8f0', borderRadius: '32px', padding: '40px', textAlign: 'center', cursor: 'pointer', background: '#fff', transition: 'all 0.2s' }} onMouseOver={e=>e.currentTarget.style.borderColor='#cbd5e1'} onMouseOut={e=>e.currentTarget.style.borderColor='#e2e8f0'}>
+                                    <input id="fileX" type="file" hidden onChange={e => setSelectedFile(e.target.files?.[0] || null)} />
+                                    {selectedFile ? (
+                                       <div style={{ fontWeight: 800, color: '#0d9488', fontSize: '16px' }}>✅ {selectedFile.name}</div>
+                                    ) : (
+                                       <div>
+                                          <div style={{ color: '#64748b', fontWeight: 700, fontSize: '15px' }}>คลิกเพื่อเลือกไฟล์ หรือ ลากไฟล์มาวางที่นี่</div>
+                                          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>ขนาดไม่เกิน 10MB</div>
+                                       </div>
+                                    )}
+                                 </div>
+                              </div>
 
                              <div style={{ gridColumn: 'span 2', background: '#f5f3ff', padding: '24px', borderRadius: '24px', border: '1px solid #ddd6fe' }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
@@ -756,8 +846,8 @@ export default function LicensePage() {
                           </div>
 
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
-                             <button onClick={() => setActiveModal('none')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '14px 32px', borderRadius: '16px', fontWeight: 800, color: '#64748b' }}>ยกเลิก</button>
-                             <button onClick={handleLicenseSubmit} disabled={submitting} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 48px', borderRadius: '16px', fontWeight: 800, boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.2)' }}>
+                             <button onClick={() => setActiveModal('none')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '14px 32px', borderRadius: '40px', fontWeight: 800, color: '#64748b', cursor: 'pointer' }}>ยกเลิก</button>
+                             <button onClick={handleLicenseSubmit} disabled={submitting} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '14px 48px', borderRadius: '40px', fontWeight: 800, boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.2)', cursor: 'pointer' }}>
                                 {submitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูลและยืนยัน'}
                              </button>
                           </div>
