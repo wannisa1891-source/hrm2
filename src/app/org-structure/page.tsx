@@ -463,7 +463,7 @@ export default function DepartmentAndEmployeePage() {
                     ))}
                     {regularStaff.length === 0 && (
                       <tr>
-                        <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่มีพนักงานในแผนกนี้</td>
+                        <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่มีพนักงานในแผนกนี้</td>
                       </tr>
                     )}
                   </tbody>
