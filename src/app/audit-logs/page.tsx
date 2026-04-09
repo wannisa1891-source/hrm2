@@ -14,10 +14,7 @@ import {
   Clock,
   LayoutDashboard,
   ShieldCheck,
-  History,
-  Activity,
-  LogIn,
-  AlertCircle
+  History
 } from 'lucide-react';
 
 interface AuditLog {
@@ -120,45 +117,35 @@ export default function AuditLogsPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 font-['Inter',_-apple-system,_'Sarabun',_sans-serif]">
-        
+      <div className="audit-container">
         {/* HEADER SECTION */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
-          <div className="space-y-4">
-            <button 
-              onClick={() => router.back()} 
-              className="group flex items-center gap-2 bg-white px-4 py-2 rounded-xl text-slate-500 font-semibold text-sm border border-slate-200 shadow-sm hover:border-indigo-400 hover:text-indigo-600 transition-all duration-300"
-            >
-              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+        <div className="audit-page-header">
+          <div className="header-left">
+            <button onClick={() => router.back()} className="back-btn-modern">
+              <ArrowLeft size={18} />
               <span>ย้อนกลับ</span>
             </button>
-            <div className="flex items-center gap-5">
-              <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-100 ring-4 ring-indigo-50">
-                <History size={28} />
+            <div className="title-group">
+              <div className="icon-badge">
+                <History size={24} />
               </div>
               <div>
-                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                  System <span className="text-indigo-600">Audit Logs</span>
-                </h1>
-                <p className="text-slate-500 font-medium mt-1">ประวัติกิจกรรมและการตรวจสอบความปลอดภัยของระบบ</p>
+                <h1>System <span className="text-primary">Audit Logs</span></h1>
+                <p>บันทึกประวัติกิจกรรมและระบบการตรวจสอบความปลอดภัย</p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button 
-              onClick={handleExport} 
-              className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-0.5 transition-all shadow-lg active:scale-95"
-            >
+          <div className="header-right">
+            <button onClick={handleExport} className="export-btn-premium">
               <Download size={18} />
               <span>Export CSV</span>
             </button>
-            <div className="relative flex items-center group">
-              <Search className="absolute left-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+            <div className="search-wrapper-modern">
+              <Search className="search-icon-fixed" size={18} />
               <input
                 type="text"
                 placeholder="ค้นหาชื่อผู้ใช้หรือรายละเอียด..."
-                className="pl-12 pr-4 py-3 w-full sm:w-[320px] lg:w-[400px] bg-white border-2 border-transparent focus:border-indigo-500 rounded-xl outline-none shadow-sm transition-all text-sm font-medium"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -169,63 +156,43 @@ export default function AuditLogsPage() {
           </div>
         </div>
 
-        {/* SUMMARY CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'กิจกรรมทั้งหมด', value: logs.length, icon: Activity, color: 'indigo' },
-            { label: 'เข้าสู่ระบบ (LOGIN)', value: logs.filter(l => l.action_detail.includes('เข้าสู่ระบบ')).length, icon: LogIn, color: 'blue' },
-            { label: 'การเปลี่ยนแปลงข้อมูล', value: logs.filter(l => ['สร้าง', 'แก้ไข', 'ลบ', 'อัปเดต'].some(w => l.action_detail.includes(w))).length, icon: ClipboardList, color: 'emerald' },
-            { label: 'ระบบ / อื่นๆ', value: logs.length - logs.filter(l => ['เข้าสู่ระบบ', 'สร้าง', 'แก้ไข', 'ลบ', 'อัปเดต'].some(w => l.action_detail.includes(w))).length, icon: AlertCircle, color: 'slate' },
-          ].map((card, i) => (
-            <div key={i} className="bg-white/80 backdrop-blur-md p-6 rounded-3xl border border-white shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-${card.color}-50 text-${card.color}-600`}>
-                <card.icon size={24} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{card.label}</p>
-                <h3 className="text-2xl font-black text-slate-800 tabular-nums">{card.value.toLocaleString()}</h3>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* DATA TABLE SECTION */}
-        <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] border border-white/50 shadow-2xl shadow-slate-200/50 overflow-hidden ring-1 ring-slate-200/10">
-          <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck size={14} />
+        {/* MAIN DATA SECTION */}
+        <div className="data-card-premium">
+          <div className="card-header-stats">
+            <div className="stat-pill">
+              <ShieldCheck size={14} className="text-blue-500" />
               <span>ความปลอดภัยสูงสุด</span>
             </div>
-            <div className="text-slate-500 font-semibold text-sm">
-              พบข้อมูลทั้งหมด <span className="text-slate-900 font-bold">{filteredLogs.length}</span> รายการ
+            <div className="data-count">
+              พบทั้งหมด <strong>{filteredLogs.length}</strong> รายการ
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+          <div className="table-responsive-wrapper">
+            <table className="audit-table-modern">
               <thead>
-                <tr className="bg-slate-50/50">
-                  <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]"><div className="flex items-center gap-2"><Clock size={12} /> Timestamp</div></th>
-                  <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]"><div className="flex items-center gap-2"><User size={12} /> Operator</div></th>
-                  <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]"><div className="flex items-center gap-2"><ClipboardList size={12} /> Activity Detail</div></th>
+                <tr>
+                  <th><div className="th-flex"><Clock size={12} /> TIMESTAMP</div></th>
+                  <th><div className="th-flex"><User size={12} /> OPERATOR</div></th>
+                  <th><div className="th-flex"><ClipboardList size={12} /> ACTIVITY DETAIL</div></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={3} className="py-24">
-                      <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="w-12 h-12 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
-                        <p className="font-bold text-slate-400">กำลังเตรียมข้อมูลระบบ...</p>
+                    <td colSpan={3}>
+                      <div className="loading-state">
+                        <div className="spinner-modern"></div>
+                        <p>กำลังเตรียมข้อมูลประวัติ...</p>
                       </div>
                     </td>
                   </tr>
                 ) : currentLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="py-24">
-                      <div className="flex flex-col items-center justify-center gap-4 opacity-30">
-                        <History size={64} />
-                        <p className="font-bold text-lg text-slate-900">ไม่พบประวัติในระบบ</p>
+                    <td colSpan={3}>
+                      <div className="empty-state-modern">
+                        <History size={48} className="opacity-20" />
+                        <p>ไม่พบข้อมูลประวัติในระบบ</p>
                       </div>
                     </td>
                   </tr>
@@ -236,45 +203,30 @@ export default function AuditLogsPage() {
                     const displayName = formatUserName(log.user_id);
 
                     return (
-                      <tr key={log.log_id || idx} className="group hover:bg-slate-50/80 transition-all duration-200">
-                        <td className="px-8 py-5 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span className="text-base font-bold text-slate-800 tabular-nums">
-                              {date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            <span className="text-xs font-semibold text-slate-400">
-                              {date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
-                            </span>
+                      <tr key={log.log_id || idx} className="audit-row">
+                        <td className="time-td">
+                          <div className="timestamp-wrapper">
+                            <span className="time-text">{date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span className="date-text">{date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}</span>
                           </div>
                         </td>
 
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm ring-2 ring-white"
-                              style={{ background: `linear-gradient(135deg, ${style.dot}, ${style.dot}aa)` }}
-                            >
+                        <td className="user-td">
+                          <div className="user-profile-sm">
+                            <div className="avatar-shimmer" style={{ background: `linear-gradient(135deg, ${style.dot}, ${style.dot}aa)` }}>
                               {displayName.charAt(0).toUpperCase()}
                             </div>
-                            <span className="font-bold text-slate-700">{displayName}</span>
+                            <span className="name-bold">{displayName}</span>
                           </div>
                         </td>
 
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-4">
-                            <span 
-                              className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all"
-                              style={{ backgroundColor: style.bg, color: style.text }}
-                            >
-                              <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: style.dot }}></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: style.dot }}></span>
-                              </span>
+                        <td className="action-td">
+                          <div className="action-pill-wrapper">
+                            <span className="status-badge-modern" style={{ backgroundColor: style.bg, color: style.text }}>
+                              <span className="status-dot-pulse" style={{ backgroundColor: style.dot }}></span>
                               {style.label}
                             </span>
-                            <span className="text-sm font-medium text-slate-600 leading-relaxed max-w-2xl truncate lg:whitespace-normal">
-                              {log.action_detail}
-                            </span>
+                            <span className="detail-msg">{log.action_detail}</span>
                           </div>
                         </td>
                       </tr>
@@ -287,62 +239,449 @@ export default function AuditLogsPage() {
 
           {/* PAGINATION SECTION */}
           {!loading && totalPages > 1 && (
-            <div className="px-8 py-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:block">
-                หน้า {currentPage} จาก {totalPages}
-              </div>
+            <div className="pagination-premium">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => p - 1)}
+                className="pag-btn"
+              >
+                <ArrowLeft size={16} />
+              </button>
               
-              <div className="flex items-center bg-slate-100 p-1.5 rounded-2xl gap-1">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => p - 1)}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center bg-white text-slate-400 shadow-sm border border-slate-200 disabled:opacity-50 disabled:shadow-none hover:text-indigo-600 transition-all font-bold group"
-                >
-                  <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-                </button>
-                
-                <div className="flex items-center gap-1 px-2">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum = currentPage;
-                    if (currentPage <= 3) pageNum = i + 1;
-                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-                    else pageNum = currentPage - 2 + i;
+              <div className="page-numbers">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum = currentPage;
+                  if (currentPage <= 3) pageNum = i + 1;
+                  else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                  else pageNum = currentPage - 2 + i;
 
-                    if (pageNum > 0 && pageNum <= totalPages) {
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`min-w-[40px] h-10 px-3 rounded-xl font-bold text-sm transition-all ${
-                            currentPage === pageNum 
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 ring-2 ring-indigo-50' 
-                            : 'text-slate-500 hover:bg-white hover:text-slate-900'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(p => p + 1)}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center bg-white text-slate-400 shadow-sm border border-slate-200 disabled:opacity-50 disabled:shadow-none hover:text-indigo-600 transition-all font-bold group"
-                >
-                  <ArrowLeft size={16} className="rotate-180 group-hover:translate-x-0.5 transition-transform" />
-                </button>
+                  if (pageNum > 0 && pageNum <= totalPages) {
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`page-num-btn ${currentPage === pageNum ? 'active' : ''}`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                  return null;
+                })}
               </div>
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(p => p + 1)}
+                className="pag-btn"
+              >
+                <ArrowLeft size={16} style={{ transform: 'rotate(180deg)' }} />
+              </button>
               
-              <div className="sm:hidden text-xs font-bold text-slate-400">
-                {currentPage} / {totalPages}
+              <div className="page-count-text">
+                หน้า {currentPage} / {totalPages}
               </div>
             </div>
           )}
         </div>
       </div>
+
+      <style jsx>{`
+        .audit-container {
+          padding: 40px;
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          min-height: 100vh;
+          font-family: 'Inter', 'Sarabun', sans-serif;
+        }
+
+        /* HEADER STYLES */
+        .audit-page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-bottom: 40px;
+          gap: 24px;
+        }
+
+        .header-left {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .back-btn-modern {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: white;
+          border: 1px solid #e2e8f0;
+          padding: 8px 16px;
+          border-radius: 12px;
+          color: #64748b;
+          font-weight: 600;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          width: fit-content;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .back-btn-modern:hover {
+          color: #6366f1;
+          border-color: #6366f1;
+          transform: translateX(-4px);
+          box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1);
+        }
+
+        .title-group {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .icon-badge {
+          width: 56px;
+          height: 56px;
+          background: white;
+          border-radius: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #6366f1;
+          box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.2);
+        }
+
+        .title-group h1 {
+          font-size: 32px;
+          font-weight: 900;
+          color: #0f172a;
+          margin: 0;
+          letter-spacing: -0.02em;
+        }
+
+        .text-primary { color: #6366f1; }
+
+        .title-group p {
+          color: #64748b;
+          margin: 4px 0 0;
+          font-size: 15px;
+          font-weight: 500;
+        }
+
+        .header-right {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+        }
+
+        .export-btn-premium {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: #0f172a;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 14px;
+          font-weight: 700;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.3s;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .export-btn-premium:hover {
+          background: #1e293b;
+          transform: translateY(-2px);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-wrapper-modern {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .search-icon-fixed {
+          position: absolute;
+          left: 16px;
+          color: #94a3b8;
+          pointer-events: none;
+        }
+
+        .search-wrapper-modern input {
+          padding: 12px 16px 12px 48px;
+          width: 320px;
+          border-radius: 14px;
+          border: 2px solid white;
+          background: white;
+          outline: none;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.3s;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-wrapper-modern input:focus {
+          border-color: #6366f1;
+          box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+          width: 380px;
+        }
+
+        /* DATA CARD STYLES */
+        .data-card-premium {
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(20px);
+          border-radius: 32px;
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+          overflow: hidden;
+          transition: all 0.3s;
+        }
+
+        .card-header-stats {
+          padding: 24px 32px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .stat-pill {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #eff6ff;
+          color: #1e40af;
+          padding: 6px 14px;
+          border-radius: 100px;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .data-count {
+          font-size: 14px;
+          color: #64748b;
+        }
+
+        .data-count strong {
+          color: #0f172a;
+          font-size: 16px;
+        }
+
+        .table-responsive-wrapper {
+          overflow-x: auto;
+        }
+
+        .audit-table-modern {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .audit-table-modern th {
+          padding: 20px 32px;
+          text-align: left;
+          font-size: 12px;
+          font-weight: 800;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          background: rgba(248, 250, 252, 0.5);
+        }
+
+        .th-flex {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .audit-row {
+          border-bottom: 1px solid rgba(0, 0, 0, 0.02);
+          transition: all 0.2s;
+        }
+
+        .audit-row:hover {
+          background: rgba(248, 250, 252, 0.8);
+        }
+
+        /* COLUMN STYLES */
+        .time-td { padding: 20px 32px; min-width: 160px; }
+        .timestamp-wrapper { display: flex; flex-direction: column; }
+        .time-text { font-size: 16px; font-weight: 800; color: #1e293b; }
+        .date-text { font-size: 13px; color: #94a3b8; font-weight: 500; }
+
+        .user-td { padding: 20px 32px; }
+        .user-profile-sm { display: flex; align-items: center; gap: 12px; }
+        .avatar-shimmer {
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 800;
+          font-size: 14px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .name-bold { font-size: 15px; font-weight: 700; color: #334155; }
+
+        .action-td { padding: 20px 32px; }
+        .action-pill-wrapper { display: flex; align-items: center; gap: 16px; }
+
+        .status-badge-modern {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 14px;
+          border-radius: 10px;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+        }
+
+        .status-dot-pulse {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          position: relative;
+        }
+
+        .status-dot-pulse::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          background: inherit;
+          animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+          0% { transform: scale(1); opacity: 0.8; }
+          70% { transform: scale(2.5); opacity: 0; }
+          100% { transform: scale(1); opacity: 0; }
+        }
+
+        .detail-msg {
+          font-size: 15px;
+          font-weight: 500;
+          color: #475569;
+          line-height: 1.5;
+        }
+
+        /* PAGINATION STYLES */
+        .pagination-premium {
+          padding: 24px 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          border-top: 1px solid rgba(0, 0, 0, 0.03);
+          position: relative;
+        }
+
+        .pag-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          background: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+          color: #64748b;
+        }
+
+        .pag-btn:hover:not(:disabled) {
+          border-color: #6366f1;
+          color: #6366f1;
+          transform: translateY(-2px);
+        }
+
+        .pag-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .page-numbers {
+          display: flex;
+          gap: 8px;
+        }
+
+        .page-num-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          border: none;
+          background: transparent;
+          font-size: 14px;
+          font-weight: 700;
+          color: #64748b;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .page-num-btn:hover {
+          background: #f1f5f9;
+          color: #0f172a;
+        }
+
+        .page-num-btn.active {
+          background: #6366f1;
+          color: white;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .page-count-text {
+          position: absolute;
+          right: 32px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #94a3b8;
+        }
+
+        /* STATES */
+        .loading-state, .empty-state-modern {
+          padding: 80px 0;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .spinner-modern {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f1f5f9;
+          border-top-color: #6366f1;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .loading-state p, .empty-state-modern p {
+          font-size: 16px;
+          font-weight: 600;
+          color: #94a3b8;
+        }
+
+        @media (max-width: 1024px) {
+          .audit-page-header { flex-direction: column; align-items: flex-start; }
+          .header-right { width: 100%; flex-direction: column; align-items: stretch; }
+          .search-wrapper-modern input { width: 100%; }
+          .search-wrapper-modern input:focus { width: 100%; }
+          .page-count-text { position: static; margin-top: 16px; }
+          .pagination-premium { flex-wrap: wrap; }
+        }
+      `}</style>
     </AppLayout>
   );
 }
