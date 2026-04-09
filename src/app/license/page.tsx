@@ -520,7 +520,7 @@ export default function LicensePage() {
                            <tr style={{ textAlign: 'left', color: '#64748b', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>
                               <th style={{ padding: '16px' }}>รหัสพนักงาน</th>
                               <th>ชื่อ-นามสกุล</th>
-                              <th>วิชาชีพ</th>
+                              <th style={{ width: "220px", whiteSpace: "nowrap" }}>วิชาชีพ</th>
                               <th>เลขใบอนุญาต</th>
                               <th>วันหมดอายุ</th>
                               <th>สถานะ</th>
@@ -659,7 +659,7 @@ export default function LicensePage() {
                         <thead>
                            <tr style={{ textAlign: 'left', borderBottom: '1px solid #f1f5f9', color: '#64748b', fontSize: '12px', textTransform: 'uppercase' }}>
                               <th style={{ padding: '16px' }}>ชื่อเกณฑ์</th>
-                              <th>วิชาชีพ</th>
+                              <th style={{ width: "220px", whiteSpace: "nowrap" }}>วิชาชีพ</th>
                               <th>บังคับแผนก/ตำแหน่ง</th>
                               <th>อายุบัตร (ปี)</th>
                               <th>เตือน (วัน)</th>
@@ -892,7 +892,7 @@ export default function LicensePage() {
                                              <thead>
                                                 <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase' }}>
                                                    <th style={{ padding: '0 16px' }}>เลขใบอนุญาต</th>
-                                                   <th>วิชาชีพ</th>
+                                                   <th style={{ width: '220px', whiteSpace: 'nowrap' }}>วิชาชีพ</th>
                                                    <th>หมดอายุ</th>
                                                    <th style={{ textAlign: 'right', paddingRight: '16px' }}>ไฟล์</th>
                                                 </tr>
@@ -973,14 +973,26 @@ export default function LicensePage() {
                                  </p>
                               </div>
 
-                              <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: '#f8fafc', padding: '20px', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
+                              <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px', background: '#f8fafc', padding: '24px', borderRadius: '28px', border: '1px solid #e2e8f0' }}>
                                  <div>
                                     <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>รหัสพนักงาน</div>
                                     <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.emp_id || '-'}</div>
                                  </div>
                                  <div>
                                     <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>ตำแหน่ง</div>
-                                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.position_name || '-'}</div>
+                                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.position_name || currentEmp?.pos_name || '-'}</div>
+                                 </div>
+                                 <div>
+                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>แผนก</div>
+                                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.dept_name || '-'}</div>
+                                 </div>
+                                 <div>
+                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>ประเภทการจ้าง</div>
+                                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{currentEmp?.emp_type || '-'}</div>
+                                 </div>
+                                 <div style={{ gridColumn: 'span 2', marginTop: '4px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
+                                    <div style={{ fontSize: '11px', color: '#2563eb', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>คะแนนสะสม CNEU/CME (Global)</div>
+                                    <div style={{ fontSize: '20px', fontWeight: 900, color: '#1e40af' }}>{currentEmp?.cneu_cme_points || '0.00'}</div>
                                  </div>
                               </div>
 
@@ -1003,16 +1015,16 @@ export default function LicensePage() {
                               {/* Close Button */}
                               <button onClick={() => setActiveModal('none')} style={{ position: 'absolute', top: '32px', right: '32px', background: '#fff', border: '1px solid #e2e8f0', width: '36px', height: '36px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>×</button>
 
-                              <div style={{ marginBottom: '40px' }}>
-                                 <div style={{ color: '#0d9488', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>Professional Credential</div>
-                                 <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>รายละเอียดการขึ้นทะเบียนและใบอนุญาต</h2>
-                                 <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '15px', fontWeight: 500 }}>ข้อมูลด้านล่างแสดงชื่อผู้ประกอบวิชาชีพ หมายเลขใบอนุญาต ช่วงเวลาที่ใบอนุญาตมีผล และสถานะล่าสุด</p>
-                              </div>
-
-                              {/* Status Badge Top Right */}
-                              <div style={{ position: 'absolute', top: '104px', right: '64px', background: '#fff', padding: '12px 24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', textAlign: 'center' }}>
-                                 <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, marginBottom: '4px' }}>สถานะใบอนุญาต</div>
-                                 <div style={{ color: stat.color, fontWeight: 900, fontSize: '14px' }}>{stat.label}</div>
+                              <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
+                                 <div style={{ flex: 1 }}>
+                                    <div style={{ color: '#0d9488', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>ข้อมูลวุฒิบัตรและใบอนุญาต</div>
+                                    <h2 style={{ margin: 0, fontSize: '30px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: '1.2' }}>รายละเอียดการขึ้นทะเบียนและใบอนุญาต</h2>
+                                    <p style={{ margin: '12px 0 0 0', color: '#64748b', fontSize: '15px', fontWeight: 500, lineHeight: '1.6' }}>ข้อมูลด้านล่างแสดงชื่อผู้ประกอบวิชาชีพ หมายเลขใบอนุญาต ช่วงเวลาที่ใบอนุญาตมีผล และสถานะล่าสุด</p>
+                                 </div>
+                                 <div style={{ background: '#fff', padding: '12px 24px', borderRadius: '18px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', textAlign: 'right', flexShrink: 0, marginTop: '8px' }}>
+                                    <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>สถานะใบอนุญาต</div>
+                                    <div style={{ color: stat.color, fontWeight: 900, fontSize: '14px', padding: '4px 12px', borderRadius: '8px', background: stat.bg, display: 'inline-block' }}>{stat.label}</div>
+                                 </div>
                               </div>
 
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
@@ -1099,7 +1111,7 @@ export default function LicensePage() {
                                        </div>
                                        <div>
                                           <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 900 }}>ประวัติการขึ้นทะเบียนย้อนหลัง</h4>
-                                          <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Employee track record & past credentials</p>
+                                          <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748b', fontWeight: 600 }}>ประวัติการต่ออายุและข้อมูลใบประกาศย้อนหลังทั้งหมด</p>
                                        </div>
                                     </div>
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="3" style={{ transition: 'transform 0.3s', transform: isHistoryExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>
@@ -1112,11 +1124,11 @@ export default function LicensePage() {
                                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 10px' }}>
                                           <thead>
                                              <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                <th style={{ padding: '0 24px' }}>เลขใบอนุญาต</th>
-                                                <th>ประเภทวิชาชีพ</th>
-                                                <th>วันหมดอายุ</th>
-                                                <th>สถานะ</th>
-                                                <th style={{ textAlign: 'right', paddingRight: '24px' }}>เอกสาร</th>
+                                                <th style={{ padding: '0 24px', whiteSpace: 'nowrap' }}>เลขใบอนุญาต</th>
+                                                <th style={{ whiteSpace: 'nowrap' }}>ประเภทวิชาชีพ</th>
+                                                <th style={{ whiteSpace: 'nowrap' }}>วันหมดอายุ</th>
+                                                <th style={{ whiteSpace: 'nowrap' }}>สถานะ</th>
+                                                <th style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>เอกสาร</th>
                                              </tr>
                                           </thead>
                                           <tbody>
@@ -1128,11 +1140,11 @@ export default function LicensePage() {
                                                 return (
                                                    <tr key={idx} style={{ background: '#fff', borderRadius: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
                                                       <td style={{ padding: '20px 24px', fontWeight: 900, fontFamily: 'monospace', fontSize: '15px', color: '#0f172a', borderTopLeftRadius: '18px', borderBottomLeftRadius: '18px' }}>{h.license_no}</td>
-                                                      <td style={{ fontWeight: 800, color: '#475569' }}>{h.license_name}</td>
+                                                      <td style={{ fontWeight: 800, color: '#475569', whiteSpace: 'nowrap' }}>{h.license_name}</td>
                                                       <td style={{ fontWeight: 800, color: '#dc2626' }}>{expStr}</td>
                                                       <td>
                                                          <span style={{ padding: '6px 14px', borderRadius: '50px', fontSize: '10px', fontWeight: 900, background: h.verified_status === 'Verified' ? '#dcfce7' : '#f1f5f9', color: h.verified_status === 'Verified' ? '#16a34a' : '#64748b' }}>
-                                                            {h.verified_status === 'Verified' ? 'Verified' : 'Pending'}
+                                                            {h.verified_status === 'Verified' ? 'ตรวจสอบแล้ว' : 'รอตรวจสอบ'}
                                                          </span>
                                                       </td>
                                                       <td style={{ textAlign: 'right', paddingRight: '24px', borderTopRightRadius: '18px', borderBottomRightRadius: '18px' }}>
@@ -1180,7 +1192,7 @@ export default function LicensePage() {
             {/* Audit / History Modal (Simplified & Premium) */}
             {historyOpen && (
                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
-                  <div style={{ background: '#fff', width: '950px', maxHeight: '85vh', borderRadius: '40px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)' }}>
+                  <div style={{ background: '#fff', width: '1150px', maxHeight: '85vh', borderRadius: '40px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)' }}>
                      <div style={{ padding: '32px 48px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
                         <div>
                            <div style={{ color: '#0d9488', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Audit Log History</div>
@@ -1193,14 +1205,14 @@ export default function LicensePage() {
                         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
                            <thead>
                               <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase' }}>
-                                 <th style={{ padding: '0 20px', width: '60px' }}>ลำดับ</th>
-                                 <th style={{ width: '150px' }}>เลขที่ใบอนุญาต</th>
-                                 <th>วิชาชีพ</th>
-                                 <th>วันที่ออกบัตร/ต่ออายุ</th>
-                                 <th>วันหมดอายุ</th>
-                                 <th>คะแนนสะสม</th>
-                                 <th>สถานะ</th>
-                                 <th style={{ textAlign: 'right', paddingRight: '20px' }}>หลักฐาน</th>
+                                 <th style={{ padding: "0 20px", width: "60px", whiteSpace: "nowrap" }}>ลำดับ</th>
+                                 <th style={{ width: "150px", whiteSpace: "nowrap" }}>เลขที่ใบอนุญาต</th>
+                                 <th style={{ width: "220px", whiteSpace: "nowrap" }}>วิชาชีพ</th>
+                                 <th style={{ whiteSpace: 'nowrap' }}>วันที่ออกบัตร/ต่ออายุ</th>
+                                 <th style={{ whiteSpace: 'nowrap' }}>วันหมดอายุ</th>
+                                 <th style={{ whiteSpace: 'nowrap' }}>คะแนนสะสม</th>
+                                 <th style={{ whiteSpace: 'nowrap' }}>สถานะ</th>
+                                 <th style={{ textAlign: 'right', paddingRight: '20px', whiteSpace: 'nowrap' }}>หลักฐาน</th>
                               </tr>
                            </thead>
                            <tbody>
@@ -1215,11 +1227,11 @@ export default function LicensePage() {
                                        <td style={{ padding: '20px', borderRadius: '20px 0 0 20px', fontWeight: 900, color: '#94a3b8', fontSize: '14px' }}>
                                           {historyData.length - i}
                                        </td>
-                                       <td style={{ fontWeight: 900, fontFamily: 'monospace', fontSize: '15px', color: '#0f172a' }}>{h.license_no}</td>
-                                       <td style={{ fontWeight: 800, color: '#475569' }}>{h.license_name}</td>
-                                       <td style={{ fontWeight: 800, color: '#0d9488' }}>{issStr}</td>
-                                       <td style={{ fontWeight: 800, color: '#0f172a' }}>{expStr}</td>
-                                       <td style={{ fontWeight: 900, color: '#2563eb' }}>{h.points || '0.00'}</td>
+                                       <td style={{ fontWeight: 900, fontFamily: "monospace", fontSize: "15px", color: "#0f172a", whiteSpace: "nowrap" }}>{h.license_no}</td>
+                                       <td style={{ fontWeight: 800, color: "#475569", whiteSpace: "nowrap" }}>{h.license_name}</td>
+                                       <td style={{ fontWeight: 800, color: "#0d9488", whiteSpace: "nowrap" }}>{issStr}</td>
+                                       <td style={{ fontWeight: 800, color: "#0f172a", whiteSpace: "nowrap" }}>{expStr}</td>
+                                       <td style={{ fontWeight: 900, color: '#2563eb', whiteSpace: 'nowrap' }}>{h.points || '0.00'}</td>
                                        <td>
                                           {h.verified_status === 'Verified' ? (
                                              <span style={{ padding: '8px 16px', borderRadius: '50px', fontSize: '11px', background: '#dcfce7', color: '#16a34a', fontWeight: 900, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>

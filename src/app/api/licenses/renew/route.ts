@@ -48,11 +48,10 @@ export async function POST(req: NextRequest) {
         const insertQuery = `
           INSERT INTO tbl_employee_licenses 
           (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, verified_status, remarks, file_path)
-          SELECT emp_id, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?
+          SELECT emp_id, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, COALESCE(?, file_path)
           FROM tbl_employee_licenses WHERE id = ?
         `;
         
-        // Use old file path if new one not provided
         const finalPath = filePath || null; 
 
         const values = [

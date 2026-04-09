@@ -26,7 +26,8 @@ export async function GET(req: NextRequest) {
         l.institution,
         l.issue_date,
         l.expire_date,
-        l.status as license_status
+        l.status as license_status,
+        l.file_path
       FROM tbl_employees e
       JOIN tbl_employee_licenses l ON e.emp_id = l.emp_id
       WHERE 1=1
@@ -80,7 +81,8 @@ export async function GET(req: NextRequest) {
         license_name: row.license_name || '',
         license_type: row.license_type || '',
         institution: row.institution || '',
-        issue_date: row.issue_date ? new Date(row.issue_date).toLocaleDateString('en-CA') : ''
+        issue_date: row.issue_date ? new Date(row.issue_date).toLocaleDateString('en-CA') : '',
+        file_path: row.file_path || null
       };
     });
 
