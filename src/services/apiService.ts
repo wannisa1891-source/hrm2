@@ -114,6 +114,11 @@ export interface DashboardData {
     sick: { remain: number; used: number; raw: number }
   }
   recentLeaves?: any[]
+  payrollData?: {
+    currentNetSalary: number;
+    paymentDate: string;
+    history: { month: string; amount: number; date: string }[];
+  }
 }
 
 export interface Announcement {

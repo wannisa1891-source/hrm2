@@ -8,7 +8,7 @@ interface UserDashboardProps {
     personal: { remain: number, used: number, raw: number };
     sick: { remain: number, used: number, raw: number };
   };
-  payrollData: {
+  payrollData?: {
     currentNetSalary: number;
     paymentDate: string;
     history: any[];
@@ -22,7 +22,7 @@ interface UserDashboardProps {
 export default function UserDashboard({
   user,
   leaveStats,
-  payrollData,
+  payrollData = { currentNetSalary: 0, paymentDate: '-', history: [] },
   recentLeaves,
   newsList,
   onSelectNews,
