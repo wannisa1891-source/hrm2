@@ -46,8 +46,6 @@ export interface Employee {
   email?: string
   password?: string
   role?: string
-  staff_no?: number
-  created_at?: string
 }
 
 export interface ProfessionalLicense {
@@ -116,6 +114,11 @@ export interface DashboardData {
     sick: { remain: number; used: number; raw: number }
   }
   recentLeaves?: any[]
+  payrollData?: {
+    currentNetSalary: number;
+    paymentDate: string;
+    history: { month: string; amount: number; date: string }[];
+  }
 }
 
 export interface Announcement {

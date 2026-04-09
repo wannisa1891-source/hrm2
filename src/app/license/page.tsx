@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid
+  BarChart, Bar, XAxis, YAxis
 } from 'recharts';
 
 export const dynamic = 'force-dynamic';
@@ -114,15 +114,16 @@ export default function LicensePage() {
 
   const fetchInitialData = async () => {
     try {
+      const v = Date.now();
       const [deptRes, posRes, empRes] = await Promise.all([
-        fetch('/api/departments'),
-        fetch('/api/positions'),
-        fetch('/api/employees')
+        fetch(`/api/departments?v=${v}`, { cache: 'no-store' }),
+        fetch(`/api/positions?v=${v}`, { cache: 'no-store' }),
+        fetch(`/api/employees?v=${v}`, { cache: 'no-store' })
       ]);
       setDepartments(await deptRes.json());
       setPositions(await posRes.json());
       setAllEmployees(await empRes.json());
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error('Fetch Initial Error:', err); }
   };
 
   const fetchLicenses = async () => {
@@ -131,25 +132,32 @@ export default function LicensePage() {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (statusFilter !== 'all') params.append('status', statusFilter);
-      const res = await fetch(`/api/licenses?${params.toString()}`);
-      setLicenses(await res.json());
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+      params.append('v', Date.now().toString());
+
+      const res = await fetch(`/api/licenses?${params.toString()}`, { cache: 'no-store' });
+      const data = await res.json();
+      setLicenses(data);
+    } catch (err) { console.error('Fetch Licenses Error:', err); } finally { setLoading(false); }
   };
 
   const fetchMonitorData = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/licenses/monitor');
-      setMonitorData(await res.json());
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+      const v = Date.now();
+      const res = await fetch(`/api/licenses/monitor?v=${v}`, { cache: 'no-store' });
+      const data = await res.json();
+      setMonitorData(data);
+    } catch (err) { console.error('Fetch Monitor Error:', err); } finally { setLoading(false); }
   };
 
   const fetchConfigs = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/licenses/configs');
-      setConfigs(await res.json());
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+      const v = Date.now();
+      const res = await fetch(`/api/licenses/configs?v=${v}`, { cache: 'no-store' });
+      const data = await res.json();
+      setConfigs(data);
+    } catch (err) { console.error('Fetch Configs Error:', err); } finally { setLoading(false); }
   };
 
   const handleConfigSubmit = async (e: React.FormEvent) => {
@@ -164,7 +172,8 @@ export default function LicensePage() {
       });
       if (!res.ok) throw new Error('Failed to save');
       Swal.fire('สำเร็จ', 'บันทึกเกณฑ์เรียบร้อยแล้ว', 'success');
-      fetchConfigs();
+      // Force instant refresh
+      await fetchConfigs();
       setActiveModal('none');
     } catch (err: any) { Swal.fire('Error', err.message, 'error'); } finally { setSubmitting(false); }
   };
@@ -174,7 +183,8 @@ export default function LicensePage() {
     try {
       setSubmitting(true);
       const fd = new FormData();
-      fd.append('license_id', selectedLicense?.license_id?.toString() || selectedLicense?.id || '');
+      const rawId = selectedLicense?.license_id || selectedLicense?.id || '';
+      fd.append('license_id', rawId.toString());
       fd.append('emp_id', activeModal === 'add' ? formData.emp_id : selectedLicense?.emp_id || '');
       fd.append('expire_date', formData.expire_date);
       fd.append('license_no', formData.license_no);
@@ -191,26 +201,33 @@ export default function LicensePage() {
         body: fd
       });
       if (res.ok) {
-        Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'บันทึกข้อมูลและอัปโหลดไฟล์เรียบร้อยแล้ว', showConfirmButton: false, timer: 1500 });
-        fetchLicenses();
+        Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'บันทึกข้อมูลเรียบร้อยแล้ว', showConfirmButton: false, timer: 1000 });
+        // Immediate data sync
+        await fetchLicenses();
+        if (activeTab === 'monitor') await fetchMonitorData();
         setActiveModal('none');
         setSelectedFile(null);
       } else {
         const err = await res.json();
         throw new Error(err.error || 'Failed to save');
       }
-    } catch (err: any) { Swal.fire('Error', err.message, 'error'); } finally { setSubmitting(false); }
+    } catch (err: any) { 
+      console.error('Submit Error:', err);
+      Swal.fire('Error', err.message, 'error'); 
+    } finally { setSubmitting(false); }
   };
 
   const fetchHistory = async (empId: string) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/licenses/renew?emp_id=${empId}&history=true`);
+      const v = Date.now();
+      const res = await fetch(`/api/licenses/renew?emp_id=${empId}&history=true&v=${v}`, { cache: 'no-store' });
       if (res.ok) {
-        setHistoryData(await res.json());
+        const data = await res.json();
+        setHistoryData(data);
         setHistoryModalOpen(true);
       }
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+    } catch (err) { console.error('Fetch History Error:', err); } finally { setLoading(false); }
   };
 
   const handleOpenModal = (type: any, data?: any) => {
@@ -220,6 +237,7 @@ export default function LicensePage() {
     } else {
       setSelectedLicense(data || null);
       setSearchTermEmp('');
+      setSelectedFile(null);
       if (data) {
         setFormData({
           license_no: data.license_no || '',
@@ -240,8 +258,6 @@ export default function LicensePage() {
     setActiveModal(type);
   };
 
-  const COLORS = ['#1e293b', '#3b82f6', '#ef4444'];
-  
   const checkEmployeeRequirement = (empId: string) => {
     const emp = allEmployees.find(e => e.emp_id === empId);
     if (!emp) return null;
@@ -257,7 +273,7 @@ export default function LicensePage() {
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
                License Governance System 
-               <span style={{ fontSize: '12px', background: '#0f172a', color: '#fff', padding: '4px 12px', borderRadius: '20px', marginLeft: '12px', verticalAlign: 'middle' }}>V4 ENTERPRISE</span>
+               <span style={{ fontSize: '10px', background: '#16a34a', color: '#fff', padding: '4px 12px', borderRadius: '20px', marginLeft: '12px', verticalAlign: 'middle', fontWeight: 800 }}>AUTOMATED SURVEILLANCE ACTIVE</span>
             </h1>
             <p style={{ color: '#64748b', fontSize: '16px', marginTop: '4px' }}>การจัดการและตรวจสอบใบประกอบวิชาชีพตามมาตรฐานสูงสุด</p>
           </div>
@@ -320,11 +336,11 @@ export default function LicensePage() {
                           <tr key={l.id} style={{ background: '#fff' }}>
                              <td style={{ padding: '20px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px', border: '1px solid #f1f5f9', borderRight: 'none' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{l.name?.[0]}</div>
+                                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{l.name?.[0] || 'U'}</div>
                                    <div>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                          <div style={{ fontWeight: 800, color: '#0f172a' }}>{l.name}</div>
-                                         <button onClick={() => fetchHistory(l.emp_id)} title="ดูประวัติการต่ออายุ" style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '12px' }}>🕒</button>
+                                         <button onClick={() => fetchHistory(l.emp_id)} title="ดูประวัติการต่ออายุ" style={{ background: '#f1f5f9', border: 'none', borderRadius: '8px', padding: '4px 8px', cursor: 'pointer', fontSize: '10px', color: '#64748b', fontWeight: 800 }}>HISTORY</button>
                                       </div>
                                       <div style={{ fontSize: '12px', color: '#94a3b8' }}>ID: {l.emp_id}</div>
                                    </div>
@@ -339,7 +355,7 @@ export default function LicensePage() {
                                 <span style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '11px', fontWeight: 800, background: stat.bg, color: stat.color }}>{stat.label}</span>
                              </td>
                              <td style={{ padding: '20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px', border: '1px solid #f1f5f9', borderLeft: 'none', textAlign: 'right' }}>
-                                <button onClick={() => handleOpenModal('renew', l)} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>จัดการ / ต่ออายุ</button>
+                                <button onClick={() => handleOpenModal('renew', l)} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>จัดการ / ต่ออายุ</button>
                              </td>
                           </tr>
                         );
@@ -357,8 +373,8 @@ export default function LicensePage() {
                  {[
                    { label: 'บุคลากรทั้งหมด', val: monitorData.totalEmployees, color: '#0f172a', filter: 'all' },
                    { label: 'ถูกต้องครบถ้วน', val: monitorData.compliant, color: '#16a34a', filter: 'all' },
-                   { label: 'ใกล้หมดอายุ', val: monitorData.expiring, color: '#ca8a04', filter: 'expiring' },
-                   { label: 'หมดอายุ / ขาดข้อมูล', val: monitorData.missing, color: '#ef4444', filter: 'expired' }
+                   { label: 'ใกล้หมดอายุ', val: monitorData.expiring, color: '#ca8a04', filter: 'all' },
+                   { label: 'หมดอายุ / ขาดข้อมูล', val: monitorData.missing, color: '#ef4444', filter: 'all' }
                  ].map((c, i) => (
                    <div 
                      key={i} 
@@ -377,7 +393,7 @@ export default function LicensePage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
                  <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', border: '1px solid #e2e8f0' }}>
-                    <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สถิติตามแผนก (Department Compliance)</h3>
+                    <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สถิติตามแผนก</h3>
                     <div style={{ height: '350px' }}>
                        <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={Object.entries(monitorData.departmentStats).map(([name, s]) => ({ name, compliant: s.compliant, missing: s.missing + s.expiring }))}>
@@ -478,10 +494,9 @@ export default function LicensePage() {
            </div>
         )}
 
-        {/* Professional License Entry Modal */}
+        {/* Entry Modal */}
         {(activeModal === 'renew' || activeModal === 'add' || activeModal === 'edit') && (() => {
            const selection = formData.emp_id ? checkEmployeeRequirement(formData.emp_id) : null;
-           const employee = allEmployees.find(e => e.emp_id === formData.emp_id);
            
            return (
            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.95)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
@@ -489,7 +504,7 @@ export default function LicensePage() {
                  <div style={{ padding: '32px 40px', background: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>จัดการข้อมูลใบประกอบวิชาชีพ</h2>
-                       <p style={{ margin: '4px 0 0 0', opacity: 0.6, fontSize: '14px' }}>การบันทึกข้อมูลเพื่อเข้าสู่ระบบประวัติและการกำกับดูแลมาตรฐานสากล</p>
+                       <p style={{ margin: '4px 0 0 0', opacity: 0.6, fontSize: '14px' }}>การบันทึกข้อมูลเพื่อเข้าสู่ระบบประวัติและการกำกับดูแลมาตรฐาน</p>
                     </div>
                     {selection && <div style={{ background: '#16a34a', padding: '8px 20px', borderRadius: '30px', fontSize: '12px', fontWeight: 800 }}>เกณฑ์บังคับ: {selection.license_name}</div>}
                  </div>
@@ -501,7 +516,7 @@ export default function LicensePage() {
                              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '12px' }}>1. ข้อมูลบุคลากร</label>
                              {activeModal === 'add' ? (
                                 <div style={{ position: 'relative' }}>
-                                   <input placeholder="ค้นหาชื่อ หรือ รหัสพนักงาน..." value={searchTermEmp} onChange={e => { setSearchTermEmp(e.target.value); setFormData({...formData, emp_id: ''}); }} style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                   <input placeholder="ค้นหาพนักงาน..." value={searchTermEmp} onChange={e => { setSearchTermEmp(e.target.value); setFormData({...formData, emp_id: ''}); }} style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
                                    {searchTermEmp && !formData.emp_id && (
                                       <div style={{ position: 'absolute', top: '100%', left:0, right:0, background:'#fff', border:'1px solid #e2e8f0', borderRadius:'10px', marginTop:'4px', zIndex:100, maxHeight:'200px', overflowY:'auto' }}>
                                          {allEmployees.filter(e => e.first_name_th?.includes(searchTermEmp) || e.emp_id?.includes(searchTermEmp)).slice(0, 5).map(e => (
@@ -522,13 +537,12 @@ export default function LicensePage() {
                              )}
                           </div>
                           <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '12px' }}>2. อัปโหลดไฟล์หลักฐาน (PDF/PNG/JPG)</label>
+                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '12px' }}>2. อัปโหลดหลักฐาน (PDF/PNG/JPG)</label>
                              <div 
                                 onClick={() => document.getElementById('fileInput')?.click()}
                                 style={{ height: '150px', border: '2px dashed #cbd5e1', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.2s', background: selectedFile ? '#f0fdf4' : 'transparent' }}
                              >
                                 <input id="fileInput" type="file" hidden onChange={e => setSelectedFile(e.target.files?.[0] || null)} accept=".pdf,.png,.jpg,.jpeg" />
-                                <div style={{ fontSize: '32px' }}>{selectedFile ? '✅' : '📁'}</div>
                                 <div style={{ fontSize: '12px', marginTop: '8px', textAlign: 'center' }}>
                                    {selectedFile ? <strong>{selectedFile.name}</strong> : 'คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่'}
                                 </div>
@@ -579,83 +593,97 @@ export default function LicensePage() {
            );
         })()}
 
-        {/* History Modal */}
+        {/* Audit Trail Modal */}
         {historyModalOpen && (
-           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.95)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ background: '#fff', width: '800px', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
-                 <div style={{ padding: '24px 32px', background: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0 }}>ประวัติการถือครองใบประกอบวิชาชีพ</h3>
-                    <button onClick={() => setHistoryModalOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>ปิด</button>
-                 </div>
-                 <div style={{ padding: '32px', maxHeight: '60vh', overflowY: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                       <thead>
-                          <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
-                             <th style={{ padding: '12px' }}>ช่วงเวลา</th>
-                             <th>วิชาชีพ / เลขที่ใบอนุญาต</th>
-                             <th>สถานะ</th>
-                          </tr>
-                       </thead>
-                       <tbody>
-                          {historyData.map(h => (
-                             <tr key={h.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                                <td style={{ padding: '16px' }}>{h.issue_date || '-'} ถึง {h.expire_date || '-'}</td>
-                                <td>{h.license_name}<br/><span style={{ fontSize:'11px', color:'#94a3b8' }}>{h.license_no}</span></td>
-                                <td>
-                                   {h.file_path ? (
-                                      <a href={h.file_path} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontSize: '12px', fontWeight: 800, textDecoration: 'none' }}>เปิดดูเอกสาร</a>
-                                   ) : (
-                                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>ไม่มีไฟล์</span>
-                                   )}
-                                </td>
-                                <td>
-                                   <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 800, background: h.status === 'Active' ? '#dcfce7' : '#f1f5f9', color: h.status === 'Active' ? '#16a34a' : '#64748b' }}>
-                                      {h.status === 'Active' ? 'ใบปัจจุบัน' : 'ประวัติใบเดิม'}
-                                   </span>
-                                </td>
-                             </tr>
-                          ))}
-                       </tbody>
-                    </table>
-                 </div>
-              </div>
-           </div>
-        )}
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.95)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+               <div style={{ background: '#fff', width: '900px', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                  <div style={{ padding: '32px 40px', background: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                     <div>
+                        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>ไทม์ไลน์การถือครองวิชาชีพ</h2>
+                        <p style={{ margin: '4px 0 0 0', opacity: 0.6 }}>ประวัติการต่ออายุย้อนหลังและพยานหลักฐาน (Audit Trail)</p>
+                     </div>
+                     <button onClick={() => setHistoryModalOpen(false)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontWeight: 700 }}>ปิดหน้าต่าง</button>
+                  </div>
+                  <div style={{ padding: '40px', maxHeight: '60vh', overflowY: 'auto' }}>
+                     {historyData.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>ไม่พบประวัติการต่ออายุก่อนหน้านี้</div>
+                     ) : (
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                           <thead>
+                              <tr style={{ textAlign: 'left', color: '#64748b', fontSize: '11px', textTransform: 'uppercase', borderBottom: '2px solid #f1f5f9' }}>
+                                 <th style={{ padding: '16px' }}>ช่วงวันที่มีผล/หมดอายุ</th>
+                                 <th>เลขใบอนุญาต / สถาบัน</th>
+                                 <th>วิชาชีพ</th>
+                                 <th>หลักฐาน</th>
+                                 <th>สถานะ</th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              {historyData.map((h, i) => (
+                                 <tr key={h.id || i} style={{ borderBottom: '1px solid #f8fafc', background: h.status === 'Active' ? '#f0fdf4' : 'transparent' }}>
+                                    <td style={{ padding: '16px' }}>
+                                       <div style={{ fontWeight: 800, color: h.status === 'Active' ? '#16a34a' : '#1e293b' }}>{h.expire_date || '-'}</div>
+                                       <div style={{ fontSize: '11px', color: '#64748b' }}>ออกเมื่อ: {h.issue_date || '-'}</div>
+                                    </td>
+                                    <td>
+                                       <div style={{ fontWeight: 700 }}>{h.license_no}</div>
+                                       <div style={{ fontSize: '11px', color: '#64748b' }}>{h.institution || '-'}</div>
+                                    </td>
+                                    <td>{h.license_name}</td>
+                                    <td>
+                                       {h.file_path ? (
+                                          <a href={h.file_path} target="_blank" rel="noopener noreferrer" style={{ background: '#eff6ff', color: '#2563eb', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 800, textDecoration: 'none' }}>เปิดไฟล์แนบ</a>
+                                       ) : <span style={{ color: '#94a3b8', fontSize: '11px' }}>ไม่มีไฟล์</span>}
+                                    </td>
+                                    <td>
+                                       <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, background: h.status === 'Active' ? '#dcfce7' : '#f1f5f9', color: h.status === 'Active' ? '#16a34a' : '#64748b' }}>
+                                          {h.status === 'Active' ? 'ฉบับปัจจุบัน' : 'ประวัติเดิม'}
+                                       </span>
+                                    </td>
+                                 </tr>
+                              ))}
+                           </tbody>
+                        </table>
+                     )}
+                  </div>
+               </div>
+            </div>
+         )}
 
-        {/* Config Modal */}
-        {activeModal === 'config' && (
-           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.95)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ background: '#fff', width: '500px', borderRadius: '24px', padding: '40px' }}>
-                 <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', fontWeight: 800 }}>ตั้งค่าเกณฑ์มาตรฐาน</h2>
-                 <form onSubmit={handleConfigSubmit}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                       <div>
-                          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>ชื่อเกณฑ์</label>
-                          <input required value={configFormData.config_name} onChange={e => setConfigFormData({...configFormData, config_name: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
-                       </div>
-                       <div>
-                          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>วิชาชีพที่บังคับ</label>
-                          <input required value={configFormData.license_name} onChange={e => setConfigFormData({...configFormData, license_name: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
-                       </div>
-                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                          <div>
-                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>อายุใบอนุญาต (ปี)</label>
-                             <input type="number" value={configFormData.valid_years} onChange={e => setConfigFormData({...configFormData, valid_years: parseInt(e.target.value)})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
-                          </div>
-                          <div>
-                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>เตือนล่วงหน้า (วัน)</label>
-                             <input type="number" value={configFormData.warning_days} onChange={e => setConfigFormData({...configFormData, warning_days: parseInt(e.target.value)})} style={{ width: '100', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
-                          </div>
-                       </div>
-                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-                          <button type="button" onClick={() => setActiveModal('none')} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '12px 24px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>ยกเลิก</button>
-                          <button type="submit" style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '12px 32px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>บันทึกเกณฑ์</button>
-                       </div>
-                    </div>
-                 </form>
-              </div>
-           </div>
-        )}
+         {/* Config Modal */}
+         {activeModal === 'config' && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.95)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <div style={{ background: '#fff', width: '500px', borderRadius: '24px', padding: '40px' }}>
+                  <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', fontWeight: 800 }}>ตั้งค่าเกณฑ์มาตรฐาน</h2>
+                  <form onSubmit={handleConfigSubmit}>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div>
+                           <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>ชื่อเกณฑ์</label>
+                           <input required value={configFormData.config_name} onChange={e => setConfigFormData({...configFormData, config_name: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                        </div>
+                        <div>
+                           <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>วิชาชีพที่บังคับ</label>
+                           <input required value={configFormData.license_name} onChange={e => setConfigFormData({...configFormData, license_name: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                           <div>
+                              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>อายุใบอนุญาต (ปี)</label>
+                              <input type="number" value={configFormData.valid_years} onChange={e => setConfigFormData({...configFormData, valid_years: parseInt(e.target.value)})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                           </div>
+                           <div>
+                              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>เตือนล่วงหน้า (วัน)</label>
+                              <input type="number" value={configFormData.warning_days} onChange={e => setConfigFormData({...configFormData, warning_days: parseInt(e.target.value)})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                           </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                           <button type="button" onClick={() => setActiveModal('none')} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '12px 24px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>ยกเลิก</button>
+                           <button type="submit" style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '12px 32px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>บันทึกเกณฑ์</button>
+                        </div>
+                     </div>
+                  </form>
+               </div>
+            </div>
+         )}
 
       </div>
     </AppLayout>
