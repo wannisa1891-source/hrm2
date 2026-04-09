@@ -50,8 +50,8 @@ export default function EmployeeCardPage() {
     </AppLayout>
   );
 
-  const fullName = `${profile.prefix || ''}${profile.first_name_th} ${profile.last_name_th}`;
-  const fullNameEn = `${profile.first_name_en || ''} ${profile.last_name_en || ''}`;
+  const empForCard = profile;
+  const fullName = `${empForCard.prefix || ''}${empForCard.first_name_th} ${empForCard.last_name_th}`;
 
   return (
     <AppLayout>
@@ -61,130 +61,143 @@ export default function EmployeeCardPage() {
         flexDirection: 'column', 
         alignItems: 'center', 
         justifyContent: 'center',
-        padding: '24px',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+        padding: '40px 24px',
+        background: '#f8fafc'
       }}>
         
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>บัตรพนักงานดิจิทัล</h1>
-          <p style={{ color: '#64748b', fontWeight: 500 }}>Digital Employee Identification Card</p>
+          <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>บัตรพนักงาน</h1>
+          <p style={{ color: '#64748b', fontWeight: 500 }}>Official Employee Identification Card</p>
         </div>
 
-        {/* Card Container */}
-        <div className="id-card-wrap" style={{ 
-          width: '100%', 
-          maxWidth: '400px', 
-          height: '600px', 
-          perspective: '1000px',
+        {/* Card Container - Flexbox to show front and back */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '40px', 
+          flexWrap: 'wrap', 
+          justifyContent: 'center',
+          maxWidth: '1000px',
+          width: '100%'
         }}>
-          <div className="id-card" style={{
-            position: 'relative',
-            width: '100%',
-            height: '100%',
-            background: 'linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%)',
-            borderRadius: '24px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            padding: '32px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            overflow: 'hidden',
-            border: '1px solid rgba(255,255,255,0.8)'
-          }}>
-            
-            {/* Header / Hospital Logo Placeholder */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', marginBottom: '32px' }}>
-              <div style={{ width: '40px', height: '40px', background: '#3b82f6', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+          
+          {/* --- Front Card (Matched with Admin Sidebar design) --- */}
+          <div style={{ width: '300px', height: '480px', background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0 }}>
+
+            {/* Abstract blobs */}
+            <div style={{ position: 'absolute', top: '-40px', left: '-20px', width: '280px', height: '260px', background: '#0f172a', borderRadius: '0 0 60% 40% / 0 0 50% 70%', zIndex: 2 }} />
+            <div style={{ position: 'absolute', top: 0, right: '-60px', width: '200px', height: '280px', background: '#f59e0b', borderRadius: '0 0 40% 60%', zIndex: 1 }} />
+            <div style={{ position: 'absolute', bottom: '-40px', left: '-40px', width: '120px', height: '120px', background: '#f59e0b', borderRadius: '50%', zIndex: 1 }} />
+
+            {/* Logo / Tagline */}
+            <div style={{ position: 'relative', zIndex: 3, padding: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '28px', height: '28px', background: '#f59e0b', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: '12px', height: '12px', border: '2px solid #0f172a', borderRadius: '50%' }} />
               </div>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e293b', lineHeight: 1 }}>HOSPITAL NAME</div>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8' }}>HEALTHCARE SERVICES</div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.5px', lineHeight: 1 }}>HRM SYSTEM</div>
+                <div style={{ fontSize: '9px', color: '#cbd5e1', marginTop: '2px', letterSpacing: '0.5px' }}>EMPLOYEE ID CARD</div>
               </div>
             </div>
 
-            {/* Photo */}
-            <div style={{ 
-              width: '180px', 
-              height: '180px', 
-              borderRadius: '20px', 
-              overflow: 'hidden', 
-              marginBottom: '24px',
-              border: '6px solid white',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-              position: 'relative',
-              background: '#f1f5f9'
-            }}>
-              <Image 
-                src={profile.image ? `/uploads/${profile.image}` : (profile.photo ? `/uploads/${profile.photo}` : 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png')} 
-                alt="employee photo" 
-                fill
-                style={{ objectFit: 'cover' }}
-                unoptimized
-                onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }}
-              />
-            </div>
-
-            {/* Name Details */}
-            <div style={{ textAlign: 'center', width: '100%' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{fullName}</h2>
-              <p style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{fullNameEn}</p>
-            </div>
-
-            {/* Divider */}
-            <div style={{ width: '60px', height: '4px', background: '#3b82f6', borderRadius: '2px', margin: '24px 0' }}></div>
-
-            {/* Position & Department */}
-            <div style={{ textAlign: 'center', marginBottom: '32px', width: '100%' }}>
-              <div style={{ fontSize: '16px', fontWeight: 700, color: '#3b82f6' }}>{profile.pos_name}</div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#475569', marginTop: '4px' }}>{profile.dept_name}</div>
-            </div>
-
-            {/* ID Number */}
-            <div style={{ 
-              background: '#f8fafc', 
-              padding: '12px 24px', 
-              borderRadius: '12px', 
-              border: '1px solid #e2e8f0',
-              marginBottom: '32px',
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '12px'
-            }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>ID NUMBER:</span>
-              <span style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', letterSpacing: '0.1em' }}>{profile.emp_id}</span>
-            </div>
-
-            {/* Footer / QR Code */}
-            <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-                <QRCodeSVG value={`EMPLOYEE:${profile.emp_id}`} size={80} level="H" includeMargin={false} />
+            {/* Image */}
+            <div style={{ position: 'relative', zIndex: 3, marginTop: '4px', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '130px', height: '130px', position: 'relative', borderRadius: '50%', border: '6px solid #ffffff', boxShadow: '0 8px 16px rgba(0,0,0,0.1)', background: '#f1f5f9', overflow: 'hidden' }}>
+                <Image fill src={empForCard.image ? `/uploads/${empForCard.image}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>`} alt="Employee" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} />
               </div>
-              <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>SCAN TO VERIFY</span>
             </div>
 
-            {/* Holographic Decoration */}
-            <div style={{
-              position: 'absolute',
-              top: '-10%',
-              right: '-10%',
-              width: '150px',
-              height: '150px',
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%)',
-              borderRadius: '50%',
-              pointerEvents: 'none'
-            }}></div>
+            {/* Name & Title */}
+            <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', marginTop: '16px', padding: '0 20px' }}>
+              <h2 style={{ margin: '0', fontSize: '18px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{empForCard.first_name_en || (empForCard.first_name_th + ' ' + empForCard.last_name_th)}</h2>
+              {empForCard.first_name_en && empForCard.last_name_en && (
+                <h2 style={{ margin: '0', fontSize: '18px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{empForCard.last_name_en}</h2>
+              )}
+              <p style={{ margin: '4px 0 0 0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>{empForCard.pos_name}</p>
+            </div>
+
+            {/* Details Info Grid */}
+            <div style={{ position: 'relative', zIndex: 3, marginTop: '24px', padding: '0 32px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '50px 1fr', gap: '6px 8px', fontSize: '11px' }}>
+                <div style={{ color: '#64748b', fontWeight: 600 }}>ID</div>
+                <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.emp_id}</div>
+                <div style={{ color: '#64748b', fontWeight: 600 }}>DOB</div>
+                <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.birth_date ? new Date(empForCard.birth_date).toLocaleDateString('en-GB') : '-'}</div>
+                <div style={{ color: '#64748b', fontWeight: 600 }}>Phone</div>
+                <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.phone || empForCard.mobile_no || '-'}</div>
+                <div style={{ color: '#64748b', fontWeight: 600 }}>Email</div>
+                <div style={{ color: '#0f172a', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>: {empForCard.email || '-'}</div>
+              </div>
+            </div>
+
+            {/* Barcode/QR wrapper */}
+            <div style={{ position: 'absolute', bottom: '20px', left: '0', right: '0', display: 'flex', justifyContent: 'center', zIndex: 3 }}>
+              <QRCodeSVG value={empForCard.emp_id} size={48} level="M" />
+            </div>
+
           </div>
+
+          {/* --- Back Card (Matched with Admin Sidebar design) --- */}
+          <div style={{ width: '300px', height: '480px', background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0 }}>
+
+            {/* Blobs Back */}
+            <div style={{ position: 'absolute', top: '-60px', left: '-20px', width: '360px', height: '180px', background: '#0f172a', borderRadius: '0 0 50% 50%', zIndex: 2 }} />
+            <div style={{ position: 'absolute', top: 0, right: '-40px', width: '160px', height: '160px', background: '#f59e0b', borderRadius: '0 0 0 60%', zIndex: 1 }} />
+            <div style={{ position: 'absolute', bottom: '-40px', left: '-40px', width: '120px', height: '120px', background: '#f59e0b', borderRadius: '50%', zIndex: 1 }} />
+
+            {/* Logo / Tagline */}
+            <div style={{ position: 'relative', zIndex: 3, padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <div style={{ width: '24px', height: '24px', background: '#f59e0b', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '10px', height: '10px', border: '2px solid #0f172a', borderRadius: '50%' }} />
+              </div>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.5px', lineHeight: 1 }}>HRM SYSTEM</div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div style={{ position: 'relative', zIndex: 3, padding: '20px 28px', marginTop: '40px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', textAlign: 'center', margin: '0 0 20px 0', letterSpacing: '0.5px' }}>ข้อกำหนดและเงื่อนไข</h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: '4px' }} />
+                  <div>บัตรนี้เป็นทรัพย์สินของบริษัทและต้องคืนเมื่อสิ้นสุดการจ้างงาน</div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: '4px' }} />
+                  <div>ท่านต้องสวมบัตรประจำตัวนี้ให้เห็นชัดเจนตลอดเวลาขณะอยู่ในบริเวณบริษัท</div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: '4px' }} />
+                  <div>หากพบเห็นโปรดส่งคืนฝ่ายทรัพยากรบุคคลทันที</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+                <div>
+                  <div style={{ marginBottom: '6px' }}>วันที่เริ่มงาน &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(empForCard.start_date).toLocaleDateString('en-GB') : '-'}</span></div>
+                  <div>วันหมดอายุ &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleDateString('en-GB') : '-'}</span></div>
+                </div>
+              </div>
+
+              {/* Signature */}
+              <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Brush Script MT', 'Dancing Script', cursive", fontSize: '24px', color: '#0f172a', margin: '0', lineHeight: 1, height: '24px' }}>Wannisa</div>
+                <div style={{ borderTop: '1px solid #cbd5e1', margin: '8px auto 0', width: '140px', paddingTop: '6px' }} />
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>ลายมือชื่อผู้มีอำนาจ</div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
         {/* Action Buttons */}
-        <div style={{ marginTop: '40px', display: 'flex', gap: '16px' }}>
+        <div style={{ marginTop: '60px', display: 'flex', gap: '16px' }}>
           <button 
             onClick={() => window.print()}
             style={{ 
-              padding: '12px 24px', 
+              padding: '12px 28px', 
               background: '#0f172a', 
               color: 'white', 
               border: 'none', 
@@ -193,7 +206,7 @@ export default function EmployeeCardPage() {
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '10px',
               boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.3)'
             }}
           >
@@ -204,7 +217,7 @@ export default function EmployeeCardPage() {
           <button 
             onClick={() => router.back()}
             style={{ 
-              padding: '12px 24px', 
+              padding: '12px 28px', 
               background: 'white', 
               color: '#475569', 
               border: '1px solid #e2e8f0', 
@@ -219,14 +232,11 @@ export default function EmployeeCardPage() {
 
         <style jsx global>{`
           @media print {
-            .sidebar-hybrid, .nav-label, .profile-tabs, button { display: none !important; }
-            .id-card-wrap { margin: 0 !important; transform: scale(1.5); transform-origin: top center; }
-            body { background: white !important; }
+            .sidebar-hybrid, .nav-label, .profile-tabs, button, h1, p { display: none !important; }
+            body { background: white !important; padding: 0 !important; }
             .main-content { padding: 0 !important; margin: 0 !important; }
-          }
-          .id-card-wrap:hover .id-card {
-            transform: translateY(-5px) rotateX(2deg);
-            transition: all 0.3s ease;
+            div[style*="calc(100vh - 100px)"] { height: auto !important; min-height: auto !important; padding: 0 !important; }
+            div[style*="max-width: 1000px"] { transform: scale(1); gap: 20px !important; }
           }
         `}</style>
 
