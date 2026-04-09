@@ -7,8 +7,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key_xyz_1234
 const secretKey = new TextEncoder().encode(JWT_SECRET);
 
 // Array of paths that don't require authentication
-const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
-const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/auth/logout'];
+const publicPaths = ['/login'];
+const publicApiPaths = ['/api/auth/login', '/api/auth/logout'];
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
