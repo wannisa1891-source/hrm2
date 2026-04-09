@@ -88,35 +88,41 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   const filteredMenuItems = useMemo(() => {
     return menuItems.reduce<any[]>((acc, item) => {
-      if (!isAdmin) {
-        // Special mapping for users
-        if (item.id === 'finance') {
-          acc.push({
-            ...item,
-            label: 'เงินเดือนของฉัน'
-          });
-          return acc;
-        }
-
-        if (item.id === 'employee-card') {
-          acc.push(item);
-          return acc;
-        }
-
-        if (item.id === 'personnel' || item.id === 'audit') return acc;
-
-        if (item.children) {
-          item.children.forEach(child => {
-            acc.push({
-              id: child.id,
-              label: child.label,
-              icon: child.icon || item.icon,
-              href: child.href
-            });
-          });
-          return acc;
-        }
+      if (isAdmin) {
+        // For Admins: Hide the individual employee-card menu
+        if (item.id === 'employee-card') return acc;
+        acc.push(item);
+        return acc;
       }
+
+      // For Users
+      if (item.id === 'finance') {
+        acc.push({
+          ...item,
+          label: 'เงินเดือนของฉัน'
+        });
+        return acc;
+      }
+
+      if (item.id === 'employee-card') {
+        acc.push(item);
+        return acc;
+      }
+
+      if (item.id === 'personnel' || item.id === 'audit') return acc;
+
+      if (item.children) {
+        item.children.forEach(child => {
+          acc.push({
+            id: child.id,
+            label: child.label,
+            icon: child.icon || item.icon,
+            href: child.href
+          });
+        });
+        return acc;
+      }
+
       acc.push(item);
       return acc;
     }, []);
