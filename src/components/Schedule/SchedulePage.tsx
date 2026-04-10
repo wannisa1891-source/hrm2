@@ -85,10 +85,33 @@ export default function SchedulePage() {
     openEditModal,
     closeModal,
     deptData,
+    checkRestConflict,
   } = useScheduleModal(schedules, () => { })
 
   const { totalSchedules, todaySchedules, monthSchedules } = useScheduleSummary(schedules)
   const { departmentStatus } = useScheduleStatus(schedules)
+
+  const conflictErrors = useMemo(() => {
+    if (!form.nurseName || !selectedDate || !form.shift) return [];
+    return checkRestConflict(form.nurseName, selectedDate, form.shift, editingId);
+  }, [form.nurseName, selectedDate, form.shift, editingId, schedules, checkRestConflict]);
+
+  const hasConflicts = conflictErrors.length > 0;
+
+  const yesterdayStr = useMemo(() => selectedDate ? new Date(selectedDate.getTime() - 86400000).toDateString() : '', [selectedDate]);
+  const todayStr = useMemo(() => selectedDate ? selectedDate.toDateString() : '', [selectedDate]);
+  const tomorrowStr = useMemo(() => selectedDate ? new Date(selectedDate.getTime() + 86400000).toDateString() : '', [selectedDate]);
+
+  const empContextSchedules = useMemo(() => {
+    if (!form.nurseName || !selectedDate) return [];
+    const empIdOnly = form.nurseName.split(' - ')[0].trim();
+    return schedules.filter(s => {
+      if (s.nurseName !== empIdOnly) return false;
+      if (editingId && s.id === editingId) return false;
+      const dStr = s.date.toDateString();
+      return dStr === yesterdayStr || dStr === todayStr || dStr === tomorrowStr;
+    }).sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [form.nurseName, selectedDate, schedules, editingId, yesterdayStr, todayStr, tomorrowStr]);
 
   // โหลดเวรของเดือนที่กำลังดูอยู่
   useEffect(() => {
@@ -195,8 +218,13 @@ export default function SchedulePage() {
   const daySchedules = selectedDate ? schedules.filter(s => {
     const a = new Date(s.date)
     const b = new Date(selectedDate)
-    return a.toDateString() === b.toDateString()
-  }) : []
+    if (a.toDateString() === b.toDateString()) return true;
+    
+    const yesterday = new Date(b.getTime() - 86400000);
+    if (a.toDateString() === yesterday.toDateString() && s.shift === 'Night') return true;
+    
+    return false;
+  }).sort((a,b) => a.date.getTime() - b.date.getTime()) : []
 
   const getShiftColor = (shift: string): string => {
     const found = SHIFT_TYPES.find(s => s.value === shift)
@@ -367,7 +395,7 @@ export default function SchedulePage() {
               <button className="sp-btn-nav" onClick={goNext}>
                 <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               </button>
-              <button className="sp-btn-today" onClick={goToday}>วันนี้</button>
+              <button className="sp-btn-today" onClick={() => { goToday(); changeView('day'); }}>วันนี้</button>
             </div>
             <div className="sp-cal-views">
               {VIEWS.map((v) => (
@@ -485,7 +513,10 @@ export default function SchedulePage() {
                     <div key={sch.id} className="sp-existing-item">
                       <div className="sp-existing-info">
                         <span className="sp-existing-dot" style={{ background: getShiftColor(sch.shift) }} />
-                        <span>{sch.nurseName} — {sch.shift} — {sch.department}</span>
+                        <span>
+                           {sch.nurseName} — {sch.shift} — {sch.department} 
+                           {new Date(sch.date).toDateString() !== selectedDate?.toDateString() && <span className="sp-shift-type-badge ml-2 text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">ข้ามคืนจากเมื่อวาน</span>}
+                        </span>
                       </div>
                       <div className="sp-existing-actions">
                         <button className="sp-btn-icon" onClick={() => openEditModal(sch)} title="แก้ไข">
@@ -501,6 +532,14 @@ export default function SchedulePage() {
               )}
 
               {/* Validation errors */}
+              {conflictErrors.length > 0 && (
+                <div className="sp-error" style={{ background: '#fef2f2', border: '1px solid #ef4444', color: '#b91c1c' }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>⚠️ พบข้อผิดพลาดของเวลาพัก/กะชน:</div>
+                  {conflictErrors.map((err, i) => (
+                    <div key={i} className="mb-1 text-sm">- {err}</div>
+                  ))}
+                </div>
+              )}
               {errors.length > 0 && (
                 <div className="sp-error">
                   {errors.map((err, i) => (
@@ -549,6 +588,33 @@ export default function SchedulePage() {
                       onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, nurseName: e.target.value }))}
                       placeholder="ระบุชื่อรหัสพนักงาน/พยาบาล" />
                   )}
+
+                  {/* Employee Context Preview */}
+                  {empContextSchedules.length > 0 && (
+                    <div style={{ marginTop: '10px', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1', fontSize: '13px' }}>
+                      <div style={{ fontWeight: 600, color: '#334155', marginBottom: '8px', display: 'flex', alignItems: 'center', gap:'6px' }}>
+                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                         ตารางเวรใกล้เคียงของพนักงานนี้
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {empContextSchedules.map(s => {
+                          const isYesterday = s.date.toDateString() === yesterdayStr;
+                          const isToday = s.date.toDateString() === todayStr;
+                          const label = isYesterday ? 'เมื่อวาน' : isToday ? 'วันนี้' : 'พรุ่งนี้';
+                          return (
+                            <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '6px 10px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                              <span style={{ fontWeight: 600, color: isToday ? '#2563eb' : '#64748b' }}>{label} ({s.date.toLocaleDateString('th-TH', {day:'numeric', month:'short'})})</span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: getShiftColor(s.shift) }}></span>
+                                <b>{s.shift}</b>
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
                 <div className="sp-form-group">
                   <label>ประเภทเวร <span className="sp-req">*</span></label>
@@ -584,11 +650,11 @@ export default function SchedulePage() {
 
               <div className="sp-modal-btns">
                 {!isEditing && (
-                  <button className="sp-btn-save" style={{ background: '#0ea5e9' }} onClick={() => handleSave(true)} disabled={loading} title="บันทึกคนนี้แล้วเคลียร์ชื่อเพื่อกรอกคนถัดไป">
+                  <button className="sp-btn-save" style={{ background: '#0ea5e9' }} onClick={() => handleSave(true)} disabled={loading || hasConflicts} title="บันทึกคนนี้แล้วเคลียร์ชื่อเพื่อกรอกคนถัดไป">
                     บันทึก + เพิ่มต่อ
                   </button>
                 )}
-                <button className="sp-btn-save" onClick={() => handleSave(false)} disabled={loading}>
+                <button className="sp-btn-save" onClick={() => handleSave(false)} disabled={loading || hasConflicts}>
                   {isEditing ? 'อัปเดต (ปิด)' : 'บันทึก (ปิด)'}
                 </button>
                 {isEditing && editingId && (

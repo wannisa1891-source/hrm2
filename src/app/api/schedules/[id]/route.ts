@@ -60,19 +60,20 @@ function toMinutes(timeStr: string): number {
   return h * 60 + m;
 }
 
-/**
- * ตรวจสอบว่า shift A กับ shift B มีเวลาชนกันหรือไม่
- * รองรับ shift ข้ามวัน (end < start หมายถึงใช้ 1440 offset)
- */
-function shiftsOverlap(
-  startA: number,
-  endA: number,
-  startB: number,
-  endB: number
-): boolean {
-  const normA: [number, number] = endA <= startA ? [startA, endA + 1440] : [startA, endA];
-  const normB: [number, number] = endB <= startB ? [startB, endB + 1440] : [startB, endB];
-  return normA[0] < normB[1] && normB[0] < normA[1];
+const MIN_REST_HOURS = 10;
+const MIN_REST_MINUTES = MIN_REST_HOURS * 60;
+
+function getAbsoluteShiftMetrics(dateStr: string, timeStr: string, endStr: string) {
+    const baseDate = new Date(dateStr);
+    const baseMinutes = Math.floor(baseDate.getTime() / 60000);
+    const startMins = toMinutes(timeStr);
+    let endMins = toMinutes(endStr);
+    if (endMins <= startMins) endMins += 1440;
+
+    return {
+        start: baseMinutes + startMins,
+        end: baseMinutes + endMins
+    };
 }
 
 // ============================================================
@@ -106,7 +107,7 @@ async function checkTimeConflict(
   newShift: ShiftType,
   excludeId: string
 ): Promise<string | null> {
-  // ดึงเวรของพนักงานในช่วง ±1 วัน เพื่อรองรับ shift ข้ามวัน
+  // ดึงเวรของพนักงานในช่วง ±1 วัน เพื่อรองรับ shift ข้ามวันและพักไม่พอ
   const [existingRows]: any = await pool.query(
     `SELECT s.id, t.start_time, t.end_time, t.code, s.schedule_date
      FROM tbl_schedules s
@@ -117,25 +118,30 @@ async function checkTimeConflict(
     [empId, date, date, excludeId]
   );
 
-  const newStart = toMinutes(newShift.start_time);
-  const newEnd   = toMinutes(newShift.end_time);
+  const newMetrics = getAbsoluteShiftMetrics(date, newShift.start_time, newShift.end_time);
 
   for (const row of existingRows) {
-    const existStart = toMinutes(row.start_time);
-    const existEnd   = toMinutes(row.end_time);
+    const rowDateStr = new Date(row.schedule_date).toISOString().split('T')[0];
+    const existMetrics = getAbsoluteShiftMetrics(rowDateStr, row.start_time, row.end_time);
 
-    // คำนวณ offset ถ้าเวรอยู่คนละวัน
-    const dayDiff =
-      (new Date(row.schedule_date).getTime() - new Date(date).getTime()) / 86_400_000;
+    // Overlap Check (ชนกัน)
+    const overlaps = (newMetrics.start < existMetrics.end && existMetrics.start < newMetrics.end);
+    if (overlaps) {
+      return `พนักงาน ${empId} มีเวร ${resolveShiftName(row.code)} (${row.start_time.slice(0, 5)}–${row.end_time.slice(0, 5)}) วันที่ ${rowDateStr} ชนกับเวรที่ต้องการแก้ไข`;
+    }
 
-    let adjStart = existStart + dayDiff * 1440;
-    let adjEnd   = existEnd   + dayDiff * 1440;
-
-    if (shiftsOverlap(newStart, newEnd, adjStart, adjEnd)) {
-      const shiftLabel = resolveShiftName(row.code);
-      const startStr   = row.start_time.slice(0, 5);
-      const endStr     = row.end_time.slice(0, 5);
-      return `พนักงาน ${empId} มีเวร${shiftLabel} (${startStr}–${endStr}) วันที่ ${row.schedule_date} ชนกับเวรที่ต้องการแก้ไข`;
+    // Rest Check (พักไม่พอ)
+    if (newMetrics.start >= existMetrics.end) {
+      const rest = newMetrics.start - existMetrics.end;
+      if (rest < MIN_REST_MINUTES) {
+        return `พนักงาน ${empId} พักไม่เพียงพอ (${+(rest / 60).toFixed(1)} ชม.) ระหว่างเวร ${resolveShiftName(row.code)} → ${newShift.name}`;
+      }
+    }
+    if (existMetrics.start >= newMetrics.end) {
+      const rest = existMetrics.start - newMetrics.end;
+      if (rest < MIN_REST_MINUTES) {
+        return `พนักงาน ${empId} พักไม่เพียงพอ (${+(rest / 60).toFixed(1)} ชม.) ระหว่างเวร ${newShift.name} → ${resolveShiftName(row.code)}`;
+      }
     }
   }
   return null;
