@@ -56,20 +56,20 @@ function toMinutes(timeStr: string): number {
   return h * 60 + m;
 }
 
-/**
- * ตรวจสอบว่า shift A กับ shift B มีเวลาชนกันหรือไม่
- * รองรับ shift ข้ามวัน (end < start หมายถึงวันถัดไป)
- */
-function shiftsOverlap(
-  startA: number,
-  endA: number,
-  startB: number,
-  endB: number
-): boolean {
-  // normalize to [start, end] in a 2-day window (0–2880 min)
-  const normA: [number, number] = endA <= startA ? [startA, endA + 1440] : [startA, endA];
-  const normB: [number, number] = endB <= startB ? [startB, endB + 1440] : [startB, endB];
-  return normA[0] < normB[1] && normB[0] < normA[1];
+const MIN_REST_HOURS = 10;
+const MIN_REST_MINUTES = MIN_REST_HOURS * 60;
+
+function getAbsoluteShiftMetrics(dateStr: string, timeStr: string, endStr: string) {
+    const baseDate = new Date(dateStr);
+    const baseMinutes = Math.floor(baseDate.getTime() / 60000);
+    const startMins = toMinutes(timeStr);
+    let endMins = toMinutes(endStr);
+    if (endMins <= startMins) endMins += 1440;
+
+    return {
+        start: baseMinutes + startMins,
+        end: baseMinutes + endMins
+    };
 }
 
 // ============================================================
@@ -97,17 +97,13 @@ async function checkDuplicate(
   return null;
 }
 
-/**
- * ตรวจสอบ shift ชนกัน (เวลาทับซ้อน) สำหรับ emp_id เดียวกันในวันเดียวกัน
- * รองรับ shift ข้ามวัน
- */
 async function checkTimeConflict(
   empId: string,
   date: string,
   newShift: ShiftType,
   excludeId?: string
 ): Promise<string | null> {
-  // ดึงเวรทั้งหมดของพนักงานในวันนี้และวันก่อน/หลัง (สำหรับ shift ข้ามวัน)
+  // ดึงเวรทั้งหมดของพนักงานในวันนี้และวันก่อน/หลัง (สำหรับ shift ข้ามวันและพักไม่พอ)
   const [existingRows]: any = await pool.query(
     `SELECT s.id, t.start_time, t.end_time, t.code, s.schedule_date
      FROM tbl_schedules s
@@ -118,31 +114,30 @@ async function checkTimeConflict(
     [empId, date, date, excludeId ?? null, excludeId ?? null]
   );
 
-  const newStart = toMinutes(newShift.start_time);
-  const newEnd = toMinutes(newShift.end_time);
+  const newMetrics = getAbsoluteShiftMetrics(date, newShift.start_time, newShift.end_time);
 
   for (const row of existingRows) {
-    const existStart = toMinutes(row.start_time);
-    const existEnd = toMinutes(row.end_time);
+    const rowDateStr = new Date(row.schedule_date).toISOString().split('T')[0];
+    const existMetrics = getAbsoluteShiftMetrics(rowDateStr, row.start_time, row.end_time);
 
-    // ปรับ offset ถ้าเวรอยู่คนละวัน
-    let offsetStart = existStart;
-    let offsetEnd = existEnd;
-    const dayDiff =
-      (new Date(row.schedule_date).getTime() - new Date(date).getTime()) /
-      86400000; // -1, 0, or 1
-
-    if (dayDiff === -1) {
-      // เวรของวันก่อน → เลื่อนเวลาไปก่อน 0 (offset -1440)
-      offsetStart -= 1440;
-      offsetEnd = offsetEnd <= existStart ? offsetEnd : offsetEnd - 1440;
-    } else if (dayDiff === 1) {
-      offsetStart += 1440;
-      offsetEnd += 1440;
+    // Overlap Check (ชนกัน)
+    const overlaps = (newMetrics.start < existMetrics.end && existMetrics.start < newMetrics.end);
+    if (overlaps) {
+      return `พนักงาน ${empId} มีเวร ${resolveShiftName(row.code)} (${row.start_time.slice(0, 5)}–${row.end_time.slice(0, 5)}) ชนกับเวรที่ต้องการเพิ่ม`;
     }
 
-    if (shiftsOverlap(newStart, newEnd, offsetStart, offsetEnd)) {
-      return `พนักงาน ${empId} มีเวร${resolveShiftName(row.code)} (${row.start_time.slice(0, 5)}–${row.end_time.slice(0, 5)}) ชนกับเวรที่ต้องการเพิ่ม`;
+    // Rest Check (พักไม่พอ)
+    if (newMetrics.start >= existMetrics.end) {
+      const rest = newMetrics.start - existMetrics.end;
+      if (rest < MIN_REST_MINUTES) {
+        return `พนักงาน ${empId} พักไม่เพียงพอ (${+(rest / 60).toFixed(1)} ชม.) ระหว่างเวร ${resolveShiftName(row.code)} → ${newShift.name}`;
+      }
+    }
+    if (existMetrics.start >= newMetrics.end) {
+      const rest = existMetrics.start - newMetrics.end;
+      if (rest < MIN_REST_MINUTES) {
+        return `พนักงาน ${empId} พักไม่เพียงพอ (${+(rest / 60).toFixed(1)} ชม.) ระหว่างเวร ${newShift.name} → ${resolveShiftName(row.code)}`;
+      }
     }
   }
   return null;
