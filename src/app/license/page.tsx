@@ -799,7 +799,7 @@ export default function LicensePage() {
                                        name: dept,
                                        ครบถ้วน: stats.compliant,
                                        ใกล้หมดอายุ: stats.expiring,
-                                       หมดอายุ: stats.missing
+                                       'รอตรวจสอบ/หมดอายุ': stats.missing
                                     }))}>
                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                        <XAxis dataKey="name" fontSize={10} interval={0} />
@@ -808,7 +808,7 @@ export default function LicensePage() {
                                        <Legend />
                                        <Bar dataKey="ครบถ้วน" stackId="a" fill="#16a34a" />
                                        <Bar dataKey="ใกล้หมดอายุ" stackId="a" fill="#ca8a04" />
-                                       <Bar dataKey="หมดอายุ" stackId="a" fill="#dc2626" />
+                                       <Bar dataKey="รอตรวจสอบ/หมดอายุ" stackId="a" fill="#dc2626" />
                                     </BarChart>
                                  </ResponsiveContainer>
                               </div>
@@ -955,6 +955,18 @@ export default function LicensePage() {
                                           <a href={checkLink} target="_blank" rel="noreferrer" style={{ background: '#3b82f6', color: '#fff', padding: '0 32px', borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}>ตรวจสอบสภาฯ</a>
                                        )}
                                     </div>
+                                 </div>
+                                 <div>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>
+                                       ชื่อวิชาชีพ/ใบอนุญาต <span style={{ color: '#ef4444' }}>*</span>
+                                    </label>
+                                    <input 
+                                       required 
+                                       value={formData.license_name || ''} 
+                                       onChange={e => setFormData({ ...formData, license_name: e.target.value })} 
+                                       placeholder="ระบุชื่อใบอนุญาต..." 
+                                       style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', fontWeight: 900, fontSize: '16px', outline: 'none', background: '#fff' }} 
+                                    />
                                  </div>
                                  <div>
                                     <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>เลขที่ใบอนุญาตใหม่</label>
