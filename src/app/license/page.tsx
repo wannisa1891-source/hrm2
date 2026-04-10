@@ -635,7 +635,7 @@ export default function LicensePage() {
 
    return (
       <AppLayout>
-         <div style={{ padding: '32px', minHeight: '100vh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Anuphan, Prompt, sans-serif' }}>
+         <div className="license-page-root custom-scrollbar" style={{ padding: '32px', minHeight: '100vh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Anuphan, Prompt, sans-serif' }}>
 
             {/* Main Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
@@ -763,10 +763,10 @@ export default function LicensePage() {
                            ))}
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '32px' }}>
-                           <div style={cardStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '32px', minHeight: '400px' }}>
+                           <div style={{ ...cardStyle, minWidth: 0 }}>
                               <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สัดส่วนพนักงานตามสถานะ</h3>
-                              <div style={{ height: '300px' }}>
+                              <div style={{ height: '320px' }}>
                                  <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                        <Pie
@@ -776,7 +776,7 @@ export default function LicensePage() {
                                              { name: 'รอตรวจสอบ/หมดอายุ', value: monitorData.missing, color: '#dc2626' }
                                           ]}
                                           innerRadius={60}
-                                          outerRadius={80}
+                                          outerRadius={90}
                                           paddingAngle={5}
                                           dataKey="value"
                                        >
@@ -785,33 +785,48 @@ export default function LicensePage() {
                                           ].map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                        </Pie>
                                        <Tooltip />
-                                       <Legend />
+                                       <Legend formatter={(value) => <span style={{ fontWeight: 700, color: '#475569', fontSize: '12px' }}>{value}</span>} />
                                     </PieChart>
                                  </ResponsiveContainer>
                               </div>
                            </div>
 
-                           <div style={cardStyle}>
-                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สถานะแยกตามภาคส่วน (5 อันดับแรก)</h3>
-                              <div style={{ height: '300px' }}>
-                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={Object.entries(monitorData.departmentStats).slice(0, 5).map(([dept, stats]) => ({
-                                       name: dept,
-                                       ครบถ้วน: stats.compliant,
-                                       ใกล้หมดอายุ: stats.expiring,
-                                       'รอตรวจสอบ/หมดอายุ': stats.missing
-                                    }))}>
-                                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                       <XAxis dataKey="name" fontSize={10} interval={0} />
-                                       <YAxis fontSize={10} />
-                                       <Tooltip />
-                                       <Legend />
-                                       <Bar dataKey="ครบถ้วน" stackId="a" fill="#16a34a" />
-                                       <Bar dataKey="ใกล้หมดอายุ" stackId="a" fill="#ca8a04" />
-                                       <Bar dataKey="รอตรวจสอบ/หมดอายุ" stackId="a" fill="#dc2626" />
-                                    </BarChart>
-                                 </ResponsiveContainer>
-                              </div>
+                           <div style={{ ...cardStyle, minWidth: 0, overflow: 'hidden' }}>
+                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สถานะแยกตามภาคส่วน (เลื่อนดูได้)</h3>
+                               <div className="custom-scrollbar" style={{ height: '320px', overflowX: 'auto', paddingBottom: '16px' }}>
+                                  <div style={{ minWidth: `${Math.max(800, Object.keys(monitorData.departmentStats).length * 80)}px`, height: '100%' }}>
+                                     <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart 
+                                           data={Object.entries(monitorData.departmentStats).map(([dept, stats]) => ({
+                                              name: dept,
+                                              ครบถ้วน: stats.compliant,
+                                              ใกล้หมดอายุ: stats.expiring,
+                                              'รอตรวจสอบ/หมดอายุ': stats.missing
+                                           }))}
+                                           margin={{ bottom: 80, top: 10, right: 20, left: 10 }}
+                                        >
+                                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                           <XAxis 
+                                              dataKey="name" 
+                                              fontSize={10} 
+                                              interval={0} 
+                                              angle={-35} 
+                                              textAnchor="end" 
+                                              height={100}
+                                              tick={{ dy: 5, fontWeight: 700, fill: '#64748b' }}
+                                           />
+                                           <YAxis fontSize={10} tick={{ fill: '#64748b', fontWeight: 700 }} />
+                                           <Tooltip 
+                                              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontWeight: 800 }}
+                                           />
+                                           <Legend verticalAlign="top" height={36} wrapperStyle={{ fontWeight: 800, fontSize: '12px' }} />
+                                           <Bar dataKey="ครบถ้วน" stackId="a" fill="#16a34a" barSize={30} />
+                                           <Bar dataKey="ใกล้หมดอายุ" stackId="a" fill="#ca8a04" barSize={30} />
+                                           <Bar dataKey="รอตรวจสอบ/หมดอายุ" stackId="a" fill="#dc2626" radius={[4, 4, 0, 0]} barSize={30} />
+                                        </BarChart>
+                                     </ResponsiveContainer>
+                                  </div>
+                               </div>
                            </div>
                         </div>
                      </>
