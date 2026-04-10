@@ -452,7 +452,8 @@ export default function DepartmentAndEmployeePage() {
                       <th style={styles.th}>บุคลากร</th>
                       <th style={styles.th}>ตำแหน่ง</th>
                       <th style={styles.th}>สังกัด (ฝ่าย)</th>
-                      <th style={styles.th}>กลุ่มงาน / หน่วยงาน</th>
+                      <th style={styles.th}>กลุ่มงาน</th>
+                      <th style={styles.th}>หน่วยงาน</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
                       <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
                     </tr>
@@ -463,7 +464,7 @@ export default function DepartmentAndEmployeePage() {
                     ))}
                     {regularStaff.length === 0 && (
                       <tr>
-                        <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่มีพนักงานในแผนกนี้</td>
+                        <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่มีพนักงานในแผนกนี้</td>
                       </tr>
                     )}
                   </tbody>
@@ -493,7 +494,8 @@ export default function DepartmentAndEmployeePage() {
                       <th style={styles.th}>ชื่อ-สกุล</th>
                       <th style={styles.th}>คณะ / ตำแหน่ง</th>
                       <th style={styles.th}>สังกัด (ฝ่าย)</th>
-                      <th style={styles.th}>กลุ่มงาน / หน่วยงาน</th>
+                      <th style={styles.th}>กลุ่มงาน</th>
+                      <th style={styles.th}>หน่วยงาน</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
                       <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
                     </tr>
@@ -1152,7 +1154,14 @@ function EmployeeRow({
         {(() => {
           const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
           if (!dept) return '-';
-          return `${dept.dept_name}${dept.sub_dept ? ` > ${dept.sub_dept}` : ''}`;
+          return dept.dept_name || '-';
+        })()}
+      </td>
+      <td style={{ ...styles.td, color: '#64748b', fontSize: '14px' }}>
+        {(() => {
+          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+          if (!dept) return '-';
+          return dept.sub_dept || '-';
         })()}
       </td>
       <td style={{ ...styles.td, textAlign: 'center', position: 'relative', zIndex: isOpen ? 50 : 1 }}>

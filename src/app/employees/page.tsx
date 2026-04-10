@@ -480,16 +480,17 @@ function EmployeesContent() {
                   <th>ชื่อ-สกุลพนักงาน</th>
                   <th>ตำแหน่ง</th>
                   <th>สังกัด (ฝ่าย)</th>
-                  <th>กลุ่มงาน / หน่วยงาน</th>
+                  <th>กลุ่มงาน</th>
+                  <th>หน่วยงาน</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
                 ) : currentData.length === 0 ? (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
                   currentData.map((emp) => (
                     <tr
@@ -523,7 +524,14 @@ function EmployeesContent() {
                         {(() => {
                           const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
                           if (!dept) return '-';
-                          return `${dept.dept_name}${dept.sub_dept ? ` > ${dept.sub_dept}` : ''}`;
+                          return dept.dept_name || '-';
+                        })()}
+                      </td>
+                      <td style={{ color: '#334155' }}>
+                        {(() => {
+                          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+                          if (!dept) return '-';
+                          return dept.sub_dept || '-';
                         })()}
                       </td>
                       <td style={{ textAlign: 'center' }}>
