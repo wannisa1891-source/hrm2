@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
     const summary = {
       totalEmployees: employees.length,
       compliant: 0,
-      missing: 0,
+      missing: 0, 
+      pending: 0, 
       expiring: 0,
       departmentStats: {} as Record<string, any>,
       details: [] as any[]
@@ -40,77 +41,97 @@ export async function GET(req: NextRequest) {
         (!c.pos_id || c.pos_id === emp.pos_id)
       );
 
-      let empStatus = 'Compliant';
-      const empLicensesNeeded: any[] = [];
+      // Find all latest licenses for this employee
+      const empLicenses = licenses.filter(l => l.emp_id === emp.emp_id);
+      
+      let empStatus = 'Exempt'; 
+      const empLicensesDetail: any[] = [];
 
-      relevantConfigs.forEach(config => {
-        const found = licenses.find(l => {
-          if (l.emp_id !== emp.emp_id) return false;
+      // 1. Evaluate existing licenses
+      empLicenses.forEach(l => {
+        const expDate = l.expire_date ? new Date(l.expire_date) : null;
+        const isVerified = l.verified_status === 'Verified';
+        
+        let lStatus = 'Active';
+
+        if (!isVerified) {
+          lStatus = 'PendingAudit';
+        } else if (expDate) {
+          const today = new Date();
+          const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
           
-          const dbName = (l.license_name || '').toLowerCase().trim();
-          const configLicense = (config.license_name || '').toLowerCase().trim();
-          const configType = (config.config_name || '').toLowerCase().trim();
-
-          // Match if exact OR if one contains the other (robust matching)
-          return (
-            (dbName && configLicense && (dbName.includes(configLicense) || configLicense.includes(dbName))) ||
-            (dbName && configType && (dbName.includes(configType) || configType.includes(dbName)))
-          );
-        });
-
-        if (!found) {
-          if (config.is_mandatory) {
-            empStatus = 'Missing';
-            empLicensesNeeded.push({ name: config.license_name, status: 'Missing' });
-          }
-        } else {
-          const expDate = found.expire_date ? new Date(found.expire_date) : null;
-          const isVerified = found.verified_status === 'Verified';
-
-          if (!isVerified) {
-            // Found but not audited yet
-            if (empStatus !== 'Missing') empStatus = 'PendingAudit';
-            empLicensesNeeded.push({ name: config.license_name, status: 'PendingAudit' });
-          } else if (expDate) {
-            const today = new Date();
-            const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            
-            if (diffDays <= 0) {
-              empStatus = 'Expired';
-              empLicensesNeeded.push({ name: config.license_name, status: 'Expired', daysLeft: diffDays });
-            } else if (diffDays <= config.warning_days) {
-              if (empStatus !== 'Missing' && empStatus !== 'Expired' && empStatus !== 'PendingAudit') {
-                empStatus = 'Expiring';
-              }
-              empLicensesNeeded.push({ name: config.license_name, status: 'Expiring', daysLeft: diffDays });
-            } else {
-              empLicensesNeeded.push({ name: config.license_name, status: 'Active', daysLeft: diffDays });
+          if (diffDays <= 0) {
+            lStatus = 'Expired';
+          } else {
+            // Find relevant config for warning days
+            const matchingConfig = relevantConfigs.find(c => {
+               const dbName = (l.license_name || '').toLowerCase().trim();
+               const configLicense = (c.license_name || '').toLowerCase().trim();
+               return (dbName.includes(configLicense) || configLicense.includes(dbName));
+            });
+            const warningDays = matchingConfig ? matchingConfig.warning_days : 30;
+            if (diffDays <= warningDays) {
+              lStatus = 'Expiring';
             }
+          }
+        }
+
+        empLicensesDetail.push({ name: l.license_name, status: lStatus });
+
+        // Update overall employee status based on priority
+        const priority = { 'Expired': 5, 'PendingAudit': 4, 'Missing': 3, 'Expiring': 2, 'Active': 1, 'Exempt': 0 };
+        if (priority[lStatus as keyof typeof priority] > priority[empStatus as keyof typeof priority]) {
+          empStatus = lStatus;
+        }
+      });
+
+      // 2. Check for missing mandatory licenses
+      relevantConfigs.forEach(config => {
+        if (config.is_mandatory) {
+          const hasIt = empLicenses.some(l => {
+            const dbName = (l.license_name || '').toLowerCase().trim();
+            const configLicense = (config.license_name || '').toLowerCase().trim();
+            return (dbName.includes(configLicense) || configLicense.includes(dbName));
+          });
+
+          if (!hasIt) {
+            // If missing a required license, status is at least Missing
+            if (empStatus === 'Exempt' || empStatus === 'Active' || empStatus === 'Expiring') {
+                empStatus = 'Missing';
+            }
+            empLicensesDetail.push({ name: config.license_name, status: 'Missing' });
           }
         }
       });
 
-      if (relevantConfigs.length === 0) empStatus = 'Exempt';
+      // Handle translation to status cards
+      if (empStatus === 'Exempt' && relevantConfigs.length > 0) {
+          empStatus = 'Active';
+      }
 
-      // Update summary
-      if (empStatus === 'Compliant') summary.compliant++;
-      if (empStatus === 'Missing' || empStatus === 'PendingAudit' || empStatus === 'Expired') summary.missing++;
-      if (empStatus === 'Expiring') summary.expiring++;
+      const finalStatusName = empStatus === 'Active' ? 'Compliant' : empStatus;
 
-      // Dept Stats
+      // Update counters
+      if (finalStatusName === 'Compliant') summary.compliant++;
+      if (finalStatusName === 'Missing' || finalStatusName === 'Expired') summary.missing++;
+      if (finalStatusName === 'PendingAudit') summary.pending++;
+      if (finalStatusName === 'Expiring') summary.expiring++;
+
+      // Update Department Stats
       const deptName = emp.dept_name || 'ไม่ระบุ';
       if (!summary.departmentStats[deptName]) {
-        summary.departmentStats[deptName] = { total: 0, compliant: 0, missing: 0, expiring: 0 };
+        summary.departmentStats[deptName] = { total: 0, compliant: 0, missing: 0, pending: 0, expiring: 0 };
       }
       summary.departmentStats[deptName].total++;
-      if (empStatus === 'Compliant') summary.departmentStats[deptName].compliant++;
-      if (empStatus === 'Missing' || empStatus === 'PendingAudit' || empStatus === 'Expired') summary.departmentStats[deptName].missing++;
-      if (empStatus === 'Expiring') summary.departmentStats[deptName].expiring++;
+      if (finalStatusName === 'Compliant') summary.departmentStats[deptName].compliant++;
+      if (finalStatusName === 'Missing' || finalStatusName === 'Expired') summary.departmentStats[deptName].missing++;
+      if (finalStatusName === 'PendingAudit') summary.departmentStats[deptName].pending++;
+      if (finalStatusName === 'Expiring') summary.departmentStats[deptName].expiring++;
 
       summary.details.push({
         ...emp,
-        status: empStatus,
-        licenses: empLicensesNeeded
+        status: finalStatusName,
+        licenses: empLicensesDetail
       });
     });
 
