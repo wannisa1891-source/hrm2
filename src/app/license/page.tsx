@@ -597,9 +597,9 @@ export default function LicensePage() {
                                     </td>
                                     <td style={{ fontWeight: 700 }}>{c.valid_years}</td>
                                     <td style={{ color: '#ea580c', fontWeight: 700 }}>{c.warning_days}</td>
-                                    <td>
-                                       {link ? <a href={link} target="_blank" rel="noreferrer" style={{ background: '#3b82f6', color: '#fff', padding: '6px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, textDecoration: 'none' }}>ตรวจสอบสภาฯ</a> : <span style={{ fontSize: '11px', color: '#cbd5e1' }}>ไม่พบลิงก์</span>}
-                                    </td>
+                                     <td style={{ whiteSpace: 'nowrap' }}>
+                                        {link ? <a href={link} target="_blank" rel="noreferrer" style={{ background: '#3b82f6', color: '#fff', padding: '6px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center' }}>ตรวจสอบสภาฯ</a> : <span style={{ fontSize: '11px', color: '#cbd5e1' }}>ไม่พบลิงก์</span>}
+                                     </td>
                                     <td style={{ textAlign: 'right' }}><button onClick={() => handleOpenModal('config', c)} style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 800, cursor: 'pointer' }}>แก้ไข</button></td>
                                  </tr>
                               );
@@ -652,7 +652,7 @@ export default function LicensePage() {
                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                                           <label style={{ fontSize: '14px', fontWeight: 800, color: '#475569' }}>สภาวิชาชีพ (หน่วยงานที่ออกบัตร)</label>
                                           {formData.issuer && COUNCIL_LINKS[formData.issuer] && (
-                                             <a href={COUNCIL_LINKS[formData.issuer]} target="_blank" rel="noreferrer" style={{ fontSize: '11px', fontWeight: 900, color: '#2563eb', textDecoration: 'none', background: '#eff6ff', padding: '4px 12px', borderRadius: '50px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                             <a href={COUNCIL_LINKS[formData.issuer]} target="_blank" rel="noreferrer" style={{ fontSize: '11px', fontWeight: 900, color: '#2563eb', textDecoration: 'none', background: '#eff6ff', padding: '6px 16px', borderRadius: '50px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                                                 ตรวจสอบสภาฯ
                                              </a>
@@ -698,7 +698,7 @@ export default function LicensePage() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                  <div style={{ fontSize: '16px', fontWeight: 800 }}>{selectedLicense.issuer || '-'}</div>
                                  {selectedLicense.issuer && COUNCIL_LINKS[selectedLicense.issuer] && (
-                                    <a href={COUNCIL_LINKS[selectedLicense.issuer]} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#3b82f6', color: '#fff', padding: '4px 12px', borderRadius: '14px', fontSize: '11px', fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.2)' }}>
+                                    <a href={COUNCIL_LINKS[selectedLicense.issuer]} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#3b82f6', color: '#fff', padding: '4px 12px', borderRadius: '14px', fontSize: '11px', fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.2)', whiteSpace: 'nowrap' }}>
                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                                        ตรวจสอบสภาฯ
                                     </a>
@@ -727,7 +727,18 @@ export default function LicensePage() {
                         <div style={{ display: 'grid', gap: '24px', marginBottom: '32px' }}>
                            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ชื่อเกณฑ์</label><input required value={configFormData.config_name} onChange={e => setConfigFormData({ ...configFormData, config_name: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>
                            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ประเภทวิชาชีพ</label><input required value={configFormData.license_name} onChange={e => setConfigFormData({ ...configFormData, license_name: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>
-                           <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>สภาวิชาชีพ</label><ModernSelect value={configFormData.issuer || ''} onChange={val => setConfigFormData({ ...configFormData, issuer: val })} options={ISSUERS.map(i => ({ value: i, label: i }))} /></div>
+                           <div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                 <label style={{ fontSize: '14px', fontWeight: 800 }}>สภาวิชาชีพ</label>
+                                 {configFormData.issuer && COUNCIL_LINKS[configFormData.issuer] && (
+                                    <a href={COUNCIL_LINKS[configFormData.issuer]} target="_blank" rel="noreferrer" style={{ fontSize: '11px', fontWeight: 900, color: '#2563eb', textDecoration: 'none', background: '#eff6ff', padding: '6px 16px', borderRadius: '50px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                                       ตรวจสอบสภาฯ
+                                    </a>
+                                 )}
+                              </div>
+                              <ModernSelect value={configFormData.issuer || ''} onChange={val => setConfigFormData({ ...configFormData, issuer: val })} options={ISSUERS.map(i => ({ value: i, label: i }))} />
+                           </div>
                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                               <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>แผนก (ทุกแผนกละเว้น)</label><ModernSelect value={configFormData.dept_id || ''} onChange={val => setConfigFormData({ ...configFormData, dept_id: val })} options={departments.map(d => ({ value: d.dept_id, label: d.dept_name }))} /></div>
                               <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ตำแหน่ง (ทุกตำแหน่งละเว้น)</label><ModernSelect value={configFormData.pos_id || ''} onChange={val => setConfigFormData({ ...configFormData, pos_id: val })} options={positions.map(p => ({ value: p.pos_id, label: p.pos_name }))} /></div>

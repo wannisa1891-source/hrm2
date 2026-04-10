@@ -27,6 +27,28 @@ export async function GET(req: NextRequest) {
       // Column already exists or other error (ignore)
     }
 
+    // Data Repair: Auto-populate issuer for existing records where it's NULL
+    await pool.query(`
+      UPDATE tbl_license_configs
+      SET issuer = CASE
+        WHEN license_name LIKE '%พยาบาล%' OR config_name LIKE '%พยาบาล%' THEN 'สภาการพยาบาล'
+        WHEN (license_name LIKE '%แพทย์%' OR config_name LIKE '%แพทย์%') 
+             AND license_name NOT LIKE '%แผนไทย%' AND config_name NOT LIKE '%แผนไทย%' THEN 'แพทยสภา'
+        WHEN license_name LIKE '%เทคนิคการแพทย์%' OR config_name LIKE '%เทคนิคการแพทย์%' THEN 'สภาเทคนิคการแพทย์'
+        WHEN license_name LIKE '%เภสัช%' OR config_name LIKE '%เภสัช%' THEN 'สภาเภสัชกรรม'
+        WHEN license_name LIKE '%กายภาพบำบัด%' OR config_name LIKE '%กายภาพบำบัด%' THEN 'สภากายภาพบำบัด'
+        WHEN license_name LIKE '%ทันตแพทย์%' OR config_name LIKE '%ทันตแพทย์%' THEN 'ทันตแพทยสภา'
+        WHEN license_name LIKE '%แพทย์แผนไทย%' OR config_name LIKE '%แพทย์แผนไทย%' THEN 'สภาการแพทย์แผนไทย'
+        WHEN license_name LIKE '%รังสีเทคนิค%' OR config_name LIKE '%รังสีเทคนิค%' THEN 'คณะกรรมการวิชาชีพสาขารังสีเทคนิค'
+        WHEN license_name LIKE '%ครู%' OR config_name LIKE '%ครู%' THEN 'คุรุสภา'
+        WHEN license_name LIKE '%วิศวกร%' OR config_name LIKE '%วิศวกร%' THEN 'สภาวิศวกร'
+        WHEN license_name LIKE '%ฉุกเฉิน%' OR config_name LIKE '%ฉุกเฉิน%' THEN 'สถาบันการแพทย์ฉุกเฉินแห่งชาติ (สพฉ.)'
+        WHEN license_name LIKE '%สนับสนุนบริการสุขภาพ%' OR config_name LIKE '%สนับสนุนบริการสุขภาพ%' THEN 'กรมสนับสนุนบริการสุขภาพ'
+        ELSE issuer
+      END
+      WHERE issuer IS NULL OR issuer = '';
+    `);
+
     const [rows]: any = await pool.query('SELECT * FROM tbl_license_configs ORDER BY created_at DESC');
     
     // Auto-Seed if empty
