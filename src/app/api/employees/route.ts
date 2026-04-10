@@ -16,9 +16,11 @@ export async function GET() {
       licenseResult
     ] = await Promise.all([
       pool.query(`
-        SELECT e.* 
+        SELECT e.*, p.pos_name, d.dept_name
         FROM tbl_employees e
-        ORDER BY e.emp_id DESC
+        LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id
+        LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
+        ORDER BY e.emp_id ASC
       `),
       pool.query(`
         SELECT * FROM tbl_employee_licenses

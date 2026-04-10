@@ -34,9 +34,9 @@ export interface ScheduleForm {
 
 // ประเภทเวรเริ่มต้น (ใช้เผื่อดึง API ไม่ได้)
 export const SHIFT_TYPES: ShiftType[] = [
-  { value: 'Morning', label: 'Morning (เช้า)', color: '#10b981' },
-  { value: 'Afternoon', label: 'Afternoon (บ่าย)', color: '#f59e0b' },
-  { value: 'Night', label: 'Night (ดึก)', color: '#8b5cf6' },
+  { value: 'Morning', label: 'Morning (08:00 - 16:00)', color: '#10b981' },
+  { value: 'Afternoon', label: 'Afternoon (16:00 - 00:00)', color: '#f59e0b' },
+  { value: 'Night', label: 'Night (00:00 - 08:00)', color: '#8b5cf6' },
 ]
 
 // ดึงข้อมูลแผนกผ่าน hook (dynamic)

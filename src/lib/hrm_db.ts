@@ -9,10 +9,13 @@ const pool =
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: 3306,
+    port: parseInt(process.env.DB_PORT || '3306'),
     waitForConnections: true,
     connectionLimit: 10,
   });
+
+console.log(`Database connected to ${process.env.DB_HOST}:${process.env.DB_PORT || 3306} (${process.env.DB_NAME})`);
+
 
 if (process.env.NODE_ENV !== "production") globalForMysql.pool = pool;
 

@@ -48,7 +48,7 @@ export default function DayView({
       d.getDate() === currentDate.getDate()
     )
   })
-
+//เลิกงาน
   function getShiftsForHour(hour: string): Schedule[] {
     // Basic mapping: if user didn't specify start time, we map Evening to 16:00, Night to 00:00, Morning to 08:00
     // This provides a visual representation in the timeline if real `startTime` is not present

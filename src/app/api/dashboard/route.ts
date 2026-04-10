@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
       queryParams.push(empId);
     }
 
+    // Employee-specific queries for Dashboard
     let employeeQuotaQuery: Promise<any> = Promise.resolve([[]]);
     let employeeUsedLeavesQuery: Promise<any> = Promise.resolve([[]]);
     let employeeRecentLeavesQuery: Promise<any> = Promise.resolve([[]]);
@@ -46,6 +47,7 @@ export async function GET(req: NextRequest) {
         FROM tbl_payroll
         WHERE emp_id = ?
         ORDER BY pay_year DESC, pay_month DESC
+        LIMIT 5
       `, [empId]);
     }
 

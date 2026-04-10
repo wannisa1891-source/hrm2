@@ -98,7 +98,7 @@ export default function AuditLogsPage() {
       return { bg: '#FFE4E6', text: '#9F1239', dot: '#f1a9b5ff', label: 'DELETE' };
     if (d.includes('เข้าสู่ระบบ') || d.includes('login'))
       return { bg: '#DBEAFE', text: '#1E40AF', dot: '#3B82F6', label: 'LOGIN' };
-    return { bg: '#F1F5F9', text: '#343536ff', dot: '#a6bcd6ff', label: 'SYSTEM' };
+    return { bg: '#F1F5F9', text: '#475569', dot: '#94A3B8', label: 'SYSTEM' };
   };
 
   if (user && !isAdmin) return null;
