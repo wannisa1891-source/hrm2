@@ -757,7 +757,7 @@ export default function LicensePage() {
                               { label: 'ถูกต้องครบถ้วน', val: monitorData.compliant, color: '#16a34a', statusKey: 'Compliant' },
                               { label: 'ใกล้หมดอายุ', val: monitorData.expiring, color: '#ca8a04', statusKey: 'Expiring' },
                               { label: 'รอตรวจสอบ', val: monitorData.pending, color: '#7c3aed', statusKey: 'PendingAudit' },
-                              { label: 'หมดอายุ/ไม่มีใบ', val: monitorData.missing, color: '#dc2626', statusKey: 'RedAlert' }
+                              { label: 'หมดอายุ', val: monitorData.missing, color: '#dc2626', statusKey: 'RedAlert' }
                            ].map((c, i) => (
                               <div 
                                  key={i} 
@@ -801,7 +801,7 @@ export default function LicensePage() {
                                              { name: 'ครบถ้วน', value: monitorData.compliant, color: '#16a34a' },
                                              { name: 'ใกล้หมดอายุ', value: monitorData.expiring, color: '#ca8a04' },
                                              { name: 'รอตรวจสอบ', value: monitorData.pending, color: '#7c3aed' },
-                                             { name: 'หมดอายุ/ไม่มีใบ', value: monitorData.missing, color: '#dc2626' }
+                                             { name: 'หมดอายุ', value: monitorData.missing, color: '#dc2626' }
                                           ]}
                                           innerRadius={60}
                                           outerRadius={90}
@@ -820,7 +820,7 @@ export default function LicensePage() {
                            </div>
 
                            <div style={{ ...cardStyle, minWidth: 0, overflow: 'hidden' }}>
-                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สถานะแยกตามภาคส่วน (เลื่อนดูได้)</h3>
+                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สถานะแยกตามภาคส่วน</h3>
                                <div className="custom-scrollbar" style={{ height: '320px', overflowX: 'auto', paddingBottom: '16px' }}>
                                   <div style={{ minWidth: `${Math.max(800, Object.keys(monitorData.departmentStats).length * 80)}px`, height: '100%' }}>
                                      <ResponsiveContainer width="100%" height="100%">
@@ -829,7 +829,8 @@ export default function LicensePage() {
                                               name: dept,
                                               ครบถ้วน: stats.compliant,
                                               ใกล้หมดอายุ: stats.expiring,
-                                              'รอตรวจสอบ/หมดอายุ': stats.missing
+                                              รอตรวจสอบ: stats.pending,
+                                              หมดอายุ: stats.missing
                                            }))}
                                            margin={{ bottom: 80, top: 10, right: 20, left: 10 }}
                                         >
@@ -847,10 +848,11 @@ export default function LicensePage() {
                                            <Tooltip 
                                               contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontWeight: 800 }}
                                            />
-                                           <Legend verticalAlign="top" height={36} wrapperStyle={{ fontWeight: 800, fontSize: '12px' }} />
+
                                            <Bar dataKey="ครบถ้วน" stackId="a" fill="#16a34a" barSize={30} />
                                            <Bar dataKey="ใกล้หมดอายุ" stackId="a" fill="#ca8a04" barSize={30} />
-                                           <Bar dataKey="รอตรวจสอบ/หมดอายุ" stackId="a" fill="#dc2626" radius={[4, 4, 0, 0]} barSize={30} />
+                                           <Bar dataKey="รอตรวจสอบ" stackId="a" fill="#7c3aed" barSize={30} />
+                                           <Bar dataKey="หมดอายุ" stackId="a" fill="#dc2626" radius={[4, 4, 0, 0]} barSize={30} />
                                         </BarChart>
                                      </ResponsiveContainer>
                                   </div>
@@ -923,8 +925,8 @@ export default function LicensePage() {
                const filteredEmp = allEmployees.filter(e => e.first_name_th?.includes(searchTermEmp) || e.emp_id?.includes(searchTermEmp));
 
                return (
-                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
-                     <div style={{ background: '#f8fafc', width: '1100px', maxHeight: '90vh', borderRadius: '40px', overflow: 'hidden', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', border: '1px solid #fff' }}>
+                  <div onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
+                     <div onClick={e => e.stopPropagation()} style={{ background: '#f8fafc', width: '1100px', maxHeight: '90vh', borderRadius: '40px', overflow: 'hidden', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', border: '1px solid #fff' }}>
 
                         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
@@ -1101,8 +1103,8 @@ export default function LicensePage() {
                const councilLink = findIssuerLink(selectedLicense.issuer || '');
 
                return (
-                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
-                     <div style={{ background: '#f8fafc', width: '1100px', maxHeight: '90vh', borderRadius: '40px', overflow: 'hidden', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', border: '1px solid #fff' }}>
+                  <div onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
+                     <div onClick={e => e.stopPropagation()} style={{ background: '#f8fafc', width: '1100px', maxHeight: '90vh', borderRadius: '40px', overflow: 'hidden', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', border: '1px solid #fff' }}>
 
                         {/* Content Body (No Header Banner as requested) */}
                         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -1257,8 +1259,8 @@ export default function LicensePage() {
 
             {/* Audit / History Modal (Simplified & Premium) */}
             {historyOpen && (
-               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
-                  <div style={{ background: '#fff', width: '1150px', maxHeight: '85vh', borderRadius: '40px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)' }}>
+               <div onClick={() => setHistoryOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
+                  <div onClick={e => e.stopPropagation()} style={{ background: '#fff', width: '1150px', maxHeight: '85vh', borderRadius: '40px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)' }}>
                      <div style={{ padding: '32px 48px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
                         <div>
                            <div style={{ color: '#0d9488', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Audit Log History</div>
@@ -1338,8 +1340,8 @@ export default function LicensePage() {
 
             {/* Config Modal */}
             {activeModal === 'config' && (
-               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ background: '#fff', width: '600px', borderRadius: '24px', padding: '40px' }}>
+               <div onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div onClick={e => e.stopPropagation()} style={{ background: '#fff', width: '600px', borderRadius: '24px', padding: '40px' }}>
                      <h2 style={{ margin: '0 0 32px 0', fontSize: '24px', fontWeight: 900 }}>ตั้งค่าเกณฑ์มาตรฐาน</h2>
                      <form onSubmit={handleConfigSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div>
@@ -1390,8 +1392,8 @@ export default function LicensePage() {
          
             {/* --- Drill-down Status Modal --- */}
             {statusDetailModal.isOpen && (
-               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
-                  <div style={{ background: '#f8fafc', width: '900px', maxHeight: '85vh', borderRadius: '40px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)', border: '1px solid #fff' }}>
+               <div onClick={() => setStatusDetailModal({ ...statusDetailModal, isOpen: false })} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
+                  <div onClick={e => e.stopPropagation()} style={{ background: '#f8fafc', width: '900px', maxHeight: '85vh', borderRadius: '40px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)', border: '1px solid #fff' }}>
                      
                      <div style={{ padding: '32px 48px', background: '#fff', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
