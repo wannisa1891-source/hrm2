@@ -311,7 +311,7 @@ function ModernSelect({
                <div style={{
                   position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
                   background: '#fff', borderRadius: '24px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.15)',
-                  zIndex: 4000, overflow: 'hidden', padding: '10px', border: '1px solid #f1f5f9',
+                  zIndex: 9999, overflow: 'hidden', padding: '10px', border: '1px solid #f1f5f9',
                   maxHeight: '300px', overflowY: 'auto'
                }}>
                   {options.map((opt, i) => (
@@ -381,6 +381,8 @@ export default function LicensePage() {
    const [quickPoints, setQuickPoints] = useState(0);
    const [quickVerified, setQuickVerified] = useState(false);
    const [updatingQuick, setUpdatingQuick] = useState(false);
+   const [statusDetailModal, setStatusDetailModal] = useState<{ isOpen: boolean, status: string, label: string, color: string }>({ isOpen: false, status: '', label: '', color: '' });
+   const [statusSearchTerm, setStatusSearchTerm] = useState('');
 
    useEffect(() => {
       fetchInitialData();
@@ -773,7 +775,8 @@ export default function LicensePage() {
                                           data={[
                                              { name: 'ครบถ้วน', value: monitorData.compliant, color: '#16a34a' },
                                              { name: 'ใกล้หมดอายุ', value: monitorData.expiring, color: '#ca8a04' },
-                                             { name: 'รอตรวจสอบ/หมดอายุ', value: monitorData.missing, color: '#dc2626' }
+                                             { name: 'รอตรวจสอบ', value: monitorData.pending, color: '#7c3aed' },
+                                             { name: 'หมดอายุ/ไม่มีใบ', value: monitorData.missing, color: '#dc2626' }
                                           ]}
                                           innerRadius={60}
                                           outerRadius={90}
@@ -895,7 +898,7 @@ export default function LicensePage() {
                const filteredEmp = allEmployees.filter(e => e.first_name_th?.includes(searchTermEmp) || e.emp_id?.includes(searchTermEmp));
 
                return (
-                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
+                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
                      <div style={{ background: '#f8fafc', width: '1100px', maxHeight: '90vh', borderRadius: '40px', overflow: 'hidden', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', border: '1px solid #fff' }}>
 
                         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -1073,7 +1076,7 @@ export default function LicensePage() {
                const councilLink = findIssuerLink(selectedLicense.issuer || '');
 
                return (
-                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
+                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
                      <div style={{ background: '#f8fafc', width: '1100px', maxHeight: '90vh', borderRadius: '40px', overflow: 'hidden', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', border: '1px solid #fff' }}>
 
                         {/* Content Body (No Header Banner as requested) */}
@@ -1229,7 +1232,7 @@ export default function LicensePage() {
 
             {/* Audit / History Modal (Simplified & Premium) */}
             {historyOpen && (
-               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
+               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
                   <div style={{ background: '#fff', width: '1150px', maxHeight: '85vh', borderRadius: '40px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)' }}>
                      <div style={{ padding: '32px 48px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
                         <div>
@@ -1310,7 +1313,7 @@ export default function LicensePage() {
 
             {/* Config Modal */}
             {activeModal === 'config' && (
-               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ background: '#fff', width: '600px', borderRadius: '24px', padding: '40px' }}>
                      <h2 style={{ margin: '0 0 32px 0', fontSize: '24px', fontWeight: 900 }}>ตั้งค่าเกณฑ์มาตรฐาน</h2>
                      <form onSubmit={handleConfigSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1359,7 +1362,103 @@ export default function LicensePage() {
                   </div>
                </div>
             )}
-         </div>
+         
+            {/* --- Drill-down Status Modal --- */}
+            {statusDetailModal.isOpen && (
+               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '20px' }}>
+                  <div style={{ background: '#f8fafc', width: '900px', maxHeight: '85vh', borderRadius: '40px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)', border: '1px solid #fff' }}>
+                     
+                     <div style={{ padding: '32px 48px', background: '#fff', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                           <div style={{ color: statusDetailModal.color, fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>รายชื่อพนักงานแยกตามสถานะ</div>
+                           <h3 style={{ margin: 0, fontSize: '28px', fontWeight: 900, color: '#0f172a' }}>{statusDetailModal.label}</h3>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                           <div style={{ position: 'relative' }}>
+                              <input 
+                                 type="text" 
+                                 placeholder="ค้นหาชื่อ หรือ รหัสพนักงาน..." 
+                                 value={statusSearchTerm}
+                                 onChange={e => setStatusSearchTerm(e.target.value)}
+                                 style={{ padding: '12px 20px 12px 48px', borderRadius: '15px', border: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: 700, fontSize: '14px', width: '280px', outline: 'none' }}
+                              />
+                              <svg style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                           </div>
+                           <button onClick={() => { setStatusDetailModal({ ...statusDetailModal, isOpen: false }); setStatusSearchTerm(''); }} style={{ border: '1px solid #e2e8f0', background: '#fff', width: '40px', height: '40px', borderRadius: '15px', cursor: 'pointer', fontSize: '20px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                        </div>
+                     </div>
+
+                     <div style={{ flex: 1, overflowY: 'auto', padding: '16px 48px 48px 48px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
+                           <thead>
+                              <tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase' }}>
+                                 <th style={{ paddingLeft: '16px' }}>พนักงาน</th>
+                                 <th>ตำแหน่ง / แผนก</th>
+                                 <th>สถานะใบอนุญาต</th>
+                                 <th style={{ textAlign: 'right', paddingRight: '16px' }}>รายละเอียด</th>
+                              </tr>
+                           </thead>
+                           <tbody className="custom-scrollbar">
+                              {monitorData?.details
+                                 .filter(emp => {
+                                    if (statusDetailModal.status === 'RedAlert') {
+                                       if (emp.status !== 'Missing' && emp.status !== 'Expired') return false;
+                                    } else if (statusDetailModal.status !== 'all') {
+                                       if (emp.status !== statusDetailModal.status) return false;
+                                    }
+                                    if (!statusSearchTerm) return true;
+                                    const search = statusSearchTerm.toLowerCase();
+                                    return (
+                                       emp.first_name_th?.toLowerCase().includes(search) ||
+                                       emp.last_name_th?.toLowerCase().includes(search) ||
+                                       emp.emp_id?.toLowerCase().includes(search)
+                                    );
+                                 })
+                                 .map((emp, idx) => (
+                                    <tr key={idx} style={{ background: '#fff', borderRadius: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                       <td style={{ padding: '16px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                             <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden' }}>
+                                                {emp.image ? (
+                                                   <img src={'/uploads/' + emp.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                ) : (
+                                                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>👤</div>
+                                                )}
+                                             </div>
+                                             <div>
+                                                <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
+                                                <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>ID: {emp.emp_id}</div>
+                                             </div>
+                                          </div>
+                                       </td>
+                                       <td>
+                                          <div style={{ fontWeight: 800, color: '#475569', fontSize: '13px' }}>{emp.pos_name}</div>
+                                          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>{emp.dept_name}</div>
+                                       </td>
+                                       <td>
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                             {emp.licenses?.map((l, li) => {
+                                                let bc = '#64748b'; let bg = '#f1f5f9';
+                                                if (l.status === 'Active' || l.status === 'Compliant') { bc = '#16a34a'; bg = '#dcfce7'; }
+                                                else if (l.status === 'PendingAudit') { bc = '#7c3aed'; bg = '#f5f3ff'; }
+                                                else if (l.status === 'Expiring') { bc = '#ca8a04'; bg = '#fef9c3'; }
+                                                else if (l.status === 'Missing' || l.status === 'Expired') { bc = '#dc2626'; bg = '#fee2e2'; }
+                                                return <div key={li} style={{ fontSize: '10px', fontWeight: 800, background: bg, color: bc, padding: '2px 8px', borderRadius: '50px', width: 'fit-content' }}>{l.name} ({l.status})</div>;
+                                             })}
+                                          </div>
+                                       </td>
+                                       <td style={{ textAlign: 'right', paddingRight: '16px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px' }}>
+                                          <button onClick={() => { const lic = licenses.find(lx => lx.emp_id === emp.emp_id); handleOpenModal('view', lic ? { ...lic, emp_id: emp.emp_id } : { emp_id: emp.emp_id }); }} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: 800, color: '#2563eb', cursor: 'pointer' }}>ดูโปรไฟล์</button>
+                                       </td>
+                                    </tr>
+                                 ))}
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
+               </div>
+            )}
+</div>
       </AppLayout>
    );
 }
