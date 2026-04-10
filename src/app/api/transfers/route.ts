@@ -297,14 +297,15 @@ export async function PUT(req: NextRequest) {
       `UPDATE tbl_transfers SET
         order_no = ?, order_date = ?, subject = ?, transfer_type = ?, effective_date = ?,
         old_dept_id = ?, new_dept_id = ?, old_position = ?, new_position = ?,
-        old_level = ?, new_level = ?, old_salary = ?, new_salary = ?,
-        order_file = ?, status = ?
+        old_level = ?, new_level = ?, old_position_no = ?, new_position_no = ?,
+        old_salary = ?, new_salary = ?, transfer_file = ?, status = ?
        WHERE transfer_id = ?`,
       [
         data.orderNo, data.orderDate || null, data.title, data.transferType,
         data.effectDate || null, data.oldDeptId || null, data.newDeptId || null,
         data.oldPos || null, data.newPos || null,
         data.oldLevel || null, data.newLevel || null,
+        data.oldPosNo || null, data.newPosNo || null,
         data.oldSalary || 0, data.newSalary || 0,
         fileName, status, transfer_id,
       ]
@@ -357,7 +358,7 @@ export async function DELETE(req: NextRequest) {
 
     // Get file name before deleting
     const [rows] = await pool.query(
-      'SELECT order_file FROM tbl_transfers WHERE transfer_id = ?',
+      'SELECT transfer_file FROM tbl_transfers WHERE transfer_id = ?',
       [id]
     ) as any[];
     const record = (rows as any[])[0];
@@ -365,7 +366,7 @@ export async function DELETE(req: NextRequest) {
     await pool.query('DELETE FROM tbl_transfers WHERE transfer_id = ?', [id]);
 
     // Clean up associated PDF file
-    if (record?.order_file) deleteFile(record.order_file);
+    if (record?.transfer_file) deleteFile(record.transfer_file);
 
     await logAudit(req.headers.get('x-user-id'), `ลบคำสั่งย้าย/แต่งตั้ง ID: ${id}`);
 

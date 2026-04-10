@@ -36,7 +36,7 @@ interface TransferRecord {
   old_salary: number;
   new_salary: number;
   remark: string;
-  order_file: string | null;
+  transfer_file: string | null;
   status: string;
 }
 
@@ -212,12 +212,20 @@ export default function TransferPage() {
       title: t.subject,
       transferType: TRANSFER_TYPES.find(x => x.label.includes(t.transfer_type || ''))?.id || '03',
       empId: t.emp_id,
+      oldDeptId: t.old_dept_id,
+      oldDept: t.old_dept_name,
       newDeptId: t.new_dept_id,
+      oldPos: t.old_position,
+      oldPosName: t.old_pos_name || t.old_position,
       newPos: t.new_position,
+      oldLevel: t.old_level,
       newLevel: t.new_level,
+      oldPosNo: t.old_pos_no,
       newPosNo: t.new_pos_no,
+      oldSalary: t.old_salary || 0,
       newSalary: t.new_salary || 0,
       remark: t.remark || '',
+      order_file: t.transfer_file,
       status: newStatus
     };
     
@@ -324,6 +332,11 @@ export default function TransferPage() {
         .badge-approved { background: #ecfdf5; color: #059669; border-color: rgba(16, 185, 129, 0.2); }
         .badge-rejected { background: #fef2f2; color: #dc2626; border-color: rgba(239, 68, 68, 0.2); }
         .dept-tag { font-weight: 700; color: #2563eb; background: #eff6ff; padding: 6px 12px; border-radius: 8px; display: inline-block; }
+
+        /* Clickable Row */
+        .clickable-row { cursor: pointer; transition: all 0.2s; }
+        .clickable-row:hover { background-color: #f8fafc !important; }
+        .clickable-row:hover .emp-val { color: #2563eb; text-decoration: underline; }
 
         /* Action Buttons (No Emojis) */
         .tr-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
@@ -534,11 +547,11 @@ export default function TransferPage() {
                   return filtered.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8', fontSize: 14 }}>ยังไม่มีประวัติการย้าย — {isAdmin && <span>กด <strong>สร้างคำสั่งย้ายใหม่</strong> เพื่อเริ่มต้น</span>}</td></tr>
                   ) : paged.map(t => (
-                    <tr key={t.transfer_id}>
+                    <tr key={t.transfer_id} className="clickable-row" onClick={() => setViewingTransfer(t)} title="คลิกเพื่อดูรายละเอียด">
                       <td><span style={{ fontFamily: 'monospace', fontSize: 12, background: '#f1f5f9', padding: '2px 8px', borderRadius: 6, color: '#64748b' }}>{t.order_no}</span></td>
                       <td style={{ fontSize: 13, color: '#64748b' }}>{t.effective_date?.split('T')[0] || '—'}</td>
                       <td>
-                        <div style={{ fontWeight: 600, color: '#1e293b' }}>{t.emp_name || '—'}</div>
+                        <div className="emp-val" style={{ fontWeight: 600, color: '#1e293b', transition: 'color 0.2s' }}>{t.emp_name || '—'}</div>
                         <div style={{ fontSize: 12, color: '#94a3b8' }}>{t.old_pos_name || t.old_position || '—'} → {t.new_pos_name || t.new_position || '—'}</div>
                       </td>
                       <td style={{ fontSize: 13, color: '#475569' }}>{t.transfer_type || '—'}</td>
@@ -552,7 +565,7 @@ export default function TransferPage() {
                           <span className="status-badge badge-pending"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> รออนุมัติ</span>
                         )}
                       </td>
-                      <td style={{ textAlign: 'center' }}>
+                      <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
                           {isAdmin && t.status === 'Pending' && (
                             <>
@@ -577,8 +590,8 @@ export default function TransferPage() {
                               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             </button>
                           )}
-                          {t.order_file && (
-                            <a href={`/uploads/${t.order_file}`} target="_blank" rel="noreferrer" className="action-btn action-file" title="ดูไฟล์แนบ">
+                          {t.transfer_file && (
+                            <a href={`/uploads/${t.transfer_file}`} target="_blank" rel="noreferrer" className="action-btn action-file" title="ดูไฟล์แนบ">
                               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                             </a>
                           )}
