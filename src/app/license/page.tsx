@@ -463,6 +463,10 @@ export default function LicensePage() {
          Swal.fire('คำเตือน', 'กรุณายืนยันว่าได้ตรวจสอบข้อมูลกับสภาวิชาชีพเรียบร้อยแล้ว', 'warning');
          return;
       }
+      if (activeModal === 'add' && !formData.emp_id) {
+         Swal.fire('คำเตือน', 'กรุณาเลือกพนักงานที่ต้องการเพิ่มใบอนุญาต', 'warning');
+         return;
+      }
 
       try {
          setSubmitting(true);
@@ -898,6 +902,46 @@ export default function LicensePage() {
                               </div>
 
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px', marginBottom: '32px' }}>
+                                 {activeModal === 'add' && (
+                                    <div style={{ gridColumn: 'span 2' }}>
+                                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>
+                                          พนักงานที่ต้องการเพิ่มใบอนุญาต <span style={{ color: '#ef4444' }}>*</span>
+                                       </label>
+                                       <div style={{ position: 'relative' }}>
+                                          <input 
+                                             list="empList"
+                                             required 
+                                             placeholder="พิมพ์ค้นหาชื่อ หรือรหัสพนักงาน..."
+                                             value={searchTermEmp || (formData.emp_id ? `${allEmployees.find(e => e.emp_id === formData.emp_id)?.first_name_th || ''} ${allEmployees.find(e => e.emp_id === formData.emp_id)?.last_name_th || ''} (${formData.emp_id})` : '')}
+                                             onChange={e => {
+                                                const val = e.target.value;
+                                                setSearchTermEmp(val);
+                                                const match = val.match(/\(([^)]+)\)$/);
+                                                const extractedId = match ? match[1] : val;
+                                                const found = allEmployees.find(emp => emp.emp_id === extractedId || `${emp.first_name_th} ${emp.last_name_th} (${emp.emp_id})` === val);
+                                                
+                                                if (found) {
+                                                   setFormData({ ...formData, emp_id: found.emp_id });
+                                                   setSearchTermEmp(`${found.first_name_th} ${found.last_name_th} (${found.emp_id})`);
+                                                } else {
+                                                   setFormData({ ...formData, emp_id: '' });
+                                                }
+                                             }}
+                                             onFocus={() => { if(formData.emp_id) setSearchTermEmp(''); }}
+                                             style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '2px solid #3b82f6', fontWeight: 900, fontSize: '15px', outline: 'none', background: '#eff6ff', color: '#1e3a8a', cursor: 'text' }}
+                                          />
+                                          <datalist id="empList">
+                                             {allEmployees.map(e => (
+                                                <option key={e.emp_id} value={`${e.first_name_th} ${e.last_name_th} (${e.emp_id})`} />
+                                             ))}
+                                          </datalist>
+                                       </div>
+                                       {!formData.emp_id && searchTermEmp && (
+                                          <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '6px', paddingLeft: '12px', fontWeight: 700 }}>⚠️ ระบุพนักงานให้ถูกต้องจากรายการ</div>
+                                       )}
+                                    </div>
+                                 )}
+
                                  <div style={{ gridColumn: 'span 2' }}>
                                     <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px', paddingLeft: '12px' }}>หน่วยงานสภาวิชาชีพ / ผู้ออกใบอนุญาต</label>
                                     <div style={{ display: 'flex', gap: '12px' }}>
