@@ -751,14 +751,39 @@ export default function LicensePage() {
                      <div style={cardStyle}>กำลังโหลดข้อมูลสรุปผล...</div>
                   ) : monitorData ? (
                      <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '24px' }}>
                            {[
-                              { label: 'พนักงานทั้งหมด', val: monitorData.totalEmployees, color: '#0f172a' },
-                              { label: 'ถูกต้องครบถ้วน', val: monitorData.compliant, color: '#16a34a' },
-                              { label: 'ใกล้หมดอายุ', val: monitorData.expiring, color: '#ca8a04' },
-                              { label: 'รอตรวจสอบ / หมดอายุ', val: monitorData.missing, color: '#dc2626' }
+                              { label: 'พนักงานทั้งหมด', val: monitorData.totalEmployees, color: '#0f172a', statusKey: 'all' },
+                              { label: 'ถูกต้องครบถ้วน', val: monitorData.compliant, color: '#16a34a', statusKey: 'Compliant' },
+                              { label: 'ใกล้หมดอายุ', val: monitorData.expiring, color: '#ca8a04', statusKey: 'Expiring' },
+                              { label: 'รอตรวจสอบ', val: monitorData.pending, color: '#7c3aed', statusKey: 'PendingAudit' },
+                              { label: 'หมดอายุ/ไม่มีใบ', val: monitorData.missing, color: '#dc2626', statusKey: 'RedAlert' }
                            ].map((c, i) => (
-                              <div key={i} style={cardStyle}>
+                              <div 
+                                 key={i} 
+                                 style={{ 
+                                    ...cardStyle, 
+                                    cursor: 'pointer', 
+                                    transition: 'all 0.2s',
+                                    border: '1px solid transparent',
+                                 }} 
+                                 onClick={() => setStatusDetailModal({ 
+                                    isOpen: true, 
+                                    status: (c as any).statusKey, 
+                                    label: c.label, 
+                                    color: c.color 
+                                 })}
+                                 onMouseOver={e => {
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.boxShadow = '0 15px 30px -5px rgba(0,0,0,0.08)';
+                                    e.currentTarget.style.borderColor = c.color + '40';
+                                 }}
+                                 onMouseOut={e => {
+                                    e.currentTarget.style.transform = 'none';
+                                    e.currentTarget.style.boxShadow = 'none';
+                                    e.currentTarget.style.borderColor = 'transparent';
+                                 }}
+                              >
                                  <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>{c.label}</p>
                                  <h2 style={{ margin: '8px 0 0 0', fontSize: '36px', fontWeight: 900, color: c.color }}>{c.val}</h2>
                               </div>
@@ -784,7 +809,7 @@ export default function LicensePage() {
                                           dataKey="value"
                                        >
                                           {[
-                                             { color: '#16a34a' }, { color: '#ca8a04' }, { color: '#dc2626' }
+                                             { color: '#16a34a' }, { color: '#ca8a04' }, { color: '#7c3aed' }, { color: '#dc2626' }
                                           ].map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                        </Pie>
                                        <Tooltip />
