@@ -17,6 +17,8 @@ export async function POST(req: NextRequest) {
     const issue_date = formData.get('issue_date') as string;
     const remarks = formData.get('remarks') as string;
     const verified_status = formData.get('verified_status') as string;
+    const points = formData.get('points') as string;
+    const warning_days_override = formData.get('warning_days_override') as string;
     const file = formData.get('file') as File;
 
     if (!expire_date || (!license_id && !emp_id)) {
@@ -43,33 +45,30 @@ export async function POST(req: NextRequest) {
         await connection.query('UPDATE tbl_employee_licenses SET status = "Renewed" WHERE id = ?', [license_id]);
 
         // 2. Insert NEW record as Active
-        // If no new file was uploaded, we can choose to carry over the old one or leave it empty
-        // For professional use, a renewal usually requires a NEW file, but we'll carry over if empty
         const insertQuery = `
           INSERT INTO tbl_employee_licenses 
-          (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, verified_status, remarks, file_path)
-          SELECT emp_id, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?
+          (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, verified_status, remarks, file_path, points, warning_days_override)
+          SELECT emp_id, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, COALESCE(?, file_path), ?, ?
           FROM tbl_employee_licenses WHERE id = ?
         `;
         
-        // Use old file path if new one not provided
         const finalPath = filePath || null; 
 
         const values = [
           license_name, license_type, license_no, institution, issue_date, expire_date, 
-          verified_status || 'Pending', remarks, finalPath, license_id
+          verified_status || 'Pending', remarks, finalPath, points || 0, warning_days_override || null, license_id
         ];
         await connection.query(insertQuery, values);
       } else {
         // Initial Create
         const insertQuery = `
           INSERT INTO tbl_employee_licenses 
-          (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, verified_status, remarks, file_path)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?)
+          (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, verified_status, remarks, file_path, points, warning_days_override)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)
         `;
         const values = [
           emp_id, license_name, license_type, license_no, institution, issue_date, expire_date,
-          verified_status || 'Pending', remarks, filePath || null
+          verified_status || 'Pending', remarks, filePath || null, points || 0, warning_days_override || null
         ];
         await connection.query(insertQuery, values);
       }

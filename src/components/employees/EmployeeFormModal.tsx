@@ -26,7 +26,7 @@ export default function EmployeeFormModal({
     prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '',
     birth_date: '', gender: 'ชาย', citizen_id: '',
     emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานประจำ', start_date: '', base_salary: 0,
-    phone: '', address: '', status: 'Active',
+    phone: '', address: '', status: 'ทำงานปกติ',
     addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
     has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: []
   };
@@ -140,6 +140,11 @@ export default function EmployeeFormModal({
     await onSave(fd, isEditing);
     setSaving(false);
   };
+
+  // Hierarchical Helpers
+  const divisions = (Array.from(new Set(departments.map(d => d.division?.trim()))).filter(Boolean) as string[]).sort((a, b) => a.localeCompare(b, 'th'));
+  const getGroupsByDiv = (div: string) => Array.from(new Set(departments.filter(d => d.division?.trim() === div).map(d => d.dept_name?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th'));
+  const getSubsByGrp = (div: string, grp: string) => departments.filter(d => d.division?.trim() === div && d.dept_name?.trim() === grp).sort((a, b) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th'));
 
   if (!isOpen) return null;
 
@@ -356,19 +361,65 @@ export default function EmployeeFormModal({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สถานะพนักงาน</label>
                     <select value={formData.status || ''} onChange={e => setField('status', e.target.value)} style={inputStyle}>
-                      <option value="Active">ทำงานปกติ</option>
-                      <option value="Probation">ทดลองงาน</option>
-                      <option value="Inactive">หยุดปฏิบัติงาน</option>
-                      <option value="Resigned">ลาออก/พ้นสภาพ</option>
-                      <option value="Terminated">ให้ออก</option>
+                      <option value="ทำงานปกติ">ทำงานปกติ</option>
+                      <option value="ทดลองงาน">ทดลองงาน</option>
+                      <option value="หยุดปฏิบัติงาน">หยุดปฏิบัติงาน</option>
+                      <option value="ลาออก/พ้นสภาพ">ลาออก/พ้นสภาพ</option>
+                      <option value="ให้ออก">ให้ออก</option>
                     </select>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สังกัดกลุ่มงาน</label>
-                    <select value={formData.dept_id || ''} onChange={e => setField('dept_id', e.target.value)} required style={inputStyle}>
-                      <option value="">[ เลือกสังกัด / แผนก ]</option>
-                      {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
-                    </select>
+                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: 'span 2' }}>
+                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัดหน่วยงาน (Division > Group > Sub-dept)</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                      <div>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>ฝ่าย</label>
+                        <select 
+                          value={departments.find(d => d.dept_id === formData.dept_id)?.division || ''} 
+                          onChange={e => {
+                            const div = e.target.value;
+                            if (!div) setField('dept_id', '');
+                            else {
+                              const firstDept = departments.find(d => d.division === div);
+                              setField('dept_id', firstDept?.dept_id || '');
+                            }
+                          }}
+                          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
+                        >
+                          <option value="">[ เลือกฝ่าย ]</option>
+                          {divisions.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>กลุ่มงาน</label>
+                        <select 
+                          value={departments.find(d => d.dept_id === formData.dept_id)?.dept_name || ''} 
+                          onChange={e => {
+                            const grp = e.target.value;
+                            const div = departments.find(d => d.dept_id === formData.dept_id)?.division;
+                            const firstDept = departments.find(d => d.division === div && d.dept_name === grp);
+                            setField('dept_id', firstDept?.dept_id || '');
+                          }}
+                          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
+                        >
+                          <option value="">[ เลือกกลุ่มงาน ]</option>
+                          {getGroupsByDiv(departments.find(d => d.dept_id === formData.dept_id)?.division || '').map(g => <option key={g} value={g}>{g}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>แผนกย่อย / หน่วยงาน</label>
+                        <select 
+                          value={formData.dept_id || ''} 
+                          onChange={e => setField('dept_id', e.target.value)} 
+                          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
+                        >
+                          <option value="">[ เลือกแผนกย่อย ]</option>
+                          {getSubsByGrp(
+                            departments.find(d => d.dept_id === formData.dept_id)?.division || '',
+                            departments.find(d => d.dept_id === formData.dept_id)?.dept_name || ''
+                          ).map(s => <option key={s.dept_id} value={s.dept_id}>{s.sub_dept || '(ไม่มีแผนกย่อย)'}</option>)}
+                        </select>
+                      </div>
+                    </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ตำแหน่งงาน</label>

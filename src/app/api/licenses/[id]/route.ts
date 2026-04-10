@@ -10,7 +10,7 @@ export async function PUT(
 ) {
   try {
     const id = params.id;
-    const { license_no, expire_date, cneu_cme_points, license_name, license_type, institution, issue_date } = await req.json();
+    const { license_no, expire_date, cneu_cme_points, license_name, license_type, institution, issue_date, verified_status } = await req.json();
 
     if (!id) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -21,11 +21,9 @@ export async function PUT(
 
       // Get emp_id to update points
       let empId = null;
-      if (cneu_cme_points !== undefined) {
-        const [rows]: any = await pool.query('SELECT emp_id FROM tbl_employee_licenses WHERE id = ?', [licenseId]);
-        if (rows.length > 0) {
-          empId = rows[0].emp_id;
-        }
+      const [rows]: any = await pool.query('SELECT emp_id FROM tbl_employee_licenses WHERE id = ?', [licenseId]);
+      if (rows.length > 0) {
+        empId = rows[0].emp_id;
       }
 
       const connection = await pool.getConnection();
@@ -40,10 +38,22 @@ export async function PUT(
             license_name = COALESCE(?, license_name),
             license_type = COALESCE(?, license_type),
             institution = COALESCE(?, institution),
-            issue_date = COALESCE(?, issue_date)
+            issue_date = COALESCE(?, issue_date),
+            points = COALESCE(?, points),
+            verified_status = COALESCE(?, verified_status)
           WHERE id = ?
         `;
-        await connection.query(query, [license_no || null, expire_date || null, license_name || null, license_type || null, institution || null, issue_date || null, licenseId]);
+        await connection.query(query, [
+          license_no || null, 
+          expire_date || null, 
+          license_name || null, 
+          license_type || null, 
+          institution || null, 
+          issue_date || null, 
+          cneu_cme_points !== undefined ? cneu_cme_points : null,
+          verified_status !== undefined ? verified_status : null,
+          licenseId
+        ]);
 
         if (empId && cneu_cme_points !== undefined) {
           await connection.query('UPDATE tbl_employees SET cneu_cme_points = ? WHERE emp_id = ?', [cneu_cme_points, empId]);

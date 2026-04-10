@@ -42,7 +42,9 @@ function EmployeesContent() {
   const { positions, loadPositions } = usePositions();
 
   const [search, setSearch] = useState(searchParams.get('q') || '');
-  const [filterDept, setFilterDept] = useState('all');
+  const [filterDiv, setFilterDiv] = useState('all');
+  const [filterGrp, setFilterGrp] = useState('all');
+  const [filterSub, setFilterSub] = useState('all');
   const [filterPos, setFilterPos] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterLicense, setFilterLicense] = useState('all');
@@ -222,13 +224,20 @@ function EmployeesContent() {
     loadPositions();
   }, [loadEmployees, loadDepartments, loadPositions]);
 
-  const getDeptName = (id: string) => departments.find(d => d.dept_name === id)?.dept_name || id;
+  const getDeptName = (id: string) => {
+    const dept = departments.find(d => String(d.dept_id) === String(id));
+    if (!dept) return id || '-';
+    return `${dept.division} > ${dept.dept_name}${dept.sub_dept ? ` > ${dept.sub_dept}` : ''}`;
+  };
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
 
   const filteredData = useMemo(() => {
     return employees.filter(e => {
-      const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id} ${e.staff_no || ''}`.toLowerCase().includes(search.toLowerCase());
-      const matchDept = filterDept === 'all' || e.dept_id === filterDept;
+      const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
+      const dept = departments.find(d => d.dept_id === e.dept_id);
+      const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
+                        (filterGrp === 'all' || dept?.dept_name === filterGrp) &&
+                        (filterSub === 'all' || e.dept_id === filterSub);
       const matchPos = filterPos === 'all' || e.pos_id === filterPos;
       const matchStatus = filterStatus === 'all' || e.status === filterStatus;
 
@@ -237,7 +246,7 @@ function EmployeesContent() {
 
       return matchSearch && matchDept && matchPos && matchStatus && matchLicense;
     });
-  }, [employees, search, filterDept, filterPos, filterStatus, filterLicense]);
+  }, [employees, search, filterDiv, filterGrp, filterSub, filterPos, filterStatus, filterLicense, departments]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -419,21 +428,39 @@ function EmployeesContent() {
               <input type="text" placeholder="ค้นหาชื่อหรือรหัสพนักงาน..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
 
-            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterDept} onChange={e => setFilterDept(e.target.value)}>
-              <option value="all">ทุกแผนก</option>
-              {departments.map(d => <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>)}
-            </select>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterDiv} onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); setFilterSub('all'); }}>
+                <option value="all">ทุกฝ่าย</option>
+                {Array.from(new Set(departments.map(d => d.division?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th')).map(div => (
+                  <option key={div as string} value={div as string}>{div as string}</option>
+                ))}
+              </select>
+
+              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterGrp} onChange={e => { setFilterGrp(e.target.value); setFilterSub('all'); }} disabled={filterDiv === 'all'}>
+                <option value="all">ทุกกลุ่มงาน</option>
+                {Array.from(new Set(departments.filter(d => d.division?.trim() === filterDiv).map(d => d.dept_name?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th')).map(grp => (
+                  <option key={grp as string} value={grp as string}>{grp as string}</option>
+                ))}
+              </select>
+
+              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterSub} onChange={e => setFilterSub(e.target.value)} disabled={filterGrp === 'all'}>
+                <option value="all">ทุกแผนกย่อย</option>
+                {departments.filter(d => d.division?.trim() === filterDiv && d.dept_name?.trim() === filterGrp).sort((a, b) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th')).map(d => (
+                  <option key={d.dept_id} value={d.dept_id}>{d.sub_dept || '(ไม่มีแผนกย่อย)'}</option>
+                ))}
+              </select>
+            </div>
             <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterPos} onChange={e => setFilterPos(e.target.value)}>
               <option value="all">ทุกตำแหน่ง</option>
               {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
             </select>
             <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
               <option value="all">สถานะการทำงาน: ทั้งหมด</option>
-              <option value="Active">ทำงานปกติ (Active)</option>
-              <option value="Probation">ทดลองงาน</option>
-              <option value="Inactive">หยุดปฏิบัติงาน</option>
-              <option value="Resigned">ลาออก/พ้นสภาพ</option>
-              <option value="Terminated">ให้ออก</option>
+              <option value="ทำงานปกติ">ทำงานปกติ (Active)</option>
+              <option value="ทดลองงาน">ทดลองงาน</option>
+              <option value="หยุดปฏิบัติงาน">หยุดปฏิบัติงาน</option>
+              <option value="ลาออก/พ้นสภาพ">ลาออก/พ้นสภาพ</option>
+              <option value="ให้ออก">ให้ออก</option>
             </select>
             <select className="form-select" style={{ width: 'auto', minWidth: '160px' }} value={filterLicense} onChange={e => setFilterLicense(e.target.value)}>
               <option value="all">ใบประกอบฯ: ทั้งหมด</option>
@@ -452,17 +479,18 @@ function EmployeesContent() {
                   <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
                   <th>ตำแหน่ง</th>
-                  <th>แผนก/งาน</th>
-                  <th style={{ textAlign: 'center' }}>วันที่บันทึก</th>
-                  <th style={{ textAlign: 'center' }}>สถานะ</th>
+                  <th>สังกัด (ฝ่าย)</th>
+                  <th>กลุ่มงาน</th>
+                  <th>หน่วยงาน</th>
+                  <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
                 ) : currentData.length === 0 ? (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
                   currentData.map((emp) => (
                     <tr
@@ -489,20 +517,25 @@ function EmployeesContent() {
                         </div>
                       </td>
                       <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
+                      <td style={{ color: '#4f46e5', fontWeight: 600 }}>
+                        {departments.find(d => String(d.dept_id) === String(emp.dept_id))?.division || '-'}
+                      </td>
                       <td style={{ color: '#334155' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', background: '#f8fafc', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }}>
-                          {getDeptName(emp.dept_id)}
-                        </span>
+                        {(() => {
+                          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+                          if (!dept) return '-';
+                          return dept.dept_name || '-';
+                        })()}
+                      </td>
+                      <td style={{ color: '#334155' }}>
+                        {(() => {
+                          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+                          if (!dept) return '-';
+                          return dept.sub_dept || '-';
+                        })()}
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <span style={{ fontSize: '13px', color: '#64748b' }}>
-                          {emp.created_at ? new Date(emp.created_at).toLocaleDateString('th-TH') : '-'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`badge ${emp.status === 'Active' ? 'badge-green' : 'badge-gray'}`}>
-                          {emp.status}
-                        </span>
+                         <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} />
                       </td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <div className="action-btn-group" style={{ justifyContent: 'center' }}>
@@ -723,6 +756,119 @@ function EmployeesContent() {
       )}
 
     </AppLayout>
+  );
+}
+
+function StatusPicker({ emp, isAdmin, editEmployee }: any) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [openUp, setOpenUp] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenUp(spaceBelow < 250);
+    }
+  }, [isOpen]);
+
+  const statusOptions = [
+    { value: 'ทำงานปกติ', label: 'ทำงานปกติ', color: '#16a34a', bg: '#dcfce7' },
+    { value: 'ทดลองงาน', label: 'ทดลองงาน', color: '#a16207', bg: '#fef9c3' },
+    { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
+    { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ', color: '#ef4444', bg: '#fee2e2' },
+    { value: 'ให้ออก', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
+  ];
+
+  const statusMapping: { [key: string]: string } = {
+    'Active': 'ทำงานปกติ',
+    'Probation': 'ทดลองงาน',
+    'Inactive': 'หยุดปฏิบัติงาน',
+    'Resigned': 'ลาออก/พ้นสภาพ',
+    'Terminated': 'ให้ออก'
+  };
+
+  const currentStatus = statusOptions.find(o => o.value === emp.status || o.label === emp.status) || 
+                        statusOptions.find(o => o.value === statusMapping[emp.status]) || 
+                        statusOptions[0];
+
+  const handleUpdate = async (newStatus: string) => {
+    if (newStatus === emp.status) {
+      setIsOpen(false);
+      return;
+    }
+    const formData = new FormData();
+    formData.append('status', newStatus);
+    const res = await editEmployee(emp.emp_id, formData);
+    if (res.success) {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
+      <div 
+        onClick={(e) => {
+          if (!isAdmin) return;
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        style={{
+          padding: '6px 14px', borderRadius: '14px', fontSize: '13px', fontWeight: 800,
+          background: currentStatus.bg,
+          color: currentStatus.color,
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          cursor: isAdmin ? 'pointer' : 'default',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          border: '1px solid transparent',
+          userSelect: 'none',
+          whiteSpace: 'nowrap'
+        }}
+        onMouseOver={e => { if (isAdmin) { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.borderColor = currentStatus.color + '44'; } }}
+        onMouseOut={e => { if (isAdmin) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'transparent'; } }}
+      >
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: currentStatus.color }} />
+        {currentStatus.label}
+      </div>
+
+      {isOpen && (
+        <>
+          <div 
+            onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+            style={{ position: 'fixed', inset: 0, zIndex: 100 }} 
+          />
+          <div style={{
+            position: 'absolute', 
+            [openUp ? 'bottom' : 'top']: '100%', 
+            left: '50%', 
+            transform: `translateX(-50%) ${openUp ? 'translateY(-12px)' : 'translateY(12px)'}`,
+            background: 'rgba(255, 255, 255, 0.98)', backdropFilter: 'blur(20px)',
+            borderRadius: '20px', border: '1px solid rgba(241, 245, 249, 1)',
+            boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12)', 
+            padding: '10px', zIndex: 101, width: '180px',
+          }}>
+            <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>เลือกสถานะใหม่</div>
+            {statusOptions.map(opt => (
+              <div 
+                key={opt.value}
+                onClick={(e) => { e.stopPropagation(); handleUpdate(opt.value); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  background: emp.status === opt.value ? '#f1f5f9' : 'transparent',
+                  color: emp.status === opt.value ? '#0f172a' : '#64748b'
+                }}
+                onMouseOver={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0f172a'; }}
+                onMouseOut={e => { if (emp.status !== opt.value) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } else { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#0f172a'; } }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: opt.color }} />
+                <span style={{ fontSize: '14px', fontWeight: emp.status === opt.value ? 700 : 500 }}>{opt.label}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 

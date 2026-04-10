@@ -1274,3 +1274,43 @@ body {
   background: #f5f8ff;
   border-color: #c7d2fe;
 }
+
+
+/* Force visible scrollbars for compliance chart */
+.custom-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  height: 8px !important;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 10px !important;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #94a3b8 !important;
+  border-radius: 10px !important;
+  border: 2px solid #f1f5f9 !important;
+}
+.custom-scrollbar {
+  scrollbar-width: thin !important;
+  -ms-overflow-style: auto !important;
+}
+
+
+/* Scoped scrollbars for License Page ONLY */
+.license-page-root * {
+  scrollbar-width: auto !important;
+  -ms-overflow-style: auto !important;
+}
+.license-page-root *::-webkit-scrollbar {
+  display: block !important;
+  width: 8px !important;
+  height: 8px !important;
+}
+.license-page-root *::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 10px !important;
+  border: 2px solid #f8fafc !important;
+}
+.license-page-root *::-webkit-scrollbar-track {
+  background: #f8fafc !important;
+}
