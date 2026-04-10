@@ -38,7 +38,8 @@ const COUNCIL_LINKS: Record<string, string> = {
    'สภาวิศวกร': 'https://service.coe.or.th/verify_license',
    'สถาบันการแพทย์ฉุกเฉินแห่งชาติ (สพฉ.)': 'https://www.niems.go.th/',
    'กรมสนับสนุนบริการสุขภาพ': 'https://hss-db.hss.moph.go.th/',
-   'คณะกรรมการวิชาชีพสาขารังสีเทคนิค': 'https://mrd.hss.moph.go.th/mrd1_hss/?cat=66'
+   'คณะกรรมการวิชาชีพสาขารังสีเทคนิค': 'https://mrd.hss.moph.go.th/mrd1_hss/?cat=66',
+   'สภาการแพทย์แผนไทย': 'https://www.thaimed.or.th/'
 };
 
 // --- Interfaces ---
@@ -648,7 +649,15 @@ export default function LicensePage() {
                                        <input type="date" required value={formData.expire_date} onChange={e => setFormData({ ...formData, expire_date: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', outline: 'none' }} />
                                     </div>
                                     <div style={{ gridColumn: 'span 2' }}>
-                                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>สภาวิชาชีพ (หน่วยงานที่ออกบัตร)</label>
+                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                          <label style={{ fontSize: '14px', fontWeight: 800, color: '#475569' }}>สภาวิชาชีพ (หน่วยงานที่ออกบัตร)</label>
+                                          {formData.issuer && COUNCIL_LINKS[formData.issuer] && (
+                                             <a href={COUNCIL_LINKS[formData.issuer]} target="_blank" rel="noreferrer" style={{ fontSize: '11px', fontWeight: 900, color: '#2563eb', textDecoration: 'none', background: '#eff6ff', padding: '4px 12px', borderRadius: '50px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                                                ตรวจสอบสภาฯ
+                                             </a>
+                                          )}
+                                       </div>
                                        <ModernSelect value={formData.issuer} onChange={val => setFormData({ ...formData, issuer: val })} options={ISSUERS.map(i => ({ value: i, label: i }))} />
                                     </div>
                                     <div style={{ gridColumn: 'span 2' }}>
@@ -684,7 +693,18 @@ export default function LicensePage() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
                            <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>เลขที่ใบอนุญาต</div><div style={{ fontSize: '16px', fontWeight: 800, fontFamily: 'monospace' }}>{selectedLicense.license_no || '-'}</div></div>
                            <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>ประเภทวิชาชีพ</div><div style={{ fontSize: '16px', fontWeight: 800 }}>{selectedLicense.type || selectedLicense.license_name || '-'}</div></div>
-                           <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>สภาวิชาชีพ</div><div style={{ fontSize: '16px', fontWeight: 800 }}>{selectedLicense.issuer || '-'}</div></div>
+                           <div>
+                              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>สภาวิชาชีพ</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                 <div style={{ fontSize: '16px', fontWeight: 800 }}>{selectedLicense.issuer || '-'}</div>
+                                 {selectedLicense.issuer && COUNCIL_LINKS[selectedLicense.issuer] && (
+                                    <a href={COUNCIL_LINKS[selectedLicense.issuer]} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#3b82f6', color: '#fff', padding: '4px 12px', borderRadius: '14px', fontSize: '11px', fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.2)' }}>
+                                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                                       ตรวจสอบสภาฯ
+                                    </a>
+                                 )}
+                              </div>
+                           </div>
                            <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>วันหมดอายุ</div><div style={{ fontSize: '16px', fontWeight: 800 }}>{selectedLicense.expires || '-'}</div></div>
                         </div>
                         {selectedLicense.file_path && (
