@@ -7,21 +7,21 @@ export async function GET() {
     const password = 'admin';
     const hash = crypto.createHash('sha256').update(password).digest('hex');
     
-    // Check if admin exists in tbl_users
-    const [rows]: any = await pool.query("SELECT * FROM tbl_users WHERE username = 'admin'");
+    // Check if admin exists in tbl_employees
+    const [rows]: any = await pool.query("SELECT * FROM tbl_employees WHERE username = 'admin' OR emp_id = 'admin'");
     
     if (rows.length === 0) {
       await pool.query(
-        "INSERT INTO tbl_users (username, password_hash, role, status) VALUES ('admin', ?, 'Admin', 'Active')",
+        "INSERT INTO tbl_employees (emp_id, username, password, first_name_th, last_name_th, role, status, dept_id, pos_id, citizen_id) VALUES ('admin', 'admin', ?, 'System', 'Admin', 'Admin', 'Active', 'ADM-FIN', 'P001', 'ADMIN-ID')",
         [hash]
       );
-      return NextResponse.json({ message: 'Admin user created successfully.' });
+      return NextResponse.json({ message: 'Admin user created successfully in tbl_employees.' });
     } else {
       await pool.query(
-        "UPDATE tbl_users SET password_hash = ?, role = 'Admin', status = 'Active' WHERE username = 'admin'",
-        [hash]
+        "UPDATE tbl_employees SET password = ?, role = 'Admin', status = 'Active', username = 'admin' WHERE emp_id = ? OR username = 'admin'",
+        [hash, rows[0].emp_id]
       );
-      return NextResponse.json({ message: 'Admin user updated successfully.' });
+      return NextResponse.json({ message: 'Admin user updated successfully in tbl_employees.' });
     }
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

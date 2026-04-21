@@ -116,6 +116,7 @@ export default function LoginPage() {
             placeholder="Username"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             autoComplete="username"
+            suppressHydrationWarning
             style={{ border: 'none', background: 'none', width: '100%', fontSize: 15, color: '#333', outline: 'none', fontFamily: 'Sarabun, sans-serif' }}
           />
         </div>
@@ -130,6 +131,7 @@ export default function LoginPage() {
             placeholder="Password"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             autoComplete="current-password"
+            suppressHydrationWarning
             style={{ border: 'none', background: 'none', width: '100%', fontSize: 15, color: '#333', outline: 'none', fontFamily: 'Sarabun, sans-serif' }}
           />
         </div>

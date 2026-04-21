@@ -153,7 +153,7 @@ async function checkTimeConflict(
 
 async function getEmployeeEmail(empId: string): Promise<string | null> {
   const [rows]: any = await pool.query(
-    'SELECT email FROM tbl_users WHERE emp_id = ? LIMIT 1',
+    'SELECT email FROM tbl_employees WHERE emp_id = ? LIMIT 1',
     [empId]
   );
   return rows[0]?.email ?? null;

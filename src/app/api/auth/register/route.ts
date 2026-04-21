@@ -29,88 +29,60 @@ export async function POST(req: NextRequest) {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // 2. Check duplicate username
-    const [existingUser]: any = await connection.query(
-      'SELECT user_id FROM tbl_users WHERE username = ?',
-      [username]
+    // 2. Check duplicate username or email in tbl_employees
+    const [existing]: any = await connection.query(
+      'SELECT emp_id FROM tbl_employees WHERE username = ? OR email = ? OR (emp_id IS NOT NULL AND emp_id = ?)',
+      [username, email, emp_id || '']
     );
-    if (existingUser.length > 0) {
+    if (existing.length > 0) {
       await connection.rollback();
       return NextResponse.json(
-        { success: false, message: 'Username นี้ถูกใช้งานแล้ว' },
+        { success: false, message: 'Username, Email หรือ รหัสพนักงานนี้ถูกใช้งานแล้ว' },
         { status: 409 }
       );
     }
 
-    // 3. Check duplicate email
-    const [existingEmail]: any = await connection.query(
-      'SELECT user_id FROM tbl_users WHERE email = ?',
-      [email]
-    );
-    if (existingEmail.length > 0) {
-      await connection.rollback();
-      return NextResponse.json(
-        { success: false, message: 'Email นี้ถูกใช้งานแล้ว' },
-        { status: 409 }
-      );
-    }
-
-    // 4. Handle Employee Profile Creation/Linking
+    // 4. Handle Employee Profile Creation
     let final_emp_id = emp_id;
-    if (final_emp_id) {
-      // Check if employee already exists in tbl_employees
-      const [existingEmp]: any = await connection.query(
-        'SELECT emp_id FROM tbl_employees WHERE emp_id = ?',
-        [final_emp_id]
-      );
-      if (existingEmp.length === 0) {
-        // If they provided an ID but it doesn't exist, create it
-        await connection.query(
-          `INSERT INTO tbl_employees 
-            (emp_id, prefix, first_name_th, last_name_th, email, phone, gender, birth_date, start_date, citizen_id, base_salary, status, role)
-           VALUES (?, '-', ?, ?, ?, ?, ?, ?, ?, '0000000000000', 0, 'Active', 'User')`,
-          [final_emp_id, first_name, last_name, email, phone || '', gender || 'ชาย', date_of_birth || null, start_date || null]
-        );
-      }
-    } else {
-      // Auto-generate emp_id and create new employee
-      final_emp_id = 'E' + Date.now().toString().slice(-5);
-      await connection.query(
-        `INSERT INTO tbl_employees 
-          (emp_id, prefix, first_name_th, last_name_th, email, phone, gender, birth_date, start_date, citizen_id, base_salary, status, role)
-         VALUES (?, '-', ?, ?, ?, ?, ?, ?, ?, '0000000000000', 0, 'Active', 'User')`,
-        [final_emp_id, first_name, last_name, email, phone || '', gender || 'ชาย', date_of_birth || null, start_date || null]
-      );
+    if (!final_emp_id) {
+       final_emp_id = 'E' + Date.now().toString().slice(-5);
     }
 
-    // 5. Create user_id = 'U' + timestamp
-    const user_id = 'U' + Date.now();
-
-    // 6. Hash password ด้วย SHA-256
+    // Hash password สำหรับ tbl_employees
     const password_hash = sha256(password);
 
-    // 7. Insert into tbl_users
-    await connection.query(
-      `INSERT INTO tbl_users 
-        (user_id, username, password_hash, first_name, last_name, email,
-         emp_id, gender, date_of_birth, phone, position, department,
-         start_date, employee_type, role, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', 'Active')`,
-      [
-        user_id, username, password_hash, first_name, last_name, email,
-        final_emp_id, gender || null, date_of_birth || null, phone || null,
-        position || null, department || null,
-        start_date || null, employee_type || null
-      ]
+    // 5. Insert or Update tbl_employees
+    // ตรวจสอบว่ามีแถวที่สร้างไว้ล่วงหน้า (ไม่มีรหัสผ่าน) หรือไม่
+    const [existingEmpById]: any = await connection.query(
+      'SELECT emp_id FROM tbl_employees WHERE emp_id = ?',
+      [final_emp_id]
     );
 
+    if (existingEmpById.length > 0) {
+      // Update existing record with login info
+      await connection.query(
+        `UPDATE tbl_employees SET 
+          username = ?, password = ?, first_name_th = ?, last_name_th = ?, email = ?, phone = ?, gender = ?, birth_date = ?, status = 'Active'
+         WHERE emp_id = ?`,
+        [username, password_hash, first_name, last_name, email, phone || '', gender || 'ชาย', date_of_birth || null, final_emp_id]
+      );
+    } else {
+      // Insert new record
+      await connection.query(
+        `INSERT INTO tbl_employees 
+          (emp_id, username, password, prefix, first_name_th, last_name_th, email, phone, gender, birth_date, start_date, citizen_id, base_salary, status, role, dept_id, pos_id)
+         VALUES (?, ?, ?, '-', ?, ?, ?, ?, ?, ?, ?, '0000000000000', 0, 'Active', 'User', 'ADM-FIN', 'P001')`,
+        [final_emp_id, username, password_hash, first_name, last_name, email, phone || '', gender || 'ชาย', date_of_birth || null, start_date || null]
+      );
+    }
+
     await connection.commit();
-    console.log('✅ REGISTER SUCCESS:', user_id);
+    console.log('✅ REGISTER SUCCESS:', final_emp_id);
 
     return NextResponse.json({
       success: true,
       message: 'สมัครสมาชิกสำเร็จ',
-      user_id
+      emp_id: final_emp_id
     });
 
   } catch (error: any) {

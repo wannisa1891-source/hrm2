@@ -11,12 +11,42 @@ export async function GET(req: NextRequest) {
         pos_id VARCHAR(50) NULL,
         dept_id VARCHAR(50) NULL,
         license_name VARCHAR(255) NOT NULL,
+        issuer VARCHAR(100) NULL,
         valid_years INT DEFAULT 5,
         warning_days INT DEFAULT 90,
         is_mandatory TINYINT(1) DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    // Add issuer column if not exists (for existing tables)
+    try {
+      await pool.query('ALTER TABLE tbl_license_configs ADD COLUMN issuer VARCHAR(100) NULL AFTER license_name');
+    } catch (e) {
+      // Column already exists or other error (ignore)
+    }
+
+    // Data Repair: Auto-populate issuer for existing records where it's NULL
+    await pool.query(`
+      UPDATE tbl_license_configs
+      SET issuer = CASE
+        WHEN license_name LIKE '%พยาบาล%' OR config_name LIKE '%พยาบาล%' THEN 'สภาการพยาบาล'
+        WHEN (license_name LIKE '%แพทย์%' OR config_name LIKE '%แพทย์%') 
+             AND license_name NOT LIKE '%แผนไทย%' AND config_name NOT LIKE '%แผนไทย%' THEN 'แพทยสภา'
+        WHEN license_name LIKE '%เทคนิคการแพทย์%' OR config_name LIKE '%เทคนิคการแพทย์%' THEN 'สภาเทคนิคการแพทย์'
+        WHEN license_name LIKE '%เภสัช%' OR config_name LIKE '%เภสัช%' THEN 'สภาเภสัชกรรม'
+        WHEN license_name LIKE '%กายภาพบำบัด%' OR config_name LIKE '%กายภาพบำบัด%' THEN 'สภากายภาพบำบัด'
+        WHEN license_name LIKE '%ทันตแพทย์%' OR config_name LIKE '%ทันตแพทย์%' THEN 'ทันตแพทยสภา'
+        WHEN license_name LIKE '%แพทย์แผนไทย%' OR config_name LIKE '%แพทย์แผนไทย%' THEN 'สภาการแพทย์แผนไทย'
+        WHEN license_name LIKE '%รังสีเทคนิค%' OR config_name LIKE '%รังสีเทคนิค%' THEN 'คณะกรรมการวิชาชีพสาขารังสีเทคนิค'
+        WHEN license_name LIKE '%ครู%' OR config_name LIKE '%ครู%' THEN 'คุรุสภา'
+        WHEN license_name LIKE '%วิศวกร%' OR config_name LIKE '%วิศวกร%' THEN 'สภาวิศวกร'
+        WHEN license_name LIKE '%ฉุกเฉิน%' OR config_name LIKE '%ฉุกเฉิน%' THEN 'สถาบันการแพทย์ฉุกเฉินแห่งชาติ (สพฉ.)'
+        WHEN license_name LIKE '%สนับสนุนบริการสุขภาพ%' OR config_name LIKE '%สนับสนุนบริการสุขภาพ%' THEN 'กรมสนับสนุนบริการสุขภาพ'
+        ELSE issuer
+      END
+      WHERE issuer IS NULL OR issuer = '';
     `);
 
     const [rows]: any = await pool.query('SELECT * FROM tbl_license_configs ORDER BY created_at DESC');
@@ -28,14 +58,24 @@ export async function GET(req: NextRequest) {
       
       for (const pos of positions) {
         let licenseName = 'ใบประกอบวิชาชีพ';
-        if (pos.pos_name.includes('พยาบาล')) licenseName = 'ใบประกอบวิชาชีพการพยาบาลและการผดุงครรภ์';
-        if (pos.pos_name.includes('แพทย์')) licenseName = 'ใบประกอบวิชาชีพเวชกรรม';
-        if (pos.pos_name.includes('เภสัช')) licenseName = 'ใบประกอบวิชาชีพเภสัชกรรม';
+        let issuer = '';
+        if (pos.pos_name.includes('พยาบาล')) {
+          licenseName = 'ใบประกอบวิชาชีพการพยาบาลและการผดุงครรภ์';
+          issuer = 'สภาการพยาบาล';
+        }
+        if (pos.pos_name.includes('แพทย์')) {
+          licenseName = 'ใบประกอบวิชาชีพเวชกรรม';
+          issuer = 'แพทยสภา';
+        }
+        if (pos.pos_name.includes('เภสัช')) {
+          licenseName = 'ใบประกอบวิชาชีพเภสัชกรรม';
+          issuer = 'สภาเภสัชกรรม';
+        }
 
         await pool.query(`
-          INSERT INTO tbl_license_configs (config_name, pos_id, license_name, valid_years, warning_days, is_mandatory)
-          VALUES (?, ?, ?, 5, 90, 1)
-        `, [`เกณฑ์สำหรับ ${pos.pos_name}`, pos.pos_id, licenseName]);
+          INSERT INTO tbl_license_configs (config_name, pos_id, license_name, issuer, valid_years, warning_days, is_mandatory)
+          VALUES (?, ?, ?, ?, 5, 90, 1)
+        `, [`เกณฑ์สำหรับ ${pos.pos_name}`, pos.pos_id, licenseName, issuer]);
       }
       
       const [newRows] = await pool.query('SELECT * FROM tbl_license_configs ORDER BY created_at DESC');
@@ -54,14 +94,15 @@ export async function POST(req: NextRequest) {
     const d = await req.json();
     const query = `
       INSERT INTO tbl_license_configs 
-      (config_name, pos_id, dept_id, license_name, valid_years, warning_days, is_mandatory)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (config_name, pos_id, dept_id, license_name, issuer, valid_years, warning_days, is_mandatory)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [
       d.config_name,
       d.pos_id || null,
       d.dept_id || null,
       d.license_name,
+      d.issuer || null,
       d.valid_years || 5,
       d.warning_days || 90,
       d.is_mandatory !== undefined ? d.is_mandatory : 1
@@ -78,7 +119,7 @@ export async function PUT(req: NextRequest) {
     const d = await req.json();
     const query = `
       UPDATE tbl_license_configs 
-      SET config_name = ?, pos_id = ?, dept_id = ?, license_name = ?, valid_years = ?, warning_days = ?, is_mandatory = ?
+      SET config_name = ?, pos_id = ?, dept_id = ?, license_name = ?, issuer = ?, valid_years = ?, warning_days = ?, is_mandatory = ?
       WHERE id = ?
     `;
     const values = [
@@ -86,6 +127,7 @@ export async function PUT(req: NextRequest) {
       d.pos_id || null,
       d.dept_id || null,
       d.license_name,
+      d.issuer || null,
       d.valid_years || 5,
       d.warning_days || 90,
       d.is_mandatory !== undefined ? d.is_mandatory : 1,

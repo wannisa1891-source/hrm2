@@ -62,15 +62,16 @@ export async function GET(req: NextRequest) {
       userQuotaResult,
       userUsedResult,
       userRecentResult,
-      userPayrollResult
+      userPayrollResult,
+      capacityResult
     ] = await Promise.all([
-      pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status = 'Active'"),
+      pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status IN ('Active', 'A')"),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE ? >= start_date AND ? <= end_date", [today, today]),
       pool.query(`
         SELECT p.pos_name as name, COUNT(e.emp_id) as value
         FROM tbl_employees e
         LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id
-        WHERE e.status = 'Active'
+        WHERE e.status IN ('Active', 'A')
         GROUP BY p.pos_name
       `),
       pool.query("SELECT COUNT(*) as count FROM tbl_transfers").catch(() => [[{ count: 0 }]]),
@@ -79,12 +80,14 @@ export async function GET(req: NextRequest) {
       employeeQuotaQuery,
       employeeUsedLeavesQuery,
       employeeRecentLeavesQuery,
-      employeePayrollQuery
+      employeePayrollQuery,
+      pool.query("SELECT SUM(capacity) as total_capacity FROM tbl_departments")
     ]);
 
     const empCount = (empResult[0] as any[])[0].count;
     const leaveTodayCount = (leaveResult[0] as any[])[0].count;
-    const vacantCount = 0;
+    const totalCapacity = (capacityResult[0] as any[])[0].total_capacity || 0;
+    const vacantCount = Math.max(0, totalCapacity - empCount);
 
     const colors = ['#4A5644', '#C5A073', '#8884d8', '#82ca9d', '#ffc658'];
     const professions = (profResult[0] as any[]).map((row, index) => ({
