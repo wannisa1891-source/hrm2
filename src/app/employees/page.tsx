@@ -430,25 +430,19 @@ function EmployeesContent() {
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterDiv} onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); setFilterSub('all'); }}>
-                <option value="all">ทุกฝ่าย</option>
+                <option value="all">ทุกแผนก</option>
                 {Array.from(new Set(departments.map(d => d.division?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th')).map(div => (
                   <option key={div as string} value={div as string}>{div as string}</option>
                 ))}
               </select>
 
               <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterGrp} onChange={e => { setFilterGrp(e.target.value); setFilterSub('all'); }} disabled={filterDiv === 'all'}>
-                <option value="all">ทุกกลุ่มงาน</option>
+                <option value="all">ทุกหน่วยงาน</option>
                 {Array.from(new Set(departments.filter(d => d.division?.trim() === filterDiv).map(d => d.dept_name?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th')).map(grp => (
                   <option key={grp as string} value={grp as string}>{grp as string}</option>
                 ))}
               </select>
 
-              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterSub} onChange={e => setFilterSub(e.target.value)} disabled={filterGrp === 'all'}>
-                <option value="all">ทุกแผนกย่อย</option>
-                {departments.filter(d => d.division?.trim() === filterDiv && d.dept_name?.trim() === filterGrp).sort((a, b) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th')).map(d => (
-                  <option key={d.dept_id} value={d.dept_id}>{d.sub_dept || '(ไม่มีแผนกย่อย)'}</option>
-                ))}
-              </select>
             </div>
             <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterPos} onChange={e => setFilterPos(e.target.value)}>
               <option value="all">ทุกตำแหน่ง</option>
@@ -479,8 +473,7 @@ function EmployeesContent() {
                   <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
                   <th>ตำแหน่ง</th>
-                  <th>สังกัด (ฝ่าย)</th>
-                  <th>กลุ่มงาน</th>
+                  <th>แผนก</th>
                   <th>หน่วยงาน</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
@@ -525,13 +518,6 @@ function EmployeesContent() {
                           const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
                           if (!dept) return '-';
                           return dept.dept_name || '-';
-                        })()}
-                      </td>
-                      <td style={{ color: '#334155' }}>
-                        {(() => {
-                          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
-                          if (!dept) return '-';
-                          return dept.sub_dept || '-';
                         })()}
                       </td>
                       <td style={{ textAlign: 'center' }}>
