@@ -104,144 +104,220 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' }}>
+        <Loader2 style={{ width: 40, height: 40, color: '#2563eb', animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden py-12">
-      <div className="absolute top-0 right-0 w-full h-80 bg-gradient-to-bl from-indigo-700 to-blue-600 rounded-b-[60px] transform -translate-y-20 skew-y-1 shadow-lg z-0"></div>
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      backgroundColor: '#f0f2f5', 
+      fontFamily: "'Sarabun', sans-serif",
+      position: 'relative',
+      overflow: 'hidden',
+      padding: '40px 20px'
+    }}>
+      {/* Background Accent Like Login Page Slides Pattern */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '35vh',
+        background: 'linear-gradient(135deg, #002D55, #2563eb)',
+        zIndex: 0,
+        borderBottomLeftRadius: '100px',
+        borderBottomRightRadius: '100px',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+      }} />
       
-      <div className="relative z-10 w-full max-w-lg px-6">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="px-8 pt-10 pb-6 border-b border-slate-100">
-            <h1 className="text-2xl font-bold text-center text-slate-800 mb-2">
-              ตั้งรหัสผ่านใหม่
-            </h1>
-            <p className="text-center text-slate-500 text-sm">
-              กรุณากำหนดรหัสผ่านใหม่ที่คาดเดายาก 
-              และไม่ซ้ำกับรหัสผ่านเดิมที่เคยใช้งาน
-            </p>
+      <div className="glass-card" style={{ 
+        position: 'relative', 
+        zIndex: 10, 
+        width: '100%', 
+        maxWight: '480px', 
+        maxWidth: '480px',
+        padding: '0',
+        borderRadius: '24px',
+        overflow: 'hidden',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+        background: '#ffffff'
+      }}>
+        {/* Header Section */}
+        <div style={{ 
+          padding: '40px 40px 24px', 
+          textAlign: 'center', 
+          borderBottom: '1px solid #f1f5f9'
+        }}>
+          <div style={{ marginBottom: 20 }}>
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/3063/3063176.png"
+              alt="logo"
+              style={{ width: 64, display: 'block', margin: '0 auto' }}
+            />
           </div>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1e293b', margin: '0 0 8px' }}>
+            ตั้งรหัสผ่านใหม่
+          </h1>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+            กรุณากำหนดรหัสผ่านใหม่ที่คาดเดายาก<br/>และไม่ซ้ำกับรหัสผ่านเดิม
+          </p>
+        </div>
 
-          <div className="px-8 py-8 bg-slate-50/50">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Password Input */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">รหัสผ่านใหม่</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-slate-400" />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={status === 'loading'}
-                    className="block w-full pl-10 pr-12 py-3 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-                    placeholder="กรอกรหัสผ่านใหม่"
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-slate-400 hover:text-slate-600 focus:outline-none"
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
+        {/* Form Section */}
+        <div style={{ padding: '32px 40px 40px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            
+            {/* New Password */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>
+                รหัสผ่านใหม่
+              </label>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>
+                  <Lock size={18} />
                 </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={status === 'loading'}
+                  suppressHydrationWarning
+                  style={{
+                    width: '100%',
+                    padding: '12px 44px 12px 40px',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                    fontFamily: 'inherit'
+                  }}
+                  placeholder="อย่างน้อย 8 ตัวอักษร"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+            </div>
 
-              {/* Confirm Password Input */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">ยืนยันรหัสผ่านใหม่</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <CheckCircle2 className={`h-5 w-5 ${rules.match ? 'text-emerald-500' : 'text-slate-400'}`} />
-                  </div>
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={status === 'loading'}
-                    className={`block w-full pl-10 pr-12 py-3 border rounded-xl bg-white transition duration-200 focus:ring-2 focus:outline-none ${
-                        confirmPassword.length > 0 
-                        ? rules.match 
-                          ? 'border-emerald-300 focus:ring-emerald-500 focus:border-emerald-500' 
-                          : 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                        : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
-                    }`}
-                    placeholder="ยืนยันรหัสผ่านอีกครั้ง"
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="text-slate-400 hover:text-slate-600 focus:outline-none"
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
+            {/* Confirm Password */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>
+                ยืนยันรหัสผ่านใหม่
+              </label>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: rules.match ? '#10b981' : '#94a3b8' }}>
+                  <CheckCircle2 size={18} />
                 </div>
-                {confirmPassword.length > 0 && !rules.match && (
-                  <p className="mt-2 text-sm text-red-500 flex items-center">
-                    <XCircle className="w-4 h-4 mr-1" /> รหัสผ่านไม่ตรงกัน
-                  </p>
-                )}
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={status === 'loading'}
+                  suppressHydrationWarning
+                  style={{
+                    width: '100%',
+                    padding: '12px 44px 12px 40px',
+                    borderRadius: '12px',
+                    border: `1px solid ${confirmPassword ? (rules.match ? '#10b981' : '#ef4444') : '#e2e8f0'}`,
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                    fontFamily: 'inherit'
+                  }}
+                  placeholder="กรอกรหัสผ่านอีกครั้ง"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+            </div>
 
-              {/* Validation Rules Checklist */}
-              <div className="bg-slate-100/50 rounded-xl p-4 border border-slate-200">
-                <p className="text-sm font-medium text-slate-700 mb-3">เงื่อนไขรหัสผ่าน:</p>
-                <ul className="space-y-2 text-sm">
-                  <li className={`flex items-center ${rules.length ? 'text-emerald-600' : 'text-slate-500'}`}>
-                    {rules.length ? <CheckCircle2 className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2 opacity-50" />}
-                    มีความยาวอย่างน้อย 8 ตัวอักษร
-                  </li>
-                  <li className={`flex items-center ${rules.uppercase ? 'text-emerald-600' : 'text-slate-500'}`}>
-                    {rules.uppercase ? <CheckCircle2 className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2 opacity-50" />}
-                    มีตัวอักษรพิมพ์ใหญ่ (A-Z) อย่างน้อย 1 ตัว
-                  </li>
-                  <li className={`flex items-center ${rules.lowercase ? 'text-emerald-600' : 'text-slate-500'}`}>
-                    {rules.lowercase ? <CheckCircle2 className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2 opacity-50" />}
-                    มีตัวอักษรพิมพ์เล็ก (a-z) อย่างน้อย 1 ตัว
-                  </li>
-                  <li className={`flex items-center ${rules.number ? 'text-emerald-600' : 'text-slate-500'}`}>
-                    {rules.number ? <CheckCircle2 className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2 opacity-50" />}
-                    มีตัวเลข (0-9) อย่างน้อย 1 ตัว
-                  </li>
-                  <li className={`flex items-center ${rules.symbol ? 'text-emerald-600' : 'text-slate-500'}`}>
-                    {rules.symbol ? <CheckCircle2 className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2 opacity-50" />}
-                    มีสัญลักษณ์พิเศษ (!@#$%^&*) อย่างน้อย 1 ตัว
-                  </li>
-                </ul>
+            {/* Validation Rules */}
+            <div style={{ padding: '16px', borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: '#475569', margin: '0 0 10px' }}>เงื่อนไขความปลอดภัย:</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
+                {[
+                  { label: 'ยาวอย่างน้อย 8 ตัวอักษร', valid: rules.length },
+                  { label: 'มีตัวพิมพ์ใหญ่ (A-Z)', valid: rules.uppercase },
+                  { label: 'มีตัวพิมพ์เล็ก (a-z)', valid: rules.lowercase },
+                  { label: 'มีตัวเลข (0-9)', valid: rules.number },
+                  { label: 'มีสัญลักษณ์พิเศษ (!@#$%)', valid: rules.symbol },
+                ].map((rule, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: rule.valid ? '#059669' : '#64748b' }}>
+                    {rule.valid ? <CheckCircle2 size={14} /> : <XCircle size={14} style={{ opacity: 0.5 }} />}
+                    {rule.label}
+                  </div>
+                ))}
               </div>
+            </div>
 
-              <button
-                type="submit"
-                disabled={!isFormValid || status === 'loading'}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
-              >
-                {status === 'loading' ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    กำลังบันทึกรหัสผ่าน...
-                  </>
-                ) : (
-                  <>
-                    บันทึกรหัสผ่านใหม่ <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={!isFormValid || status === 'loading'}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '12px',
+                border: 'none',
+                background: !isFormValid || status === 'loading' ? '#cbd5e1' : 'linear-gradient(135deg, #002D55, #2563eb)',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: '16px',
+                cursor: !isFormValid || status === 'loading' ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.25s ease',
+                boxShadow: isFormValid && status !== 'loading' ? '0 10px 20px rgba(37, 99, 235, 0.2)' : 'none'
+              }}
+            >
+              {status === 'loading' ? (
+                <>
+                  <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                  กำลังบันทึก...
+                </>
+              ) : (
+                <>
+                  บันทึกรหัสผ่านใหม่ <ArrowRight size={18} />
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+        
+        {/* Footer Link */}
+        <div style={{ padding: '20px', textAlign: 'center', backgroundColor: '#f8fafc', fontSize: '13px' }}>
+          <Link href="/login" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>
+            กลับหน้าเข้าสู่ระบบ
+          </Link>
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
