@@ -114,7 +114,7 @@ export default function DepartmentAndEmployeePage() {
         const deptName = dept?.dept_name || '';
         const divName = dept?.division || '';
         const subDept = dept?.sub_dept || '';
-        return `${e.first_name_th || ''} ${e.last_name_th || ''} ${e.first_name_en || ''} ${e.last_name_en || ''} ${e.emp_id || ''} ${deptName} ${divName} ${subDept}`.toLowerCase().includes(term);
+        return `${e.first_name_th || ''} ${e.last_name_th || ''} ${e.emp_id || ''} ${deptName} ${divName} ${subDept}`.toLowerCase().includes(term);
       });
     }
 
