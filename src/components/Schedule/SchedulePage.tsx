@@ -287,9 +287,9 @@ export default function SchedulePage() {
         .sp-dept-badge { font-size: 12px; color: #1d4ed8; font-weight: 800; background: #eff6ff; padding: 4px 12px; border-radius: 20px; border: 1px solid #bfdbfe; box-shadow: inset 0 1px 2px rgba(255,255,255,0.7); }
         .sp-modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,.6); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .sp-modal-box { background: var(--card); border-radius: 8px; padding: 24px 32px; width: 500px; max-width: 90vw; max-height: 85vh; overflow-y: auto; box-shadow: var(--shd2); }
-        .sp-modal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--bdr); pb-2 }
+        .sp-modal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--bdr); }
         .sp-modal-top h3 { margin: 0 0 12px; font-size: 18px; font-weight: 700; color: var(--txt); display: flex; align-items: center; gap: 8px; }
-        .sp-modal-x { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--txt2); padding: 4px; border-radius: 4px; mb-3 }
+        .sp-modal-x { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--txt2); padding: 4px; border-radius: 4px; }
         .sp-modal-x:hover { background: var(--bg); color: var(--txt); }
         .sp-modal-date { font-size: 13px; color: var(--txt2); margin-bottom: 16px; padding: 8px 12px; background: var(--bg); border-radius: 6px; font-weight: 600; border: 1px solid var(--bdr); }
         .sp-modal-existing { margin-bottom: 16px; }
@@ -327,7 +327,7 @@ export default function SchedulePage() {
         .sp-modal-top h3 svg { width: 20px; height: 20px; }
         .sp-modal-top .sp-modal-x svg { width: 20px; height: 20px; }
         .sp-btn-icon svg { width: 16px; height: 16px; }
-      `}} />
+        `}} />
 
       <div className="schedule-page" style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
 
@@ -337,7 +337,6 @@ export default function SchedulePage() {
             <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <svg width="28" height="28" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
               ตารางเวร
-
             </h1>
             <p className="page-subtitle">จัดการตารางเวรและการทำงานของบุคลากรทางการแพทย์แบบครบวงจร</p>
           </div>
