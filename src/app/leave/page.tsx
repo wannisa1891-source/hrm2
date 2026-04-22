@@ -9,15 +9,24 @@ import { Leave } from '@/services/apiService';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { useSearchParams } from 'next/navigation';
-import { getCurrentFiscalYearRange } from '@/lib/dateUtils';
+import { getCurrentFiscalYearRange, toDateStr } from '@/lib/dateUtils';
+
+const CATEGORIES = [
+  { id: 'Sick', name: 'ลาป่วย', color: '#f59e0b' },
+  { id: 'Personal', name: 'ลากิจ', color: '#6366f1' },
+  { id: 'Vacation', name: 'ลาพักผ่อน', color: '#10b981' },
+  { id: 'Other', name: 'อื่นๆ', color: '#64748b' },
+];
 
 const LEAVE_TYPES = [
-  { id: 'L01', name: 'ลาป่วย', color: '#f59e0b' },
-  { id: 'L02', name: 'ลากิจ', color: '#6366f1' },
-  { id: 'L03', name: 'ลาพักผ่อน', color: '#10b981' },
-  { id: 'L04', name: 'ลาคลอด', color: '#ec4899' },
-  { id: 'L05', name: 'ลาช่วยภริยาคลอด', color: '#8b5cf6' },
-  { id: 'L06', name: 'ลาอุปสมบท/ฮัจญ์', color: '#f97316' },
+  { id: 'T01', name: 'ราชการ', p_qt: 45, s_qt: 60, v_qt: 10, rule: 'สะสมเพิ่มปีละ 10 วัน', color: '#f59e0b' },
+  { id: 'T02', name: 'พนักงานราชการ', p_qt: 10, s_qt: 30, v_qt: 15, rule: 'สะสมเพิ่มปีละ 15 วัน', color: '#6366f1' },
+  { id: 'T03', name: 'ลูกจ้างพนักงานกระทรวง', p_qt: 15, s_qt: 45, v_qt: 15, rule: 'สะสมไม่เกิน 15 วัน/ปี', color: '#10b981' },
+  { id: 'T04', name: 'ลูกจ้างชั่วคราว (นักเรียนทุน)', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#ec4899' },
+  { id: 'T05', name: 'ลูกจ้างรายเดือน', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#8b5cf6' },
+  { id: 'T06', name: 'ลูกจ้างรายวัน', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#f97316' },
+  { id: 'T07', name: 'ลูกจ้างเหมา', p_qt: 0, s_qt: 0, v_qt: 0, rule: '-', color: '#64748b' },
+  { id: 'T08', name: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#334155' },
 ];
 
 export default function LeavePage() {
@@ -40,7 +49,7 @@ export default function LeavePage() {
   const [showForm, setShowForm] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
-  const [form, setForm] = useState({ emp_id: '', leave_type_id: 'L01', start_date: '', end_date: '', reason: '' });
+  const [form, setForm] = useState({ emp_id: '', leave_type_id: 'T01', leave_category: 'Sick', start_date: '', end_date: '', reason: '' });
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
   const perPage = 8;
@@ -52,6 +61,15 @@ export default function LeavePage() {
 
   useEffect(() => { loadLeaves(); loadEmployees(); }, [loadLeaves, loadEmployees]);
   useEffect(() => { setPage(1); }, [filterStatus, searchQuery]);
+
+  useEffect(() => {
+    if (showForm && !isAdmin && user?.emp_type) {
+      const group = LEAVE_TYPES.find(t => t.name === user.emp_type);
+      if (group) {
+        setForm(f => ({ ...f, leave_type_id: group.id }));
+      }
+    }
+  }, [showForm, isAdmin, user]);
 
   useEffect(() => {
     if (leaveIdParam && leaves.length > 0) {
@@ -100,7 +118,7 @@ export default function LeavePage() {
     setSaving(false);
     if (ok) { 
       setShowForm(false); 
-      setForm({ emp_id: '', leave_type_id: 'L01', start_date: '', end_date: '', reason: '' }); 
+      setForm({ emp_id: '', leave_type_id: 'T01', leave_category: 'Sick', start_date: '', end_date: '', reason: '' }); 
       Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
     }
   };
@@ -259,10 +277,10 @@ export default function LeavePage() {
                 <td style={{ padding: '10px 14px' }}>
                   <span style={{
                     fontSize: 11, padding: '2px 8px', borderRadius: 4, fontWeight: 500,
-                    background: (LEAVE_TYPES.find(t => t.id === l.leave_type_id)?.color || '#6b7280') + '18',
-                    color: LEAVE_TYPES.find(t => t.id === l.leave_type_id)?.color || '#6b7280'
+                    background: (CATEGORIES.find(c => c.id === (l as any).leave_category)?.color || '#6b7280') + '18',
+                    color: CATEGORIES.find(c => c.id === (l as any).leave_category)?.color || '#6b7280'
                   }}>
-                    {LEAVE_TYPES.find(t => t.id === l.leave_type_id)?.name || 'อื่นๆ'}
+                    {CATEGORIES.find(c => c.id === (l as any).leave_category)?.name || 'อื่นๆ'}
                   </span>
                 </td>
                 <td style={{ padding: '10px 14px', fontSize: 12, color: '#374151' }}>
@@ -347,11 +365,19 @@ export default function LeavePage() {
               ) : (
                 <input type="hidden" value={user?.emp_id} />
               )}
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>ประเภทการลา</label>
-                <select value={form.leave_type_id} onChange={e => setForm({ ...form, leave_type_id: e.target.value })} style={inp}>
-                  {LEAVE_TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>ประเภทการลา</label>
+                  <select value={form.leave_category} onChange={e => setForm({ ...form, leave_category: e.target.value })} style={inp}>
+                    {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>กลุ่ม/สังกัด</label>
+                  <select value={form.leave_type_id} onChange={e => setForm({ ...form, leave_type_id: e.target.value })} style={inp} disabled={!isAdmin}>
+                    {LEAVE_TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
@@ -382,27 +408,39 @@ export default function LeavePage() {
       {/* Review Modal */}
       {showReviewModal && selectedLeave && (() => {
         const days = calculateDays(selectedLeave.start_date, selectedLeave.end_date);
-        let qt = 0, ql = '';
-        if (selectedLeave.leave_type_id === 'L01') { qt = selectedLeave.quota_sick ?? 30; ql = 'ลาป่วย'; }
-        else if (selectedLeave.leave_type_id === 'L02') { qt = selectedLeave.quota_personal ?? 15; ql = 'ลากิจ'; }
-        else if (selectedLeave.leave_type_id === 'L03') { qt = selectedLeave.quota_vacation ?? 10; ql = 'ลาพักผ่อน'; }
-        else if (selectedLeave.leave_type_id === 'L04') { qt = 90; ql = 'ลาคลอด'; }
-        else if (selectedLeave.leave_type_id === 'L05') { qt = 15; ql = 'ลาช่วยภริยาคลอด'; }
-        else if (selectedLeave.leave_type_id === 'L06') { qt = 120; ql = 'ลาอุปสมบท/ฮัจญ์'; }
+        const typeCfg = LEAVE_TYPES.find(t => t.id === selectedLeave.leave_type_id);
+        const ql = typeCfg?.name || 'การลา';
+        // Quota display logic
+        const s_qt = typeCfg?.s_qt || 0;
+        const p_qt = typeCfg?.p_qt || 0;
+        const v_qt = typeCfg?.v_qt || 0;
 
-        // Calculate used days in current fiscal year
+
+        // Calculate used days in current fiscal year FOR THIS CATEGORY
         const usedInFiscalYear = leaves
           .filter(l => 
             l.emp_id === selectedLeave.emp_id && 
             l.status === 'Approved' && 
-            l.leave_type_id === selectedLeave.leave_type_id &&
+            (l as any).leave_category === (selectedLeave as any).leave_category &&
             new Date(l.start_date) >= getCurrentFiscalYearRange().start &&
             new Date(l.start_date) <= getCurrentFiscalYearRange().end
           )
           .reduce((sum, l) => sum + calculateDays(l.start_date, l.end_date), 0);
 
-        const rem = qt - usedInFiscalYear - days;
-        const over = rem < 0;
+        // Map category to quota field
+        let qt = 0;
+        const cat = (selectedLeave as any).leave_category || 'Sick';
+        if (cat === 'Sick') qt = typeCfg?.s_qt || 0;
+        else if (cat === 'Personal') qt = typeCfg?.p_qt || 0;
+        else if (cat === 'Vacation') {
+          qt = typeCfg?.v_qt || 0;
+          // Add accumulation from user profile if vacation
+          qt += (selectedLeave as any).accumulated_vacation || 0;
+        }
+
+        const rem = qt - usedInFiscalYear;
+        const over = rem < days;
+        const finalRem = rem - days;
 
         return (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}
@@ -456,21 +494,34 @@ export default function LeavePage() {
                 </div>
               )}
 
-              {/* Quota */}
-              {qt > 0 && (
-                <div style={{ padding: '16px', borderRadius: 12, marginBottom: 24, border: over ? '1px solid #fecaca' : '1px solid #bbf7d0', background: over ? '#fef2f2' : '#f0fdf4' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: over ? '#991b1b' : '#166534', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={over ? "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" : "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"} /></svg>
-                    {over ? 'เกินโควตาวันลา!' : 'โควตาวันลา'}
+              {/* Dynamic Calculation Summary */}
+              <div style={{ padding: '16px', borderRadius: 16, marginBottom: 24, border: over ? '1px solid #fecaca' : '1px solid #bbf7d0', background: over ? '#fef2f2' : '#f0fdf4' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: over ? '#991b1b' : '#166534', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={over ? "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" : "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"} /></svg>
+                  {over ? 'แจ้งเตือน: วันลาเกินโควตา!' : 'สรุปวันคงเหลือ'}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#475569' }}>
+                    <span>โควตา {CATEGORIES.find(c => c.id === (selectedLeave as any).leave_category)?.name} ทั้งหมด</span>
+                    <span style={{ fontWeight: 600 }}>{qt} วัน</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6, color: over ? '#b91c1c' : '#166534' }}>
-                    <span>จำนวนโควตา {ql} ทั้งหมด</span><span style={{ fontWeight: 600 }}>{qt} วัน</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#475569' }}>
+                    <span>ใช้ไปแล้ว (ในปีงบนี้)</span>
+                    <span style={{ fontWeight: 600, color: '#ef4444' }}>-{usedInFiscalYear} วัน</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: over ? '#b91c1c' : '#166534' }}>
-                    <span>คงเหลือหลังอนุมัติ</span><span style={{ fontWeight: 800 }}>{rem} วัน</span>
+                  <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                    <span style={{ fontWeight: 700, color: '#0f172a' }}>คงเหลือสุทธิ</span>
+                    <span style={{ fontWeight: 800, color: finalRem < 0 ? '#ef4444' : '#10b981', fontSize: 18 }}>{finalRem} วัน</span>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Group Base Info (Collapsible or subtle) */}
+              <div style={{ marginBottom: 24, fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                คำนวณตามสิทธิ์กลุ่ม: {ql} | {typeCfg?.rule}
+              </div>
 
               {/* Approval Progress */}
               <div style={{ marginBottom: 24 }}>

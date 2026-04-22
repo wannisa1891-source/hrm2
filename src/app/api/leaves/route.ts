@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const sql = `SELECT l.*, 
         e.first_name_th, e.last_name_th, e.photo, e.emp_type,
-        e.quota_personal, e.quota_vacation, e.quota_sick,
+        e.quota_personal, e.quota_vacation, e.quota_sick, e.accumulated_vacation,
         d.dept_name 
       FROM tbl_leaves l 
       LEFT JOIN tbl_employees e ON l.emp_id = e.emp_id 
@@ -24,14 +24,14 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { emp_id, leave_type_id, start_date, end_date, reason } = await req.json();
+    const { emp_id, leave_type_id, leave_category, start_date, end_date, reason } = await req.json();
     const leave_id = 'L' + Date.now().toString().slice(-4);
     await pool.query(
       `INSERT INTO tbl_leaves 
-       (leave_id, emp_id, leave_type_id, start_date, end_date, reason, status, 
+       (leave_id, emp_id, leave_type_id, leave_category, start_date, end_date, reason, status, 
         dept_head_status, admin_status, housekeeper_status, director_status, current_stage) 
-       VALUES (?,?,?,?,?,?,'Pending', 'Pending', 'Pending', 'Pending', 'Pending', 'Head of Dept')`,
-      [leave_id, emp_id, leave_type_id, start_date, end_date, reason]
+       VALUES (?,?,?,?,?,?,?,'Pending', 'Pending', 'Pending', 'Pending', 'Pending', 'Head of Dept')`,
+      [leave_id, emp_id, leave_type_id, leave_category || 'Sick', start_date, end_date, reason]
     );
 
     // Notify Admins with metadata for auto-open
