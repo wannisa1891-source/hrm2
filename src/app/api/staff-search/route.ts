@@ -8,7 +8,8 @@ export async function GET(req: NextRequest) {
     const sql = `SELECT e.emp_id as id, 
       CONCAT(e.prefix, e.first_name_th, ' ', e.last_name_th) as name, 
       p.pos_name as pos, e.pos_id as pos_id, d.dept_name as dept, e.dept_id as dept_id, e.base_salary as salary,
-      e.position_level as level, e.position_no as pos_no
+      e.position_level as level, e.position_no as pos_no,
+      e.birth_date as dob, e.citizen_id as id_card, e.start_date as start_date
       FROM tbl_employees e 
       LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id 
       LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id 
