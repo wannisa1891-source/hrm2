@@ -47,9 +47,9 @@ export async function POST(req: NextRequest) {
 
     const emp = rows[0];
 
-    // 4. ตรวจสอบเวลา Token Expiry
-    const now = new Date();
+    // 4. ตรวจสอบเวลา Token Expiry (อ้างอิงเวลาเซิร์ฟเวอร์ฐานข้อมูล)
     const expiry = new Date(emp.reset_token_expiry);
+    const now = new Date();
     
     if (now > expiry) {
       // ล้าง Token ทิ้งเพื่อป้องกันการใช้ซ้ำ

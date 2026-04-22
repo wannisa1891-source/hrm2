@@ -74,14 +74,10 @@ export async function POST(req: NextRequest) {
     // Hash Token (SHA-256) ก่อนเก็บลง Database ตามข้อกำหนด Secruity
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
-    // วันหมดอายุ 15 นาที
-    const expiryDate = new Date(Date.now() + 15 * 60 * 1000);
-    const expiryStr = expiryDate.toISOString().slice(0, 19).replace('T', ' ');
-
-    // 4. บันทึก Token Hash ติดกับ Employee
+    // 4. บันทึก Token Hash ติดกับ Employee พร้อมวันหมดอายุ (15 นาที)
     await pool.query(
-      'UPDATE tbl_employees SET reset_token_hash = ?, reset_token_expiry = ? WHERE emp_id = ?',
-      [tokenHash, expiryStr, emp.emp_id]
+      'UPDATE tbl_employees SET reset_token_hash = ?, reset_token_expiry = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE emp_id = ?',
+      [tokenHash, emp.emp_id]
     );
 
     // 5. ส่งอีเมล
