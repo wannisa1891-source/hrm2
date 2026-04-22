@@ -466,22 +466,22 @@ function EmployeesContent() {
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
                   <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
-                  <th>ชื่อเล่น</th>
                   <th>ตำแหน่ง</th>
-                  <th>แผนก</th>
+                  <th>แผนก (กลุ่มงาน)</th>
                   <th>หน่วยงาน</th>
-                  <th>หน่วยปฏิบัติงานที่</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
+                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
                 ) : currentData.length === 0 ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
+                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
-                  currentData.map((emp) => (
+                  currentData.map((emp) => {
+                    const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+                    return (
                     <tr
                       key={emp.emp_id}
                       onClick={() => openView(emp)}
@@ -506,8 +506,8 @@ function EmployeesContent() {
                         </div>
                       </td>
                       <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
-                      <td>{departments.find(d => String(d.dept_id) === String(emp.dept_id))?.division || '-'}</td>
-                      <td>{departments.find(d => String(d.dept_id) === String(emp.dept_id))?.dept_name || '-'}</td>
+                      <td>{dept?.division || '-'}</td>
+                      <td>{dept?.dept_name || '-'}</td>
                       <td style={{ textAlign: 'center' }}>
                         <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} />
                       </td>
@@ -532,7 +532,8 @@ function EmployeesContent() {
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
