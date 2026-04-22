@@ -65,7 +65,7 @@ export default function MyProfilePage() {
     e.preventDefault();
     if (!newTraining.course_name) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุชื่อหลักสูตร', 'warning');
     if (!data?.profile?.emp_id) return;
-    
+
     Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     const fd = new FormData();
     fd.append('emp_id', data.profile.emp_id);
@@ -84,7 +84,7 @@ export default function MyProfilePage() {
       setTrainingFile(null);
       fetchProfile();
     } catch (err: any) {
-      Swal.fire('ข้อผิดพลาด', err.message, 'error');
+      Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
     }
   };
 
@@ -96,7 +96,7 @@ export default function MyProfilePage() {
     if (newPassword !== confirmPassword) {
       return Swal.fire('รหัสผ่านไม่ตรงกัน', 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน', 'error');
     }
-    
+
     try {
       const res = await fetch('/api/profile/password', {
         method: 'POST',
@@ -134,7 +134,7 @@ export default function MyProfilePage() {
     if (!result.isConfirmed) return;
 
     Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    
+
     try {
       const res = await fetch(`/api/employees/${data.profile.emp_id}/reset-password`, { method: 'POST' });
       const resData = await res.json();
@@ -158,7 +158,7 @@ export default function MyProfilePage() {
       setLoading(false);
       return;
     }
-    
+
     try {
       const res = await fetch(`/api/profile?emp_id=${targetId}`);
       const result = await res.json();
@@ -173,7 +173,7 @@ export default function MyProfilePage() {
       setLoading(false);
     }
   };
-  
+
   const handleSaveProfile = async (fd: FormData, isEditing: boolean) => {
     if (!fullProfile?.emp_id) return { success: false, message: 'ไม่พบข้อมูลบัญชี' };
     const res = await editEmployee(fullProfile.emp_id, fd);
@@ -221,7 +221,8 @@ export default function MyProfilePage() {
 
   return (
     <AppLayout>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .profile-container { display: grid; grid-template-columns: 320px 1fr; gap: 24px; padding: 24px; max-width: 1400px; margin: 0 auto; }
         
         .profile-avatar-wrap { width: 140px; height: 140px; border-radius: 50%; margin: 0 auto 20px; padding: 4px; border: 4px solid #f8fafc; box-shadow: 0 10px 25px -10px rgba(0,0,0,0.1); position: relative; }
@@ -271,9 +272,9 @@ export default function MyProfilePage() {
         {/* Left Column */}
         <div className="glass-card left-card" style={{ padding: '32px 24px', textAlign: 'center' }}>
           <div className="profile-avatar-wrap" style={{ overflow: 'hidden' }}>
-            <Image 
-              src={profile.image ? `/uploads/${profile.image}` : (profile.photo ? `/uploads/${profile.photo}` : 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png')} 
-              alt="avatar" 
+            <Image
+              src={profile.image ? `/uploads/${profile.image}` : (profile.photo ? `/uploads/${profile.photo}` : 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png')}
+              alt="avatar"
               className="profile-avatar"
               fill
               unoptimized
@@ -282,7 +283,7 @@ export default function MyProfilePage() {
           </div>
           <h2 className="profile-name">{fullName}</h2>
           <div className="profile-title">{profile.pos_name}</div>
-          
+
           <div className="profile-meta">
             <div className="meta-item">
               <span className="icon">🆔</span>
@@ -313,15 +314,15 @@ export default function MyProfilePage() {
             <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
               <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
                 <h3 className="card-title" style={{ margin: 0 }}>รายละเอียดแฟ้มประวัติ (Profile Details)</h3>
-                <button onClick={handleEditInfoClick} style={{ padding: '8px 20px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)', transition: 'transform 0.2s' }} onMouseOver={e=>e.currentTarget.style.transform='translateY(-2px)'} onMouseOut={e=>e.currentTarget.style.transform='translateY(0)'}>
+                <button onClick={handleEditInfoClick} style={{ padding: '8px 20px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                   แก้ไขประวัติส่วนตัว
                 </button>
               </div>
-              
+
               <div style={{ padding: '32px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-                  
+
                   {/* Personal & Contact */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
@@ -375,7 +376,7 @@ export default function MyProfilePage() {
 
                   {/* Licenses & Leave */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    
+
                     <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
                       <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -385,7 +386,7 @@ export default function MyProfilePage() {
                           {fullProfile?.licenses?.length || 0} รายการ
                         </span>
                       </h4>
-                      
+
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {!fullProfile?.licenses || fullProfile.licenses.length === 0 ? (
                           <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '14px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
@@ -456,7 +457,7 @@ export default function MyProfilePage() {
                   </thead>
                   <tbody>
                     {leaves.length === 0 ? (
-                      <tr><td colSpan={5} style={{textAlign:'center', padding:40, color:'#94a3b8'}}>ไม่พบรายการการลา</td></tr>
+                      <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>ไม่พบรายการการลา</td></tr>
                     ) : (
                       leaves.map((l: any, i: number) => (
                         <tr key={i}>
@@ -481,27 +482,27 @@ export default function MyProfilePage() {
           {activeTab === 'training' && (
             <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">ประวัติการอบรม (Training History)</h3>
-              
+
               <form onSubmit={handleAddTraining} style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#334155' }}>เพิ่มประวัติการอบรม</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>ชื่อหลักสูตร / โครงการ</label>
-                    <input type="text" value={newTraining.course_name} onChange={e => setNewTraining({...newTraining, course_name: e.target.value})} required className="form-input" placeholder="ระบุชื่อหลักสูตรที่เข้าอบรม..." />
+                    <input type="text" value={newTraining.course_name} onChange={e => setNewTraining({ ...newTraining, course_name: e.target.value })} required className="form-input" placeholder="ระบุชื่อหลักสูตรที่เข้าอบรม..." />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>หน่วยงานที่จัดบรรยาย</label>
-                    <input type="text" value={newTraining.institution} onChange={e => setNewTraining({...newTraining, institution: e.target.value})} className="form-input" placeholder="ระบุหน่วยงาน..." />
+                    <input type="text" value={newTraining.institution} onChange={e => setNewTraining({ ...newTraining, institution: e.target.value })} className="form-input" placeholder="ระบุหน่วยงาน..." />
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>วันที่เริ่มต้น</label>
-                    <input type="date" value={newTraining.start_date} onChange={e => setNewTraining({...newTraining, start_date: e.target.value})} className="form-input" />
+                    <input type="date" value={newTraining.start_date} onChange={e => setNewTraining({ ...newTraining, start_date: e.target.value })} className="form-input" />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>วันที่สิ้นสุด</label>
-                    <input type="date" value={newTraining.end_date} onChange={e => setNewTraining({...newTraining, end_date: e.target.value})} className="form-input" />
+                    <input type="date" value={newTraining.end_date} onChange={e => setNewTraining({ ...newTraining, end_date: e.target.value })} className="form-input" />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>ไฟล์แนบเกียรติบัตร (ถ้ามี)</label>
@@ -525,12 +526,12 @@ export default function MyProfilePage() {
                   </thead>
                   <tbody>
                     {trainings.length === 0 ? (
-                      <tr><td colSpan={4} style={{textAlign:'center', padding:40, color:'#94a3b8'}}>ไม่มีประวัติการอบรม</td></tr>
+                      <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>ไม่มีประวัติการอบรม</td></tr>
                     ) : (
                       trainings.map((t: any, i: number) => (
                         <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                           <td style={{ padding: '12px 16px' }}>
-                            {t.start_date ? new Date(t.start_date).toLocaleDateString('th-TH') : '—'} 
+                            {t.start_date ? new Date(t.start_date).toLocaleDateString('th-TH') : '—'}
                             {t.end_date && t.end_date !== t.start_date ? ` - ${new Date(t.end_date).toLocaleDateString('th-TH')}` : ''}
                           </td>
                           <td style={{ padding: '12px 16px', fontWeight: 600, color: '#1e293b' }}>{t.course_name}</td>
@@ -568,7 +569,7 @@ export default function MyProfilePage() {
                   </thead>
                   <tbody>
                     {payroll.length === 0 ? (
-                      <tr><td colSpan={6} style={{textAlign:'center', padding:40, color:'#94a3b8'}}>ไม่พบข้อมูลการจ่ายเงิน</td></tr>
+                      <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>ไม่พบข้อมูลการจ่ายเงิน</td></tr>
                     ) : (
                       payroll.map((p: any, i: number) => {
                         const base = Number(p.base_salary || 0);
@@ -576,11 +577,11 @@ export default function MyProfilePage() {
                         const deduct = Number(p.tax || 0) + Number(p.social_security || 0) + Number(p.other_deductions || 0);
                         return (
                           <tr key={i}>
-                            <td style={{fontWeight:700}}>{p.pay_month}/{p.pay_year}</td>
+                            <td style={{ fontWeight: 700 }}>{p.pay_month}/{p.pay_year}</td>
                             <td>{base.toLocaleString()}</td>
-                            <td style={{color:'#059669'}}>+{extra.toLocaleString()}</td>
-                            <td style={{color:'#dc2626'}}>-{deduct.toLocaleString()}</td>
-                            <td style={{fontWeight:800, color:'#2563eb'}}>{Number(p.net_salary || 0).toLocaleString()}</td>
+                            <td style={{ color: '#059669' }}>+{extra.toLocaleString()}</td>
+                            <td style={{ color: '#dc2626' }}>-{deduct.toLocaleString()}</td>
+                            <td style={{ fontWeight: 800, color: '#2563eb' }}>{Number(p.net_salary || 0).toLocaleString()}</td>
                             <td>
                               <span className={`badge ${p.status === 'Paid' ? 'badge-success' : 'badge-pending'}`}>
                                 {p.status === 'Paid' ? 'จ่ายแล้ว' : p.status}
@@ -599,7 +600,7 @@ export default function MyProfilePage() {
           {activeTab === 'password' && (
             <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">เปลี่ยนรหัสผ่าน</h3>
-              
+
               {/* Manual Form */}
               <form onSubmit={handleChangePassword} style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px', background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 12px 0', fontWeight: 600 }}>เปลี่ยนรหัสผ่านด้วยตนเอง</h4>
@@ -625,8 +626,8 @@ export default function MyProfilePage() {
                   รีเซ็ตรหัสผ่านแบบอัตโนมัติ
                 </h4>
                 <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 24px 0', lineHeight: '1.6' }}>
-                  ระบบจะดำเนินการสุ่มรหัสผ่านใหม่เพื่อความปลอดภัย 
-                  และจัดส่งการแจ้งเตือนไปยังอีเมลของคุณ 
+                  ระบบจะดำเนินการสุ่มรหัสผ่านใหม่เพื่อความปลอดภัย
+                  และจัดส่งการแจ้งเตือนไปยังอีเมลของคุณ
                   (โปรดตรวจสอบให้แน่ใจว่าอีเมลในประวัติส่วนตัวมีความถูกต้อง)
                 </p>
                 <button type="button" onClick={handleResetPasswordViaEmail} style={{ padding: '10px 20px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s', fontSize: '14px', display: 'inline-flex', alignItems: 'center' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#334155'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#0f172a'; }}>
@@ -638,8 +639,8 @@ export default function MyProfilePage() {
         </div>
       </div>
 
-      <EmployeeFormModal 
-        isOpen={showEditModal} 
+      <EmployeeFormModal
+        isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         employee={fullProfile}
         onSave={handleSaveProfile}
