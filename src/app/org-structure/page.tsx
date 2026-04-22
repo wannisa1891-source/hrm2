@@ -326,7 +326,6 @@ export default function DepartmentAndEmployeePage() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Building size={16} />
                       <span style={{ fontWeight: 700 }}>{divName}</span>
                     </div>
                     <ChevronRight size={16} style={{ transform: isDivExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
@@ -355,7 +354,6 @@ export default function DepartmentAndEmployeePage() {
                               }}
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-                                <Users size={14} />
                                 <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{grpName}</span>
                               </div>
                               {hasSubDepts && (
@@ -366,23 +364,22 @@ export default function DepartmentAndEmployeePage() {
                             {isGrpExpanded && hasSubDepts && (
                               <div style={{ paddingLeft: '20px', marginTop: '2px' }}>
                                 {units.sort((a: any, b: any) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th')).map((unit: any) => (
-                                  <div
-                                    key={unit.dept_id}
-                                    onClick={() => {
-                                      setSelectedDiv(divName);
-                                      setSelectedGrp(grpName);
-                                      setSelectedDeptId(unit.dept_id);
-                                      openDeptModal(unit);
-                                    }}
-                                    style={{
-                                      ...styles.unitItem,
-                                      background: selectedDeptId === unit.dept_id ? '#eff6ff' : 'transparent',
-                                      color: selectedDeptId === unit.dept_id ? '#2563eb' : '#94a3b8',
-                                    }}
-                                  >
-                                    <MapPin size={12} />
-                                    <span style={{ fontSize: '12px' }}>{unit.sub_dept || 'ฝ่ายบริหาร'}</span>
-                                  </div>
+                                    <div
+                                      key={unit.dept_id}
+                                      onClick={() => {
+                                        setSelectedDiv(divName);
+                                        setSelectedGrp(grpName);
+                                        setSelectedDeptId(unit.dept_id);
+                                        openDeptModal(unit);
+                                      }}
+                                      style={{
+                                        ...styles.unitItem,
+                                        background: selectedDeptId === unit.dept_id ? '#eff6ff' : 'transparent',
+                                        color: selectedDeptId === unit.dept_id ? '#2563eb' : '#94a3b8',
+                                      }}
+                                    >
+                                      <span style={{ fontSize: '12px' }}>{unit.sub_dept || 'ฝ่ายบริหาร'}</span>
+                                    </div>
                                 ))}
                               </div>
                             )}
@@ -1146,11 +1143,11 @@ function EmployeeRow({
         {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}
       </td>
       <td style={{ ...styles.td, color: '#4f46e5', fontSize: '14px', fontWeight: 600 }}>
-        {departments.find(d => String(d.dept_id) === String(emp.dept_id))?.division || '-'}
+        {departments.find((d: any) => String(d.dept_id) === String(emp.dept_id))?.division || '-'}
       </td>
       <td style={{ ...styles.td, color: '#64748b', fontSize: '14px' }}>
         {(() => {
-          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+          const dept = departments.find((d: any) => String(d.dept_id) === String(emp.dept_id));
           if (!dept) return '-';
           return dept.dept_name || '-';
         })()}
