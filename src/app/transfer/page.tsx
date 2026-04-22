@@ -507,7 +507,7 @@ export default function TransferPage() {
               </div>
               <div>
                 <div className="tr-stat-count">{visibleTransfers.filter(t => t.transfer_type?.includes('เลื่อน') && t.order_date?.startsWith(new Date().getFullYear().toString())).length}</div>
-                <div className="tr-stat-label">เลื่อนตำแหน่งปีนี้</div>
+                <div className="tr-stat-label"> เลื่อนตำแหน่งปีนี้</div>
               </div>
               <div className="tr-stat-tag">ปีนี้</div>
             </div>
