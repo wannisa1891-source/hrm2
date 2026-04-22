@@ -217,6 +217,7 @@ export default function useScheduleModal(
     departments: Object.keys(DEPARTMENT_HIERARCHY),
     units: availableUnits,
     employees,
+    deptData,
     form,
     setForm,
     isEditing,

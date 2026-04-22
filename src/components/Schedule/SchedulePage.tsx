@@ -81,6 +81,7 @@ export default function SchedulePage() {
     openModal,
     openEditModal,
     closeModal,
+    deptData,
     units,
     checkRoomConflict,
     getShiftColor,
@@ -124,10 +125,9 @@ export default function SchedulePage() {
       let expectedDept = '';
 
       const empData = employees.find(e => e.emp_id === u.emp_id);
-      if (empData && empData.dept_id && departments) {
-        // Find matching department string that contains the dept_id or matches logic
-        const d = departments.find(d => typeof d === 'string' && d.includes(empData.dept_id || ''));
-        if (d) expectedDept = d;
+      if (empData && empData.dept_id && deptData) {
+        const d = (deptData as any[])?.find(d => d.dept_id === empData.dept_id);
+        if (d && d.division) expectedDept = d.division;
       }
 
       setForm((f: ScheduleForm) => {
@@ -565,9 +565,9 @@ export default function SchedulePage() {
                             // Lookup employee and their department
                             const empId = val.split(' - ')[0].trim();
                             const emp = employees.find(e => e.emp_id === empId);
-                            if (emp && emp.dept_id && departments) {
-                              const d = departments.find(d => typeof d === 'string' && d.includes(emp.dept_id || ''));
-                              if (d) newForm.organizer = d;
+                            if (emp && emp.dept_id && deptData) {
+                              const d = (deptData as any[])?.find(d => d.dept_id === emp.dept_id);
+                              if (d && d.division) newForm.organizer = d.division;
                             }
                             return newForm;
                           });
