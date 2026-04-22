@@ -17,7 +17,7 @@ import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
 import Image from 'next/image';
 
 const EMPTY_FORM: Partial<Employee> = {
-  prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '',
+  prefix: 'นาย', first_name_th: '', last_name_th: '',
   birth_date: '', gender: 'ชาย', citizen_id: '',
   emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '', base_salary: 0,
   phone: '', address: '', status: 'Active',
@@ -134,11 +134,8 @@ function EmployeesContent() {
         return {
           emp_id: row['รหัสพนักงาน'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
-          first_name_th: row['ชื่อ (TH)'] || row['ชื่อ(TH)'] || row['ชื่อ'] || row['first_name_th'] || '',
-          last_name_th: row['นามสกุล (TH)'] || row['นามสกุล(TH)'] || row['นามสกุล'] || row['last_name_th'] || '',
-          first_name_en: row['ชื่อ (EN)'] || row['first_name_en'] || '',
-          last_name_en: row['นามสกุล (EN)'] || row['last_name_en'] || '',
-          nickname: row['ชื่อเล่น'] || row['nickname'] || '',
+          first_name_th: row['ชื่อ'] || row['ชื่อ'] || row['ชื่อ'] || row['first_name_th'] || '',
+          last_name_th: row['นามสกุล'] || row['นามสกุล'] || row['นามสกุล'] || row['last_name_th'] || '',
           gender: row['เพศ'] || row['gender'] || '',
           birth_date: row['วัน/เดือน/ปีเกิด'] || row['วันเกิด'] || row['birth_date'] || null,
           citizen_id: row['บัตรประชาชน'] || row['เลขบัตรประชาชน'] || row['citizen_id'] || '',
@@ -334,7 +331,7 @@ function EmployeesContent() {
 
   const exportToCSV = () => {
     const headers = [
-      'รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อ (EN)', 'นามสกุล (EN)', 'ชื่อเล่น',
+      'รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อเล่น',
       'เพศ', 'วัน/เดือน/ปีเกิด', 'บัตรประชาชน', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่',
       'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน', 'เงินเดือน',
       'สถานะการทำงาน', 'คะแนน CNEU/CME', 'ข้อมูลใบอนุญาต'
@@ -347,8 +344,6 @@ function EmployeesContent() {
         e.prefix || '',
         e.first_name_th || '',
         e.last_name_th || '',
-        e.first_name_en || '',
-        e.last_name_en || '',
         e.gender || '',
         e.birth_date ? new Date(e.birth_date).toLocaleDateString('en-GB') : '',
         e.citizen_id || '',
@@ -471,9 +466,8 @@ function EmployeesContent() {
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
                   <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
-                  <th>ชื่อเล่น</th>
                   <th>ตำแหน่ง</th>
-                  <th>แผนก</th>
+                  <th>แผนก (กลุ่มงาน)</th>
                   <th>หน่วยงาน</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
@@ -481,11 +475,13 @@ function EmployeesContent() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
+                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
                 ) : currentData.length === 0 ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
+                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
-                  currentData.map((emp) => (
+                  currentData.map((emp) => {
+                    const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+                    return (
                     <tr
                       key={emp.emp_id}
                       onClick={() => openView(emp)}
@@ -511,8 +507,8 @@ function EmployeesContent() {
                       </td>
                       <td style={{ color: '#334155' }}>{emp.nickname || '-'}</td>
                       <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
-                      <td>{departments.find(d => String(d.dept_id) === String(emp.dept_id))?.division || '-'}</td>
-                      <td>{departments.find(d => String(d.dept_id) === String(emp.dept_id))?.dept_name || '-'}</td>
+                      <td>{dept?.division || '-'}</td>
+                      <td>{dept?.dept_name || '-'}</td>
                       <td style={{ textAlign: 'center' }}>
                         <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} />
                       </td>
@@ -537,7 +533,8 @@ function EmployeesContent() {
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -636,16 +633,6 @@ function EmployeesContent() {
                           <Image fill src={empForCard.image ? `/uploads/${empForCard.image}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>`} alt="Employee" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} />
                         </div>
                       </div>
-
-                      {/* Name & Title */}
-                      <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', marginTop: '16px', padding: '0 20px' }}>
-                        <h2 style={{ margin: '0', fontSize: '18px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{empForCard.first_name_en || (empForCard.first_name_th + ' ' + empForCard.last_name_th)}</h2>
-                        {empForCard.first_name_en && empForCard.last_name_en && (
-                          <h2 style={{ margin: '0', fontSize: '18px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{empForCard.last_name_en}</h2>
-                        )}
-                        <p style={{ margin: '4px 0 0 0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>{getPosName(empForCard.pos_id)}</p>
-                      </div>
-
                       {/* Details Info Grid */}
                       <div style={{ position: 'relative', zIndex: 3, marginTop: '24px', padding: '0 32px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '50px 1fr', gap: '6px 8px', fontSize: '11px' }}>

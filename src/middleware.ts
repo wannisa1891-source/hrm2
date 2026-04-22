@@ -26,13 +26,6 @@ export async function middleware(req: NextRequest) {
   const isPublicPath = publicPaths.includes(path);
   const isPublicApiPath = publicApiPaths.some(p => path.startsWith(p));
 
-  // Debug log for middleware
-  try {
-    const fs = require('fs');
-    const msg = `[MIDDLEWARE] ${new Date().toISOString()} - Path: ${path} - isPublicApi: ${isPublicApiPath}\n`;
-    fs.appendFileSync('login_debug.log', msg);
-  } catch (e) { }
-
   if (isPublicApiPath) {
     return NextResponse.next();
   }

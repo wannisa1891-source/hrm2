@@ -219,14 +219,18 @@ export default function SchedulePage() {
     }
   }
 
+  const handleEditCheck = (sch: Schedule) => {
+    if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
+      openEditModal(sch)
+    } else {
+      Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขการประชุมของผู้อื่น', 'error')
+    }
+  }
+
   const daySchedules = selectedDate ? schedules.filter(s => {
     const a = new Date(s.date)
     const b = new Date(selectedDate)
     if (a.toDateString() === b.toDateString()) return true;
-    
-    const yesterday = new Date(b.getTime() - 86400000);
-    if (a.toDateString() === yesterday.toDateString() && s.room === 'Night') return true;
-    
     return false;
   }).sort((a,b) => a.date.getTime() - b.date.getTime()) : []
 
@@ -246,8 +250,8 @@ export default function SchedulePage() {
           --card: #ffffff; --bg: #f8fafc; --txt: #1e293b; --txt2: #64748b;
           --bdr: #e2e8f0; --shd: 0 1px 3px rgba(0,0,0,.04); --shd2: 0 4px 12px rgba(0,0,0,.06);
           --rad: 8px;
+          font-family: 'Inter', system-ui, sans-serif;
         }
-        .schedule-page { font-family: 'Inter', system-ui, sans-serif; }
         .sp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--bdr); }
         .sp-header-left { display: flex; align-items: center; gap: 12px; }
         .sp-header-icon { color: var(--txt2); }
@@ -414,37 +418,19 @@ export default function SchedulePage() {
             <ListView currentDate={currentDate} schedules={schedules}
               roomTypes={roomTypes}
               onOpenDay={openModal}
-              onOpenEditModal={(sch) => {
-                if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
-                  openEditModal(sch)
-                } else {
-                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขการประชุมของผู้อื่น', 'error')
-                }
-              }} />
+              onOpenEditModal={handleEditCheck} />
           )}
           {!loading && currentView === 'week' && (
             <WeekView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor}
               onOpenDay={openModal}
-              onOpenEditModal={(sch) => {
-                if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
-                  openEditModal(sch)
-                } else {
-                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขการประชุมของผู้อื่น', 'error')
-                }
-              }} />
+              onOpenEditModal={handleEditCheck} />
           )}
           {!loading && currentView === 'month' && (
             <MonthView currentDate={currentDate} schedules={schedules}
               getShiftColor={getShiftColor}
               onOpenDay={openModal}
-              onOpenEditModal={(sch) => {
-                if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
-                  openEditModal(sch)
-                } else {
-                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขการประชุมของผู้อื่น', 'error')
-                }
-              }} />
+              onOpenEditModal={handleEditCheck} />
           )}
           {!loading && currentView === 'year' && (
             <YearView currentDate={currentDate} schedules={schedules} onOpenMonth={openMonth} />
@@ -546,7 +532,6 @@ export default function SchedulePage() {
                 </div>
               )}
 
-              {/* Form */}
               {/* Form */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 
