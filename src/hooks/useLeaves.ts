@@ -48,10 +48,10 @@ export function useLeaves() {
   )
 
   const changeLeaveStatus = useCallback(
-    async (leave_id: string, status: string): Promise<boolean> => {
+    async (leave_id: string, status: string, stage?: string): Promise<boolean> => {
       try {
         setError(null)
-        await updateLeaveStatus(leave_id, status)
+        await updateLeaveStatus(leave_id, status, stage)
         await loadLeaves()
         return true
       } catch (err) {

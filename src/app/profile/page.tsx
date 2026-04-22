@@ -30,6 +30,8 @@ interface ProfileData {
     pos_name: string;
     dept_name: string;
     hire_date: string;
+    admission_date?: string;
+    retirement_date?: string;
     mobile_no?: string;
     email?: string;
     citizen_id?: string;
@@ -41,6 +43,7 @@ interface ProfileData {
   };
   leaves: any[];
   payroll: any[];
+  trainings?: any[];
 }
 
 export default function MyProfilePage() {
@@ -49,7 +52,7 @@ export default function MyProfilePage() {
   const [loading, setLoading] = useState(true);
 
   // 1. เพิ่ม 'certificates' เข้าไปใน type
-  const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password' | 'certificates'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password' | 'certificates' | 'training'>('info');
   const router = useRouter();
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -278,6 +281,9 @@ export default function MyProfilePage() {
             <button className={`tab-btn ${activeTab === 'certificates' ? 'active' : ''}`} onClick={() => setActiveTab('certificates')}>
               <Award size={16} /> ใบอนุญาต
             </button>
+            <button className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')}>
+              <FileText size={16} /> ประวัติอบรม
+            </button>
             <button className={`tab-btn ${activeTab === 'password' ? 'active' : ''}`} onClick={() => setActiveTab('password')}>
               <Lock size={16} /> ความปลอดภัย
             </button>
@@ -331,6 +337,14 @@ export default function MyProfilePage() {
                   <div className="data-item">
                     <span className="data-label">วันที่เริ่มงาน</span>
                     <span className="data-val">{profile.hire_date ? new Date(profile.hire_date).toLocaleDateString('th-TH') : '-'}</span>
+                  </div>
+                  <div className="data-item">
+                    <span className="data-label">วันที่บรรจุ</span>
+                    <span className="data-val">{profile.admission_date ? new Date(profile.admission_date).toLocaleDateString('th-TH') : '-'}</span>
+                  </div>
+                  <div className="data-item">
+                    <span className="data-label">วันที่เกษียณ</span>
+                    <span className="data-val">{profile.retirement_date ? new Date(profile.retirement_date).toLocaleDateString('th-TH') : '-'}</span>
                   </div>
                   <div className="data-item">
                     <span className="data-label">โควตาลาพักร้อน</span>
@@ -455,6 +469,46 @@ export default function MyProfilePage() {
                           หมดอายุ: {new Date(lic.expire_date).toLocaleDateString('th-TH')}
                         </div>
                       )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ส่วนแสดง Trainings */}
+          {activeTab === 'training' && (
+            <div className="glass-card" style={{ padding: '32px' }}>
+              <h3 className="card-title">
+                <FileText className="card-title-icon" size={24} /> ประวัติการฝึกอบรม
+              </h3>
+              {!fullProfile?.trainings || fullProfile.trainings.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+                  <FileText size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                  <p>ยังไม่มีประวัติการอบรม</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                  {fullProfile.trainings.map((tr: any, idx: number) => (
+                    <div key={idx} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '20px', overflow: 'hidden', transition: 'all 0.3s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                      {tr.image_file && (
+                        <div style={{ position: 'relative', width: '100%', height: '160px' }}>
+                          <Image src={`/uploads/${tr.image_file}`} alt="Training" fill style={{ objectFit: 'cover' }} unoptimized />
+                        </div>
+                      )}
+                      <div style={{ padding: '20px' }}>
+                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '15px', marginBottom: '8px' }}>{tr.course_name}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#64748b' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={12} /> {tr.location || '-'}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Briefcase size={12} /> {tr.institution || '-'}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={12} /> {new Date(tr.start_date).toLocaleDateString('th-TH')} - {new Date(tr.end_date).toLocaleDateString('th-TH')}</div>
+                        </div>
+                        {tr.certificate_file && (
+                          <a href={`/uploads/${tr.certificate_file}`} target="_blank" rel="noreferrer" style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#2563eb', fontWeight: 700, textDecoration: 'none', background: '#eff6ff', padding: '8px 12px', borderRadius: '10px' }}>
+                            <Award size={14} /> ดูเกียรติบัตร
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

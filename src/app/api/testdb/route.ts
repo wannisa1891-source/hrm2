@@ -9,7 +9,7 @@ export async function GET() {
     let dirContents = [];
     try {
       dirContents = fs.readdirSync(uploadDir);
-    } catch (e) {
+    } catch (e: any) {
       dirContents = [e.message];
     }
 

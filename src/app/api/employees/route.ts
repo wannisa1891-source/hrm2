@@ -13,7 +13,8 @@ export async function GET() {
   try {
     const [
       empResult,
-      licenseResult
+      licenseResult,
+      trainingResult
     ] = await Promise.all([
       pool.query(`
         SELECT e.*, p.pos_name, d.dept_name
@@ -24,15 +25,21 @@ export async function GET() {
       `),
       pool.query(`
         SELECT * FROM tbl_employee_licenses
+      `),
+      pool.query(`
+        SELECT * FROM tbl_employee_trainings
       `)
     ]);
 
     const rows = empResult[0];
     const licenses = licenseResult[0];
+    const trainings = trainingResult[0];
 
-    // Map licenses to their corresponding employees
+    // Map licenses and trainings to their corresponding employees
     const employees = (rows as any[]).map(emp => {
       const empLicenses = (licenses as any[]).filter(l => l.emp_id === emp.emp_id);
+      const empTrainings = (trainings as any[]).filter(t => t.emp_id === emp.emp_id);
+      
       // Determine primary license for table display
       const activeLicenses = empLicenses.filter(l => l.status !== 'Expired' && l.status !== 'Suspended');
       const primaryLicense = activeLicenses.length > 0 ? activeLicenses[0] : (empLicenses.length > 0 ? empLicenses[0] : null);
@@ -40,6 +47,7 @@ export async function GET() {
       return {
         ...emp,
         licenses: empLicenses,
+        trainings: empTrainings,
         license_status: primaryLicense ? primaryLicense.status : null,
         license_expire: primaryLicense ? primaryLicense.expire_date : null
       };
@@ -72,14 +80,14 @@ export async function POST(req: NextRequest) {
       [...formData.entries()].filter(([, v]) => typeof v === 'string').map(([k, v]) => [k, v as string])
     );
 
-    // Parse licenses array from stringified JSON
+    // Parse licenses and trainings arrays from stringified JSON
     let licenses: any[] = [];
     if (d.licenses_data) {
-      try {
-        licenses = JSON.parse(d.licenses_data);
-      } catch(e) {
-        console.error("Failed to parse licenses_data:", e);
-      }
+      try { licenses = JSON.parse(d.licenses_data); } catch(e) {}
+    }
+    let trainings: any[] = [];
+    if (d.trainings_data) {
+      try { trainings = JSON.parse(d.trainings_data); } catch(e) {}
     }
 
     const connection = await pool.getConnection();
@@ -89,8 +97,9 @@ export async function POST(req: NextRequest) {
       const sql = `INSERT INTO tbl_employees 
         (emp_id, prefix, first_name_th, last_name_th, first_name_en, last_name_en, 
          birth_date, gender, address, citizen_id, phone, email, password, role, 
-         emp_type, dept_id, pos_id, start_date, base_salary, status, image, cneu_cme_points) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?)`;
+         emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, base_salary, status, image, cneu_cme_points,
+         quota_personal, quota_vacation, quota_sick) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)`;
 
       const hashedPassword = d.password ? crypto.createHash('sha256').update(d.password).digest('hex') : '';
 
@@ -100,9 +109,14 @@ export async function POST(req: NextRequest) {
         d.birth_date || null, d.gender || 'ชาย', d.address || '',
         d.id_card || d.citizen_id || '0000000000000', d.phone || '',
         d.email || null, hashedPassword, d.role || 'User',
-        d.emp_type || 'พนักงานประจำ', d.dept_id || '', d.pos_id || '', d.start_date || new Date().toISOString().split('T')[0],
+        d.emp_type || 'พนักงานประจำ', d.dept_id || '', d.pos_id || '', 
+        d.start_date || new Date().toISOString().split('T')[0],
+        d.admission_date || null, d.retirement_date || null,
         d.base_salary || 0, imageName,
-        d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0
+        d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0,
+        d.quota_personal ? parseInt(d.quota_personal) : 0,
+        d.quota_vacation ? parseInt(d.quota_vacation) : 0,
+        d.quota_sick ? parseInt(d.quota_sick) : 0
       ];
 
       await connection.query(sql, values);
@@ -111,7 +125,6 @@ export async function POST(req: NextRequest) {
       if (licenses.length > 0) {
         for (let i = 0; i < licenses.length; i++) {
           let licFileName: string | null = null;
-          // Check if there is an uploaded file for this specific license index
           const licFile = formData.get(`license_file_${i}`) as File | null;
           if (licFile && licFile.size > 0) {
             const ext = path.extname(licFile.name);
@@ -125,17 +138,42 @@ export async function POST(req: NextRequest) {
             (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, file_path)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
           const licValues = [
-            d.emp_id,
-            lic.license_name || null,
-            lic.license_type || null,
-            lic.license_no || null,
-            lic.institution || null,
-            lic.issue_date || null,
-            lic.expire_date || null,
-            lic.status || 'Active',
-            licFileName
+            d.emp_id, lic.license_name || null, lic.license_type || null, lic.license_no || null,
+            lic.institution || null, lic.issue_date || null, lic.expire_date || null,
+            lic.status || 'Active', licFileName
           ];
           await connection.query(licSql, licValues);
+        }
+      }
+
+      // Insert multiple trainings
+      if (trainings.length > 0) {
+        for (let i = 0; i < trainings.length; i++) {
+          let certFile: string | null = null;
+          let imgFile: string | null = null;
+          
+          const cf = formData.get(`training_cert_${i}`) as File | null;
+          if (cf && cf.size > 0) {
+            const ext = path.extname(cf.name);
+            certFile = `tr_cert_${d.emp_id}_${i}_${Date.now()}${ext}`;
+            fs.writeFileSync(path.join(uploadDir, certFile), Buffer.from(await cf.arrayBuffer()));
+          }
+          const imf = formData.get(`training_img_${i}`) as File | null;
+          if (imf && imf.size > 0) {
+            const ext = path.extname(imf.name);
+            imgFile = `tr_img_${d.emp_id}_${i}_${Date.now()}${ext}`;
+            fs.writeFileSync(path.join(uploadDir, imgFile), Buffer.from(await imf.arrayBuffer()));
+          }
+
+          const tr = trainings[i];
+          const trSql = `INSERT INTO tbl_employee_trainings 
+            (emp_id, course_name, institution, location, start_date, end_date, certificate_file, image_file)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+          const trValues = [
+            d.emp_id, tr.course_name, tr.institution || null, tr.location || null,
+            tr.start_date || null, tr.end_date || null, certFile, imgFile
+          ];
+          await connection.query(trSql, trValues);
         }
       }
 

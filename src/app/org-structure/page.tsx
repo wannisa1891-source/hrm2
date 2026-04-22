@@ -451,8 +451,7 @@ export default function DepartmentAndEmployeePage() {
                       <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
                       <th style={styles.th}>บุคลากร</th>
                       <th style={styles.th}>ตำแหน่ง</th>
-                      <th style={styles.th}>สังกัด (ฝ่าย)</th>
-                      <th style={styles.th}>กลุ่มงาน</th>
+                      <th style={styles.th}>แผนก</th>
                       <th style={styles.th}>หน่วยงาน</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
                       <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
@@ -493,8 +492,7 @@ export default function DepartmentAndEmployeePage() {
                       <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
                       <th style={styles.th}>ชื่อ-สกุล</th>
                       <th style={styles.th}>คณะ / ตำแหน่ง</th>
-                      <th style={styles.th}>สังกัด (ฝ่าย)</th>
-                      <th style={styles.th}>กลุ่มงาน</th>
+                      <th style={styles.th}>แผนก</th>
                       <th style={styles.th}>หน่วยงาน</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
                       <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
@@ -553,7 +551,7 @@ export default function DepartmentAndEmployeePage() {
                   <Briefcase size={16} /> ข้อมูลปฏิบัติงาน
                 </div>
                 <div style={styles.infoBox}>
-                  <InfoRow label="สังกัดส่วนงาน" value={getDeptName(selectedEmp.dept_id)} />
+                  <InfoRow label="แผนก/หน่วยงาน" value={getDeptName(selectedEmp.dept_id)} />
                   <InfoRow label="ประเภทจ้างงาน" value={selectedEmp.emp_type || 'ไม่มีระบุ'} />
                   <InfoRow label="สถานะพนักงาน" value={selectedEmp.status} color={selectedEmp.status === 'Active' ? '#16a34a' : '#64748b'} />
                 </div>
@@ -1148,20 +1146,13 @@ function EmployeeRow({
         {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}
       </td>
       <td style={{ ...styles.td, color: '#4f46e5', fontSize: '14px', fontWeight: 600 }}>
-        {departments.find(d => String(d.dept_id) === String(emp.dept_id))?.division || '-'}
+        {departments.find((d: any) => String(d.dept_id) === String(emp.dept_id))?.division || '-'}
       </td>
       <td style={{ ...styles.td, color: '#64748b', fontSize: '14px' }}>
         {(() => {
-          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
+          const dept = departments.find((d: any) => String(d.dept_id) === String(emp.dept_id));
           if (!dept) return '-';
           return dept.dept_name || '-';
-        })()}
-      </td>
-      <td style={{ ...styles.td, color: '#64748b', fontSize: '14px' }}>
-        {(() => {
-          const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
-          if (!dept) return '-';
-          return dept.sub_dept || '-';
         })()}
       </td>
       <td style={{ ...styles.td, textAlign: 'center', position: 'relative', zIndex: isOpen ? 50 : 1 }}>

@@ -9,6 +9,7 @@ import { Leave } from '@/services/apiService';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { useSearchParams } from 'next/navigation';
+import { getCurrentFiscalYearRange } from '@/lib/dateUtils';
 
 const LEAVE_TYPES = [
   { id: 'L01', name: 'ลาป่วย', color: '#f59e0b' },
@@ -383,12 +384,24 @@ export default function LeavePage() {
         const days = calculateDays(selectedLeave.start_date, selectedLeave.end_date);
         let qt = 0, ql = '';
         if (selectedLeave.leave_type_id === 'L01') { qt = selectedLeave.quota_sick ?? 30; ql = 'ลาป่วย'; }
-        else if (selectedLeave.leave_type_id === 'L02') { qt = selectedLeave.quota_personal ?? 45; ql = 'ลากิจ'; }
+        else if (selectedLeave.leave_type_id === 'L02') { qt = selectedLeave.quota_personal ?? 15; ql = 'ลากิจ'; }
         else if (selectedLeave.leave_type_id === 'L03') { qt = selectedLeave.quota_vacation ?? 10; ql = 'ลาพักผ่อน'; }
         else if (selectedLeave.leave_type_id === 'L04') { qt = 90; ql = 'ลาคลอด'; }
         else if (selectedLeave.leave_type_id === 'L05') { qt = 15; ql = 'ลาช่วยภริยาคลอด'; }
         else if (selectedLeave.leave_type_id === 'L06') { qt = 120; ql = 'ลาอุปสมบท/ฮัจญ์'; }
-        const rem = qt - days;
+
+        // Calculate used days in current fiscal year
+        const usedInFiscalYear = leaves
+          .filter(l => 
+            l.emp_id === selectedLeave.emp_id && 
+            l.status === 'Approved' && 
+            l.leave_type_id === selectedLeave.leave_type_id &&
+            new Date(l.start_date) >= getCurrentFiscalYearRange().start &&
+            new Date(l.start_date) <= getCurrentFiscalYearRange().end
+          )
+          .reduce((sum, l) => sum + calculateDays(l.start_date, l.end_date), 0);
+
+        const rem = qt - usedInFiscalYear - days;
         const over = rem < 0;
 
         return (
@@ -417,7 +430,7 @@ export default function LeavePage() {
                 </div>
                 <div>
                   <div style={{ fontWeight: 800, color: '#0f172a', fontSize: 16, marginBottom: 2 }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th}</div>
-                  <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{selectedLeave.dept_name || 'ไม่ระบุแผนก'}</div>
+                  <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{selectedLeave.dept_name || 'ไม่ระบุแผนก'} {selectedLeave.emp_type ? `(${selectedLeave.emp_type})` : ''}</div>
                 </div>
               </div>
 
@@ -459,22 +472,49 @@ export default function LeavePage() {
                 </div>
               )}
 
+              {/* Approval Progress */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>ขั้นตอนการอนุมัติ (Approval Stages)</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {[
+                    { id: 'Head of Dept', label: '1. หัวหน้าแผนก', status: selectedLeave.dept_head_status },
+                    { id: 'Administration', label: '2. ธุรการ', status: selectedLeave.admin_status },
+                    { id: 'Housekeeper', label: '3. พ่อบ้าน', status: selectedLeave.housekeeper_status },
+                    { id: 'Director', label: '4. ผอ.', status: selectedLeave.director_status },
+                  ].map((s, i) => {
+                    const isCurrent = selectedLeave.current_stage === s.id;
+                    const isDone = s.status === 'Approved';
+                    return (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', borderRadius: '12px', background: isCurrent ? '#eff6ff' : '#f8fafc', border: isCurrent ? '1px solid #3b82f6' : '1px solid #e2e8f0' }}>
+                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: isDone ? '#10b981' : isCurrent ? '#3b82f6' : '#cbd5e1', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>
+                          {isDone ? '✓' : i + 1}
+                        </div>
+                        <div style={{ flex: 1, fontSize: 13, fontWeight: isCurrent ? 700 : 500, color: isDone ? '#166534' : isCurrent ? '#1e40af' : '#475569' }}>{s.label}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: isDone ? '#10b981' : isCurrent ? '#3b82f6' : '#94a3b8' }}>
+                          {isDone ? 'อนุมัติแล้ว' : isCurrent ? 'กำลังพิจารณา' : 'รอคิว'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Actions */}
               {(isAdmin && selectedLeave.status === 'Pending') ? (
                 <div style={{ display: 'flex', gap: 12, paddingTop: 8 }}>
-                  <button onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Rejected'); setShowReviewModal(false); }}
+                  <button onClick={() => { changeLeaveStatus(String(selectedLeave.leave_id), 'Rejected', String(selectedLeave.current_stage)); setShowReviewModal(false); }}
                     style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1px solid #fecaca', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 700, fontSize: 14, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                     onMouseEnter={e => e.currentTarget.style.background = '#fee2e2'}
                     onMouseLeave={e => e.currentTarget.style.background = '#fef2f2'}>
                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                     ไม่อนุมัติ
                   </button>
-                  <button onClick={() => { changeLeaveStatus(selectedLeave.leave_id, 'Approved'); setShowReviewModal(false); }}
+                  <button onClick={() => { changeLeaveStatus(String(selectedLeave.leave_id), 'Approved', String(selectedLeave.current_stage)); setShowReviewModal(false); }}
                     style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: '#0f172a', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: 14, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                     onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
                     onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    อนุมัติการลา
+                    อนุมัติขั้นตอนปัจจุบัน
                   </button>
                 </div>
               ) : (
