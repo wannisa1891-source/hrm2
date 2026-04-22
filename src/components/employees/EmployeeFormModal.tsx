@@ -359,13 +359,18 @@ export default function EmployeeFormModal({
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
-                    <select value={formData.emp_type || ''} onChange={e => setField('emp_type', e.target.value)} style={inputStyle}>
-                      <option value="ข้าราชการ">ข้าราชการ</option>
-                      <option value="พนักงานประจำ">พนักงานประจำ</option>
-                      <option value="พาร์ทไทม์">พาร์ทไทม์</option>
-                      <option value="สัญญาจ้าง">สัญญาจ้าง</option>
-                      <option value="นักศึกษาฝึกงาน">นักศึกษาฝึกงาน</option>
-                    </select>
+                      <select value={formData.emp_type || ''} onChange={e => setField('emp_type', e.target.value)} style={inputStyle}>
+                        <option value="ราชการ">ราชการ</option>
+                        <option value="พนักงานราชการ">พนักงานราชการ</option>
+                        <option value="ลูกจ้างพนักงานกระทรวง">ลูกจ้างพนักงานกระทรวง</option>
+                        <option value="ลูกจ้างชั่วคราว(นักเรียนทุน)">ลูกจ้างชั่วคราว(นักเรียนทุน)</option>
+                        <option value="ลูกจ้างรายเดือน">ลูกจ้างรายเดือน</option>
+                        <option value="ลูกจ้างรายวัน">ลูกจ้างรายวัน</option>
+                        <option value="ลูกจ้างเหมา">ลูกจ้างเหมา</option>
+                        <option value="ลูกจ้างชั่วคราวที่อายุ 60 ปี">ลูกจ้างชั่วคราวที่อายุ 60 ปี</option>
+                        <option value="นักศึกษาฝึกงาน">นักศึกษาฝึกงาน</option>
+                      </select>
+
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สถานะพนักงาน</label>

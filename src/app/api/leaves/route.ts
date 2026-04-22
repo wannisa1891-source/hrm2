@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const sql = `SELECT l.*, 
         e.first_name_th, e.last_name_th, e.photo, e.emp_type, e.start_date AS start_date_work,
-        e.quota_personal, e.quota_vacation, e.quota_sick,
+        e.quota_personal, e.quota_vacation, e.quota_sick, e.accumulated_vacation,
         d.dept_name 
       FROM tbl_leaves l 
       LEFT JOIN tbl_employees e ON l.emp_id = e.emp_id 

@@ -10,6 +10,7 @@ import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { useSearchParams } from 'next/navigation';
 import { getCurrentFiscalYearRange } from '@/lib/dateUtils';
+import { getQuotaByType } from '@/constants/leaveRules';
 
 const LEAVE_TYPES = [
   { id: 'L01', name: 'ลาป่วย', color: '#f59e0b' },
@@ -22,39 +23,12 @@ const LEAVE_TYPES = [
 
 const getQuotaForEmployee = (empType: string, leaveTypeId: string, startDate?: string) => {
   const type = (empType || '').trim();
-  
-  // Default values
-  let quotas = { sick: 30, personal: 15, vacation: 10 };
+  const quotaObj = getQuotaByType(type, startDate);
 
-  if (type === 'ราชการ') {
-    quotas = { sick: 60, personal: 45, vacation: 10 };
-  } else if (type === 'พนักงานราชการ') {
-    quotas = { sick: 30, personal: 10, vacation: 15 };
-  } else if (type === 'ลูกจ้างพนักงานกระทรวง') {
-    quotas = { sick: 45, personal: 15, vacation: 15 };
-  } else if (type.includes('ลูกจ้างชั่วคราว(นักเรียนทุน)')) {
-    quotas = { sick: 15, personal: 0, vacation: 10 };
-  } else if (type === 'ลูกจ้างรายเดือน') {
-    quotas = { sick: 15, personal: 0, vacation: 10 };
-  } else if (type === 'ลูกจ้างรายวัน') {
-    let sickQuota = 8;
-    if (startDate) {
-      const start = new Date(startDate);
-      const now = new Date();
-      const diffYears = (now.getTime() - start.getTime()) / (1000 * 3600 * 24 * 365.25);
-      if (diffYears >= 1) sickQuota = 15;
-    }
-    quotas = { sick: sickQuota, personal: 0, vacation: 10 };
-  } else if (type === 'ลูกจ้างชั่วคราวที่อายุ 60 ปี') {
-    quotas = { sick: 15, personal: 0, vacation: 10 };
-  } else if (type === 'ลูกจ้างเหมา') {
-    quotas = { sick: 0, personal: 0, vacation: 0 };
-  }
-
-  if (leaveTypeId === 'L01') return quotas.sick;
-  if (leaveTypeId === 'L02') return quotas.personal;
-  if (leaveTypeId === 'L03') return quotas.vacation;
-  if (leaveTypeId === 'L04') return 90; // ลาคลอด
+  if (leaveTypeId === 'L01') return quotaObj.sick;
+  if (leaveTypeId === 'L02') return quotaObj.personal;
+  if (leaveTypeId === 'L03') return quotaObj.vacation;
+  if (leaveTypeId === 'L04') return 90; // ลาคลอด (General rule)
   if (leaveTypeId === 'L05') return 15; // ลาช่วยภริยาคลอด
   if (leaveTypeId === 'L06') return 120; // ลาอุปสมบท/ฮัจญ์
   return 0;
@@ -432,6 +406,9 @@ export default function LeavePage() {
           else if (selectedLeave.leave_type_id === 'L03') qt = selectedLeave.quota_vacation || 0;
         }
 
+        const acc = selectedLeave.leave_type_id === 'L03' ? (selectedLeave.accumulated_vacation || 0) : 0;
+        const totalQt = qt + acc;
+
         // Calculate used days in current fiscal year
         const usedInFiscalYear = leaves
           .filter(l => 
@@ -439,17 +416,18 @@ export default function LeavePage() {
             l.status === 'Approved' && 
             l.leave_type_id === selectedLeave.leave_type_id &&
             new Date(l.start_date) >= getCurrentFiscalYearRange().start &&
-            new Date(l.start_date) <= getCurrentFiscalYearRange().end
+            new Date(l.start_date) <= getCurrentFiscalYearRange().end &&
+            l.leave_id !== selectedLeave.leave_id // Don't count current if editing
           )
           .reduce((sum, l) => sum + calculateDays(l.start_date, l.end_date), 0);
 
-        const rem = qt - usedInFiscalYear - days;
+        const rem = totalQt - usedInFiscalYear - days;
         const over = rem < 0;
 
         return (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}
             onClick={e => e.target === e.currentTarget && setShowReviewModal(false)}>
-            <div style={{ background: 'white', borderRadius: 24, padding: 32, width: 480, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', animation: 'fadeIn 0.2s ease-out' }}>
+          <div style={{ background: 'white', borderRadius: 24, padding: '24px 32px', width: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', animation: 'fadeIn 0.2s ease-out' }} className="custom-scroll">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                 <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0f172a' }}>รายละเอียดการลา</h3>
                 <button onClick={() => setShowReviewModal(false)} style={{ width: 32, height: 32, borderRadius: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
@@ -508,8 +486,13 @@ export default function LeavePage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6, color: over ? '#b91c1c' : '#166534' }}>
                     <span>จำนวนโควตา {ql} ทั้งหมด</span><span style={{ fontWeight: 600 }}>{qt} วัน</span>
                   </div>
+                  {acc > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6, color: over ? '#b91c1c' : '#166534' }}>
+                      <span>วันลาสะสมคงเหลือ</span><span style={{ fontWeight: 600 }}>{acc} วัน</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: over ? '#b91c1c' : '#166534' }}>
-                    <span>คงเหลือหลังอนุมัติ</span><span style={{ fontWeight: 800 }}>{rem} วัน</span>
+                    <span>คงเหลือหลังอนุมัติ (รวมสะสม)</span><span style={{ fontWeight: 800 }}>{rem} วัน</span>
                   </div>
                 </div>
               )}

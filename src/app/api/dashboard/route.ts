@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       const fyStart = isPostOct ? `${currentYear}-10-01` : `${currentYear - 1}-10-01`;
       const fyEnd = isPostOct ? `${currentYear + 1}-09-30` : `${currentYear}-09-30`;
 
-      employeeQuotaQuery = pool.query('SELECT quota_vacation, quota_personal, quota_sick FROM tbl_employees WHERE emp_id = ?', [empId]);
+      employeeQuotaQuery = pool.query('SELECT quota_vacation, quota_personal, quota_sick, accumulated_vacation FROM tbl_employees WHERE emp_id = ?', [empId]);
       employeeUsedLeavesQuery = pool.query(`
         SELECT leave_type_id, DATEDIFF(end_date, start_date) + 1 AS used_days 
         FROM tbl_leaves 
@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
     if (empId) {
       const quotaRows = userQuotaResult[0] as any[];
       if (quotaRows.length > 0) {
-        leaveStats.vacation.raw = quotaRows[0].quota_vacation || 0;
+        leaveStats.vacation.raw = (quotaRows[0].quota_vacation || 0) + (quotaRows[0].accumulated_vacation || 0);
         leaveStats.personal.raw = quotaRows[0].quota_personal || 0;
         leaveStats.sick.raw = quotaRows[0].quota_sick || 0;
       }
