@@ -936,11 +936,7 @@ export default function TransferPage() {
                     <span className="compare-val-box cv-old">{viewingTransfer.old_pos_no || '—'}</span>
                     <span className="compare-val-box cv-new">{viewingTransfer.new_pos_no || '—'}</span>
                   </div>
-                  <div className="compare-row">
-                    <span className="detail-label">เงินเดือน</span>
-                    <span className="compare-val-box cv-old">{viewingTransfer.old_salary?.toLocaleString() || '0'}</span>
-                    <span className="compare-val-box cv-new">{viewingTransfer.new_salary?.toLocaleString() || '0'}</span>
-                  </div>
+
                 </div>
 
                 {viewingTransfer.request_memo && (

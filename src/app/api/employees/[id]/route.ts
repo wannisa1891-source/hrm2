@@ -83,7 +83,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       const existing = (existingRows as any[])[0];
 
       let updateFields = [
-        `prefix = ?`, `first_name_th = ?`, `last_name_th = ?`, `first_name_en = ?`, `last_name_en = ?`,
+        `prefix = ?`, `first_name_th = ?`, `last_name_th = ?`, `nickname = ?`, `first_name_en = ?`, `last_name_en = ?`,
         `birth_date = ?`, `gender = ?`, `address = ?`, `citizen_id = ?`, `phone = ?`, `email = ?`, `role = ?`,
         `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `admission_date = ?`, `retirement_date = ?`, 
         `base_salary = ?`, `status = ?`, `cneu_cme_points = ?`,
@@ -96,6 +96,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         safeVal(d.prefix, existing.prefix),
         safeVal(d.first_name_th, existing.first_name_th),
         safeVal(d.last_name_th, existing.last_name_th),
+        safeVal(d.nickname, existing.nickname),
         safeVal(d.first_name_en, existing.first_name_en),
         safeVal(d.last_name_en, existing.last_name_en),
         safeVal(d.birth_date, existing.birth_date),

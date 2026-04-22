@@ -47,7 +47,7 @@ const menuItems: MenuItem[] = [
     label: 'การลา',
     icon: icons.leave,
     children: [
-      { id: 'schedule', label: 'ตารางเวร', href: '/schedule', icon: icons.schedule },
+      { id: 'schedule', label: 'ตารางประชุม', href: '/schedule', icon: icons.schedule },
       { id: 'leave-sys', label: 'ระบบการลา', href: '/leave', icon: icons.leave },
     ],
   },

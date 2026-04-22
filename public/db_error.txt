@@ -1,6 +1,6 @@
-Error: Cannot add or update a child row: a foreign key constraint fails (`hrm_db`.`tbl_employees`, CONSTRAINT `tbl_employees_ibfk_1` FOREIGN KEY (`dept_id`) REFERENCES `tbl_departments` (`dept_id`))\nError: Cannot add or update a child row: a foreign key constraint fails (`hrm_db`.`tbl_employees`, CONSTRAINT `tbl_employees_ibfk_1` FOREIGN KEY (`dept_id`) REFERENCES `tbl_departments` (`dept_id`))
+Error: Column 'birth_date' cannot be null\nError: Column 'birth_date' cannot be null
     at PromisePoolConnection.query (webpack-internal:///(rsc)/./node_modules/mysql2/lib/promise/connection.js:29:22)
-    at POST (webpack-internal:///(rsc)/./src/app/api/employees/route.ts:124:30)
+    at POST (webpack-internal:///(rsc)/./src/app/api/employees/route.ts:143:30)
     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
     at async C:\xampp\htdocs\hrm2\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:55038
     at async ek.execute (C:\xampp\htdocs\hrm2\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:45808)

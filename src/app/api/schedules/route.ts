@@ -7,69 +7,16 @@ import { logAudit } from '@/lib/audit';
 //  Types
 // ============================================================
 
-interface ShiftType {
-  id: number;
-  code: string;
-  name: string;
-  start_time: string; // "HH:MM:SS"
-  end_time: string;   // "HH:MM:SS"
-  working_hours: number;
-}
-
-interface ScheduleRow {
-  id: number;
-  emp_id: string;
-  shift_type_id: number;
-  role: string;
-  schedule_date: string;
-  notes: string;
+interface BookingRow {
+  booking_id: number;
+  subject: string;
+  description: string;
+  room_id: number;
+  room_name: string;
+  organizer_id: string;
+  start_time: string;
+  end_time: string;
   status: string;
-}
-
-// ============================================================
-//  Helpers: Shift Mapping
-// ============================================================
-
-const shiftNameToId: Record<string, number> = {
-  Morning: 1,
-  Afternoon: 2,
-  Night: 3,
-};
-
-const shiftCodeToName: Record<string, string> = {
-  ม: 'Morning',
-  บ: 'Afternoon',
-  ด: 'Night',
-};
-
-function resolveShiftName(code: string): string {
-  return shiftCodeToName[code] ?? 'Morning';
-}
-
-// ============================================================
-//  Helpers: Time Overlap (รองรับ shift ข้ามวัน)
-// ============================================================
-
-/** แปลง "HH:MM:SS" → นาทีนับจากเที่ยงคืน */
-function toMinutes(timeStr: string): number {
-  const [h, m] = timeStr.split(':').map(Number);
-  return h * 60 + m;
-}
-
-const MIN_REST_HOURS = 10;
-const MIN_REST_MINUTES = MIN_REST_HOURS * 60;
-
-function getAbsoluteShiftMetrics(dateStr: string, timeStr: string, endStr: string) {
-    const baseDate = new Date(dateStr);
-    const baseMinutes = Math.floor(baseDate.getTime() / 60000);
-    const startMins = toMinutes(timeStr);
-    let endMins = toMinutes(endStr);
-    if (endMins <= startMins) endMins += 1440;
-
-    return {
-        start: baseMinutes + startMins,
-        end: baseMinutes + endMins
-    };
 }
 
 // ============================================================
@@ -77,167 +24,89 @@ function getAbsoluteShiftMetrics(dateStr: string, timeStr: string, endStr: strin
 // ============================================================
 
 /**
- * ตรวจสอบ duplicate schedule (emp_id + date + shift_type_id ซ้ำ)
+ * Check for room booking conflict (overlapping time in same room)
  */
-async function checkDuplicate(
-  empId: string,
-  date: string,
-  shiftTypeId: number,
+async function checkRoomConflict(
+  roomId: number,
+  startTime: string,
+  endTime: string,
   excludeId?: string
 ): Promise<string | null> {
   const [rows]: any = await pool.query(
-    `SELECT id FROM tbl_schedules
-     WHERE emp_id = ? AND schedule_date = ? AND shift_type_id = ?
-       AND (? IS NULL OR id != ?)`,
-    [empId, date, shiftTypeId, excludeId ?? null, excludeId ?? null]
+    `SELECT b.booking_id, b.subject, r.room_name 
+     FROM tbl_bookings b
+     JOIN tbl_meeting_rooms r ON b.room_id = r.room_id
+     WHERE b.room_id = ? 
+       AND b.status != 'Cancelled'
+       AND (b.start_time < ? AND b.end_time > ?)
+       AND (? IS NULL OR b.booking_id != ?)`,
+    [roomId, endTime, startTime, excludeId ?? null, excludeId ?? null]
   );
+
   if (rows.length > 0) {
-    return `พนักงาน ${empId} มีเวรนี้ในวันที่ ${date} อยู่แล้ว`;
-  }
-  return null;
-}
-
-async function checkTimeConflict(
-  empId: string,
-  date: string,
-  newShift: ShiftType,
-  excludeId?: string
-): Promise<string | null> {
-  // ดึงเวรทั้งหมดของพนักงานในวันนี้และวันก่อน/หลัง (สำหรับ shift ข้ามวันและพักไม่พอ)
-  const [existingRows]: any = await pool.query(
-    `SELECT s.id, t.start_time, t.end_time, t.code, s.schedule_date
-     FROM tbl_schedules s
-     JOIN tbl_shift_types t ON s.shift_type_id = t.id
-     WHERE s.emp_id = ?
-       AND s.schedule_date BETWEEN DATE_SUB(?, INTERVAL 1 DAY) AND DATE_ADD(?, INTERVAL 1 DAY)
-       AND (? IS NULL OR s.id != ?)`,
-    [empId, date, date, excludeId ?? null, excludeId ?? null]
-  );
-
-  const newMetrics = getAbsoluteShiftMetrics(date, newShift.start_time, newShift.end_time);
-
-  for (const row of existingRows) {
-    const rowDateStr = new Date(row.schedule_date).toISOString().split('T')[0];
-    const existMetrics = getAbsoluteShiftMetrics(rowDateStr, row.start_time, row.end_time);
-
-    // Overlap Check (ชนกัน)
-    const overlaps = (newMetrics.start < existMetrics.end && existMetrics.start < newMetrics.end);
-    if (overlaps) {
-      return `พนักงาน ${empId} มีเวร ${resolveShiftName(row.code)} (${row.start_time.slice(0, 5)}–${row.end_time.slice(0, 5)}) ชนกับเวรที่ต้องการเพิ่ม`;
-    }
-
-    // Rest Check (พักไม่พอ)
-    if (newMetrics.start >= existMetrics.end) {
-      const rest = newMetrics.start - existMetrics.end;
-      if (rest < MIN_REST_MINUTES) {
-        return `พนักงาน ${empId} พักไม่เพียงพอ (${+(rest / 60).toFixed(1)} ชม.) ระหว่างเวร ${resolveShiftName(row.code)} → ${newShift.name}`;
-      }
-    }
-    if (existMetrics.start >= newMetrics.end) {
-      const rest = existMetrics.start - newMetrics.end;
-      if (rest < MIN_REST_MINUTES) {
-        return `พนักงาน ${empId} พักไม่เพียงพอ (${+(rest / 60).toFixed(1)} ชม.) ระหว่างเวร ${newShift.name} → ${resolveShiftName(row.code)}`;
-      }
-    }
+    const conflict = rows[0];
+    return `ห้องประชุม "${conflict.room_name}" ถูกจองแล้วในช่วงเวลานี้สำหรับหัวข้อ "${conflict.subject}"`;
   }
   return null;
 }
 
 // ============================================================
-//  Email Notification Templates
+//  Email Notification Template
 // ============================================================
 
-async function getEmployeeEmail(empId: string): Promise<string | null> {
-  const [rows]: any = await pool.query(
-    'SELECT email FROM tbl_employees WHERE emp_id = ? LIMIT 1',
-    [empId]
-  );
-  return rows[0]?.email ?? null;
-}
-
-async function sendScheduleEmail(
+async function sendMeetingEmail(
   empId: string,
   action: 'created' | 'updated' | 'deleted',
   details: {
     date: string;
-    shiftName: string;
-    department: string;
+    subject: string;
+    room: string;
+    startTime: string;
+    endTime: string;
     note?: string;
-    before?: { shift: string; department: string };
   }
 ) {
   try {
-    const email = await getEmployeeEmail(empId);
-    if (!email) return; // ถ้าไม่มี email ข้ามไป
+    const [emp]: any = await pool.query('SELECT email FROM tbl_employees WHERE emp_id = ?', [empId]);
+    const email = emp[0]?.email;
+    if (!email) return;
 
-    const actionLabel =
-      action === 'created'
-        ? '✅ เพิ่มตารางเวรใหม่'
-        : action === 'updated'
-        ? '✏️ อัปเดตตารางเวร'
-        : '🗑️ ลบตารางเวร';
-
-    const changeRow =
-      action === 'updated' && details.before
-        ? `<tr>
-            <td style="padding:8px;color:#6b7280">การเปลี่ยนแปลง</td>
-            <td style="padding:8px">
-              กะ: ${details.before.shift} → ${details.shiftName}<br/>
-              แผนก: ${details.before.department} → ${details.department}
-            </td>
-          </tr>`
-        : '';
+    const actionLabel = action === 'created' ? '✅ เพิ่มการนัดหมายประชุมใหม่' : action === 'updated' ? '✏️ อัปเดตข้อมูลการประชุม' : '🗑️ ยกเลิกการประชุม';
 
     const html = `
       <div style="font-family:sans-serif;max-width:480px;margin:auto;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
         <div style="background:#2563eb;padding:20px 24px">
           <h2 style="color:#fff;margin:0;font-size:18px">${actionLabel}</h2>
-          <p style="color:#bfdbfe;margin:4px 0 0;font-size:13px">ระบบจัดการตารางเวร HRM</p>
+          <p style="color:#bfdbfe;margin:4px 0 0;font-size:13px">ระบบจัดการตารางประชุม HRM</p>
         </div>
         <div style="padding:24px">
           <p style="margin:0 0 16px;color:#374151">สวัสดี, พนักงานรหัส <strong>${empId}</strong></p>
           <table style="width:100%;border-collapse:collapse;font-size:14px">
             <tr style="background:#f3f4f6">
-              <td style="padding:8px;color:#6b7280;width:40%">วันที่</td>
-              <td style="padding:8px"><strong>${details.date}</strong></td>
+              <td style="padding:8px;color:#6b7280;width:40%">หัวข้อประชุม</td>
+              <td style="padding:8px"><strong>${details.subject}</strong></td>
             </tr>
             <tr>
-              <td style="padding:8px;color:#6b7280">กะการทำงาน</td>
-              <td style="padding:8px">${details.shiftName}</td>
+              <td style="padding:8px;color:#6b7280">ห้องประชุม</td>
+              <td style="padding:8px">${details.room}</td>
             </tr>
             <tr style="background:#f3f4f6">
-              <td style="padding:8px;color:#6b7280">แผนก</td>
-              <td style="padding:8px">${details.department}</td>
+              <td style="padding:8px;color:#6b7280">เวลา</td>
+              <td style="padding:8px">${details.startTime} - ${details.endTime}</td>
             </tr>
-            ${changeRow}
             ${details.note ? `<tr><td style="padding:8px;color:#6b7280">หมายเหตุ</td><td style="padding:8px">${details.note}</td></tr>` : ''}
           </table>
-          ${
-            action === 'deleted'
-              ? `<div style="margin-top:16px;padding:12px;background:#fef2f2;border-radius:6px;color:#b91c1c;font-size:13px">
-                  เวรดังกล่าวถูกลบออกจากระบบแล้ว หากมีข้อสงสัยกรุณาติดต่อผู้ดูแลระบบ
-                </div>`
-              : ''
-          }
-        </div>
-        <div style="padding:12px 24px;background:#f9fafb;text-align:center;font-size:12px;color:#9ca3af">
-          อีเมลนี้ส่งจากระบบ HRM โดยอัตโนมัติ กรุณาอย่าตอบกลับ
         </div>
       </div>`;
 
-    await sendMail({
-      to: email,
-      subject: `[HRM] ${actionLabel} — ${details.date}`,
-      html,
-    });
+    await sendMail({ to: email, subject: `[HRM] ${actionLabel} — ${details.subject}`, html });
   } catch (err) {
-    console.error('[sendScheduleEmail] Failed:', err);
-    // ไม่ throw เพื่อให้ API ยังทำงานต่อได้แม้ส่ง mail ไม่สำเร็จ
+    console.error('[sendMeetingEmail] Failed:', err);
   }
 }
 
 // ============================================================
-//  GET /api/schedules?month=YYYY-MM
+//  GET /api/schedules
 // ============================================================
 
 export const dynamic = 'force-dynamic';
@@ -245,114 +114,96 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const month = searchParams.get('month');
+    const month = searchParams.get('month'); // YYYY-MM
 
     let sql = `
-      SELECT s.id, s.emp_id AS nurse_name, s.role AS department,
-             s.schedule_date, t.code AS shift_code, s.notes AS note
-      FROM tbl_schedules s
-      LEFT JOIN tbl_shift_types t ON s.shift_type_id = t.id
+      SELECT b.booking_id as id, b.subject as nurse_name, b.description as note, 
+             b.start_time as schedule_date, b.end_time, r.room_name as shift, b.organizer_id as department,
+             b.booker_name, b.contact_phone, b.unit_name
+      FROM tbl_bookings b
+      LEFT JOIN tbl_meeting_rooms r ON b.room_id = r.room_id
       WHERE 1=1
     `;
     const values: string[] = [];
 
     if (month) {
-      sql += ' AND DATE_FORMAT(s.schedule_date, "%Y-%m") = ?';
+      sql += ' AND DATE_FORMAT(b.start_time, "%Y-%m") = ?';
       values.push(month);
     }
 
-    sql += ' ORDER BY s.schedule_date ASC, s.shift_type_id ASC';
+    sql += ' ORDER BY b.start_time ASC';
 
     const [rows]: any = await pool.query(sql, values);
 
+    // Keep field names compatible with frontend for now to avoid breaking UI until phase 3
     const mappedRows = rows.map((r: any) => ({
       id: r.id.toString(),
       nurse_name: r.nurse_name,
-      shift: resolveShiftName(r.shift_code),
+      shift: r.shift,
       department: r.department,
+      booker_name: r.booker_name,
+      contact_phone: r.contact_phone,
+      unit_name: r.unit_name,
       schedule_date: r.schedule_date,
       note: r.note,
+      startTime: new Date(r.schedule_date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      endTime: new Date(r.end_time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }),
     }));
 
     return NextResponse.json(mappedRows);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'DB Error';
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 // ============================================================
-//  POST /api/schedules  — เพิ่มเวรใหม่
+//  POST /api/schedules
 // ============================================================
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { nurseName, shift, department, date, note, requestedBy } = body;
+    const { nurseName, shift, department, date, note, startTime, endTime, requestedBy, bookerName, contactPhone, unitName } = body;
 
-    // 1. Basic validation
-    if (!nurseName || !shift || !department || !date) {
-      return NextResponse.json(
-        { error: 'กรุณากรอกข้อมูลให้ครบ (nurseName, shift, department, date)' },
-        { status: 400 }
-      );
+    // 1. Validation
+    if (!nurseName || !shift || !date) {
+      return NextResponse.json({ error: 'กรุณากรอกข้อมูลให้ครบ' }, { status: 400 });
     }
 
-    const shiftTypeId = shiftNameToId[shift];
-    if (!shiftTypeId) {
-      return NextResponse.json(
-        { error: `ประเภทกะไม่ถูกต้อง: ${shift}` },
-        { status: 400 }
-      );
-    }
+    // Resolve Room ID
+    const [roomRows]: any = await pool.query('SELECT room_id FROM tbl_meeting_rooms WHERE room_name = ?', [shift]);
+    if (!roomRows.length) return NextResponse.json({ error: 'ไม่พบห้องประชุมที่ระบุ' }, { status: 404 });
+    const roomId = roomRows[0].room_id;
 
-    // 2. ดึงข้อมูล ShiftType สำหรับตรวจ conflict
-    const [shiftRows]: any = await pool.query(
-      'SELECT id, code, name, start_time, end_time, working_hours FROM tbl_shift_types WHERE id = ?',
-      [shiftTypeId]
-    );
-    if (!shiftRows.length) {
-      return NextResponse.json({ error: 'ไม่พบข้อมูลประเภทกะในระบบ' }, { status: 404 });
-    }
-    const shiftType: ShiftType = shiftRows[0];
+    // Prepare timestamps
+    const fullStart = `${date} ${startTime || '09:00:00'}`;
+    const fullEnd = `${date} ${endTime || '10:00:00'}`;
 
-    // 3. Duplicate check
-    const dupError = await checkDuplicate(nurseName.trim(), date, shiftTypeId);
-    if (dupError) {
-      return NextResponse.json({ error: dupError }, { status: 409 });
-    }
+    // 2. Conflict Check
+    const conflict = await checkRoomConflict(roomId, fullStart, fullEnd);
+    if (conflict) return NextResponse.json({ error: conflict }, { status: 409 });
 
-    // 4. Time conflict check
-    const conflictError = await checkTimeConflict(nurseName.trim(), date, shiftType);
-    if (conflictError) {
-      return NextResponse.json({ error: conflictError }, { status: 409 });
-    }
-
-    // 5. Insert
+    // 3. Insert
     const [result]: any = await pool.query(
-      'INSERT INTO tbl_schedules (emp_id, shift_type_id, role, schedule_date, notes, status) VALUES (?,?,?,?,?,?)',
-      [nurseName.trim(), shiftTypeId, department, date, note ?? '', 'Published']
+      'INSERT INTO tbl_bookings (subject, description, room_id, organizer_id, start_time, end_time, booker_name, contact_phone, unit_name) VALUES (?,?,?,?,?,?,?,?,?)',
+      [nurseName, note || '', roomId, department, fullStart, fullEnd, bookerName || '', contactPhone || '', unitName || '']
     );
 
     const newId = result.insertId.toString();
 
-    // 6. Audit log
-    await logAudit(
-      requestedBy ?? 'System',
-      `CREATE schedule id=${newId} emp=${nurseName} date=${date} shift=${shift} dept=${department}`
-    );
-
-    // 7. Email notification (non-blocking)
-    sendScheduleEmail(nurseName.trim(), 'created', {
+    // 4. Email & Audit
+    await logAudit(requestedBy || 'System', `CREATE booking id=${newId} subject=${nurseName} room=${shift}`);
+    sendMeetingEmail(department, 'created', {
       date,
-      shiftName: shift,
-      department,
-      note,
+      subject: nurseName,
+      room: shift,
+      startTime: startTime || '09:00',
+      endTime: endTime || '10:00',
+      note
     });
 
     return NextResponse.json({ success: true, id: newId });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'DB Error';
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

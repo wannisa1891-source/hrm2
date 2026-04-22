@@ -7,8 +7,7 @@ import type { Schedule } from '../useScheduleModal'
 interface MonthViewProps {
   currentDate: Date
   schedules: Schedule[]
-  getShiftColor: (shift: string) => string
-  getShiftDot: (shift: string) => string
+  getShiftColor: (room: string) => string
   onOpenDay: (date: Date) => void
   onOpenEditModal: (schedule: Schedule) => void
 }
@@ -42,7 +41,6 @@ export default function MonthView({
   currentDate,
   schedules,
   getShiftColor,
-  getShiftDot,
   onOpenDay,
   onOpenEditModal,
 }: MonthViewProps) {
@@ -61,7 +59,7 @@ export default function MonthView({
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .mv-header { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
         .mv-day-name { text-align: center; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
         .mv-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 8px; }
@@ -80,7 +78,7 @@ export default function MonthView({
         .mv-shift:hover { filter: brightness(0.95); transform: translateY(-1px); }
         .mv-shift .shift-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
         .mv-shift .shift-type { font-size: 10px; font-weight: 700; opacity: 0.8; }
-      `}</style>
+      `}} />
       <div>
         {/* Day name header */}
         <div className="mv-header">
@@ -112,20 +110,20 @@ export default function MonthView({
                     </div>
                     <div className="mv-shifts">
                       {getDaySchedules(day).map((sch) => {
-                          // Beautiful glass pill styling for shift
-                          const color = getShiftColor(sch.shift);
+                          // Beautiful glass pill styling for room
+                          const color = getShiftColor(sch.room);
                           const bg = color + '15'; // 15% opacity hex
-                          const shortType = sch.shift === 'Morning' ? 'ช' : sch.shift === 'Afternoon' ? 'บ' : 'ด';
+                          const shortType = sch.room ? sch.room.charAt(0).toUpperCase() : 'M';
                           
                           return (
                             <div
                                 key={sch.id}
                                 className="mv-shift"
                                 style={{ backgroundColor: bg, color: color, border: `1px solid ${color}30` }}
-                                title={`${sch.nurseName} — ${sch.shift} — ${sch.department}`}
+                                title={`${sch.startTime} - ${sch.endTime} | ${sch.subject} — ${sch.room} — ${sch.organizer}`}
                                 onClick={(e) => { e.stopPropagation(); onOpenEditModal(sch) }}
                             >
-                                <span className="shift-text">{sch.nurseName}</span>
+                                <span className="shift-text"><strong>{sch.startTime}</strong> {sch.subject}</span>
                                 <span className="shift-type">{shortType}</span>
                             </div>
                           )

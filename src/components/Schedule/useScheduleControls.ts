@@ -1,13 +1,13 @@
 // ควบคุมเดือน / ปี / เปลี่ยน view / ปุ่ม Today
 import { useState, useMemo } from 'react'
 
-export type ViewType = 'day' | 'week' | 'month' | 'year'
+export type ViewType = 'list' | 'week' | 'month' | 'year'
 
-export const VIEWS: ViewType[] = ['day', 'week', 'month', 'year']
+export const VIEWS: ViewType[] = ['list', 'week', 'month', 'year']
 
 export default function useScheduleControls() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
-  const [currentView, setCurrentView] = useState<ViewType>('month')
+  const [currentView, setCurrentView] = useState<ViewType>('list')
 
   // แสดงเดือน+ปี สำหรับ month view
   const formatMonth = useMemo(() => {
@@ -45,7 +45,7 @@ export default function useScheduleControls() {
         d.toLocaleDateString('th-TH', { month: 'short', year: 'numeric' })
       )
     }
-    if (currentView === 'day') {
+    if (currentView === 'list') {
       return currentDate.toLocaleDateString('th-TH', {
         day: 'numeric',
         month: 'long',
@@ -60,7 +60,7 @@ export default function useScheduleControls() {
     if (currentView === 'year') d.setFullYear(d.getFullYear() - 1)
     else if (currentView === 'month') d.setMonth(d.getMonth() - 1)
     else if (currentView === 'week') d.setDate(d.getDate() - 7)
-    else if (currentView === 'day') d.setDate(d.getDate() - 1)
+    else if (currentView === 'list') d.setDate(d.getDate() - 1)
     setCurrentDate(d)
   }
 
@@ -69,7 +69,7 @@ export default function useScheduleControls() {
     if (currentView === 'year') d.setFullYear(d.getFullYear() + 1)
     else if (currentView === 'month') d.setMonth(d.getMonth() + 1)
     else if (currentView === 'week') d.setDate(d.getDate() + 7)
-    else if (currentView === 'day') d.setDate(d.getDate() + 1)
+    else if (currentView === 'list') d.setDate(d.getDate() + 1)
     setCurrentDate(d)
   }
 
