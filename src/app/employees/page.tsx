@@ -464,7 +464,7 @@ function EmployeesContent() {
             </select>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto', minHeight: '400px' }}>
             <table className="data-table">
               <thead>
                 <tr>
@@ -475,7 +475,6 @@ function EmployeesContent() {
                   <th>ตำแหน่ง</th>
                   <th>แผนก</th>
                   <th>หน่วยงาน</th>
-                  <th>หน่วยปฏิบัติงานที่</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
@@ -510,6 +509,7 @@ function EmployeesContent() {
                           {emp.license_status === 'Expired' && <span className="badge badge-red" title="ใบประกอบวิชาชีพหมดอายุ">หมดอายุ</span>}
                         </div>
                       </td>
+                      <td style={{ color: '#334155' }}>{emp.nickname || '-'}</td>
                       <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
                       <td>{departments.find(d => String(d.dept_id) === String(emp.dept_id))?.division || '-'}</td>
                       <td>{departments.find(d => String(d.dept_id) === String(emp.dept_id))?.dept_name || '-'}</td>
