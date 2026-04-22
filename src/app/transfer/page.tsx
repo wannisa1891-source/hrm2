@@ -752,13 +752,7 @@ export default function TransferPage() {
                       <input className="tr-input" style={{ padding: '6px 10px', fontSize: 13 }} placeholder="เลขที่ตำแหน่งใหม่" value={form.newPosNo} onChange={e => setF('newPosNo', e.target.value)} />
                     </td>
                   </tr>
-                  <tr>
-                    <td>เงินเดือน (บาท)</td>
-                    <td className="old-val">{selected ? form.oldSalary.toLocaleString() : '—'}</td>
-                    <td className="new-val">
-                      <input type="number" className="tr-input" style={{ padding: '6px 10px', fontSize: 13 }} placeholder="เงินเดือนใหม่" value={form.newSalary || ''} onChange={e => setF('newSalary', Number(e.target.value))} />
-                    </td>
-                  </tr>
+
                 </tbody>
               </table>
             </div>
@@ -854,11 +848,7 @@ export default function TransferPage() {
                     <span className="compare-val-box cv-old">{viewingTransfer.old_pos_no || '—'}</span>
                     <span className="compare-val-box cv-new">{viewingTransfer.new_pos_no || '—'}</span>
                   </div>
-                  <div className="compare-row">
-                    <span className="detail-label">เงินเดือน</span>
-                    <span className="compare-val-box cv-old">{viewingTransfer.old_salary?.toLocaleString() || '0'}</span>
-                    <span className="compare-val-box cv-new">{viewingTransfer.new_salary?.toLocaleString() || '0'}</span>
-                  </div>
+
                 </div>
 
                 {viewingTransfer.remark && (
