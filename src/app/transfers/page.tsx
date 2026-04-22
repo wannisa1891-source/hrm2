@@ -6,7 +6,6 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface TransferRecord {
   transfer_id: string;
   order_no: string;
   order_date: string;
@@ -23,7 +22,12 @@ interface TransferRecord {
   new_salary: number;
   order_file: string | null;
   status: string;
-}
+  // New fields
+  birth_date?: string;
+  id_card?: string;
+  hire_date?: string;
+  promotion_order?: string;
+  transfer_command?: string;
 
 interface Pagination {
   page: number;
@@ -210,16 +214,13 @@ function TransfersListPageInner() {
                   <tr>
                     <th>เลขที่คำสั่ง</th>
                     <th>ชื่อพนักงาน</th>
-                    <th>ประเภทคำสั่ง</th>
-                    <th>หน่วยงานใหม่</th>
-                    <th
-                      id="col-sort-date"
-                      style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}
-                      onClick={handleSortToggle}
-                    >
-                      วันที่มีผล{' '}
-                      <span style={{ fontSize: 11 }}>{sort === 'desc' ? '↓' : '↑'}</span>
-                    </th>
+                    <th>ตำแหน่ง</th>
+                    <th>วันที่มีผล</th>
+                    <th>วันเกิด</th>
+                    <th>เลขบัตรประชาชน</th>
+                    <th>วันที่บรรจุ</th>
+                    <th>คำสั่งเลื่อนตำแหน่ง</th>
+                    <th>คำสั่งย้าย/โอน</th>
                     <th>สถานะ</th>
                     <th style={{ textAlign: 'center' }}>จัดการ</th>
                   </tr>
@@ -243,10 +244,13 @@ function TransfersListPageInner() {
                         </div>
                       </td>
                       <td style={{ fontSize: 13, color: '#475569' }}>{t.transfer_type || '—'}</td>
-                      <td style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>
-                        {t.new_dept_name || '—'}
-                      </td>
+                      <td style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>{t.new_dept_name || '—'}</td>
                       <td style={{ fontSize: 13, color: '#64748b' }}>{formatDate(t.effective_date)}</td>
+                      <td>{t.birth_date ? formatDate(t.birth_date) : '—'}</td>
+                      <td>{t.id_card || '—'}</td>
+                      <td>{t.hire_date ? formatDate(t.hire_date) : '—'}</td>
+                      <td>{t.promotion_order || '—'}</td>
+                      <td>{t.transfer_command || '—'}</td>
                       <td><StatusBadge status={t.status} /></td>
                       <td
                         style={{ textAlign: 'center' }}
