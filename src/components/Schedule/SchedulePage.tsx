@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Swal from 'sweetalert2'
 import useScheduleControls, { VIEWS } from './useScheduleControls'
-import useScheduleModal, { SHIFT_TYPES } from './useScheduleModal'
+import useScheduleModal from './useScheduleModal'
 import useScheduleSummary from './useScheduleSummary'
 import useScheduleStatus from './useScheduleStatus'
 import { useSchedules } from '@/hooks/useSchedules'
-import DayView from './View/DayView'
+import ListView from './View/ListView'
 import WeekView from './View/WeekView'
 import MonthView from './View/MonthView'
 import YearView from './View/YearView'
@@ -20,19 +20,16 @@ function toSchedule(r: ScheduleRecord): Schedule {
   return {
     id: r.id,
     date: new Date(r.schedule_date),
-    nurseName: r.nurse_name,
-    shift: r.shift,
-    department: r.department,
+    subject: r.nurse_name,
+    room: r.shift,
+    organizer: r.department,
+    unit: r.unit_name,
+    bookerName: r.booker_name,
+    contactPhone: r.contact_phone,
+    startTime: r.startTime || '09:00',
+    endTime: r.endTime || '10:00',
     note: r.note || '',
   }
-}
-
-// Indicator จุดสีของเวร
-function getShiftDot(shift: string): string {
-  if (shift === 'Morning') return '●'
-  if (shift === 'Afternoon') return '●'
-  if (shift === 'Night') return '●'
-  return '○'
 }
 
 // ฟอร์แมต "YYYY-MM" จากวันที่
@@ -75,7 +72,7 @@ export default function SchedulePage() {
     selectedDate,
     editingId,
     errors,
-    shiftTypes,
+    roomTypes,
     departments,
     employees,
     form,
@@ -84,17 +81,18 @@ export default function SchedulePage() {
     openModal,
     openEditModal,
     closeModal,
-    deptData,
-    checkRestConflict,
-  } = useScheduleModal(schedules, () => { })
+    units,
+    checkRoomConflict,
+    getShiftColor,
+  } = useScheduleModal(schedules, () => loadSchedules(toMonthKey(currentDate)))
 
   const { totalSchedules, todaySchedules, monthSchedules } = useScheduleSummary(schedules)
   const { departmentStatus } = useScheduleStatus(schedules)
 
   const conflictErrors = useMemo(() => {
-    if (!form.nurseName || !selectedDate || !form.shift) return [];
-    return checkRestConflict(form.nurseName, selectedDate, form.shift, editingId);
-  }, [form.nurseName, selectedDate, form.shift, editingId, schedules, checkRestConflict]);
+    if (!form.room || !selectedDate || !form.startTime || !form.endTime) return [];
+    return checkRoomConflict(form.room, selectedDate, form.startTime, form.endTime, editingId);
+  }, [form.room, selectedDate, form.startTime, form.endTime, editingId, schedules, checkRoomConflict]);
 
   const hasConflicts = conflictErrors.length > 0;
 
@@ -103,15 +101,16 @@ export default function SchedulePage() {
   const tomorrowStr = useMemo(() => selectedDate ? new Date(selectedDate.getTime() + 86400000).toDateString() : '', [selectedDate]);
 
   const empContextSchedules = useMemo(() => {
-    if (!form.nurseName || !selectedDate) return [];
-    const empIdOnly = form.nurseName.split(' - ')[0].trim();
+    if (!form.subject || !selectedDate) return [];
+    const empIdOnly = form.subject.split(' - ')[0].trim();
     return schedules.filter(s => {
-      if (s.nurseName !== empIdOnly) return false;
+      const sEmpIdOnly = s.subject ? s.subject.split(' - ')[0].trim() : '';
+      if (sEmpIdOnly !== empIdOnly) return false;
       if (editingId && s.id === editingId) return false;
       const dStr = s.date.toDateString();
       return dStr === yesterdayStr || dStr === todayStr || dStr === tomorrowStr;
     }).sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [form.nurseName, selectedDate, schedules, editingId, yesterdayStr, todayStr, tomorrowStr]);
+  }, [form.subject, selectedDate, schedules, editingId, yesterdayStr, todayStr, tomorrowStr]);
 
   // โหลดเวรของเดือนที่กำลังดูอยู่
   useEffect(() => {
@@ -125,19 +124,20 @@ export default function SchedulePage() {
       let expectedDept = '';
 
       const empData = employees.find(e => e.emp_id === u.emp_id);
-      if (empData && empData.dept_id && deptData) {
-        const d = (deptData as any[])?.find(d => d.dept_id === empData.dept_id);
-        if (d) expectedDept = d.dept_name;
+      if (empData && empData.dept_id && departments) {
+        // Find matching department string that contains the dept_id or matches logic
+        const d = departments.find(d => typeof d === 'string' && d.includes(empData.dept_id || ''));
+        if (d) expectedDept = d;
       }
 
       setForm((f: ScheduleForm) => {
-        if (f.nurseName === expectedName && f.department === expectedDept) {
+        if (f.subject === expectedName && f.organizer === expectedDept) {
           return f; // Prevent infinite loop
         }
-        return { ...f, nurseName: expectedName, department: expectedDept };
+        return { ...f, subject: expectedName, organizer: expectedDept, bookerName: u.name || u.username || '' };
       });
     }
-  }, [showModal, isEditing, isAdmin, user, setForm, deptData, employees])
+  }, [showModal, isEditing, isAdmin, user, setForm, departments, employees])
 
   function openMonth(monthIndex: number) {
     const newDate = new Date(currentDate)
@@ -148,7 +148,7 @@ export default function SchedulePage() {
 
   function openDay(date: Date) {
     setCurrentDate(date)
-    changeView('day')
+    changeView('list')
   }
 
   async function confirmDelete(id: string) {
@@ -175,37 +175,41 @@ export default function SchedulePage() {
   // บันทึกเวร (เพิ่ม / แก้ไข) ผ่าน API
   async function handleSave(keepOpen: boolean = false) {
     if (!selectedDate) return
-    if (!form.nurseName.trim() || !form.shift || !form.department) {
+    if (!form.subject.trim() || !form.room || !form.organizer) {
       Swal.fire('ข้อความแจ้งเตือน', 'กรุณาระบุข้อมูลจำเป็นให้ครบถ้วน', 'warning');
       return;
     }
 
     try {
       // Extract Emp ID from nurseName if it's in format "ID - Name"
-      let empIdOnly = form.nurseName.split(' - ')[0].trim();
+      let empIdOnly = form.subject.split(' - ')[0].trim();
       if (!empIdOnly) {
-        empIdOnly = form.nurseName.replace(' - ', '').trim();
+        empIdOnly = form.subject.replace(' - ', '').trim();
       }
 
+      const scheduleData = {
+        nurseName: empIdOnly,
+        shift: form.room,
+        department: form.organizer,
+        unitName: form.unit || '',
+        bookerName: form.bookerName || '',
+        contactPhone: form.contactPhone || '',
+        startTime: form.startTime || '09:00',
+        endTime: form.endTime || '10:00',
+        note: form.note || ''
+      };
+
       if (isEditing && editingId) {
-        await editSchedule(editingId, {
-          nurseName: empIdOnly,
-          shift: form.shift,
-          department: form.department,
-          note: form.note || '',
-        }, toMonthKey(currentDate))
+        await editSchedule(editingId, scheduleData, toMonthKey(currentDate))
       } else {
         await addSchedule({
-          nurseName: empIdOnly,
-          shift: form.shift,
-          department: form.department,
+          ...scheduleData,
           date: toDateStr(selectedDate),
-          note: form.note || '',
         }, toMonthKey(currentDate))
       }
 
       if (keepOpen) {
-        setForm({ ...form, nurseName: '', note: '' });
+        setForm({ ...form, subject: '', note: '' });
       } else {
         closeModal()
       }
@@ -221,15 +225,10 @@ export default function SchedulePage() {
     if (a.toDateString() === b.toDateString()) return true;
     
     const yesterday = new Date(b.getTime() - 86400000);
-    if (a.toDateString() === yesterday.toDateString() && s.shift === 'Night') return true;
+    if (a.toDateString() === yesterday.toDateString() && s.room === 'Night') return true;
     
     return false;
   }).sort((a,b) => a.date.getTime() - b.date.getTime()) : []
-
-  const getShiftColor = (shift: string): string => {
-    const found = SHIFT_TYPES.find(s => s.value === shift)
-    return found ? found.color : '#64748b'
-  }
 
   return (
     <>
@@ -362,7 +361,7 @@ export default function SchedulePage() {
           </div>
           <div className="glass-card hover-glow"
             style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
-            onClick={() => { goToday(); changeView('day'); }}>
+            onClick={() => { goToday(); changeView('list'); }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
@@ -395,7 +394,7 @@ export default function SchedulePage() {
               <button className="sp-btn-nav" onClick={goNext}>
                 <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               </button>
-              <button className="sp-btn-today" onClick={() => { goToday(); changeView('day'); }}>วันนี้</button>
+              <button className="sp-btn-today" onClick={() => { goToday(); changeView('list'); }}>วันนี้</button>
             </div>
             <div className="sp-cal-views">
               {VIEWS.map((v) => (
@@ -403,7 +402,7 @@ export default function SchedulePage() {
                   key={v}
                   className={`sp-btn-view${currentView === v ? ' active' : ''}`}
                   onClick={() => changeView(v)}
-                >{v === 'day' ? 'วัน' : v === 'week' ? 'สัปดาห์' : v === 'month' ? 'เดือน' : 'ปี'}</button>
+                >{v === 'list' ? 'วัน' : v === 'week' ? 'สัปดาห์' : v === 'month' ? 'เดือน' : 'ปี'}</button>
               ))}
             </div>
           </div>
@@ -412,12 +411,12 @@ export default function SchedulePage() {
           {loading && <div className="sp-loading">กำลังโหลดตารางเวร...</div>}
 
           {/* Views */}
-          {!loading && currentView === 'day' && (
-            <DayView currentDate={currentDate} schedules={schedules}
-              getShiftColor={getShiftColor} getShiftDot={getShiftDot}
+          {!loading && currentView === 'list' && (
+            <ListView currentDate={currentDate} schedules={schedules}
+              roomTypes={roomTypes}
               onOpenDay={openModal}
               onOpenEditModal={(sch) => {
-                if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
+                if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
                 } else {
                   Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขเวรของผู้อื่น', 'error')
@@ -426,10 +425,10 @@ export default function SchedulePage() {
           )}
           {!loading && currentView === 'week' && (
             <WeekView currentDate={currentDate} schedules={schedules}
-              getShiftColor={getShiftColor} getShiftDot={getShiftDot}
+              getShiftColor={getShiftColor}
               onOpenDay={openModal}
               onOpenEditModal={(sch) => {
-                if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
+                if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
                 } else {
                   Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขเวรของผู้อื่น', 'error')
@@ -438,10 +437,10 @@ export default function SchedulePage() {
           )}
           {!loading && currentView === 'month' && (
             <MonthView currentDate={currentDate} schedules={schedules}
-              getShiftColor={getShiftColor} getShiftDot={getShiftDot}
+              getShiftColor={getShiftColor}
               onOpenDay={openModal}
               onOpenEditModal={(sch) => {
-                if (isAdmin || sch.nurseName.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
+                if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
                 } else {
                   Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขเวรของผู้อื่น', 'error')
@@ -455,7 +454,7 @@ export default function SchedulePage() {
           {/* Shift Legend */}
           {currentView !== 'year' && (
             <div className="sp-shift-legend">
-              {shiftTypes.map((st) => (
+              {roomTypes.map((st) => (
                 <div key={st.value} className="sp-legend-item">
                   <span className="sp-legend-dot" style={{ background: st.color }} />
                   <span>{st.label}</span>
@@ -512,9 +511,9 @@ export default function SchedulePage() {
                   {daySchedules.map((sch) => (
                     <div key={sch.id} className="sp-existing-item">
                       <div className="sp-existing-info">
-                        <span className="sp-existing-dot" style={{ background: getShiftColor(sch.shift) }} />
+                        <span className="sp-existing-dot" style={{ background: getShiftColor(sch.room) }} />
                         <span>
-                           {sch.nurseName} — {sch.shift} — {sch.department} 
+                           {sch.subject} — {sch.room} — {sch.organizer} 
                            {new Date(sch.date).toDateString() !== selectedDate?.toDateString() && <span className="sp-shift-type-badge ml-2 text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">ข้ามคืนจากเมื่อวาน</span>}
                         </span>
                       </div>
@@ -557,18 +556,18 @@ export default function SchedulePage() {
                       <input
                         className="sp-field"
                         list="emp-list"
-                        value={form.nurseName}
+                        value={form.subject}
                         onChange={(e) => {
                           const val = e.target.value;
                           setForm((f: ScheduleForm) => {
-                            const newForm = { ...f, nurseName: val };
+                            const newForm = { ...f, subject: val };
 
                             // Lookup employee and their department
                             const empId = val.split(' - ')[0].trim();
                             const emp = employees.find(e => e.emp_id === empId);
-                            if (emp && emp.dept_id) {
-                              const d = (deptData as any[])?.find(d => d.dept_id === emp.dept_id);
-                              if (d) newForm.department = d.dept_name;
+                            if (emp && emp.dept_id && departments) {
+                              const d = departments.find(d => typeof d === 'string' && d.includes(emp.dept_id || ''));
+                              if (d) newForm.organizer = d;
                             }
                             return newForm;
                           });
@@ -583,10 +582,10 @@ export default function SchedulePage() {
                       </datalist>
                     </>
                   ) : (
-                    <input className="sp-field" value={form.nurseName}
+                    <input className="sp-field" value={form.subject}
                       disabled={!isAdmin}
-                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, nurseName: e.target.value }))}
-                      placeholder="ระบุชื่อรหัสพนักงาน/พยาบาล" />
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, subject: e.target.value }))}
+                      placeholder="ระบุชื่อรหัสพนักงาน/ผู้จอง" />
                   )}
 
                   {/* Employee Context Preview */}
@@ -605,8 +604,8 @@ export default function SchedulePage() {
                             <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '6px 10px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
                               <span style={{ fontWeight: 600, color: isToday ? '#2563eb' : '#64748b' }}>{label} ({s.date.toLocaleDateString('th-TH', {day:'numeric', month:'short'})})</span>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: getShiftColor(s.shift) }}></span>
-                                <b>{s.shift}</b>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: getShiftColor(s.room) }}></span>
+                                <b>{s.room}</b>
                               </span>
                             </div>
                           );
@@ -619,14 +618,14 @@ export default function SchedulePage() {
                 <div className="sp-form-group">
                   <label>ประเภทเวร <span className="sp-req">*</span></label>
                   <div className="sp-shift-picker">
-                    {shiftTypes.map((st) => (
+                    {roomTypes.map((st) => (
                       <button key={st.value} className="sp-shift-opt"
                         style={{
-                          borderColor: form.shift === st.value ? st.color : '',
-                          background: form.shift === st.value ? st.color + '18' : '',
-                          color: form.shift === st.value ? '#1e293b' : ''
+                          borderColor: form.room === st.value ? st.color : '',
+                          background: form.room === st.value ? st.color + '18' : '',
+                          color: form.room === st.value ? '#1e293b' : ''
                         }}
-                        onClick={() => setForm((f: ScheduleForm) => ({ ...f, shift: st.value }))}>
+                        onClick={() => setForm((f: ScheduleForm) => ({ ...f, room: st.value }))}>
                         {st.label}
                       </button>
                     ))}
@@ -634,8 +633,8 @@ export default function SchedulePage() {
                 </div>
                 <div className="sp-form-group">
                   <label>แผนก <span className="sp-req">*</span></label>
-                  <select className="sp-field" value={form.department} disabled={!isAdmin}
-                    onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, department: e.target.value }))}>
+                  <select className="sp-field" value={form.organizer} disabled={!isAdmin}
+                    onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, organizer: e.target.value }))}>
                     <option value="">เลือกแผนก</option>
                     {departments.map((d) => <option key={d} value={d}>{d}</option>)}
                   </select>

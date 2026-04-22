@@ -274,6 +274,11 @@ export interface ScheduleRecord {
   department: string
   schedule_date: string   // "YYYY-MM-DD"
   note: string
+  startTime?: string
+  endTime?: string
+  booker_name?: string
+  contact_phone?: string
+  unit_name?: string
   created_at?: string
 }
 
@@ -282,7 +287,12 @@ export interface ScheduleBody {
   shift: string
   department: string
   date: string            // "YYYY-MM-DD"
+  startTime?: string
+  endTime?: string
   note?: string
+  bookerName?: string
+  contactPhone?: string
+  unitName?: string
 }
 
 export const fetchSchedules = (month?: string): Promise<ScheduleRecord[]> => {

@@ -37,14 +37,14 @@ export default function YearView({ currentDate, schedules, onOpenMonth }: YearVi
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .year-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 10px 0; }
         .month-box { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: var(--card); border-radius: 12px; border: 1.5px solid var(--bdr); cursor: pointer; transition: all 0.25s; }
         .month-box:hover { background: #eff6ff; border-color: var(--primary, #2563eb); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37,99,235,.12); }
         .month-box:hover .month-name { color: var(--primary, #2563eb); }
         .month-name { font-size: 20px; font-weight: 600; color: var(--txt); transition: color 0.25s; }
         .month-badge { font-size: 13px; color: var(--primary); font-weight: 700; background: var(--primary-lt); padding: 4px 10px; border-radius: 20px; }
-      `}</style>
+      `}} />
       <div className="year-grid">
         {yearMonths.map((m) => (
           <div

@@ -6,8 +6,7 @@ import type { Schedule } from '../useScheduleModal'
 interface DayViewProps {
   currentDate: Date
   schedules: Schedule[]
-  getShiftColor: (shift: string) => string
-  getShiftDot: (shift: string) => string
+  getShiftColor: (room: string) => string
   onOpenDay: (date: Date) => void
   onOpenEditModal: (schedule: Schedule) => void
 }
@@ -29,7 +28,6 @@ export default function DayView({
   currentDate,
   schedules,
   getShiftColor,
-  getShiftDot,
   onOpenDay,
   onOpenEditModal,
 }: DayViewProps) {
@@ -50,13 +48,16 @@ export default function DayView({
   })
 //เลิกงาน
   function getShiftsForHour(hour: string): Schedule[] {
-    // Basic mapping: if user didn't specify start time, we map Evening to 16:00, Night to 00:00, Morning to 08:00
-    // This provides a visual representation in the timeline if real `startTime` is not present
+    const hInt = parseInt(hour.split(':')[0])
     return dayShifts.filter((s) => {
-       if(s.startTime) return s.startTime === hour;
-       if(s.shift === 'Morning' && hour === '08:00') return true;
-       if(s.shift === 'Afternoon' && hour === '16:00') return true;
-       if(s.shift === 'Night' && hour === '00:00') return true;
+       if (s.startTime) {
+         const shInt = parseInt(s.startTime.split(':')[0])
+         return shInt === hInt
+       }
+       // Fallback for legacy data
+       if(s.room === 'Room A' && hInt === 9) return true;
+       if(s.room === 'Room B' && hInt === 13) return true;
+       if(s.room === 'Room C' && hInt === 9) return true;
        return false;
     })
   }
@@ -72,7 +73,7 @@ export default function DayView({
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .day-view-container { background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
         .day-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; background: #fafafa; }
         .day-header.is-today { background: #eff6ff; border-bottom-color: #bfdbfe; }
@@ -93,7 +94,7 @@ export default function DayView({
         .shift-meta { font-size: 13px; font-weight: 700; opacity: 0.8; letter-spacing: 0.5px; }
         .shift-note-tag { font-size: 12px; color: #475569; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.05); padding: 4px 10px; border-radius: 12px; font-weight: 600; }
         .shift-type-badge { padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 6px; background: rgba(255,255,255,0.4); text-transform: uppercase; }
-      `}</style>
+      `}} />
       <div className="day-view-container">
         <div className={`day-header${isToday ? ' is-today' : ''}`}>
           <h2 className="day-title">{formatDate}</h2>
@@ -104,7 +105,7 @@ export default function DayView({
               <div className="time-label">{hour}</div>
               <div className="time-cell" onClick={() => createShift(hour)}>
                 {getShiftsForHour(hour).map((shift) => {
-                    const color = getShiftColor(shift.shift);
+                    const color = getShiftColor(shift.room);
                     const bg = color + '18'; // 18% opacity hex
                     
                     return (
@@ -115,12 +116,13 @@ export default function DayView({
                         onClick={(e) => { e.stopPropagation(); onOpenEditModal(shift) }}
                       >
                         <div className="shift-details">
-                          <h4 className="nurse-name">{shift.nurseName}</h4>
-                          <span className="shift-note-tag">{shift.department}</span>
+                          <h4 className="nurse-name">{shift.subject}</h4>
+                          <span className="shift-note-tag">{shift.organizer}</span>
                           {shift.note && <span className="shift-note-tag italic">{shift.note}</span>}
                         </div>
-                        <div className="shift-type-badge text-right">
-                          {shift.shift}
+                        <div className="shift-type-badge text-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 800 }}>{shift.startTime} - {shift.endTime}</span>
+                          <span style={{ fontSize: '10px', opacity: 0.8 }}>{shift.room}</span>
                         </div>
                       </div>
                     )
