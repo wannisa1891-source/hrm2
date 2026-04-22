@@ -355,40 +355,15 @@ export default function LeavePage() {
                   : employees;
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24, padding: 20, background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>1. เลือกกลุ่มงาน</label>
-                    <select 
-                      value={selectedDivision} 
-                      onChange={e => { setSelectedDivision(e.target.value); setSelectedDept(''); setForm({...form, emp_id: ''}); setSearchTerm(''); }}
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', fontSize: 14 }}
-                    >
-                      <option value="">-- เลือกกลุ่มงาน (ทั้งหมด) --</option>
-                      {divisions.map(d => <option key={d as string} value={d as string}>{d as string}</option>)}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>2. เลือกแผนก/งานย่อย</label>
-                    <select 
-                      value={selectedDept} 
-                      disabled={!selectedDivision}
-                      onChange={e => { setSelectedDept(e.target.value); setForm({...form, emp_id: ''}); setSearchTerm(''); }}
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', fontSize: 14, background: !selectedDivision ? '#f1f5f9' : 'white' }}
-                    >
-                      <option value="">-- เลือกแผนก (ทั้งหมดในกลุ่มงาน) --</option>
-                      {deptsInDiv.map(d => <option key={d as string} value={d as string}>{d as string}</option>)}
-                    </select>
-                  </div>
-
                   <div style={{ position: 'relative' }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>3. ชื่อ-นามสกุล พนักงาน</label>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>1. ชื่อ-นามสกุล พนักงาน</label>
                     <input
                       type="text"
-                      placeholder="พิมพ์เพื่อค้นหาชื่อ..."
+                      placeholder="พิมพ์เพื่อค้นหาชื่อพนักงาน..."
                       value={searchTerm}
                       onChange={(e) => { setSearchTerm(e.target.value); setShowSearchList(true); }}
                       onFocus={() => setShowSearchList(true)}
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', fontSize: 14 }}
+                      style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid #cbd5e1', outline: 'none', fontSize: 14, boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)' }}
                     />
                     {showSearchList && (
                       <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', marginTop: 4, maxHeight: 200, overflowY: 'auto', zIndex: 10 }}>
@@ -400,6 +375,8 @@ export default function LeavePage() {
                             onClick={() => {
                               setForm({ ...form, emp_id: emp.emp_id });
                               setSearchTerm(`${emp.first_name_th} ${emp.last_name_th}`);
+                              setSelectedDivision(emp.division || '');
+                              setSelectedDept(emp.dept_name || '');
                               setShowSearchList(false);
                             }}
                             style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}
@@ -407,13 +384,41 @@ export default function LeavePage() {
                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                           >
                             <div style={{ fontWeight: 600, color: '#0f172a' }}>{emp.first_name_th} {emp.last_name_th}</div>
-                            <div style={{ fontSize: 11, color: '#64748b' }}>{emp.dept_name}</div>
+                            <div style={{ fontSize: 11, color: '#64748b' }}>{emp.division} - {emp.dept_name}</div>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>2. กลุ่มงาน</label>
+                      <select 
+                        value={selectedDivision} 
+                        onChange={e => { setSelectedDivision(e.target.value); setSelectedDept(''); setForm({...form, emp_id: ''}); setSearchTerm(''); }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', fontSize: 13, background: 'white' }}
+                      >
+                        <option value="">-- ทั้งหมด --</option>
+                        {divisions.map(d => <option key={d as string} value={d as string}>{d as string}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>3. แผนก/งานย่อย</label>
+                      <select 
+                        value={selectedDept} 
+                        disabled={!selectedDivision}
+                        onChange={e => { setSelectedDept(e.target.value); setForm({...form, emp_id: ''}); setSearchTerm(''); }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', fontSize: 13, background: !selectedDivision ? '#f1f5f9' : 'white' }}
+                      >
+                        <option value="">-- ทั้งหมด --</option>
+                        {deptsInDiv.map(d => <option key={d as string} value={d as string}>{d as string}</option>)}
+                      </select>
+                    </div>
+                  </div>
                 </div>
+
               );
             })()}
 
