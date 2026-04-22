@@ -310,7 +310,7 @@ export default function DepartmentAndEmployeePage() {
             {Object.keys(hierarchy).sort().map(divName => {
               const isDivExpanded = expandedDivs.includes(divName);
               const groups = hierarchy[divName];
-              
+
               return (
                 <div key={divName} style={{ marginBottom: '8px' }}>
                   <div
@@ -365,22 +365,22 @@ export default function DepartmentAndEmployeePage() {
                             {isGrpExpanded && hasSubDepts && (
                               <div style={{ paddingLeft: '20px', marginTop: '2px' }}>
                                 {units.sort((a: any, b: any) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th')).map((unit: any) => (
-                                    <div
-                                      key={unit.dept_id}
-                                      onClick={() => {
-                                        setSelectedDiv(divName);
-                                        setSelectedGrp(grpName);
-                                        setSelectedDeptId(unit.dept_id);
-                                        openDeptModal(unit);
-                                      }}
-                                      style={{
-                                        ...styles.unitItem,
-                                        background: selectedDeptId === unit.dept_id ? '#eff6ff' : 'transparent',
-                                        color: selectedDeptId === unit.dept_id ? '#2563eb' : '#94a3b8',
-                                      }}
-                                    >
-                                      <span style={{ fontSize: '12px' }}>{unit.sub_dept || 'ฝ่ายบริหาร'}</span>
-                                    </div>
+                                  <div
+                                    key={unit.dept_id}
+                                    onClick={() => {
+                                      setSelectedDiv(divName);
+                                      setSelectedGrp(grpName);
+                                      setSelectedDeptId(unit.dept_id);
+                                      openDeptModal(unit);
+                                    }}
+                                    style={{
+                                      ...styles.unitItem,
+                                      background: selectedDeptId === unit.dept_id ? '#eff6ff' : 'transparent',
+                                      color: selectedDeptId === unit.dept_id ? '#2563eb' : '#94a3b8',
+                                    }}
+                                  >
+                                    <span style={{ fontSize: '12px' }}>{unit.sub_dept || 'ฝ่ายบริหาร'}</span>
+                                  </div>
                                 ))}
                               </div>
                             )}
@@ -399,17 +399,17 @@ export default function DepartmentAndEmployeePage() {
         <div className="no-scrollbar" style={{ flex: 1, padding: '32px 40px 180px', overflowY: 'auto', overflowX: 'hidden' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' }}>
             <div style={{ minWidth: '300px' }}>
-              <h1 style={{ 
+              <h1 style={{
                 display: 'inline-block',
-                fontSize: '32px', 
-                fontWeight: 800, 
-                margin: 0, 
-                lineHeight: '1.6', 
-                padding: '10px 0', 
-                whiteSpace: 'nowrap', 
-                background: 'linear-gradient(135deg, #1e293b 0%, #4f46e5 100%)', 
-                WebkitBackgroundClip: 'text', 
-                WebkitTextFillColor: 'transparent' 
+                fontSize: '32px',
+                fontWeight: 800,
+                margin: 0,
+                lineHeight: '1.6',
+                padding: '10px 0',
+                whiteSpace: 'nowrap',
+                background: 'linear-gradient(135deg, #1e293b 0%, #4f46e5 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
               }}>
                 {selectedDeptId === 'interns' ? 'รายชื่อนักศึกษาฝึกงานทั้งหมด' : (selectedDeptId ? `${getDeptName(selectedDeptId)} (${departments.find(d => d.dept_id === selectedDeptId)?.sub_dept || ''})` : selectedGrp ? selectedGrp : selectedDiv ? selectedDiv : 'รายชื่อบุคลากรทั้งหมด')}
               </h1>
@@ -459,7 +459,8 @@ export default function DepartmentAndEmployeePage() {
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                       <th style={{ ...styles.th, width: '80px' }}>รูปภาพ</th>
                       <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
-                      <th style={styles.th}>บุคลากร</th>
+                      <th style={styles.th}>ชื่อ-สกุล</th>
+                      <th style={styles.th}>ชื่อเล่น</th>
                       <th style={styles.th}>แผนก</th>
                       <th style={styles.th}>หน่วยงาน</th>
                       <th style={styles.th}>ตำแหน่ง</th>
@@ -482,7 +483,7 @@ export default function DepartmentAndEmployeePage() {
               {/* Pagination for regular staff */}
               {regularStaff.length > perPage && (
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', marginBottom: '24px' }}>
-                   <Pagination page={page} setPage={setPage} totalItems={regularStaff.length} perPage={perPage} />
+                  <Pagination page={page} setPage={setPage} totalItems={regularStaff.length} perPage={perPage} />
                 </div>
               )}
             </>
@@ -502,6 +503,7 @@ export default function DepartmentAndEmployeePage() {
                       <th style={{ ...styles.th, width: '80px' }}>รูปภาพ</th>
                       <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
                       <th style={styles.th}>ชื่อ-สกุล</th>
+                      <th style={styles.th}>ชื่อเล่น</th>
                       <th style={styles.th}>แผนก</th>
                       <th style={styles.th}>หน่วยงาน</th>
                       <th style={styles.th}>ตำแหน่ง</th>
@@ -1124,8 +1126,8 @@ const styles: { [key: string]: React.CSSProperties } = {
 
 // --- Sub-components (defined for cleaner code) ---
 
-function EmployeeRow({ 
-  emp, isAdmin, departments, positions, setSelectedEmpId, 
+function EmployeeRow({
+  emp, isAdmin, departments, positions, setSelectedEmpId,
   getPosName, getDeptName, formatPosName, user, editEmployee
 }: any) {
   const [isOpen, setIsOpen] = useState(false);
@@ -1237,9 +1239,9 @@ function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
     'Terminated': 'ให้ออก'
   };
 
-  const currentStatus = statusOptions.find(o => o.value === emp.status || o.label === emp.status) || 
-                        statusOptions.find(o => o.value === statusMapping[emp.status]) || 
-                        statusOptions[0];
+  const currentStatus = statusOptions.find(o => o.value === emp.status || o.label === emp.status) ||
+    statusOptions.find(o => o.value === statusMapping[emp.status]) ||
+    statusOptions[0];
 
   const handleUpdate = async (newStatus: string) => {
     if (newStatus === emp.status) {
@@ -1256,7 +1258,7 @@ function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
 
   return (
     <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
-      <div 
+      <div
         onClick={(e) => {
           if (!isAdmin) return;
           e.stopPropagation();
@@ -1281,18 +1283,18 @@ function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
 
       {isOpen && (
         <>
-          <div 
+          <div
             onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
-            style={{ position: 'fixed', inset: 0, zIndex: 100 }} 
+            style={{ position: 'fixed', inset: 0, zIndex: 100 }}
           />
           <div style={{
-            position: 'absolute', 
-            [openUp ? 'bottom' : 'top']: '100%', 
-            left: '50%', 
+            position: 'absolute',
+            [openUp ? 'bottom' : 'top']: '100%',
+            left: '50%',
             transform: `translateX(-50%) ${openUp ? 'translateY(-12px)' : 'translateY(12px)'}`,
             background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)',
             borderRadius: '20px', border: '1px solid rgba(241, 245, 249, 1)',
-            boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12)', 
+            boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12)',
             padding: '10px', zIndex: 101, width: '180px',
             animation: openUp ? 'slideDownSelect 0.2s cubic-bezier(0.4, 0, 0.2, 1)' : 'slideUpSelect 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
           }}>
@@ -1308,7 +1310,7 @@ function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
             `}</style>
             <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>เลือกสถานะใหม่</div>
             {statusOptions.map(opt => (
-              <div 
+              <div
                 key={opt.value}
                 onClick={(e) => { e.stopPropagation(); handleUpdate(opt.value); }}
                 style={{
