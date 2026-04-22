@@ -23,7 +23,7 @@ export default function EmployeeFormModal({
   const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
 
   const EMPTY_FORM: Partial<Employee> = {
-    prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '',
+    prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '', nickname: '',
     birth_date: '', gender: 'ชาย', citizen_id: '',
     emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานประจำ', start_date: '', base_salary: 0,
     phone: '', address: '', status: 'ทำงานปกติ',
@@ -184,7 +184,7 @@ export default function EmployeeFormModal({
                   SECTION 01
                 </div>
                 <h4 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  ข้อมูลส่วนบุคคล (Personal Information)
+                  ข้อมูลส่วนบุคคล
                 </h4>
 
                 <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
@@ -202,7 +202,7 @@ export default function EmployeeFormModal({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>คำนำหน้า</label>
                       <select value={formData.prefix || ''} onChange={e => setField('prefix', e.target.value)} required style={inputStyle}>
-                        <option value="">[ เลือกคำนำหน้า ]</option>
+                        <option value="">เลือกคำนำหน้า</option>
                         <option value="นาย">นาย</option>
                         <option value="นาง">นาง</option>
                         <option value="นางสาว">นางสาว</option>
@@ -224,6 +224,11 @@ export default function EmployeeFormModal({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>นามสกุล (ภาษาไทย)</label>
                       <input type="text" placeholder="ระบุนามสกุลไทย" value={formData.last_name_th || ''} onChange={e => setField('last_name_th', e.target.value)} required style={inputStyle} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ชื่อเล่น</label>
+                      <input type="text" placeholder="ระบุชื่อเล่น" value={formData.nickname || ''} onChange={e => setField('nickname', e.target.value)} style={inputStyle} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -291,7 +296,7 @@ export default function EmployeeFormModal({
                       <select value={formData.addr_district || ''} disabled={!formData.addr_province} onChange={e => {
                         setField('addr_district', e.target.value); setField('addr_subdistrict', ''); setField('addr_zipcode', '');
                       }} style={{ ...addrInputStyle, cursor: formData.addr_province ? 'pointer' : 'not-allowed', opacity: formData.addr_province ? 1 : 0.6 }}>
-                        <option value="">[ เลือกอำเภอ ]</option>
+                        <option value="">เลือกอำเภอ</option>
                         {amphoes.map(a => <option key={a as string} value={a as string}>{a as string}</option>)}
                       </select>
                     </div>
@@ -302,7 +307,7 @@ export default function EmployeeFormModal({
                         const matchedZipcodes = Array.from(new Set(thaiAddressData.filter((d: any) => d.province === formData.addr_province && d.amphoe === formData.addr_district && d.district === e.target.value).map((d: any) => d.zipcode)));
                         if (matchedZipcodes.length === 1) setField('addr_zipcode', String(matchedZipcodes[0])); else setField('addr_zipcode', '');
                       }} style={{ ...addrInputStyle, cursor: formData.addr_district ? 'pointer' : 'not-allowed', opacity: formData.addr_district ? 1 : 0.6 }}>
-                        <option value="">[ เลือกตำบล ]</option>
+                        <option value="">เลือกตำบล</option>
                         {districts.map(d => <option key={d as string} value={d as string}>{d as string}</option>)}
                       </select>
                     </div>
@@ -310,7 +315,7 @@ export default function EmployeeFormModal({
                       <span style={{ fontSize: '12px', color: '#64748b' }}>รหัสไปรษณีย์</span>
                       {zipcodes.length > 1 ? (
                         <select value={formData.addr_zipcode || ''} disabled={!formData.addr_subdistrict} onChange={e => setField('addr_zipcode', e.target.value)} style={{ ...addrInputStyle, cursor: formData.addr_subdistrict ? 'pointer' : 'not-allowed', opacity: formData.addr_subdistrict ? 1 : 0.6 }}>
-                          <option value="">[ เลือกรหัส ]</option>{zipcodes.map(z => <option key={z as string} value={z as string}>{z as string}</option>)}
+                          <option value="">เลือกรหัส</option>{zipcodes.map(z => <option key={z as string} value={z as string}>{z as string}</option>)}
                         </select>
                       ) : (
                         <input type="text" value={formData.addr_zipcode || ''} onChange={e => setField('addr_zipcode', e.target.value)} style={addrInputStyle} placeholder="10xxx" readOnly={zipcodes.length === 1} />
@@ -332,7 +337,7 @@ export default function EmployeeFormModal({
                   SECTION 02
                 </div>
                 <h4 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  ข้อมูลการทำงานและวิชาชีพ (Job & Professional Info)
+                  ข้อมูลการทำงานและวิชาชีพ
                 </h4>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', opacity: isProfileMode ? 0.6 : 1, pointerEvents: (isProfileMode && !isAdmin) ? 'none' : 'auto' }}>
@@ -341,7 +346,7 @@ export default function EmployeeFormModal({
                     <input type="text" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} required readOnly={isEditing} style={{ ...inputStyle, background: isEditing ? '#f1f5f9' : '#ffffff', cursor: isEditing ? 'not-allowed' : 'text' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ลำดับที่ (Sequence)</label>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ลำดับที่ </label>
                     <input type="text" value={formData.staff_no || 'Auto-generated'} readOnly style={{ ...inputStyle, background: '#f1f5f9', cursor: 'not-allowed', color: '#64748b' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -369,7 +374,7 @@ export default function EmployeeFormModal({
                     </select>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: 'span 2' }}>
-                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัด (Division &gt; Department)</label>
+                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัด</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>กลุ่มงาน</label>
@@ -385,7 +390,7 @@ export default function EmployeeFormModal({
                           }}
                           style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
                         >
-                          <option value="">[ เลือกกลุ่มงาน ]</option>
+                          <option value="">เลือกกลุ่มงาน</option>
                           {divisions.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                       </div>
@@ -396,7 +401,7 @@ export default function EmployeeFormModal({
                           onChange={e => setField('dept_id', e.target.value)}
                           style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
                         >
-                          <option value="">[ เลือกแผนก ]</option>
+                          <option value="">เลือกแผนก</option>
                           {departments.filter(d => d.division?.trim() === (departments.find(dept => dept.dept_id === formData.dept_id)?.division || '')).map(s => (
                             <option key={s.dept_id} value={s.dept_id}>{s.dept_name}</option>
                           ))}
@@ -407,7 +412,7 @@ export default function EmployeeFormModal({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ตำแหน่งงาน</label>
                     <select value={formData.pos_id || ''} onChange={e => setField('pos_id', e.target.value)} required style={inputStyle}>
-                      <option value="">[ เลือกตำแหน่ง ]</option>
+                      <option value="">เลือกตำแหน่ง</option>
                       {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
                     </select>
                   </div>
@@ -464,7 +469,7 @@ export default function EmployeeFormModal({
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <label style={{ fontSize: '12px', color: '#64748b' }}>ประเภทวิชาชีพ</label>
                             <select value={lic.license_type || ''} onChange={e => setLicenseField(index, 'license_type', e.target.value)} style={addrInputStyle}>
-                              <option value="">[ เลือกประเภท ]</option>
+                              <option value="">เลือกประเภท</option>
                               <option value="พยาบาล (RN)">พยาบาล (RN)</option>
                               <option value="แพทย์ (MD)">แพทย์ (MD)</option>
                               <option value="อื่นๆ">อื่นๆ</option>

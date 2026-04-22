@@ -95,17 +95,17 @@ export async function POST(req: NextRequest) {
       await connection.beginTransaction();
 
       const sql = `INSERT INTO tbl_employees 
-        (emp_id, prefix, first_name_th, last_name_th, first_name_en, last_name_en, 
+        (emp_id, prefix, first_name_th, last_name_th, first_name_en, last_name_en, nickname,
          birth_date, gender, address, citizen_id, phone, email, password, role, 
          emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, base_salary, status, image, cneu_cme_points,
          quota_personal, quota_vacation, quota_sick) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)`;
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)`;
 
       const hashedPassword = d.password ? crypto.createHash('sha256').update(d.password).digest('hex') : '';
 
       const values = [
         d.emp_id || '', d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
-        d.first_name_en || '', d.last_name_en || '',
+        d.first_name_en || '', d.last_name_en || '', d.nickname || '',
         d.birth_date || null, d.gender || 'ชาย', d.address || '',
         d.id_card || d.citizen_id || '0000000000000', d.phone || '',
         d.email || null, hashedPassword, d.role || 'User',
