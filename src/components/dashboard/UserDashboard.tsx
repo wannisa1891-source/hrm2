@@ -42,14 +42,14 @@ export default function UserDashboard({
 
   return (
     <div style={{ padding: '0px 24px 40px', maxWidth: '1400px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', fontFamily: "'Sarabun', sans-serif" }}>
-      
+
       {/* Welcome Banner */}
       <div style={{ padding: '20px 0' }}>
         <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#1e293b' }}>
           สวัสดีครับ, {user?.name || user?.username || 'User'}
         </h1>
         <p style={{ margin: '8px 0 0 0', fontSize: 16, color: '#64748b', fontWeight: 500 }}>
-          คุณมีวันลาพักร้อนคงเหลือ <span style={{ color: '#3b82f6', fontWeight: 800, fontSize: 18 }}>{leaveStats.vacation.remain} วัน</span> 
+          คุณมีวันลาพักร้อนคงเหลือ <span style={{ color: '#3b82f6', fontWeight: 800, fontSize: 18 }}>{leaveStats.vacation.remain} วัน</span>
         </p>
       </div>
 
@@ -95,11 +95,11 @@ export default function UserDashboard({
         </div>
 
         {/* License Alert Card (New) */}
-        <div style={{ 
-          background: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? (licenseStats.expired > 0 ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)') : '#ffffff', 
-          borderRadius: 24, 
-          padding: 28, 
-          color: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? 'white' : '#64748b', 
+        <div style={{
+          background: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? (licenseStats.expired > 0 ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)') : '#ffffff',
+          borderRadius: 24,
+          padding: 28,
+          color: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? 'white' : '#64748b',
           boxShadow: '0 10px 20px rgba(0,0,0,0.05)',
           border: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? 'none' : '1px solid #e2e8f0',
           display: 'flex',
@@ -107,37 +107,37 @@ export default function UserDashboard({
           justifyContent: 'space-between'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-             <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.9 }}>ใบประกอบวิชาชีพ</div>
-             <div style={{ width: 32, height: 32, background: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? 'rgba(255,255,255,0.2)' : '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <svg width="16" height="16" fill={(licenseStats.expired > 0 || licenseStats.expiring > 0) ? "white" : "#64748b"} viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" /></svg>
-             </div>
+            <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.9 }}>ใบประกอบวิชาชีพ</div>
+            <div style={{ width: 32, height: 32, background: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? 'rgba(255,255,255,0.2)' : '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="16" fill={(licenseStats.expired > 0 || licenseStats.expiring > 0) ? "white" : "#64748b"} viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" /></svg>
+            </div>
           </div>
           <div style={{ marginTop: 12 }}>
-             { (licenseStats.expired > 0 || licenseStats.expiring > 0) ? (
-               <>
-                 <div style={{ fontSize: 20, fontWeight: 800 }}>
-                   {licenseStats.expired > 0 ? 'พบใบอนุญาตหมดอายุ!' : 'ใบอนุญาตใกล้หมดอายุ'}
-                 </div>
-                 <div style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>
-                   {licenseStats.expired > 0 ? `จำนวน ${licenseStats.expired} รายการ` : `ต้องต่ออายุภายใน 90 วัน (${licenseStats.expiring} รายการ)`}
-                 </div>
-               </>
-             ) : (
-               <>
-                 <div style={{ fontSize: 18, fontWeight: 800, color: '#10b981' }}>ปกติ</div>
-                 <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>ข้อมูลใบอนุญาตเป็นปัจจุบัน</div>
-               </>
-             )}
+            {(licenseStats.expired > 0 || licenseStats.expiring > 0) ? (
+              <>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>
+                  {licenseStats.expired > 0 ? 'พบใบอนุญาตหมดอายุ!' : 'ใบอนุญาตใกล้หมดอายุ'}
+                </div>
+                <div style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>
+                  {licenseStats.expired > 0 ? `จำนวน ${licenseStats.expired} รายการ` : `ต้องต่ออายุภายใน 90 วัน (${licenseStats.expiring} รายการ)`}
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#10b981' }}>ปกติ</div>
+                <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>ข้อมูลใบอนุญาตเป็นปัจจุบัน</div>
+              </>
+            )}
           </div>
-          <Link href="/license" style={{ 
-            marginTop: 20, 
-            background: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? 'white' : '#f8fafc', 
-            color: licenseStats.expired > 0 ? '#ef4444' : (licenseStats.expiring > 0 ? '#f59e0b' : '#3b82f6'), 
-            padding: '10px 0', 
-            borderRadius: '12px', 
-            textAlign: 'center', 
-            fontWeight: 800, 
-            fontSize: 14, 
+          <Link href="/license" style={{
+            marginTop: 20,
+            background: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? 'white' : '#f8fafc',
+            color: licenseStats.expired > 0 ? '#ef4444' : (licenseStats.expiring > 0 ? '#f59e0b' : '#3b82f6'),
+            padding: '10px 0',
+            borderRadius: '12px',
+            textAlign: 'center',
+            fontWeight: 800,
+            fontSize: 14,
             textDecoration: 'none',
             border: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? 'none' : '1px solid #e2e8f0'
           }}>
@@ -208,18 +208,18 @@ export default function UserDashboard({
 
       {/* News Slider (Simplified for now or restored from team) */}
       <div style={{ background: '#ffffff', borderRadius: 24, padding: 32, border: '1px solid #e2e8f0' }}>
-          <h3 style={{ margin: '0 0 20px 0', fontSize: 18, fontWeight: 800 }}>ข่าวสารและประกาศ</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-            {newsList.slice(0, 3).map((news, i) => (
-              <div key={i} onClick={() => onSelectNews(news)} style={{ cursor: 'pointer', background: '#f8fafc', borderRadius: 16, overflow: 'hidden', border: '1px solid #f1f5f9' }}>
-                {news.image && <div style={{ height: 120, backgroundImage: `url(${news.image})`, backgroundSize: 'cover' }} />}
-                <div style={{ padding: 16 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: '#1e293b' }}>{news.title}</div>
-                  <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{news.date}</div>
-                </div>
+        <h3 style={{ margin: '0 0 20px 0', fontSize: 18, fontWeight: 800 }}>ข่าวสารและประกาศ</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+          {newsList.slice(0, 3).map((news, i) => (
+            <div key={i} onClick={() => onSelectNews(news)} style={{ cursor: 'pointer', background: '#f8fafc', borderRadius: 16, overflow: 'hidden', border: '1px solid #f1f5f9' }}>
+              {news.image && <div style={{ height: 120, backgroundImage: `url(${news.image})`, backgroundSize: 'cover' }} />}
+              <div style={{ padding: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: '#1e293b' }}>{news.title}</div>
+                <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{news.date}</div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

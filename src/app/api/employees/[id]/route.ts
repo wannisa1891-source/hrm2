@@ -67,6 +67,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (d.licenses_data) {
       try { licenses = JSON.parse(d.licenses_data); } catch (e) { }
     }
+    let trainings: any[] = [];
+    if (d.trainings_data) {
+      try { trainings = JSON.parse(d.trainings_data); } catch (e) { }
+    }
 
     const connection = await pool.getConnection();
     try {
@@ -81,7 +85,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       let updateFields = [
         `prefix = ?`, `first_name_th = ?`, `last_name_th = ?`, `first_name_en = ?`, `last_name_en = ?`,
         `birth_date = ?`, `gender = ?`, `address = ?`, `citizen_id = ?`, `phone = ?`, `email = ?`, `role = ?`,
-        `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `base_salary = ?`, `status = ?`, `cneu_cme_points = ?`
+        `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `admission_date = ?`, `retirement_date = ?`, 
+        `base_salary = ?`, `status = ?`, `cneu_cme_points = ?`,
+        `quota_personal = ?`, `quota_vacation = ?`, `quota_sick = ?`
       ];
 
       const safeVal = (v: any, fallback: any) => (v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') ? fallback : v;
@@ -103,9 +109,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         safeVal(d.dept_id, existing.dept_id),
         safeVal(d.pos_id, existing.pos_id),
         safeVal(d.start_date, existing.start_date),
+        safeVal(d.admission_date, existing.admission_date),
+        safeVal(d.retirement_date, existing.retirement_date),
         safeVal(d.base_salary, existing.base_salary),
         safeVal(d.status, existing.status),
-        d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : existing.cneu_cme_points
+        d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : existing.cneu_cme_points,
+        d.quota_personal ? parseInt(d.quota_personal) : existing.quota_personal,
+        d.quota_vacation ? parseInt(d.quota_vacation) : existing.quota_vacation,
+        d.quota_sick ? parseInt(d.quota_sick) : existing.quota_sick
       ];
 
       if (imageName) {
@@ -152,6 +163,38 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
             lic.status || 'Active', licFileName
           ];
           await connection.query(licSql, licValues);
+        }
+      }
+
+      await connection.query('DELETE FROM tbl_employee_trainings WHERE emp_id = ?', [empId]);
+      if (trainings.length > 0) {
+        for (let i = 0; i < trainings.length; i++) {
+          let certFile: string | null = null;
+          let imgFile: string | null = null;
+          
+          const cf = formData.get(`training_cert_${i}`) as File | null;
+          if (cf && cf.size > 0) {
+            const ext = path.extname(cf.name);
+            certFile = `tr_cert_${empId}_${i}_${Date.now()}${ext}`;
+            fs.writeFileSync(path.join(uploadDir, certFile), Buffer.from(await cf.arrayBuffer()));
+          } else { certFile = trainings[i].certificate_file || null; }
+
+          const imf = formData.get(`training_img_${i}`) as File | null;
+          if (imf && imf.size > 0) {
+            const ext = path.extname(imf.name);
+            imgFile = `tr_img_${empId}_${i}_${Date.now()}${ext}`;
+            fs.writeFileSync(path.join(uploadDir, imgFile), Buffer.from(await imf.arrayBuffer()));
+          } else { imgFile = trainings[i].image_file || null; }
+
+          const tr = trainings[i];
+          const trSql = `INSERT INTO tbl_employee_trainings 
+            (emp_id, course_name, institution, location, start_date, end_date, certificate_file, image_file)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+          const trValues = [
+            empId, tr.course_name, tr.institution || null, tr.location || null,
+            tr.start_date || null, tr.end_date || null, certFile, imgFile
+          ];
+          await connection.query(trSql, trValues);
         }
       }
 

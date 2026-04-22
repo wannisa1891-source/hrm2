@@ -369,12 +369,12 @@ export default function EmployeeFormModal({
                     </select>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: 'span 2' }}>
-                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัดหน่วยงาน (Dept &gt; Unit)</label>
+                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัด (Division &gt; Department)</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <div>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>แผนก</label>
-                        <select 
-                          value={departments.find(d => d.dept_id === formData.dept_id)?.division || ''} 
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>กลุ่มงาน</label>
+                        <select
+                          value={departments.find(d => d.dept_id === formData.dept_id)?.division || ''}
                           onChange={e => {
                             const div = e.target.value;
                             if (!div) setField('dept_id', '');
@@ -385,18 +385,18 @@ export default function EmployeeFormModal({
                           }}
                           style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
                         >
-                          <option value="">[ เลือกแผนก ]</option>
+                          <option value="">[ เลือกกลุ่มงาน ]</option>
                           {divisions.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>หน่วยงาน</label>
-                        <select 
-                          value={formData.dept_id || ''} 
-                          onChange={e => setField('dept_id', e.target.value)} 
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>แผนก</label>
+                        <select
+                          value={formData.dept_id || ''}
+                          onChange={e => setField('dept_id', e.target.value)}
                           style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
                         >
-                          <option value="">[ เลือกหน่วยงาน ]</option>
+                          <option value="">[ เลือกแผนก ]</option>
                           {departments.filter(d => d.division?.trim() === (departments.find(dept => dept.dept_id === formData.dept_id)?.division || '')).map(s => (
                             <option key={s.dept_id} value={s.dept_id}>{s.dept_name}</option>
                           ))}
@@ -544,7 +544,7 @@ export default function EmployeeFormModal({
                       <td style={{ padding: '12px' }}>{h.license_no}</td>
                       <td style={{ padding: '12px' }}>{h.expire_date ? new Date(h.expire_date).toLocaleDateString('th-TH') : '-'}</td>
                       <td style={{ padding: '12px' }}>
-                        <span style={{ 
+                        <span style={{
                           padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600,
                           background: h.status === 'Active' ? '#dcfce7' : h.status === 'Renewed' ? '#dbeafe' : '#fee2e2',
                           color: h.status === 'Active' ? '#166534' : h.status === 'Renewed' ? '#1e40af' : '#991b1b'

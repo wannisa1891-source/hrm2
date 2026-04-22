@@ -4,17 +4,59 @@ import { logAudit } from '@/lib/audit';
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { status } = await req.json();
+    const { status, stage } = await req.json(); // stage: 'Head of Dept', 'Admin', 'Housekeeper', 'Director'
 
-    // Fetch emp_id first to notify
-    const [leaveRows]: any = await pool.query('SELECT emp_id FROM tbl_leaves WHERE leave_id = ?', [params.id]);
-    const emp_id = leaveRows[0]?.emp_id;
+    // Fetch leave record first
+    const [leaveRows]: any = await pool.query('SELECT * FROM tbl_leaves WHERE leave_id = ?', [params.id]);
+    const leave = leaveRows[0];
+    if (!leave) return NextResponse.json({ error: 'Leave not found' }, { status: 404 });
 
-    await pool.query('UPDATE tbl_leaves SET status = ? WHERE leave_id = ?', [status, params.id]);
+    const emp_id = leave.emp_id;
+    let updateFields = [];
+    let values = [];
+    let nextStage = leave.current_stage;
+    let finalStatus = 'Pending';
+
+    if (status === 'Rejected') {
+      finalStatus = 'Rejected';
+      updateFields.push('status = ?', 'current_stage = ?');
+      values.push('Rejected', 'Rejected');
+    } else if (status === 'Approved') {
+      if (stage === 'Head of Dept') {
+        updateFields.push('dept_head_status = ?', 'current_stage = ?');
+        values.push('Approved', 'Administration');
+      } else if (stage === 'Administration') {
+        updateFields.push('admin_status = ?', 'current_stage = ?');
+        values.push('Approved', 'Housekeeper');
+      } else if (stage === 'Housekeeper') {
+        updateFields.push('housekeeper_status = ?', 'current_stage = ?');
+        values.push('Approved', 'Director');
+      } else if (stage === 'Director') {
+        updateFields.push('director_status = ?', 'status = ?', 'current_stage = ?');
+        values.push('Approved', 'Approved', 'Completed');
+      }
+    }
+
+    if (updateFields.length > 0) {
+      values.push(params.id);
+      await pool.query(`UPDATE tbl_leaves SET ${updateFields.join(', ')} WHERE leave_id = ?`, values);
+    }
+
+    // Refresh final status for notification
+    const [updatedLeaveRows]: any = await pool.query('SELECT status, current_stage FROM tbl_leaves WHERE leave_id = ?', [params.id]);
+    const updatedStatus = updatedLeaveRows[0].status;
 
     if (emp_id) {
-       const title = status === 'Approved' ? 'ใบลาของคุณได้รับอนุมัติแล้ว' : 'ใบลาของคุณไม่ได้รับอนุมัติ';
-       const message = `คำขอลาที่รหัส ${params.id} ได้เปลี่ยนสถานะเป็น ${status === 'Approved' ? 'อนุมัติ' : 'ไม่อนุมัติ'}`;
+       let title = 'อัปเดตใบลาของคุณ';
+       let message = `ใบลาที่รหัส ${params.id} กำลังอยู่ในขั้นตอน ${updatedLeaveRows[0].current_stage}`;
+       
+       if (updatedStatus === 'Approved') {
+         title = 'ใบลาของคุณได้รับอนุมัติเรียบร้อยแล้ว';
+         message = `คำขอลาที่รหัส ${params.id} ได้รับอนุมัติครบทุกขั้นตอนแล้ว`;
+       } else if (updatedStatus === 'Rejected') {
+         title = 'ใบลาของคุณไม่ได้รับอนุมัติ';
+         message = `คำขอลาที่รหัส ${params.id} ถูกปฏิเสธ`;
+       }
        
        await pool.query(
          'INSERT INTO tbl_notifications (emp_id, title, message) VALUES (?, ?, ?)',
