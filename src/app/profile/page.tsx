@@ -16,7 +16,6 @@ import {
   ChevronRight, Camera, Edit3, Fingerprint, Globe
 } from 'lucide-react';
 
-// ... (Interface คงเดิม)
 interface ProfileData {
   profile: {
     emp_id: string;
@@ -50,8 +49,6 @@ export default function MyProfilePage() {
   const { user, isLoggedIn, login } = useAuth();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // 1. เพิ่ม 'certificates' เข้าไปใน type
   const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password' | 'certificates' | 'training'>('info');
   const router = useRouter();
 
@@ -66,11 +63,45 @@ export default function MyProfilePage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // ... (ฟังก์ชัน handleChangePassword, handleResetPasswordViaEmail, fetchProfile, handleSaveProfile คงเดิม)
+  const [newTraining, setNewTraining] = useState({ course_name: '', institution: '', start_date: '', end_date: '' });
+  const [trainingFile, setTrainingFile] = useState<File | null>(null);
+
+  const handleAddTraining = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTraining.course_name) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุชื่อหลักสูตร', 'warning');
+    if (!data?.profile?.emp_id) return;
+
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const fd = new FormData();
+    fd.append('emp_id', data.profile.emp_id);
+    fd.append('course_name', newTraining.course_name);
+    fd.append('institution', newTraining.institution);
+    fd.append('start_date', newTraining.start_date);
+    fd.append('end_date', newTraining.end_date);
+    if (trainingFile) fd.append('certificate_file', trainingFile);
+
+    try {
+      const res = await fetch('/api/profile/trainings', { method: 'POST', body: fd });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'เกิดข้อผิดพลาด');
+      Swal.fire('สำเร็จ', 'เพิ่มประวัติการอบรมแล้ว', 'success');
+      setNewTraining({ course_name: '', institution: '', start_date: '', end_date: '' });
+      setTrainingFile(null);
+      fetchProfile();
+    } catch (err: any) {
+      Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
+    }
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!oldPassword || !newPassword || !confirmPassword) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
-    if (newPassword !== confirmPassword) return Swal.fire('รหัสผ่านไม่ตรงกัน', 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน', 'error');
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
+    }
+    if (newPassword !== confirmPassword) {
+      return Swal.fire('รหัสผ่านไม่ตรงกัน', 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน', 'error');
+    }
+
     try {
       const res = await fetch('/api/profile/password', {
         method: 'POST',
@@ -88,6 +119,9 @@ export default function MyProfilePage() {
     if (!data?.profile?.emp_id) return;
     const result = await Swal.fire({ title: 'ยืนยันการรีเซ็ตรหัสผ่าน', text: `คุณต้องการรีเซ็ตรหัสผ่านใหม่ ใช่หรือไม่?`, icon: 'warning', showCancelButton: true });
     if (!result.isConfirmed) return;
+
+    Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
     try {
       const res = await fetch(`/api/employees/${data.profile.emp_id}/reset-password`, { method: 'POST' });
       const resData = await res.json();
@@ -100,7 +134,11 @@ export default function MyProfilePage() {
 
   const fetchProfile = async () => {
     const targetId = user?.emp_id || user?.username;
-    if (!targetId) { setLoading(false); return; }
+    if (!targetId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(`/api/profile?emp_id=${targetId}`);
       const result = await res.json();
@@ -128,12 +166,11 @@ export default function MyProfilePage() {
   if (loading) return <AppLayout><div style={{ textAlign: 'center', padding: '50px' }}>กำลังโหลดข้อมูล...</div></AppLayout>;
   if (!data) return <AppLayout><div style={{ textAlign: 'center', padding: '50px' }}>ไม่พบข้อมูลโปรไฟล์</div></AppLayout>;
 
-  const { profile, leaves, payroll } = data;
+  const { profile, leaves, payroll, trainings = [] } = data;
   const fullName = `${profile.prefix || ''} ${profile.first_name_th} ${profile.last_name_th}`;
 
   return (
     <AppLayout>
-      {/* (ใส่ style คงเดิม) */}
       <style dangerouslySetInnerHTML={{
         __html: `
         .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 32px; max-width: 1500px; margin: 0 auto; min-height: calc(100vh - 100px); }
@@ -195,6 +232,11 @@ export default function MyProfilePage() {
         .btn-primary { background: #2563eb; color: white; border: none; padding: 14px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
         .btn-primary:hover { background: #1d4ed8; transform: translateY(-2px); }
         
+        .leave-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+        .leave-stat { background: white; padding: 16px; border-radius: 16px; border: 1px solid #f1f5f9; text-align: center; }
+        .leave-stat-val { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .leave-stat-label { font-size: 12px; color: #64748b; font-weight: 600; }
+
         @media (max-width: 1024px) {
           .profile-container { grid-template-columns: 1fr; }
           .left-card { position: static; }
@@ -202,15 +244,14 @@ export default function MyProfilePage() {
       `}} />
 
       <div className="profile-container">
-        {/* Left Column (Avatar area) */}
+        {/* Left Column */}
         <div className="glass-card left-card" style={{ padding: '32px 24px' }}>
           <div className="profile-avatar-wrap">
             <Image 
-              src={profile.image ? `/uploads/${profile.image}` : '/default-avatar.png'} 
+              src={profile.image ? `/uploads/${profile.image}` : (profile.photo ? `/uploads/${profile.photo}` : 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png')} 
               alt="Avatar" 
               className="profile-avatar" 
-              width={160} 
-              height={160}
+              fill
               unoptimized
             />
             <button className="camera-btn" onClick={handleEditInfoClick} title="แก้ไขโปรไฟล์">
@@ -346,18 +387,25 @@ export default function MyProfilePage() {
                     <span className="data-label">วันที่เกษียณ</span>
                     <span className="data-val">{profile.retirement_date ? new Date(profile.retirement_date).toLocaleDateString('th-TH') : '-'}</span>
                   </div>
-                  <div className="data-item">
-                    <span className="data-label">โควตาลาพักร้อน</span>
-                    <span className="data-val">{profile.quota_vacation || 0} วัน</span>
+                </div>
+                
+                <div className="leave-stats">
+                  <div className="leave-stat">
+                    <div className="leave-stat-val" style={{ color: '#059669' }}>{profile.quota_vacation || 0}</div>
+                    <div className="leave-stat-label">พักร้อน</div>
                   </div>
-                  <div className="data-item">
-                    <span className="data-label">โควตาลาป่วย</span>
-                    <span className="data-val">{profile.quota_sick || 0} วัน</span>
+                  <div className="leave-stat">
+                    <div className="leave-stat-val" style={{ color: '#ef4444' }}>{profile.quota_sick || 0}</div>
+                    <div className="leave-stat-label">ลาป่วย</div>
+                  </div>
+                  <div className="leave-stat">
+                    <div className="leave-stat-val" style={{ color: '#f59e0b' }}>{profile.quota_personal || 0}</div>
+                    <div className="leave-stat-label">ลากิจ</div>
                   </div>
                 </div>
               </div>
 
-              <div className="info-section">
+              <div className="info-section" style={{ gridColumn: 'span 2' }}>
                 <div className="section-header">
                   <div className="section-icon"><MapPin size={20} /></div>
                   <h3 className="section-title">ข้อมูลที่อยู่</h3>
@@ -365,7 +413,7 @@ export default function MyProfilePage() {
                 <div className="data-list">
                   <div className="data-item">
                     <span className="data-label">ที่อยู่ปัจจุบัน</span>
-                    <div className="data-val">{fullProfile?.address || '-'}</div>
+                    <div className="data-val">{fullProfile?.address || '—'}</div>
                   </div>
                 </div>
               </div>
@@ -390,6 +438,7 @@ export default function MyProfilePage() {
                         <th>วันที่ลา</th>
                         <th>ประเภทการลา</th>
                         <th>จำนวนวัน</th>
+                        <th>เหตุผล</th>
                         <th>สถานะ</th>
                       </tr>
                     </thead>
@@ -397,8 +446,9 @@ export default function MyProfilePage() {
                       {leaves.map((l: any, idx: number) => (
                         <tr key={idx}>
                           <td>{new Date(l.start_date).toLocaleDateString('th-TH')} - {new Date(l.end_date).toLocaleDateString('th-TH')}</td>
-                          <td>{l.leave_type}</td>
+                          <td>{l.leave_type || l.leave_type_id}</td>
                           <td>{l.total_days} วัน</td>
+                          <td>{l.reason || '—'}</td>
                           <td>
                             <span className={`badge ${l.status === 'Approved' ? 'badge-success' : l.status === 'Pending' ? 'badge-warning' : 'badge-danger'}`}>
                               {l.status === 'Approved' ? 'อนุมัติแล้ว' : l.status === 'Pending' ? 'รออนุมัติ' : 'ไม่อนุมัติ'}
@@ -437,8 +487,10 @@ export default function MyProfilePage() {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 800, color: '#059669', fontSize: '16px' }}>฿{p.net_salary?.toLocaleString()}</div>
-                        <div className="badge badge-info" style={{ marginTop: '4px', fontSize: '10px' }}>โอนสำเร็จ</div>
+                        <div style={{ fontWeight: 800, color: '#059669', fontSize: '16px' }}>฿{Number(p.net_salary || 0).toLocaleString()}</div>
+                        <div className={`badge ${p.status === 'Paid' ? 'badge-info' : 'badge-warning'}`} style={{ marginTop: '4px', fontSize: '10px' }}>
+                          {p.status === 'Paid' ? 'โอนสำเร็จ' : 'รอดำเนินการ'}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -447,7 +499,6 @@ export default function MyProfilePage() {
             </div>
           )}
 
-          {/* ส่วนแสดง Licenses */}
           {activeTab === 'certificates' && (
             <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">
@@ -462,11 +513,18 @@ export default function MyProfilePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                   {fullProfile.licenses.map((lic: any, idx: number) => (
                     <div key={idx} style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{lic.license_name || lic.name || 'ใบอนุญาต'}</div>
-                      <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>ออกให้โดย: {lic.institution || lic.issuer || '-'}</div>
-                      {lic.expire_date && (
+                      <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{lic.license_name || lic.license_no || 'ใบอนุญาต'}</div>
+                      <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>ออกให้โดย: {lic.institution || '-'}</div>
+                      {(lic.issue_date || lic.expire_date) && (
                         <div style={{ fontSize: '12px', color: '#3b82f6', background: '#eff6ff', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', fontWeight: 600 }}>
-                          หมดอายุ: {new Date(lic.expire_date).toLocaleDateString('th-TH')}
+                          {[lic.issue_date?.split('T')[0], lic.expire_date?.split('T')[0]].filter(Boolean).join(' ถึง ')}
+                        </div>
+                      )}
+                      {lic.status && (
+                        <div style={{ marginTop: '8px' }}>
+                          <span className={`badge ${lic.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                            {lic.status}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -476,20 +534,51 @@ export default function MyProfilePage() {
             </div>
           )}
 
-          {/* ส่วนแสดง Trainings */}
           {activeTab === 'training' && (
             <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">
                 <FileText className="card-title-icon" size={24} /> ประวัติการฝึกอบรม
               </h3>
-              {!fullProfile?.trainings || fullProfile.trainings.length === 0 ? (
+              
+              <form onSubmit={handleAddTraining} style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#334155' }}>เพิ่มประวัติการอบรม</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">ชื่อหลักสูตร / โครงการ</label>
+                    <input type="text" value={newTraining.course_name} onChange={e => setNewTraining({ ...newTraining, course_name: e.target.value })} required className="form-input" placeholder="ระบุชื่อหลักสูตร..." />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">หน่วยงานที่จัดบรรยาย</label>
+                    <input type="text" value={newTraining.institution} onChange={e => setNewTraining({ ...newTraining, institution: e.target.value })} className="form-input" placeholder="ระบุหน่วยงาน..." />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">วันที่เริ่มต้น</label>
+                    <input type="date" value={newTraining.start_date} onChange={e => setNewTraining({ ...newTraining, start_date: e.target.value })} className="form-input" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">วันที่สิ้นสุด</label>
+                    <input type="date" value={newTraining.end_date} onChange={e => setNewTraining({ ...newTraining, end_date: e.target.value })} className="form-input" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">ไฟล์แนบเกียรติบัตร</label>
+                    <input type="file" accept="image/*,.pdf" onChange={e => setTrainingFile(e.target.files?.[0] || null)} className="form-input" style={{ padding: '8px' }} />
+                  </div>
+                </div>
+                <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start', padding: '10px 24px' }}>
+                  บันทึกประวัติ
+                </button>
+              </form>
+
+              {!trainings || trainings.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
                   <FileText size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
                   <p>ยังไม่มีประวัติการอบรม</p>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-                  {fullProfile.trainings.map((tr: any, idx: number) => (
+                  {trainings.map((tr: any, idx: number) => (
                     <div key={idx} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '20px', overflow: 'hidden', transition: 'all 0.3s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                       {tr.image_file && (
                         <div style={{ position: 'relative', width: '100%', height: '160px' }}>
@@ -501,7 +590,11 @@ export default function MyProfilePage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#64748b' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={12} /> {tr.location || '-'}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Briefcase size={12} /> {tr.institution || '-'}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={12} /> {new Date(tr.start_date).toLocaleDateString('th-TH')} - {new Date(tr.end_date).toLocaleDateString('th-TH')}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Calendar size={12} /> 
+                            {tr.start_date ? new Date(tr.start_date).toLocaleDateString('th-TH') : ''} 
+                            {tr.end_date && tr.end_date !== tr.start_date ? ` - ${new Date(tr.end_date).toLocaleDateString('th-TH')}` : ''}
+                          </div>
                         </div>
                         {tr.certificate_file && (
                           <a href={`/uploads/${tr.certificate_file}`} target="_blank" rel="noreferrer" style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#2563eb', fontWeight: 700, textDecoration: 'none', background: '#eff6ff', padding: '8px 12px', borderRadius: '10px' }}>
@@ -517,49 +610,45 @@ export default function MyProfilePage() {
           )}
 
           {activeTab === 'password' && (
-            <div className="glass-card" style={{ padding: '32px', maxWidth: '500px' }}>
+            <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">
-                <ShieldCheck className="card-title-icon" size={24} /> เปลี่ยนรหัสผ่านใหม่
+                <ShieldCheck className="card-title-icon" size={24} /> เปลี่ยนรหัสผ่านความปลอดภัย
               </h3>
-              <form onSubmit={handleChangePassword}>
-                <div className="form-group">
-                  <label className="form-label">รหัสผ่านเดิม</label>
-                  <input 
-                    type="password" 
-                    className="form-input" 
-                    placeholder="ระบุรหัสผ่านดั้งเดิม"
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                  />
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+                <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 20px 0', fontWeight: 600 }}>เปลี่ยนรหัสผ่านด้วยตนเอง</h4>
+                  <div className="form-group">
+                    <label className="form-label">รหัสผ่านเดิม</label>
+                    <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านเดิม..." />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">รหัสผ่านใหม่</label>
+                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-input" placeholder="อย่างน้อย 6 ตัวอักษร" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">ยืนยันรหัสผ่านใหม่</label>
+                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" />
+                  </div>
+                  <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                    <Fingerprint size={18} /> ยืนยันการเปลี่ยนรหัสผ่าน
+                  </button>
+                </form>
+
+                <div style={{ background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 12px 0', fontWeight: 600 }}>
+                    รีเซ็ตรหัสผ่านแบบอัตโนมัติ
+                  </h4>
+                  <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 24px 0', lineHeight: '1.6' }}>
+                    ระบบจะดำเนินการสุ่มรหัสผ่านใหม่เพื่อความปลอดภัย
+                    และจัดส่งการแจ้งเตือนไปยังอีเมลของคุณ
+                    (โปรดตรวจสอบให้แน่ใจว่าอีเมลในประวัติส่วนตัวมีความถูกต้อง)
+                  </p>
+                  <button type="button" onClick={handleResetPasswordViaEmail} className="btn-primary" style={{ width: '100%', justifyContent: 'center', background: '#d97706' }}>
+                    <Mail size={18} /> ส่งอีเมลรีเซ็ตรหัสผ่าน
+                  </button>
                 </div>
-                <div className="form-group" style={{ marginTop: '20px' }}>
-                  <label className="form-label">รหัสผ่านใหม่</label>
-                  <input 
-                    type="password" 
-                    className="form-input" 
-                    placeholder="อย่างน้อย 6 ตัวอักษร"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">ยืนยันรหัสผ่านใหม่</label>
-                  <input 
-                    type="password" 
-                    className="form-input" 
-                    placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                </div>
-                <button type="submit" className="btn-primary" style={{ marginTop: '12px', width: '100%', justifyContent: 'center' }}>
-                  <Fingerprint size={18} /> ยืนยันการเปลี่ยนรหัสผ่าน
-                </button>
-                <p style={{ marginTop: '16px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
-                  หากลืมรหัสผ่าน กรุณา{' '}
-                  <button type="button" onClick={handleResetPasswordViaEmail} style={{ border: 'none', background: 'none', color: '#2563eb', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>กดที่นี่เพื่อรีเซ็ต</button>
-                </p>
-              </form>
+              </div>
             </div>
           )}
         </div>

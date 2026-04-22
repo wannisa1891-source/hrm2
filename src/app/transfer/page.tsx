@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
 
 interface Department { dept_id: string; dept_name: string; }
 interface Position { pos_id: string; pos_name: string; }
-interface SearchResult { id: string; name: string; pos: string; pos_id?: string; dept: string; dept_id?: string; salary: number; level: string; pos_no: string; }
+interface SearchResult { id: string; name: string; pos: string; pos_id?: string; dept: string; dept_id?: string; salary: number; level: string; pos_no: string; dob?: string; id_card?: string; start_date?: string; }
 interface TransferRecord {
   transfer_id: string;
   order_no: string;
@@ -39,6 +39,12 @@ interface TransferRecord {
   transfer_file: string | null;
   order_file: string | null;
   status: string;
+  emp_dob?: string;
+  emp_id_card?: string;
+  emp_start_date?: string;
+  promotion_order?: string;
+  request_memo?: string;
+  request_file?: string;
 }
 
 const TRANSFER_TYPES = [
@@ -68,6 +74,7 @@ export default function TransferPage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [selected, setSelected] = useState<SearchResult | null>(null);
   const [orderFile, setOrderFile] = useState<File | null>(null);
+  const [requestFile, setRequestFile] = useState<File | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
@@ -99,6 +106,11 @@ export default function TransferPage() {
     oldPosNo: '', newPosNo: '',
     oldSalary: 0, newSalary: 0,
     remark: '',
+    promotionOrder: '',
+    requestMemo: '',
+    empDob: '',
+    empIdCard: '',
+    empStartDate: '',
   });
 
   const loadTransfers = async () => {
@@ -136,7 +148,10 @@ export default function TransferPage() {
       oldDept: emp.dept, 
       oldSalary: emp.salary,
       oldLevel: emp.level || '',
-      oldPosNo: emp.pos_no || ''
+      oldPosNo: emp.pos_no || '',
+      empDob: emp.dob || '',
+      empIdCard: emp.id_card || '',
+      empStartDate: emp.start_date || ''
     }));
     setSearchResults([]);
     setSearchQ(emp.name);
@@ -164,8 +179,13 @@ export default function TransferPage() {
       oldSalary: t.old_salary || 0,
       newSalary: t.new_salary || 0,
       remark: t.remark || '',
+      promotionOrder: t.promotion_order || '',
+      requestMemo: t.request_memo || '',
+      empDob: t.emp_dob || '',
+      empIdCard: t.emp_id_card || '',
+      empStartDate: t.emp_start_date || ''
     });
-    setSelected({ id: t.emp_id, name: t.emp_name, pos: t.old_position, dept: t.old_dept_name, salary: t.old_salary, level: t.old_level, pos_no: t.old_pos_no });
+    setSelected({ id: t.emp_id, name: t.emp_name, pos: t.old_position, dept: t.old_dept_name, salary: t.old_salary, level: t.old_level, pos_no: t.old_pos_no, dob: t.emp_dob, id_card: t.emp_id_card, start_date: t.emp_start_date });
     setSearchQ(t.emp_name);
     setShowForm(true);
   };
@@ -226,7 +246,10 @@ export default function TransferPage() {
       oldSalary: t.old_salary || 0,
       newSalary: t.new_salary || 0,
       remark: t.remark || '',
+      promotionOrder: t.promotion_order || '',
+      requestMemo: t.request_memo || '',
       order_file: t.transfer_file,
+      request_file: t.request_file,
       status: newStatus
     };
     
@@ -265,6 +288,7 @@ export default function TransferPage() {
     const fd = new FormData();
     fd.append('data', JSON.stringify(form));
     if (orderFile) fd.append('order_file', orderFile);
+    if (requestFile) fd.append('request_file', requestFile);
     
     const method = form.transfer_id ? 'PUT' : 'POST';
     const res = await fetch('/api/transfers', { method, body: fd });
@@ -280,7 +304,9 @@ export default function TransferPage() {
       });
       setShowForm(false);
       setSelected(null); setSearchQ('');
-      setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', oldPosName: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '' });
+      setForm({ transfer_id: '', orderNo: '', orderDate: '', effectDate: '', title: '', transferType: '03', empId: '', oldDeptId: '', oldDept: '', newDeptId: '', oldPos: '', oldPosName: '', newPos: '', oldLevel: '', newLevel: '', oldPosNo: '', newPosNo: '', oldSalary: 0, newSalary: 0, remark: '', promotionOrder: '', requestMemo: '', empDob: '', empIdCard: '', empStartDate: '' });
+      setOrderFile(null);
+      setRequestFile(null);
       loadTransfers();
     } else Swal.fire('เกิดข้อผิดพลาด', data.error || '', 'error');
   };
@@ -709,6 +735,38 @@ export default function TransferPage() {
                 </div>
               </div>
 
+              {selected && (
+                <div style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '12px', marginBottom: 20, border: '1px solid #e2e8f0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>ชื่อ-นามสกุล</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{selected.name}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>ตำแหน่งเดิม</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{selected.pos}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>เลขบัตรประชาชน</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{form.empIdCard || '—'}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>วันเดือนปีเกิด</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{form.empDob ? form.empDob.split('T')[0] : '—'}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>วันบรรจุ</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{form.empStartDate ? form.empStartDate.split('T')[0] : '—'}</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="tr-form-row">
+                <div className="tr-fg" style={{ gridColumn: '1 / -1' }}>
+                  <label className="tr-label">คำสั่งเลื่อนระดับ (ถ้ามี)</label>
+                  <input className="tr-input" placeholder="เช่น สพ.0045/2567" value={form.promotionOrder} onChange={e => setF('promotionOrder', e.target.value)} />
+                </div>
+              </div>
+
               {/* Comparison table */}
               <table className="tr-compare">
                 <thead>
@@ -766,24 +824,42 @@ export default function TransferPage() {
 
             {/* ─── SECTION 3: เอกสารแนบ ─── */}
             <div className="tr-section-header tr-section-3">
-            เอกสารแนบ
+            เอกสารแนบ และบันทึกข้อความ
             </div>
             <div className="tr-section-body">
-              <div className="tr-form-row single">
-                <div className="tr-fg">
+              <div className="tr-form-row">
+                <div className="tr-fg" style={{ gridColumn: '1 / -1' }}>
+                  <label className="tr-label">บันทึกข้อความใบขอย้าย / หนังสือส่งตัว</label>
+                  <textarea className="tr-input" style={{ minHeight: 80, resize: 'vertical' }} placeholder="รายละเอียดเพิ่มเติม หรือเนื้อหาบันทึกข้อความ..." value={form.requestMemo} onChange={e => setF('requestMemo', e.target.value)} />
+                </div>
+              </div>
+              <div className="tr-form-row">
+                <div className="tr-fg" style={{ gridColumn: '1 / -1' }}>
                   <label className="tr-label">หมายเหตุ</label>
                   <input className="tr-input" placeholder="บันทึกเพิ่มเติม (ถ้ามี)" value={form.remark} onChange={e => setF('remark', e.target.value)} />
                 </div>
               </div>
-              <div className="tr-fg">
-                <label className="tr-label">ไฟล์แนบ PDF</label>
-                <label className="tr-file-label">
-                  <span style={{ display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                  </span>
-                  <span>{orderFile ? orderFile.name : 'อัปโหลดไฟล์คำสั่งฉบับจริง (Scan) .pdf'}</span>
-                  <input type="file" accept=".pdf,.jpg,.png" style={{ display: 'none' }} onChange={e => setOrderFile(e.target.files?.[0] || null)} />
-                </label>
+              <div className="tr-form-row">
+                <div className="tr-fg">
+                  <label className="tr-label">ไฟล์แนบคำสั่งย้าย/โอน (PDF)</label>
+                  <label className="tr-file-label">
+                    <span style={{ display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                    </span>
+                    <span>{orderFile ? orderFile.name : 'อัปโหลดไฟล์คำสั่งย้าย'}</span>
+                    <input type="file" accept=".pdf,.jpg,.png" style={{ display: 'none' }} onChange={e => setOrderFile(e.target.files?.[0] || null)} />
+                  </label>
+                </div>
+                <div className="tr-fg">
+                  <label className="tr-label">ไฟล์แนบใบขอย้าย/หนังสือส่งตัว</label>
+                  <label className="tr-file-label">
+                    <span style={{ display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                    </span>
+                    <span>{requestFile ? requestFile.name : 'แนบไฟล์ใบขอย้าย / ส่งตัว'}</span>
+                    <input type="file" accept=".pdf,.jpg,.png,.doc,.docx" style={{ display: 'none' }} onChange={e => setRequestFile(e.target.files?.[0] || null)} />
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -819,14 +895,25 @@ export default function TransferPage() {
                     <span className="detail-label">เรื่อง</span>
                     <span className="detail-value">{viewingTransfer.subject}</span>
                   </div>
-                  <div className="detail-item">
-                    <span className="detail-label">ชื่อผู้ถูกคำสั่ง</span>
-                    <span className="detail-value" style={{ color: '#2563eb' }}>{viewingTransfer.emp_name}</span>
+                  <div className="detail-item" style={{ gridColumn: 'span 2' }}>
+                    <span className="detail-label">ชื่อผู้ถูกคำสั่ง (ข้าราชการ/พนักงาน)</span>
+                    <span className="detail-value" style={{ color: '#2563eb' }}>
+                      {viewingTransfer.emp_name}
+                      <span style={{ fontSize: 13, color: '#64748b', marginLeft: 12, fontWeight: 'normal' }}>
+                        (เลขบัตรประชาชน: {viewingTransfer.emp_id_card || '—'} | วันเกิด: {viewingTransfer.emp_dob?.split('T')[0] || '—'} | วันบรรจุ: {viewingTransfer.emp_start_date?.split('T')[0] || '—'})
+                      </span>
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">ประเภทคำสั่ง</span>
                     <span className="detail-value">{viewingTransfer.transfer_type}</span>
                   </div>
+                  {viewingTransfer.promotion_order && (
+                    <div className="detail-item">
+                      <span className="detail-label">คำสั่งเลื่อนระดับ</span>
+                      <span className="detail-value">{viewingTransfer.promotion_order}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="detail-compare">
@@ -862,6 +949,13 @@ export default function TransferPage() {
                   </div>
                 </div>
 
+                {viewingTransfer.request_memo && (
+                  <div style={{ marginTop: 24, padding: '16px', background: '#f8fafc', borderRadius: '12px' }}>
+                    <span className="detail-label">บันทึกข้อความใบขอย้าย / หนังสือส่งตัว</span>
+                    <p style={{ margin: '8px 0 0', fontSize: 15, color: '#334155', whiteSpace: 'pre-wrap' }}>{viewingTransfer.request_memo}</p>
+                  </div>
+                )}
+
                 {viewingTransfer.remark && (
                   <div style={{ marginTop: 24, padding: '16px', background: '#f8fafc', borderRadius: '12px' }}>
                     <span className="detail-label">หมายเหตุ</span>
@@ -869,17 +963,27 @@ export default function TransferPage() {
                   </div>
                 )}
 
-                {viewingTransfer.order_file && (
-                  <div style={{ marginTop: 24 }}>
-                    <a href={`/uploads/${viewingTransfer.order_file}`} target="_blank" rel="noreferrer" 
+                <div style={{ display: 'flex', gap: 16, marginTop: 24, flexWrap: 'wrap' }}>
+                  {viewingTransfer.transfer_file && (
+                    <a href={`/uploads/${viewingTransfer.transfer_file}`} target="_blank" rel="noreferrer" 
                       style={{ background: '#eff6ff', padding: '12px 20px', borderRadius: '12px', color: '#2563eb', fontSize: 15, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', transition: 'background 0.2s' }}
                       onMouseOver={e => e.currentTarget.style.background = '#dbeafe'}
                       onMouseOut={e => e.currentTarget.style.background = '#eff6ff'}>
                       <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       เปิดไฟล์เอกสารแนบคำสั่ง (PDF)
                     </a>
-                  </div>
-                )}
+                  )}
+
+                  {viewingTransfer.request_file && (
+                    <a href={`/uploads/${viewingTransfer.request_file}`} target="_blank" rel="noreferrer" 
+                      style={{ background: '#f0fdf4', padding: '12px 20px', borderRadius: '12px', color: '#16a34a', fontSize: 15, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', transition: 'background 0.2s' }}
+                      onMouseOver={e => e.currentTarget.style.background = '#dcfce7'}
+                      onMouseOut={e => e.currentTarget.style.background = '#f0fdf4'}>
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      เปิดไฟล์ใบขอย้าย/ส่งตัว
+                    </a>
+                  )}
+                </div>
               </div>
               <div className="tr-modal-footer">
                 <button className="btn-tr-cancel" style={{ padding: '12px 32px' }} onClick={() => setViewingTransfer(null)}>ปิดหน้าต่าง</button>

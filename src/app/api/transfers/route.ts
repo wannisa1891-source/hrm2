@@ -39,6 +39,9 @@ const BASE_QUERY = `
   SELECT
     t.*,
     CONCAT(COALESCE(e.prefix,''), e.first_name_th, ' ', e.last_name_th) AS emp_name,
+    e.birth_date AS emp_dob,
+    e.citizen_id AS emp_id_card,
+    e.start_date AS emp_start_date,
     od.dept_name AS old_dept_name,
     nd.dept_name AS new_dept_name,
     COALESCE(op.pos_name, t.old_position) AS old_pos_name,
@@ -130,6 +133,7 @@ export async function POST(req: NextRequest) {
 
   const connection = await pool.getConnection();
   let savedFileName: string | null = null;
+  let savedRequestFile: string | null = null;
 
   try {
     const formData = await req.formData();
@@ -184,6 +188,10 @@ export async function POST(req: NextRequest) {
     if (orderFile && orderFile.size > 0) {
       savedFileName = await saveFile(orderFile);
     }
+    const requestFile = formData.get('request_file') as File | null;
+    if (requestFile && requestFile.size > 0) {
+      savedRequestFile = await saveFile(requestFile);
+    }
 
     const transfer_id = 'TRF' + Date.now().toString().slice(-8);
 
@@ -202,8 +210,9 @@ export async function POST(req: NextRequest) {
       `INSERT INTO tbl_transfers
         (transfer_id, order_no, order_date, subject, transfer_type, effective_date, emp_id,
          old_dept_id, new_dept_id, old_position, new_position, old_level, new_level,
-         old_position_no, new_position_no, old_salary, new_salary, transfer_file, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         old_position_no, new_position_no, old_salary, new_salary, transfer_file, status,
+         remark, promotion_order, request_memo, request_file)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         transfer_id,
         data.orderNo,
@@ -224,6 +233,10 @@ export async function POST(req: NextRequest) {
         data.newSalary  || 0,
         savedFileName   || '',
         status,
+        data.remark || null,
+        data.promotionOrder || null,
+        data.requestMemo || null,
+        savedRequestFile || null
       ]
     );
 
@@ -248,6 +261,7 @@ export async function POST(req: NextRequest) {
     await connection.rollback();
     // Cleanup uploaded file on DB failure
     deleteFile(savedFileName);
+    deleteFile(savedRequestFile);
     const message = err instanceof Error ? err.message : 'DB Error';
     return NextResponse.json({ success: false, message }, { status: 500 });
   } finally {
@@ -289,6 +303,12 @@ export async function PUT(req: NextRequest) {
       }
       fileName = await saveFile(orderFile);
     }
+    
+    let reqFileName = data.request_file || null;
+    const requestFile = formData.get('request_file') as File | null;
+    if (requestFile && requestFile.size > 0) {
+      reqFileName = await saveFile(requestFile);
+    }
 
     await connection.beginTransaction();
 
@@ -298,7 +318,8 @@ export async function PUT(req: NextRequest) {
         order_no = ?, order_date = ?, subject = ?, transfer_type = ?, effective_date = ?,
         old_dept_id = ?, new_dept_id = ?, old_position = ?, new_position = ?,
         old_level = ?, new_level = ?, old_position_no = ?, new_position_no = ?,
-        old_salary = ?, new_salary = ?, transfer_file = ?, status = ?
+        old_salary = ?, new_salary = ?, transfer_file = ?, status = ?,
+        remark = ?, promotion_order = ?, request_memo = ?, request_file = ?
        WHERE transfer_id = ?`,
       [
         data.orderNo, data.orderDate || null, data.title, data.transferType,
@@ -307,7 +328,9 @@ export async function PUT(req: NextRequest) {
         data.oldLevel || null, data.newLevel || null,
         data.oldPosNo || null, data.newPosNo || null,
         data.oldSalary || 0, data.newSalary || 0,
-        fileName, status, transfer_id,
+        fileName, status,
+        data.remark || null, data.promotionOrder || null, data.requestMemo || null, reqFileName || null,
+        transfer_id,
       ]
     );
 
@@ -358,7 +381,7 @@ export async function DELETE(req: NextRequest) {
 
     // Get file name before deleting
     const [rows] = await pool.query(
-      'SELECT transfer_file FROM tbl_transfers WHERE transfer_id = ?',
+      'SELECT transfer_file, request_file FROM tbl_transfers WHERE transfer_id = ?',
       [id]
     ) as any[];
     const record = (rows as any[])[0];
@@ -367,6 +390,7 @@ export async function DELETE(req: NextRequest) {
 
     // Clean up associated PDF file
     if (record?.transfer_file) deleteFile(record.transfer_file);
+    if (record?.request_file) deleteFile(record.request_file);
 
     await logAudit(req.headers.get('x-user-id'), `ลบคำสั่งย้าย/แต่งตั้ง ID: ${id}`);
 

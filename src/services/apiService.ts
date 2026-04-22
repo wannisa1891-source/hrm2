@@ -136,14 +136,14 @@ export interface ScheduleBody {
 export interface Department {
   dept_id: string
   dept_name: string
+  division?: string
+  sub_dept?: string
   description?: string
   head_emp_id?: string
   phone?: string
   org_chart_url?: string
   sop_url?: string
   rules_url?: string
-  division?: string;
-  sub_dept?: string;
 }
 
 export interface Position {

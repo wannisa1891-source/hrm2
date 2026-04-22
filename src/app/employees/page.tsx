@@ -5,7 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
-import type { Employee, ProfessionalLicense } from '@/services/apiService';
+import type { Employee } from '@/services/apiService';
 import { useSearchParams, useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import { QRCodeSVG } from 'qrcode.react';
@@ -37,7 +37,7 @@ function EmployeesContent() {
     }
   }, [user, isAdmin, router]);
 
-  const { employees, loading, error, loadEmployees, addEmployee, editEmployee, removeEmployee } = useEmployees();
+  const { employees, loading, loadEmployees, addEmployee, editEmployee, removeEmployee } = useEmployees();
   const { departments, loadDepartments } = useDepartments();
   const { positions, loadPositions } = usePositions();
 
@@ -790,67 +790,83 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
           setIsOpen(!isOpen);
         }}
         style={{
-          padding: '6px 14px', borderRadius: '14px', fontSize: '13px', fontWeight: 800,
+          padding: '4px 12px',
+          borderRadius: '10px',
+          fontSize: '12px',
+          fontWeight: 700,
           background: currentStatus.bg,
           color: currentStatus.color,
-          display: 'inline-flex', alignItems: 'center', gap: '8px',
           cursor: isAdmin ? 'pointer' : 'default',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          border: '1px solid transparent',
-          userSelect: 'none',
-          whiteSpace: 'nowrap'
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          transition: 'all 0.2s',
+          border: '1px solid transparent'
         }}
-        onMouseOver={e => { if (isAdmin) { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.borderColor = currentStatus.color + '44'; } }}
-        onMouseOut={e => { if (isAdmin) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'transparent'; } }}
       >
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: currentStatus.color }} />
+        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: currentStatus.color }} />
         {currentStatus.label}
+        {isAdmin && (
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
       </div>
 
-      {isOpen && (
-        <>
-          <div 
-            onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
-            style={{ position: 'fixed', inset: 0, zIndex: 100 }} 
-          />
-          <div style={{
-            position: 'absolute', 
-            [openUp ? 'bottom' : 'top']: '100%', 
-            left: '50%', 
-            transform: `translateX(-50%) ${openUp ? 'translateY(-12px)' : 'translateY(12px)'}`,
-            background: 'rgba(255, 255, 255, 0.98)', backdropFilter: 'blur(20px)',
-            borderRadius: '20px', border: '1px solid rgba(241, 245, 249, 1)',
-            boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12)', 
-            padding: '10px', zIndex: 101, width: '180px',
-          }}>
-            <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>เลือกสถานะใหม่</div>
-            {statusOptions.map(opt => (
-              <div 
-                key={opt.value}
-                onClick={(e) => { e.stopPropagation(); handleUpdate(opt.value); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px',
-                  cursor: 'pointer', transition: 'all 0.15s',
-                  background: emp.status === opt.value ? '#f1f5f9' : 'transparent',
-                  color: emp.status === opt.value ? '#0f172a' : '#64748b'
-                }}
-                onMouseOver={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0f172a'; }}
-                onMouseOut={e => { if (emp.status !== opt.value) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } else { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#0f172a'; } }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: opt.color }} />
-                <span style={{ fontSize: '14px', fontWeight: emp.status === opt.value ? 700 : 500 }}>{opt.label}</span>
-              </div>
-            ))}
-          </div>
-        </>
+      {isOpen && isAdmin && (
+        <div 
+          style={{
+            position: 'absolute',
+            [openUp ? 'bottom' : 'top']: 'calc(100% + 8px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+            zIndex: 10,
+            padding: '6px',
+            minWidth: '160px',
+            border: '1px solid #f1f5f9'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {statusOptions.map(opt => (
+            <div
+              key={opt.value}
+              onClick={() => handleUpdate(opt.value)}
+              style={{
+                padding: '10px 12px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: opt.value === emp.status ? opt.color : '#475569',
+                background: opt.value === emp.status ? opt.bg : 'transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                if (opt.value !== emp.status) e.currentTarget.style.background = '#f8fafc';
+              }}
+              onMouseLeave={(e) => {
+                if (opt.value !== emp.status) e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: opt.color }} />
+              {opt.label}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
 }
 
-export default function EmployeesSplitPage() {
+export default function EmployeesPage() {
   return (
-    <Suspense fallback={<AppLayout><div style={{ padding: 20 }}>กำลังโหลด...</div></AppLayout>}>
+    <Suspense fallback={<AppLayout><div style={{ textAlign: 'center', padding: '50px' }}>กำลังโหลด...</div></AppLayout>}>
       <EmployeesContent />
     </Suspense>
   );
