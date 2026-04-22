@@ -38,7 +38,7 @@ const menuItems: MenuItem[] = [
     children: [
       { id: 'employees', label: 'รายชื่อพนักงาน', href: '/employees' },
       { id: 'org-structure', label: 'จัดข้อมูลแผนก', href: '/org-structure' },
-      { id: 'transfer', label: 'การโยกย้าย', href: '/transfer' },
+      { id: 'transfer', label: 'การโยกย้าย', href: '/transfers' },
       { id: 'license', label: 'ใบประกอบวิชาชีพ', href: '/license' },
     ],
   },

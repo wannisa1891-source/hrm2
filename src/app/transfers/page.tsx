@@ -6,6 +6,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+interface TransferRecord {
   transfer_id: string;
   order_no: string;
   order_date: string;
@@ -28,6 +29,7 @@ import { useAuth } from '@/contexts/AuthContext';
   hire_date?: string;
   promotion_order?: string;
   transfer_command?: string;
+}
 
 interface Pagination {
   page: number;

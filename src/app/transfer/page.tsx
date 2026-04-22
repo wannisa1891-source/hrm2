@@ -58,6 +58,12 @@ const TRANSFER_TYPES = [
 export default function TransferPage() {
   const { user } = useAuth();
   const router = useRouter();
+
+  // Redirect to plural route
+  useEffect(() => {
+    router.replace('/transfers');
+  }, [router]);
+
   const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
 
   useEffect(() => {
