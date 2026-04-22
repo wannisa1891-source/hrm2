@@ -113,7 +113,7 @@ export default function SchedulePage() {
     }).sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [form.subject, selectedDate, schedules, editingId, yesterdayStr, todayStr, tomorrowStr]);
 
-  // โหลดเวรของเดือนที่กำลังดูอยู่
+  // โหลดการประชุมของเดือนที่กำลังดูอยู่
   useEffect(() => {
     loadSchedules(toMonthKey(currentDate))
   }, [currentDate, loadSchedules])
@@ -153,26 +153,26 @@ export default function SchedulePage() {
 
   async function confirmDelete(id: string) {
     const result = await Swal.fire({
-      title: 'ยืนยันการลบเวร',
-      text: 'คุณต้องการลบเวรนี้ใช่ไหม?',
+      title: 'ยืนยันการลบการประชุม',
+      text: 'คุณต้องการลบการประชุมนี้ใช่ไหม?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
-      confirmButtonText: 'ลบเวร',
+      confirmButtonText: 'ลบการประชุม',
       cancelButtonText: 'ยกเลิก'
     });
     if (result.isConfirmed) {
       try {
         await removeSchedule(id, toMonthKey(currentDate));
         closeModal();
-        Swal.fire({ title: 'ลบเวรสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+        Swal.fire({ title: 'ลบการประชุมสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
       } catch (err: any) {
-        Swal.fire('ลบเวรไม่สำเร็จ', err.message || 'Error deleting schedule', 'error');
+        Swal.fire('ลบการประชุมไม่สำเร็จ', err.message || 'Error deleting schedule', 'error');
       }
     }
   }
 
-  // บันทึกเวร (เพิ่ม / แก้ไข) ผ่าน API
+  // บันทึกการประชุม (เพิ่ม / แก้ไข) ผ่าน API
   async function handleSave(keepOpen: boolean = false) {
     if (!selectedDate) return
     if (!form.subject.trim() || !form.room || !form.organizer) {
@@ -336,9 +336,9 @@ export default function SchedulePage() {
           <div>
             <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <svg width="28" height="28" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-              ตารางเวร
+              ตารางการประชุม
             </h1>
-            <p className="page-subtitle">จัดการตารางเวรและการทำงานของบุคลากรทางการแพทย์แบบครบวงจร</p>
+            <p className="page-subtitle">จัดการตารางการประชุมและการจองห้องประชุมแบบครบวงจร</p>
           </div>
         </div>
 
@@ -355,7 +355,7 @@ export default function SchedulePage() {
             </div>
             <div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{totalSchedules}</div>
-              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>เวรทั้งหมด</div>
+              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>การประชุมทั้งหมด</div>
             </div>
           </div>
           <div className="glass-card hover-glow"
@@ -366,7 +366,7 @@ export default function SchedulePage() {
             </div>
             <div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{todaySchedules}</div>
-              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>เวรวันนี้</div>
+              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>การประชุมวันนี้</div>
             </div>
           </div>
           <div className="glass-card hover-glow"
@@ -377,7 +377,7 @@ export default function SchedulePage() {
             </div>
             <div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{monthSchedules}</div>
-              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>เวรเดือนนี้</div>
+              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>การประชุมเดือนนี้</div>
             </div>
           </div>
         </div>
@@ -407,7 +407,7 @@ export default function SchedulePage() {
           </div>
 
           {/* Loading indicator */}
-          {loading && <div className="sp-loading">กำลังโหลดตารางเวร...</div>}
+          {loading && <div className="sp-loading">กำลังโหลดตารางการประชุม...</div>}
 
           {/* Views */}
           {!loading && currentView === 'list' && (
@@ -418,7 +418,7 @@ export default function SchedulePage() {
                 if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
                 } else {
-                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขเวรของผู้อื่น', 'error')
+                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขการประชุมของผู้อื่น', 'error')
                 }
               }} />
           )}
@@ -430,7 +430,7 @@ export default function SchedulePage() {
                 if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
                 } else {
-                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขเวรของผู้อื่น', 'error')
+                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขการประชุมของผู้อื่น', 'error')
                 }
               }} />
           )}
@@ -442,7 +442,7 @@ export default function SchedulePage() {
                 if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
                   openEditModal(sch)
                 } else {
-                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขเวรของผู้อื่น', 'error')
+                  Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขการประชุมของผู้อื่น', 'error')
                 }
               }} />
           )}
@@ -468,13 +468,13 @@ export default function SchedulePage() {
           <div className="glass-card" style={{ padding: '32px', border: 'none' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1e2433', margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <svg width="24" height="24" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-              สถานะเวรแต่ละแผนก
+              สถานะการจองแต่ละแผนก
             </h3>
             <div className="sp-dept-grid">
               {Object.entries(departmentStatus).map(([dept, count]) => (
                 <div key={dept} className="sp-dept-item">
                   <span className="sp-dept-name">{dept}</span>
-                  <span className="sp-dept-badge">{count} เวร</span>
+                  <span className="sp-dept-badge">{count} ครั้ง</span>
                 </div>
               ))}
             </div>
@@ -492,7 +492,7 @@ export default function SchedulePage() {
                   ) : (
                     <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                   )}
-                  {isEditing ? 'แก้ไขเวร' : 'เพิ่มเวร'}
+                  {isEditing ? 'แก้ไขการประชุม' : 'เพิ่มการประชุม'}
                 </h3>
                 <button className="sp-modal-x" onClick={closeModal} aria-label="Close">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -506,7 +506,7 @@ export default function SchedulePage() {
               {/* Existing schedules for day */}
               {!isEditing && daySchedules.length > 0 && (
                 <div className="sp-modal-existing">
-                  <p className="sp-existing-title">เวรที่มีอยู่ในวันนี้:</p>
+                  <p className="sp-existing-title">การประชุมที่มีอยู่ในวันนี้:</p>
                   {daySchedules.map((sch) => (
                     <div key={sch.id} className="sp-existing-item">
                       <div className="sp-existing-info">
@@ -547,98 +547,109 @@ export default function SchedulePage() {
               )}
 
               {/* Form */}
-              <div>
-                <div className="sp-form-group">
-                  <label>ชื่อบุคลากร <span className="sp-req">*</span></label>
-                  {employees.length > 0 && isAdmin ? (
-                    <>
-                      <input
-                        className="sp-field"
-                        list="emp-list"
-                        value={form.subject}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setForm((f: ScheduleForm) => {
-                            const newForm = { ...f, subject: val };
-
-                            // Lookup employee and their department
-                            const empId = val.split(' - ')[0].trim();
-                            const emp = employees.find(e => e.emp_id === empId);
-                            if (emp && emp.dept_id && deptData) {
-                              const d = (deptData as any[])?.find(d => d.dept_id === emp.dept_id);
-                              if (d && d.division) newForm.organizer = d.division;
-                            }
-                            return newForm;
-                          });
-                        }}
-                        placeholder="พิมพ์ รหัส หรือ ชื่อ-สกุล เพื่อค้นหาแบบรวดเร็ว..."
-                        autoComplete="off"
-                      />
-                      <datalist id="emp-list">
-                        {employees.map(e => (
-                          <option key={e.emp_id} value={`${e.emp_id} - ${e.first_name_th} ${e.last_name_th}`} />
-                        ))}
-                      </datalist>
-                    </>
-                  ) : (
-                    <input className="sp-field" value={form.subject}
-                      disabled={!isAdmin}
-                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, subject: e.target.value }))}
-                      placeholder="ระบุชื่อรหัสพนักงาน/ผู้จอง" />
-                  )}
-
-                  {/* Employee Context Preview */}
-                  {empContextSchedules.length > 0 && (
-                    <div style={{ marginTop: '10px', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1', fontSize: '13px' }}>
-                      <div style={{ fontWeight: 600, color: '#334155', marginBottom: '8px', display: 'flex', alignItems: 'center', gap:'6px' }}>
-                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                         ตารางเวรใกล้เคียงของพนักงานนี้
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {empContextSchedules.map(s => {
-                          const isYesterday = s.date.toDateString() === yesterdayStr;
-                          const isToday = s.date.toDateString() === todayStr;
-                          const label = isYesterday ? 'เมื่อวาน' : isToday ? 'วันนี้' : 'พรุ่งนี้';
-                          return (
-                            <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '6px 10px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                              <span style={{ fontWeight: 600, color: isToday ? '#2563eb' : '#64748b' }}>{label} ({s.date.toLocaleDateString('th-TH', {day:'numeric', month:'short'})})</span>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: getShiftColor(s.room) }}></span>
-                                <b>{s.room}</b>
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
+              {/* Form */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                
+                {/* Row 1: Meeting Subject */}
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                  <label>หัวข้อการประชุม <span className="sp-req">*</span></label>
+                  <input className="sp-field" value={form.subject}
+                    disabled={!isAdmin}
+                    onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, subject: e.target.value }))}
+                    placeholder="เช่น ประชุมสรุปผลการดำเนินงานประจำปี" />
                 </div>
-                <div className="sp-form-group">
-                  <label>ประเภทเวร <span className="sp-req">*</span></label>
-                  <div className="sp-shift-picker">
-                    {roomTypes.map((st) => (
-                      <button key={st.value} className="sp-shift-opt"
+
+                {/* Row 2: Booker Name & Contact Phone */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>ชื่อผู้จัด/ผู้ประสานงาน <span className="sp-req">*</span></label>
+                    <input className="sp-field" value={form.bookerName}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, bookerName: e.target.value }))}
+                      placeholder="ระบุชื่อผู้ติดต่อ" />
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เบอร์โทรศัพท์ติดต่อ</label>
+                    <input className="sp-field" value={form.contactPhone}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, contactPhone: e.target.value }))}
+                      placeholder="0xx-xxxxxxx" />
+                  </div>
+                </div>
+
+                {/* Row 3: Department & Unit */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>หน่วยงานผู้จัด <span className="sp-req">*</span></label>
+                    <select className="sp-field" value={form.organizer} disabled={!isAdmin}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, organizer: e.target.value }))}>
+                      <option value="">เลือกหน่วยงาน/แผนก</option>
+                      {departments.map((d) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>แผนกที่รับผิดชอบ <span className="sp-req">*</span></label>
+                    <select className="sp-field" value={form.unit}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, unit: e.target.value }))}>
+                      <option value="">เลือกกลุ่มงาน/แผนกย่อย</option>
+                      {units.map((u) => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Row 4: Day & Time Selection */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>วันที่ประชุม</label>
+                    <div style={{ padding: '8px 12px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', fontWeight: 600 }}>
+                      {selectedDate?.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เวลาเริ่ม <span className="sp-req">*</span></label>
+                    <input type="time" className="sp-field" value={form.startTime}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, startTime: e.target.value }))} />
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เวลาสิ้นสุด <span className="sp-req">*</span></label>
+                    <input type="time" className="sp-field" value={form.endTime}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, endTime: e.target.value }))} />
+                  </div>
+                </div>
+
+                {/* Row 5: Room Selection */}
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                  <label>สถานที่/ห้องประชุม <span className="sp-req">*</span></label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
+                    {roomTypes.map((st: any) => (
+                      <div key={st.value}
+                        onClick={() => setForm((f: ScheduleForm) => ({ ...f, room: st.value }))}
                         style={{
-                          borderColor: form.room === st.value ? st.color : '',
-                          background: form.room === st.value ? st.color + '18' : '',
-                          color: form.room === st.value ? '#1e293b' : ''
-                        }}
-                        onClick={() => setForm((f: ScheduleForm) => ({ ...f, room: st.value }))}>
-                        {st.label}
-                      </button>
+                          border: form.room === st.value ? `2px solid ${st.color}` : '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          background: form.room === st.value ? st.color + '10' : '#fff',
+                          transition: 'all 0.2s',
+                          boxShadow: form.room === st.value ? `0 0 0 3px ${st.color}20` : 'none'
+                        }}>
+                        {st.image ? (
+                          <div style={{ height: '60px', width: '100%', background: '#f1f5f9', position: 'relative' }}>
+                            <img src={st.image} alt={st.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                        ) : (
+                          <div style={{ height: '60px', width: '100%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e2e8f0' }}>
+                            <svg width="24" height="24" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                          </div>
+                        )}
+                        <div style={{ padding: '6px', textAlign: 'center', fontSize: '12px', fontWeight: form.room === st.value ? 700 : 500, color: form.room === st.value ? st.color : '#475569' }}>
+                          {st.label}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
-                <div className="sp-form-group">
-                  <label>แผนก <span className="sp-req">*</span></label>
-                  <select className="sp-field" value={form.organizer} disabled={!isAdmin}
-                    onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, organizer: e.target.value }))}>
-                    <option value="">เลือกแผนก</option>
-                    {departments.map((d) => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div className="sp-form-group">
+
+                {/* Row 6: Remark */}
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
                   <label>หมายเหตุ</label>
                   <input className="sp-field" value={form.note}
                     onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, note: e.target.value }))}
@@ -657,7 +668,7 @@ export default function SchedulePage() {
                 </button>
                 {isEditing && editingId && (
                   <button className="sp-btn-delete" onClick={() => confirmDelete(editingId)}>
-                    ลบเวร
+                    ลบการประชุม
                   </button>
                 )}
                 <button className="sp-btn-cancel" onClick={closeModal}>ยกเลิก</button>

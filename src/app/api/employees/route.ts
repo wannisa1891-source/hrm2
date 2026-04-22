@@ -97,9 +97,9 @@ export async function POST(req: NextRequest) {
       const sql = `INSERT INTO tbl_employees 
         (emp_id, prefix, first_name_th, last_name_th, first_name_en, last_name_en, nickname,
          birth_date, gender, address, citizen_id, phone, email, password, role, 
-         emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, base_salary, status, image, cneu_cme_points,
+         emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, status, image, cneu_cme_points,
          quota_personal, quota_vacation, quota_sick) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)`;
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)`;
 
       const hashedPassword = d.password ? crypto.createHash('sha256').update(d.password).digest('hex') : '';
 
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
         d.emp_type || 'พนักงานประจำ', d.dept_id || '', d.pos_id || '', 
         d.start_date || new Date().toISOString().split('T')[0],
         d.admission_date || null, d.retirement_date || null,
-        d.base_salary || 0, imageName,
+        imageName,
         d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0,
         d.quota_personal ? parseInt(d.quota_personal) : 0,
         d.quota_vacation ? parseInt(d.quota_vacation) : 0,
@@ -124,23 +124,42 @@ export async function POST(req: NextRequest) {
       // Insert multiple licenses
       if (licenses.length > 0) {
         for (let i = 0; i < licenses.length; i++) {
-          let licFileName: string | null = null;
-          const licFile = formData.get(`license_file_${i}`) as File | null;
-          if (licFile && licFile.size > 0) {
-            const ext = path.extname(licFile.name);
-            licFileName = `lic_${d.emp_id}_${i}_${Date.now()}${ext}`;
-            const buffer = Buffer.from(await licFile.arrayBuffer());
-            fs.writeFileSync(path.join(uploadDir, licFileName), buffer);
+          const fileCountStr = formData.get(`license_file_count_${i}`);
+          const fileCount = fileCountStr ? parseInt(fileCountStr as string) : 0;
+          let fileNames: string[] = [];
+
+          if (fileCount > 0) {
+            for (let j = 0; j < fileCount; j++) {
+              const licFile = formData.get(`license_file_${i}_${j}`) as File | null;
+              if (licFile && licFile.size > 0) {
+                const ext = path.extname(licFile.name);
+                const licFileName = `lic_${d.emp_id}_${i}_${j}_${Date.now()}${ext}`;
+                const buffer = Buffer.from(await licFile.arrayBuffer());
+                fs.writeFileSync(path.join(uploadDir, licFileName), buffer);
+                fileNames.push(licFileName);
+              }
+            }
+          } else {
+            // Backward compatibility
+            const licFile = formData.get(`license_file_${i}`) as File | null;
+            if (licFile && licFile.size > 0) {
+              const ext = path.extname(licFile.name);
+              const licFileName = `lic_${d.emp_id}_${i}_${Date.now()}${ext}`;
+              const buffer = Buffer.from(await licFile.arrayBuffer());
+              fs.writeFileSync(path.join(uploadDir, licFileName), buffer);
+              fileNames.push(licFileName);
+            }
           }
 
           const lic = licenses[i];
           const licSql = `INSERT INTO tbl_employee_licenses 
             (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, file_path)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+          const finalFilePath = fileNames.length > 0 ? JSON.stringify(fileNames) : null;
           const licValues = [
             d.emp_id, lic.license_name || null, lic.license_type || null, lic.license_no || null,
             lic.institution || null, lic.issue_date || null, lic.expire_date || null,
-            lic.status || 'Active', licFileName
+            lic.status || 'Active', finalFilePath
           ];
           await connection.query(licSql, licValues);
         }

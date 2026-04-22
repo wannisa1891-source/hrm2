@@ -86,7 +86,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         `prefix = ?`, `first_name_th = ?`, `last_name_th = ?`, `nickname = ?`, `first_name_en = ?`, `last_name_en = ?`,
         `birth_date = ?`, `gender = ?`, `address = ?`, `citizen_id = ?`, `phone = ?`, `email = ?`, `role = ?`,
         `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `admission_date = ?`, `retirement_date = ?`, 
-        `base_salary = ?`, `status = ?`, `cneu_cme_points = ?`,
+        `status = ?`, `cneu_cme_points = ?`,
         `quota_personal = ?`, `quota_vacation = ?`, `quota_sick = ?`
       ];
 
@@ -112,7 +112,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         safeVal(d.start_date, existing.start_date),
         safeVal(d.admission_date, existing.admission_date),
         safeVal(d.retirement_date, existing.retirement_date),
-        safeVal(d.base_salary, existing.base_salary),
         safeVal(d.status, existing.status),
         d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : existing.cneu_cme_points,
         d.quota_personal ? parseInt(d.quota_personal) : existing.quota_personal,
@@ -143,25 +142,53 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
       if (licenses.length > 0) {
         for (let i = 0; i < licenses.length; i++) {
-          let licFileName: string | null = null;
-          const licFile = formData.get(`license_file_${i}`) as File | null;
-          if (licFile && licFile.size > 0) {
-            const ext = path.extname(licFile.name);
-            licFileName = `lic_${empId}_${i}_${Date.now()}${ext}`;
-            const buffer = Buffer.from(await licFile.arrayBuffer());
-            fs.writeFileSync(path.join(uploadDir, licFileName), buffer);
+          const fileCountStr = formData.get(`license_file_count_${i}`);
+          const fileCount = fileCountStr ? parseInt(fileCountStr as string) : 0;
+          let fileNames: string[] = [];
+
+          if (fileCount > 0) {
+            for (let j = 0; j < fileCount; j++) {
+              const licFile = formData.get(`license_file_${i}_${j}`) as File | null;
+              if (licFile && licFile.size > 0) {
+                const ext = path.extname(licFile.name);
+                const licFileName = `lic_${empId}_${i}_${j}_${Date.now()}${ext}`;
+                const buffer = Buffer.from(await licFile.arrayBuffer());
+                fs.writeFileSync(path.join(uploadDir, licFileName), buffer);
+                fileNames.push(licFileName);
+              }
+            }
           } else {
-            licFileName = licenses[i].file_path || null;
+            // Backward compatibility
+            const licFile = formData.get(`license_file_${i}_0`) || formData.get(`license_file_${i}`) as File | null;
+            if (licFile && (licFile as File).size > 0) {
+              const ext = path.extname((licFile as File).name);
+              const licFileName = `lic_${empId}_${i}_${Date.now()}${ext}`;
+              const buffer = Buffer.from(await (licFile as File).arrayBuffer());
+              fs.writeFileSync(path.join(uploadDir, licFileName), buffer);
+              fileNames.push(licFileName);
+            } else if (licenses[i].file_path) {
+              try {
+                const parsed = JSON.parse(licenses[i].file_path);
+                if (Array.isArray(parsed)) {
+                  fileNames = parsed;
+                } else {
+                  fileNames.push(licenses[i].file_path);
+                }
+              } catch (e) {
+                fileNames.push(licenses[i].file_path);
+              }
+            }
           }
 
           const lic = licenses[i];
           const licSql = `INSERT INTO tbl_employee_licenses 
             (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, file_path)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+          const finalFilePath = fileNames.length > 0 ? JSON.stringify(fileNames) : null;
           const licValues = [
             empId, lic.license_name || null, lic.license_type || null, lic.license_no || null,
             lic.institution || null, lic.issue_date || null, lic.expire_date || null,
-            lic.status || 'Active', licFileName
+            lic.status || 'Active', finalFilePath
           ];
           await connection.query(licSql, licValues);
         }

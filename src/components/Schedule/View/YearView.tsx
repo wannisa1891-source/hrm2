@@ -54,7 +54,7 @@ export default function YearView({ currentDate, schedules, onOpenMonth }: YearVi
           >
             <div className="month-name">{MONTH_NAMES[m.month]}</div>
             {m.shiftCount > 0 && (
-              <div className="month-badge">{m.shiftCount} เวร</div>
+              <div className="month-badge">{m.shiftCount} ครั้ง</div>
             )}
           </div>
         ))}
