@@ -55,6 +55,8 @@ export default function LeavePage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearchList, setShowSearchList] = useState(false);
+  const [selectedDivision, setSelectedDivision] = useState('');
+  const [selectedDept, setSelectedDept] = useState('');
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
   const [form, setForm] = useState({ emp_id: '', leave_type_id: 'L01', start_date: '', end_date: '', reason: '' });
@@ -335,55 +337,85 @@ export default function LeavePage() {
       {showAddModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}
           onClick={e => e.target === e.currentTarget && setShowAddModal(false)}>
-          <div style={{ background: 'white', borderRadius: 24, padding: '24px 32px', width: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', animation: 'fadeIn 0.2s ease-out' }} className="custom-scroll">
+          <div style={{ background: 'white', borderRadius: 24, padding: '24px 32px', width: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', animation: 'fadeIn 0.2s ease-out' }} className="custom-scroll">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0f172a' }}>เพิ่มรายการลาใหม่</h3>
               <button onClick={() => setShowAddModal(false)} style={{ width: 32, height: 32, borderRadius: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#64748b' }}>✕</button>
             </div>
 
-            {isAdmin && (
-              <div style={{ marginBottom: 20, position: 'relative' }}>
-                <label style={{ display: 'block', marginBottom: 8, fontSize: 13, fontWeight: 600, color: '#475569' }}>ค้นหาชื่อพนักงาน หรือ แผนก</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="text"
-                    placeholder="พิมพ์ชื่อ-นามสกุล หรือ แผนกที่ต้องการค้นหา..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setShowSearchList(true);
-                    }}
-                    onFocus={() => setShowSearchList(true)}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid #cbd5e1', outline: 'none', fontSize: 14 }}
-                  />
-                  {showSearchList && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', marginTop: 4, maxHeight: 250, overflowY: 'auto', zIndex: 10 }}>
-                      {employees.filter(e => 
-                        `${e.first_name_th} ${e.last_name_th}`.includes(searchTerm) || 
-                        (e.dept_name || '').includes(searchTerm) ||
-                        (e.division || '').includes(searchTerm)
-                      ).map(emp => (
-                        <div
-                          key={emp.emp_id}
-                          onClick={() => {
-                            setForm({ ...form, emp_id: emp.emp_id });
-                            setSearchTerm(`${emp.first_name_th} ${emp.last_name_th}`);
-                            setShowSearchList(false);
-                          }}
-                          style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                        >
-                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{emp.first_name_th} {emp.last_name_th}</div>
-                          <div style={{ fontSize: 11, color: '#64748b' }}>{emp.division} - {emp.dept_name}</div>
-                        </div>
-                      ))}
-                      {employees.length === 0 && <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>ไม่พบรายชื่อพนักงาน</div>}
-                    </div>
-                  )}
+            {isAdmin && (() => {
+              const divisions = Array.from(new Set(employees.map(e => e.division).filter(Boolean))).sort();
+              const deptsInDiv = selectedDivision 
+                ? Array.from(new Set(employees.filter(e => e.division === selectedDivision).map(e => e.dept_name).filter(Boolean))).sort()
+                : [];
+              const empsInDept = selectedDept
+                ? employees.filter(e => e.division === selectedDivision && e.dept_name === selectedDept)
+                : selectedDivision
+                  ? employees.filter(e => e.division === selectedDivision)
+                  : employees;
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24, padding: 20, background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>1. เลือกกลุ่มงาน</label>
+                    <select 
+                      value={selectedDivision} 
+                      onChange={e => { setSelectedDivision(e.target.value); setSelectedDept(''); setForm({...form, emp_id: ''}); setSearchTerm(''); }}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', fontSize: 14 }}
+                    >
+                      <option value="">-- เลือกกลุ่มงาน (ทั้งหมด) --</option>
+                      {divisions.map(d => <option key={d as string} value={d as string}>{d as string}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>2. เลือกแผนก/งานย่อย</label>
+                    <select 
+                      value={selectedDept} 
+                      disabled={!selectedDivision}
+                      onChange={e => { setSelectedDept(e.target.value); setForm({...form, emp_id: ''}); setSearchTerm(''); }}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', fontSize: 14, background: !selectedDivision ? '#f1f5f9' : 'white' }}
+                    >
+                      <option value="">-- เลือกแผนก (ทั้งหมดในกลุ่มงาน) --</option>
+                      {deptsInDiv.map(d => <option key={d as string} value={d as string}>{d as string}</option>)}
+                    </select>
+                  </div>
+
+                  <div style={{ position: 'relative' }}>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>3. ชื่อ-นามสกุล พนักงาน</label>
+                    <input
+                      type="text"
+                      placeholder="พิมพ์เพื่อค้นหาชื่อ..."
+                      value={searchTerm}
+                      onChange={(e) => { setSearchTerm(e.target.value); setShowSearchList(true); }}
+                      onFocus={() => setShowSearchList(true)}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', fontSize: 14 }}
+                    />
+                    {showSearchList && (
+                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', marginTop: 4, maxHeight: 200, overflowY: 'auto', zIndex: 10 }}>
+                        {empsInDept.filter(e => 
+                          `${e.first_name_th} ${e.last_name_th}`.toLowerCase().includes(searchTerm.toLowerCase())
+                        ).map(emp => (
+                          <div
+                            key={emp.emp_id}
+                            onClick={() => {
+                              setForm({ ...form, emp_id: emp.emp_id });
+                              setSearchTerm(`${emp.first_name_th} ${emp.last_name_th}`);
+                              setShowSearchList(false);
+                            }}
+                            style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{ fontWeight: 600, color: '#0f172a' }}>{emp.first_name_th} {emp.last_name_th}</div>
+                            <div style={{ fontSize: 11, color: '#64748b' }}>{emp.dept_name}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
               <div>
