@@ -251,7 +251,7 @@ export default function EmployeeFormModal({
                       <select value={formData.gender || ''} onChange={e => setField('gender', e.target.value)} required style={inputStyle}>
                         <option value="ชาย">ชาย</option>
                         <option value="หญิง">หญิง</option>
-                        <option value="อื่นๆ">อื่นๆ</option>
+
                       </select>
                     </div>
                   </div>
