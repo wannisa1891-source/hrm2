@@ -107,6 +107,7 @@ export interface Leave {
   quota_personal?: number
   quota_vacation?: number
   emp_type?: string
+  start_date_work?: string
 }
 
 export interface ScheduleRecord {

@@ -20,6 +20,46 @@ const LEAVE_TYPES = [
   { id: 'L06', name: 'ลาอุปสมบท/ฮัจญ์', color: '#f97316' },
 ];
 
+const getQuotaForEmployee = (empType: string, leaveTypeId: string, startDate?: string) => {
+  const type = (empType || '').trim();
+  
+  // Default values
+  let quotas = { sick: 30, personal: 15, vacation: 10 };
+
+  if (type === 'ราชการ') {
+    quotas = { sick: 60, personal: 45, vacation: 10 };
+  } else if (type === 'พนักงานราชการ') {
+    quotas = { sick: 30, personal: 10, vacation: 15 };
+  } else if (type === 'ลูกจ้างพนักงานกระทรวง') {
+    quotas = { sick: 45, personal: 15, vacation: 15 };
+  } else if (type.includes('ลูกจ้างชั่วคราว(นักเรียนทุน)')) {
+    quotas = { sick: 15, personal: 0, vacation: 10 };
+  } else if (type === 'ลูกจ้างรายเดือน') {
+    quotas = { sick: 15, personal: 0, vacation: 10 };
+  } else if (type === 'ลูกจ้างรายวัน') {
+    let sickQuota = 8;
+    if (startDate) {
+      const start = new Date(startDate);
+      const now = new Date();
+      const diffYears = (now.getTime() - start.getTime()) / (1000 * 3600 * 24 * 365.25);
+      if (diffYears >= 1) sickQuota = 15;
+    }
+    quotas = { sick: sickQuota, personal: 0, vacation: 10 };
+  } else if (type === 'ลูกจ้างชั่วคราวที่อายุ 60 ปี') {
+    quotas = { sick: 15, personal: 0, vacation: 10 };
+  } else if (type === 'ลูกจ้างเหมา') {
+    quotas = { sick: 0, personal: 0, vacation: 0 };
+  }
+
+  if (leaveTypeId === 'L01') return quotas.sick;
+  if (leaveTypeId === 'L02') return quotas.personal;
+  if (leaveTypeId === 'L03') return quotas.vacation;
+  if (leaveTypeId === 'L04') return 90; // ลาคลอด
+  if (leaveTypeId === 'L05') return 15; // ลาช่วยภริยาคลอด
+  if (leaveTypeId === 'L06') return 120; // ลาอุปสมบท/ฮัจญ์
+  return 0;
+};
+
 export default function LeavePage() {
   const { user } = useAuth();
   const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
@@ -382,13 +422,15 @@ export default function LeavePage() {
       {/* Review Modal */}
       {showReviewModal && selectedLeave && (() => {
         const days = calculateDays(selectedLeave.start_date, selectedLeave.end_date);
-        let qt = 0, ql = '';
-        if (selectedLeave.leave_type_id === 'L01') { qt = selectedLeave.quota_sick ?? 30; ql = 'ลาป่วย'; }
-        else if (selectedLeave.leave_type_id === 'L02') { qt = selectedLeave.quota_personal ?? 15; ql = 'ลากิจ'; }
-        else if (selectedLeave.leave_type_id === 'L03') { qt = selectedLeave.quota_vacation ?? 10; ql = 'ลาพักผ่อน'; }
-        else if (selectedLeave.leave_type_id === 'L04') { qt = 90; ql = 'ลาคลอด'; }
-        else if (selectedLeave.leave_type_id === 'L05') { qt = 15; ql = 'ลาช่วยภริยาคลอด'; }
-        else if (selectedLeave.leave_type_id === 'L06') { qt = 120; ql = 'ลาอุปสมบท/ฮัจญ์'; }
+        let qt = getQuotaForEmployee(selectedLeave.emp_type || '', selectedLeave.leave_type_id, selectedLeave.start_date_work);
+        let ql = LEAVE_TYPES.find(t => t.id === selectedLeave.leave_type_id)?.name || 'วันลา';
+
+        // Fallback to record's quota if getQuotaForEmployee returns 0 and record has it
+        if (qt === 0) {
+          if (selectedLeave.leave_type_id === 'L01') qt = selectedLeave.quota_sick || 0;
+          else if (selectedLeave.leave_type_id === 'L02') qt = selectedLeave.quota_personal || 0;
+          else if (selectedLeave.leave_type_id === 'L03') qt = selectedLeave.quota_vacation || 0;
+        }
 
         // Calculate used days in current fiscal year
         const usedInFiscalYear = leaves
