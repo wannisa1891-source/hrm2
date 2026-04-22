@@ -109,7 +109,7 @@ export default function AuditLogsPage() {
         <header className="audit-header">
           <div>
             <h1>System Audit Logs</h1>
-            <p>บันทึกประวัติกิจกรรมและระบบการแบ่งหน้า</p>
+            <p>บันทึกประวัติกิจกรรม และระบบการแบ่งหน้า</p>
           </div>
 
           <div className="tool-box">
@@ -259,5 +259,6 @@ export default function AuditLogsPage() {
         .status-msg { padding: 60px; text-align: center; color: #cbd5e0; font-weight: 500; }
       `}</style>
     </AppLayout>
+    //
   );
 }
