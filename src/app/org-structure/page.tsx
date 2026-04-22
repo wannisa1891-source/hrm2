@@ -75,7 +75,7 @@ export default function DepartmentAndEmployeePage() {
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>('view');
   const [deptForm, setDeptForm] = useState({
-    id: '', name: '', isEdit: false,
+    id: '', name: '', division: '', isEdit: false,
     description: '', head_emp_id: '', phone: '', org_chart_url: '', sop_url: '', rules_url: ''
   });
   const [showDeptEmployees, setShowDeptEmployees] = useState(false);
@@ -170,6 +170,7 @@ export default function DepartmentAndEmployeePage() {
       return;
     }
     const deptData = {
+      division: deptForm.division,
       description: deptForm.description,
       head_emp_id: deptForm.head_emp_id,
       phone: deptForm.phone,
@@ -217,7 +218,7 @@ export default function DepartmentAndEmployeePage() {
     if (dept) {
       setModalMode(mode);
       setDeptForm({
-        id: dept.dept_id, name: dept.dept_name, isEdit: true,
+        id: dept.dept_id, name: dept.dept_name, division: dept.division || '', isEdit: true,
         description: dept.description || '',
         head_emp_id: dept.head_emp_id || '',
         phone: dept.phone || '',
@@ -228,7 +229,7 @@ export default function DepartmentAndEmployeePage() {
     } else {
       setModalMode('create');
       setDeptForm({
-        id: '', name: '', isEdit: false,
+        id: '', name: '', division: '', isEdit: false,
         description: '', head_emp_id: '', phone: '', org_chart_url: '', sop_url: '', rules_url: ''
       });
     }
@@ -848,6 +849,23 @@ export default function DepartmentAndEmployeePage() {
                     style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', background: deptForm.isEdit ? '#f8fafc' : '#fff', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: deptForm.isEdit ? '#64748b' : '#0f172a' }}
                     placeholder="เช่น D01, HR, IT"
                   />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>กลุ่มงาน (Division) <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input
+                    type="text"
+                    list="division-options"
+                    value={deptForm.division}
+                    onChange={(e) => setDeptForm({ ...deptForm, division: e.target.value })}
+                    style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
+                    placeholder="เช่น กลุ่มงานบริหารทั่วไป"
+                  />
+                  <datalist id="division-options">
+                    {Array.from(new Set(departments.map(d => String(d.division || '').trim()))).filter(Boolean).sort().map(div => (
+                      <option key={div} value={div} />
+                    ))}
+                  </datalist>
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
