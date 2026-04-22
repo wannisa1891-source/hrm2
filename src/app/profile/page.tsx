@@ -35,13 +35,14 @@ interface ProfileData {
   };
   leaves: any[];
   payroll: any[];
+  trainings?: any[];
 }
 
 export default function MyProfilePage() {
   const { user, isLoggedIn, login } = useAuth();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password' | 'training'>('info');
   const router = useRouter();
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -56,6 +57,36 @@ export default function MyProfilePage() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [newTraining, setNewTraining] = useState({ course_name: '', institution: '', start_date: '', end_date: '' });
+  const [trainingFile, setTrainingFile] = useState<File | null>(null);
+
+  const handleAddTraining = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTraining.course_name) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุชื่อหลักสูตร', 'warning');
+    if (!data?.profile?.emp_id) return;
+    
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const fd = new FormData();
+    fd.append('emp_id', data.profile.emp_id);
+    fd.append('course_name', newTraining.course_name);
+    fd.append('institution', newTraining.institution);
+    fd.append('start_date', newTraining.start_date);
+    fd.append('end_date', newTraining.end_date);
+    if (trainingFile) fd.append('certificate_file', trainingFile);
+
+    try {
+      const res = await fetch('/api/profile/trainings', { method: 'POST', body: fd });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'เกิดข้อผิดพลาด');
+      Swal.fire('สำเร็จ', 'เพิ่มประวัติการอบรมแล้ว', 'success');
+      setNewTraining({ course_name: '', institution: '', start_date: '', end_date: '' });
+      setTrainingFile(null);
+      fetchProfile();
+    } catch (err: any) {
+      Swal.fire('ข้อผิดพลาด', err.message, 'error');
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,7 +216,7 @@ export default function MyProfilePage() {
     </AppLayout>
   );
 
-  const { profile, leaves, payroll } = data;
+  const { profile, leaves, payroll, trainings = [] } = data;
   const fullName = `${profile.prefix || ''} ${profile.first_name_th} ${profile.last_name_th}`;
 
   return (
@@ -273,6 +304,7 @@ export default function MyProfilePage() {
           <div className="profile-tabs">
             <button className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>ข้อมูลทั่วไป</button>
             <button className={`tab-btn ${activeTab === 'leave' ? 'active' : ''}`} onClick={() => setActiveTab('leave')}>ประวัติการลา</button>
+            <button className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')}>ประวัติการอบรม</button>
             <button className={`tab-btn ${activeTab === 'payroll' ? 'active' : ''}`} onClick={() => setActiveTab('payroll')}>สรุปเงินเดือน</button>
             <button className={`tab-btn ${activeTab === 'password' ? 'active' : ''}`} onClick={() => setActiveTab('password')}>เปลี่ยนรหัสผ่าน</button>
           </div>
@@ -436,6 +468,79 @@ export default function MyProfilePage() {
                             <span className={`badge ${l.status === 'Approved' ? 'badge-success' : 'badge-pending'}`}>
                               {l.status === 'Approved' ? 'อนุมัติแล้ว' : 'รออนุมัติ'}
                             </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'training' && (
+            <div className="glass-card" style={{ padding: '32px' }}>
+              <h3 className="card-title">ประวัติการอบรม (Training History)</h3>
+              
+              <form onSubmit={handleAddTraining} style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#334155' }}>เพิ่มประวัติการอบรม</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>ชื่อหลักสูตร / โครงการ</label>
+                    <input type="text" value={newTraining.course_name} onChange={e => setNewTraining({...newTraining, course_name: e.target.value})} required className="form-input" placeholder="ระบุชื่อหลักสูตรที่เข้าอบรม..." />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>หน่วยงานที่จัดบรรยาย</label>
+                    <input type="text" value={newTraining.institution} onChange={e => setNewTraining({...newTraining, institution: e.target.value})} className="form-input" placeholder="ระบุหน่วยงาน..." />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>วันที่เริ่มต้น</label>
+                    <input type="date" value={newTraining.start_date} onChange={e => setNewTraining({...newTraining, start_date: e.target.value})} className="form-input" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>วันที่สิ้นสุด</label>
+                    <input type="date" value={newTraining.end_date} onChange={e => setNewTraining({...newTraining, end_date: e.target.value})} className="form-input" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>ไฟล์แนบเกียรติบัตร (ถ้ามี)</label>
+                    <input type="file" accept="image/*,.pdf" onChange={e => setTrainingFile(e.target.files?.[0] || null)} className="form-input" style={{ padding: '8px' }} />
+                  </div>
+                </div>
+                <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start', padding: '10px 24px', borderRadius: '8px', border: 'none', background: '#2563eb', color: 'white', fontWeight: 600, cursor: 'pointer' }}>
+                  บันทึกประวัติ
+                </button>
+              </form>
+
+              <div style={{ overflowX: 'auto' }} className="custom-scroll">
+                <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 700 }}>วันที่อบรม</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 700 }}>หลักสูตร</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 700 }}>หน่วยงาน</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>เกียรติบัตร</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trainings.length === 0 ? (
+                      <tr><td colSpan={4} style={{textAlign:'center', padding:40, color:'#94a3b8'}}>ไม่มีประวัติการอบรม</td></tr>
+                    ) : (
+                      trainings.map((t: any, i: number) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '12px 16px' }}>
+                            {t.start_date ? new Date(t.start_date).toLocaleDateString('th-TH') : '—'} 
+                            {t.end_date && t.end_date !== t.start_date ? ` - ${new Date(t.end_date).toLocaleDateString('th-TH')}` : ''}
+                          </td>
+                          <td style={{ padding: '12px 16px', fontWeight: 600, color: '#1e293b' }}>{t.course_name}</td>
+                          <td style={{ padding: '12px 16px', color: '#475569' }}>{t.institution || '—'}</td>
+                          <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                            {t.certificate_file ? (
+                              <a href={`/uploads/${t.certificate_file}`} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500 }}>ดูไฟล์</a>
+                            ) : (
+                              <span style={{ color: '#94a3b8' }}>ไม่มี</span>
+                            )}
                           </td>
                         </tr>
                       ))

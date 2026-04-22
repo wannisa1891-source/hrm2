@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
     const [
       empResult,
       leaveResult,
-      payrollResult
+      payrollResult,
+      trainingResult
     ] = await Promise.all([
       pool.query(
         `SELECT e.*, d.dept_name, p.pos_name 
@@ -33,6 +34,10 @@ export async function GET(req: NextRequest) {
       pool.query(
         `SELECT * FROM tbl_payroll WHERE emp_id = ? ORDER BY pay_year DESC, pay_month DESC LIMIT 12`,
         [emp_id]
+      ),
+      pool.query(
+        `SELECT * FROM tbl_employee_trainings WHERE emp_id = ? ORDER BY start_date DESC`,
+        [emp_id]
       )
     ]);
 
@@ -46,13 +51,15 @@ export async function GET(req: NextRequest) {
     }
     const leaveRows = leaveResult[0] as any[];
     const payrollRows = payrollResult[0] as any[];
+    const trainingRows = trainingResult[0] as any[];
 
     return NextResponse.json({
       success: true,
       data: {
         profile: employee,
         leaves: leaveRows,
-        payroll: payrollRows
+        payroll: payrollRows,
+        trainings: trainingRows
       }
     });
 
