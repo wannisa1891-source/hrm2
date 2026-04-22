@@ -373,11 +373,11 @@ export default function EmployeeFormModal({
                       <option value="ให้ออก">ให้ออก</option>
                     </select>
                   </div>
-                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: 'span 2' }}>
-                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัด</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: '1 / -1' }}>
+                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัด และ ตำแหน่งงาน</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                       <div>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>กลุ่มงาน</label>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>กลุ่มงาน</label>
                         <select
                           value={departments.find(d => d.dept_id === formData.dept_id)?.division || ''}
                           onChange={e => {
@@ -395,7 +395,7 @@ export default function EmployeeFormModal({
                         </select>
                       </div>
                       <div>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>แผนก</label>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>แผนก</label>
                         <select
                           value={formData.dept_id || ''}
                           onChange={e => setField('dept_id', e.target.value)}
@@ -407,18 +407,19 @@ export default function EmployeeFormModal({
                           ))}
                         </select>
                       </div>
+                      <div>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>ตำแหน่งงาน</label>
+                        <select
+                          value={formData.pos_id || ''}
+                          onChange={e => setField('pos_id', e.target.value)}
+                          required
+                          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
+                        >
+                          <option value="">เลือกตำแหน่ง</option>
+                          {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ตำแหน่งงาน</label>
-                    <select value={formData.pos_id || ''} onChange={e => setField('pos_id', e.target.value)} required style={inputStyle}>
-                      <option value="">เลือกตำแหน่ง</option>
-                      {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
-                    </select>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เงินเดือน (Base Salary)</label>
-                    <input type="number" value={formData.base_salary || ''} onChange={e => setField('base_salary', Number(e.target.value))} required min={0} placeholder="฿0.00" style={inputStyle} />
                   </div>
                 </div>
 
@@ -444,7 +445,7 @@ export default function EmployeeFormModal({
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', opacity: (formData.has_license === true || (formData.has_license as any) === 1) ? 1 : 0.5, pointerEvents: (formData.has_license === true || (formData.has_license as any) === 1) ? 'auto' : 'none', transition: 'all 0.3s' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', maxWidth: '300px' }}>
-                      <label style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>🌟 คะแนนหน่วยกิตสะสมรวม (CNEU/CME/CCPE Points)</label>
+                      <label style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>🌟 คะแนนหน่วยกิตสะสมรวม </label>
                       <input type="number" step="0.5" min="0" value={formData.cneu_cme_points || ''} onChange={e => setField('cneu_cme_points', parseFloat(e.target.value))} style={addrInputStyle} />
                     </div>
 
