@@ -1,4 +1,4 @@
-Error: Column 'birth_date' cannot be null\nError: Column 'birth_date' cannot be null
+Error: Unknown column 'first_name_en' in 'field list'\nError: Unknown column 'first_name_en' in 'field list'
     at PromisePoolConnection.query (webpack-internal:///(rsc)/./node_modules/mysql2/lib/promise/connection.js:29:22)
     at POST (webpack-internal:///(rsc)/./src/app/api/employees/route.ts:143:30)
     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)

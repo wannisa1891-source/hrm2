@@ -10,8 +10,6 @@ export interface Employee {
   prefix: string
   first_name_th: string
   last_name_th: string
-  first_name_en: string
-  last_name_en: string
   nickname?: string
   birth_date: string
   gender: string
@@ -25,7 +23,7 @@ export interface Employee {
   base_salary: number
   status: string
   image: string
-  
+
   // -- UI Mock Fields & Additional Info --
   addr_no?: string
   addr_moo?: string
@@ -36,13 +34,13 @@ export interface Employee {
   addr_district?: string
   addr_subdistrict?: string
   addr_zipcode?: string
-  
+
   has_license?: boolean | number
   licenses?: ProfessionalLicense[]
   license_status?: string
   license_expire?: string
   cneu_cme_points?: number
-  
+
   email?: string
   password?: string
   role?: string
