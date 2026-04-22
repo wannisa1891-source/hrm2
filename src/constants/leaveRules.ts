@@ -35,7 +35,7 @@ export const LEAVE_RULES: Record<EmployeeType, LeaveQuota> = {
     personal: 15,
     sick: 45,
     vacation: 15,
-    canAccumulateVacation: true, // User said "เก็บสะสมไม่เกิน 15 วัน/ปี"
+    canAccumulateVacation: true, // "เก็บสะสมไม่เกิน 15 วัน/ปี" -> usually implies carry over limit
   },
   'ลูกจ้างชั่วคราว(นักเรียนทุน)': {
     personal: 0,
@@ -51,7 +51,7 @@ export const LEAVE_RULES: Record<EmployeeType, LeaveQuota> = {
   },
   'ลูกจ้างรายวัน': {
     personal: 0,
-    sick: 8, // Special handling for 1st year needed if strict, but default to 8 or 15
+    sick: 8, // Initial, logic in getQuotaByType handles 15 after 1 year
     vacation: 10,
     canAccumulateVacation: false,
   },
@@ -68,6 +68,13 @@ export const LEAVE_RULES: Record<EmployeeType, LeaveQuota> = {
     canAccumulateVacation: false,
   },
 };
+
+export const ACCUMULATION_LIMITS: Partial<Record<EmployeeType, number>> = {
+  'ราชการ': 20, // Default limit if not specified, often 20 or 30
+  'พนักงานราชการ': 30, 
+  'ลูกจ้างพนักงานกระทรวง': 15,
+};
+
 
 /**
  * Calculates sick leave quota for Daily Employees based on work duration.

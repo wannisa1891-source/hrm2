@@ -39,6 +39,9 @@ interface ProfileData {
     quota_personal?: number;
     quota_vacation?: number;
     quota_sick?: number;
+    accumulated_vacation?: number;
+    emp_type: string;
+    start_date: string;
   };
   leaves: any[];
   payroll: any[];
@@ -389,11 +392,17 @@ export default function MyProfilePage() {
                   </div>
                 </div>
                 
-                <div className="leave-stats">
+                <div className="leave-stats" style={{ gridTemplateColumns: profile.accumulated_vacation ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)' }}>
                   <div className="leave-stat">
                     <div className="leave-stat-val" style={{ color: '#059669' }}>{profile.quota_vacation || 0}</div>
-                    <div className="leave-stat-label">พักร้อน</div>
+                    <div className="leave-stat-label">พักร้อน (ปีนี้)</div>
                   </div>
+                  {profile.accumulated_vacation !== undefined && profile.accumulated_vacation > 0 && (
+                    <div className="leave-stat">
+                      <div className="leave-stat-val" style={{ color: '#10b981' }}>{profile.accumulated_vacation}</div>
+                      <div className="leave-stat-label">พักร้อนสะสม</div>
+                    </div>
+                  )}
                   <div className="leave-stat">
                     <div className="leave-stat-val" style={{ color: '#ef4444' }}>{profile.quota_sick || 0}</div>
                     <div className="leave-stat-label">ลาป่วย</div>

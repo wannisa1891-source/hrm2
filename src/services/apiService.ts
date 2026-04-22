@@ -10,6 +10,8 @@ export interface Employee {
   prefix: string
   first_name_th: string
   last_name_th: string
+  first_name_en?: string
+  last_name_en?: string
   nickname?: string
   birth_date: string
   gender: string
@@ -54,6 +56,7 @@ export interface Employee {
   quota_personal?: number
   quota_sick?: number
   quota_vacation?: number
+  accumulated_vacation?: number
   trainings?: Training[]
 }
 
@@ -81,6 +84,7 @@ export interface ProfessionalLicense {
   status?: string
   file_path?: string | string[]
   files?: File[]
+  file?: File | null
   previewUrl?: string | null
 }
 
@@ -104,7 +108,9 @@ export interface Leave {
   quota_sick?: number
   quota_personal?: number
   quota_vacation?: number
+  accumulated_vacation?: number
   emp_type?: string
+  start_date_work?: string
 }
 
 export interface ScheduleRecord {
