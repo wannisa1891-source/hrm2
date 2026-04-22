@@ -547,10 +547,18 @@ export default function EmployeeFormModal({
                                 {(() => {
                                   let fileList: string[] = [];
                                   try {
-                                    const parsed = JSON.parse(lic.file_path);
-                                    if (Array.isArray(parsed)) fileList = parsed;
-                                    else fileList = [lic.file_path];
-                                  } catch(e) { fileList = [lic.file_path]; }
+                                    if (typeof lic.file_path === 'string' && lic.file_path.startsWith('[')) {
+                                      const parsed = JSON.parse(lic.file_path);
+                                      if (Array.isArray(parsed)) fileList = parsed;
+                                      else fileList = [lic.file_path as string];
+                                    } else if (Array.isArray(lic.file_path)) {
+                                      fileList = lic.file_path;
+                                    } else if (lic.file_path) {
+                                      fileList = [lic.file_path as string];
+                                    }
+                                  } catch(e) { 
+                                    fileList = typeof lic.file_path === 'string' ? [lic.file_path] : (lic.file_path || []);
+                                  }
                                   
                                   return fileList.map((fPath, fi) => (
                                     <a key={fi} href={`/uploads/${fPath}`} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '4px' }}>

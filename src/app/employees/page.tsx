@@ -13,6 +13,7 @@ import { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import Swal from 'sweetalert2';
 import { useAuth } from '@/contexts/AuthContext';
+import CustomSelect from '@/components/CustomSelect';
 import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
 import Image from 'next/image';
 
@@ -422,50 +423,66 @@ function EmployeesContent() {
               <input type="text" placeholder="ค้นหาชื่อหรือรหัสพนักงาน..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterDiv} onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); }}>
-                <option value="all">ทุกแผนก</option>
-                {Array.from(new Set(departments.map(d => String(d.division || '').trim()))).filter(Boolean).sort().map(div => (
-                  <option key={div as string} value={div as string}>{div as string}</option>
-                ))}
-              </select>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', zIndex: 20 }}>
+              <CustomSelect 
+                minWidth="200px" 
+                value={filterDiv} 
+                onChange={val => { setFilterDiv(val); setFilterGrp('all'); }} 
+                options={[{ value: 'all', label: 'ทุกแผนก' }, ...Array.from(new Set(departments.map(d => String(d.division || '').trim()))).filter(Boolean).sort().map(div => ({ value: div as string, label: div as string }))]}
+              />
 
-              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterGrp} onChange={e => setFilterGrp(e.target.value)} disabled={filterDiv === 'all'}>
-                <option value="all">ทุกหน่วยงาน</option>
-                {Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim()))).filter(Boolean).sort().map(grp => (
-                  <option key={grp as string} value={grp as string}>{grp as string}</option>
-                ))}
-              </select>
+              <CustomSelect 
+                minWidth="200px" 
+                value={filterGrp} 
+                onChange={val => setFilterGrp(val)} 
+                disabled={filterDiv === 'all'}
+                options={[{ value: 'all', label: 'ทุกหน่วยงาน' }, ...Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim()))).filter(Boolean).sort().map(grp => ({ value: grp as string, label: grp as string }))]}
+              />
 
             </div>
-            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterPos} onChange={e => setFilterPos(e.target.value)}>
-              <option value="all">ทุกตำแหน่ง</option>
-              {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
-            </select>
-            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-              <option value="all">สถานะการทำงาน: ทั้งหมด</option>
-              <option value="ทำงานปกติ">ทำงานปกติ (Active)</option>
-              <option value="ทดลองงาน">ทดลองงาน</option>
-              <option value="หยุดปฏิบัติงาน">หยุดปฏิบัติงาน</option>
-              <option value="ลาออก/พ้นสภาพ">ลาออก/พ้นสภาพ</option>
-              <option value="ให้ออก">ให้ออก</option>
-            </select>
-            <select className="form-select" style={{ width: 'auto', minWidth: '160px' }} value={filterLicense} onChange={e => setFilterLicense(e.target.value)}>
-              <option value="all">ใบประกอบฯ: ทั้งหมด</option>
-              <option value="Active">ปกติ (Active)</option>
-              <option value="Expiring Soon">ใกล้หมดอายุ</option>
-              <option value="Expired">หมดอายุแล้ว</option>
-              <option value="Suspended">พักใช้/ระงับ</option>
-            </select>
+            <CustomSelect 
+              minWidth="180px" 
+              value={filterPos} 
+              onChange={val => setFilterPos(val)} 
+              options={[{ value: 'all', label: 'ทุกตำแหน่ง' }, ...positions.map(p => ({ value: p.pos_id, label: p.pos_name }))]}
+            />
+            <CustomSelect 
+              minWidth="180px" 
+              value={filterStatus} 
+              onChange={val => setFilterStatus(val)} 
+              prefix="สถานะการทำงาน"
+              options={[
+                { value: 'all', label: 'ทั้งหมด' },
+                { value: 'ทำงานปกติ', label: 'ทำงานปกติ' },
+                { value: 'ทดลองงาน', label: 'ทดลองงาน' },
+                { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน' },
+                { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ' },
+                { value: 'ให้ออก', label: 'ให้ออก' }
+              ]}
+            />
+            <CustomSelect 
+              minWidth="180px" 
+              value={filterLicense} 
+              onChange={val => setFilterLicense(val)} 
+              prefix="ใบประกอบวิชาชีพ"
+              options={[
+                { value: 'all', label: 'ทั้งหมด' },
+                { value: 'Active', label: 'ปกติ' },
+                { value: 'Expiring Soon', label: 'ใกล้หมดอายุ' },
+                { value: 'Expired', label: 'หมดอายุแล้ว' },
+                { value: 'Suspended', label: 'พักใช้/ระงับ' }
+              ]}
+            />
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto', minHeight: '400px' }}>
             <table className="data-table">
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
                   <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
+                  <th>ชื่อเล่น</th>
                   <th>ตำแหน่ง</th>
                   <th>แผนก (กลุ่มงาน)</th>
                   <th>หน่วยงาน</th>
@@ -505,6 +522,7 @@ function EmployeesContent() {
                           {emp.license_status === 'Expired' && <span className="badge badge-red" title="ใบประกอบวิชาชีพหมดอายุ">หมดอายุ</span>}
                         </div>
                       </td>
+                      <td style={{ color: '#334155' }}>{emp.nickname || '-'}</td>
                       <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
                       <td>{dept?.division || '-'}</td>
                       <td>{dept?.dept_name || '-'}</td>
