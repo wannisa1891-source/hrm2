@@ -6,7 +6,7 @@ export default function useScheduleStatus(schedules: Schedule[]) {
   const departmentStatus = useMemo(() => {
     const result: Record<string, number> = {}
     schedules.forEach((s) => {
-      const dept = s.department || 'Unknown'
+      const dept = s.organizer || 'Unknown'
       result[dept] = (result[dept] || 0) + 1
     })
     return result

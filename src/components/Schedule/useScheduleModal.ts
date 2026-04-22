@@ -1,20 +1,27 @@
-// Modal สำหรับเพิ่ม / แก้ไข / ลบเวร + Validation
-import { useState, useMemo, useEffect } from 'react'
+// Modal สำหรับเพิ่ม / แก้ไข / ลบการประชุม + Validation
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useDepartments } from '@/hooks/useDepartments'
 
 export interface Schedule {
   id: string
   date: Date
-  nurseName: string
-  shift: string
-  department: string
+  subject: string
+  room: string
+  organizer: string
+  unit?: string
+  bookerName?: string
+  contactPhone?: string
   note: string
-  startTime?: string
+  startTime: string
+  endTime: string
 }
 
-export interface ShiftType {
+export interface RoomType {
   value: string
   label: string
   color: string
+  location?: string
+  capacity?: number
 }
 
 export interface Employee {
@@ -26,63 +33,50 @@ export interface Employee {
 }
 
 export interface ScheduleForm {
-  nurseName: string
-  shift: string
-  department: string
+  subject: string
+  room: string
+  organizer: string
+  unit: string
+  bookerName: string
+  contactPhone: string
   note: string
+  startTime: string
+  endTime: string
 }
-
-// ประเภทเวรเริ่มต้น (ใช้เผื่อดึง API ไม่ได้)
-export const SHIFT_TYPES: ShiftType[] = [
-  { value: 'Morning', label: 'Morning (08:00 - 16:00)', color: '#10b981' },
-  { value: 'Afternoon', label: 'Afternoon (16:00 - 00:00)', color: '#f59e0b' },
-  { value: 'Night', label: 'Night (00:00 - 08:00)', color: '#8b5cf6' },
-]
-
-export const SHIFT_CONFIG: Record<string, { start: string, end: string }> = {
-  Morning: { start: "08:00", end: "16:00" },
-  Afternoon: { start: "16:00", end: "00:00" },
-  Night: { start: "00:00", end: "08:00" },
-};
-const MIN_REST_HOURS = 10;
-const MIN_REST_MINUTES = MIN_REST_HOURS * 60;
-
-function toMinutes(timeStr: string): number {
-  const [h, m] = timeStr.split(':').map(Number);
-  return h * 60 + m;
-}
-
-function getAbsoluteShiftMetrics(date: Date, shiftCode: string) {
-    const baseMinutes = Math.floor(date.getTime() / 60000);
-    const config = SHIFT_CONFIG[shiftCode] || SHIFT_CONFIG['Morning'];
-    const startMins = toMinutes(config.start);
-    let endMins = toMinutes(config.end);
-    if (endMins <= startMins) endMins += 1440;
-
-    return {
-        start: baseMinutes + startMins,
-        end: baseMinutes + endMins
-    };
-}
-
-// ดึงข้อมูลแผนกผ่าน hook (dynamic)
-import { useDepartments } from '@/hooks/useDepartments'
 
 const EMPTY_FORM: ScheduleForm = {
-  nurseName: '',
-  shift: '',
-  department: '',
+  subject: '',
+  room: '',
+  organizer: '',
+  unit: '',
+  bookerName: '',
+  contactPhone: '',
   note: '',
+  startTime: '09:00',
+  endTime: '10:00',
 }
 
-let idCounter = 1
-function generateId() {
-  return String(idCounter++).padStart(3, '0')
+const DEPARTMENT_HIERARCHY: Record<string, string[]> = {
+  'กลุ่มงานบริหารทั่วไป': ['การเงิน', 'ธุรการ', 'พัสดุ', 'ช่าง', 'สวน', 'พขร.', 'งานโสตฯ'],
+  'กลุ่มงานประกันสุขภาพ ยุทธศาสตร์และสารสนเทศทางการแพทย์': ['ประกัน', 'คอมฯ', 'ห้องบัตร'],
+  'กลุ่มงานบริการด้านปฐมภูมิและองค์รวม': ['งานจิตเวชและยาเสพติด'],
+  'กลุ่มงานการพยาบาล': [
+    'ศูนย์คุณภาพ', 'งานการพยาบาลผู้ป่วยอุบัติเหตุฉุกเฉินและนิติเวช', 'ห้องคลอด', 'NICU', 
+    'หญิง', 'ชาย', 'ICU', 'พิเศษ', 'ซัพพลาย', 'OPD', 'แม่บ้าน', 'เปล', 'ห้องผ่าตัด'
+  ],
+  'กลุ่มงานแพทย์แผนไทยและการแพทย์ทางเลือก': ['แผนไทย แบ่งเปอร์เซนต์'],
+  'กลุ่มงานเทคนิคการแพทย์': [],
+  'กลุ่มงานทันตกรรม': [],
+  'กลุ่มงานเภสัชกรรมและคุ้มครองผู้บริโภค': [],
+  'กลุ่มงานการแพทย์': [],
+  'กลุ่มงานโภชนศาสตร์': [],
+  'กลุ่มงานรังสีวิทยา': [],
+  'กลุ่มงานเวชกรรมฟื้นฟู': [],
 }
 
 export default function useScheduleModal(
   schedules: Schedule[],
-  setSchedules: React.Dispatch<React.SetStateAction<Schedule[]>>
+  refreshSchedules: () => void
 ) {
   const [showModal, setShowModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -90,14 +84,38 @@ export default function useScheduleModal(
   const [errors, setErrors] = useState<string[]>([])
   const [form, setForm] = useState<ScheduleForm>({ ...EMPTY_FORM })
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([])
   
   const { departments: deptData, loadDepartments } = useDepartments()
 
   const isEditing = useMemo(() => editingId !== null, [editingId])
 
-  // Fetch employees for dropdown
+  // Get available units based on selected department
+  const availableUnits = useMemo(() => {
+    if (!form.organizer) return []
+    const list = DEPARTMENT_HIERARCHY[form.organizer] || []
+    return list.length > 0 ? list : [form.organizer] // Default to department name if no units
+  }, [form.organizer])
+
+  // Auto-select unit when organizer changes
+  useEffect(() => {
+    if (form.organizer && availableUnits.length > 0) {
+      if (!availableUnits.includes(form.unit)) {
+        setForm(f => ({ ...f, unit: availableUnits[0] }));
+      }
+    }
+  }, [form.organizer, availableUnits, form.unit]);
+
+  // Fetch rooms and employees
   useEffect(() => {
     loadDepartments()
+    fetch('/api/rooms')
+      .then(res => res.json())
+      .then(data => {
+        if(Array.isArray(data)) setRoomTypes(data)
+      })
+      .catch(console.error)
+
     fetch('/api/employees')
       .then(res => res.json())
       .then(data => {
@@ -106,121 +124,77 @@ export default function useScheduleModal(
       .catch(console.error)
   }, [loadDepartments])
 
-  function openModal(date: Date) {
+  const openModal = useCallback((date: Date) => {
     setSelectedDate(date)
     setEditingId(null)
     setErrors([])
     setForm({ ...EMPTY_FORM })
     setShowModal(true)
-  }
+  }, [])
 
-  function openEditModal(schedule: Schedule) {
+  const openEditModal = useCallback((schedule: Schedule) => {
     setSelectedDate(schedule.date)
     setEditingId(schedule.id)
     setErrors([])
     setForm({
-      nurseName: schedule.nurseName,
-      shift: schedule.shift,
-      department: schedule.department,
-      note: schedule.note || '',
+      subject: schedule.subject,
+      room: schedule.room,
+      organizer: schedule.organizer,
+      unit: schedule.unit || '',
+      bookerName: schedule.bookerName || '',
+      contactPhone: schedule.contactPhone || '',
+      note: schedule.note,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
     })
     setShowModal(true)
-  }
+  }, [])
 
-  function closeModal() {
+  const closeModal = useCallback(() => {
     setShowModal(false)
+    setEditingId(null)
+    setForm({ ...EMPTY_FORM })
     setErrors([])
+  }, [])
+
+  const checkRoomConflict = useCallback((room: string, date: Date, start: string, end: string, excludeId: string | null) => {
+    const dateStr = date.toDateString();
+    const newStart = new Date(`${dateStr} ${start}`).getTime();
+    const newEnd = new Date(`${dateStr} ${end}`).getTime();
+
+    const conflicts = schedules.filter(s => {
+      if (s.room !== room) return false;
+      if (excludeId && s.id === excludeId) return false;
+      if (s.date.toDateString() !== dateStr) return false;
+
+      const sStart = new Date(`${dateStr} ${s.startTime}`).getTime();
+      const sEnd = new Date(`${dateStr} ${s.endTime}`).getTime();
+
+      return (newStart < sEnd && newEnd > sStart);
+    });
+
+    return conflicts.map(c => `ชนกับ "${c.subject}" (${c.startTime} - ${c.endTime})`);
+  }, [schedules]);
+
+  const saveSchedule = async (data: ScheduleForm) => {
+    // Logic handles in SchedulePage handleSave for now
   }
 
-  const checkRestConflict = (empNameStr: string, targetDate: Date | null, targetShift: string, excludeId?: string | null): string[] => {
-    const errs: string[] = [];
-    if (!empNameStr || !targetDate || !targetShift) return errs;
-
-    const empIdOnly = empNameStr.split(' - ')[0].trim();
-    const newMetrics = getAbsoluteShiftMetrics(targetDate, targetShift);
+  const deleteSchedule = async (id: string) => {
+    if (!confirm('คุณต้องการยกเลิกการนัดหมายนี้ใช่หรือไม่?')) return;
     
-    const empSchedules = schedules.filter(s => 
-      s.nurseName === empIdOnly && 
-      (!excludeId || s.id !== excludeId)
-    );
-
-    for (const row of empSchedules) {
-      const existMetrics = getAbsoluteShiftMetrics(row.date, row.shift);
-      const rowDateStr = row.date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric', year: 'numeric' });
-      
-      if (newMetrics.start < existMetrics.end && existMetrics.start < newMetrics.end) {
-        errs.push(`เวลาทับซ้อนกับเวร ${row.shift} วันที่ ${rowDateStr}`);
-        continue;
+    try {
+      const res = await fetch(`/api/schedules/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        refreshSchedules();
+        closeModal();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'ลบไม่สำเร็จ');
       }
-
-      if (newMetrics.start >= existMetrics.end) {
-        const rest = newMetrics.start - existMetrics.end;
-        if (rest < MIN_REST_MINUTES) {
-          errs.push(`พักไม่พอ (${+(rest / 60).toFixed(1)} ชม.) จากเวร ${row.shift} ของวันที่ ${rowDateStr}`);
-        }
-      }
-      if (existMetrics.start >= newMetrics.end) {
-        const rest = existMetrics.start - newMetrics.end;
-        if (rest < MIN_REST_MINUTES) {
-          errs.push(`พักไม่พอ (${+(rest / 60).toFixed(1)} ชม.) เพื่อไปเข้าเวร ${row.shift} วันที่ ${rowDateStr}`);
-        }
-      }
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
     }
-    return errs;
-  };
-
-  // Validation
-  function validate(): boolean {
-    const errs: string[] = []
-    if (!selectedDate) errs.push('ต้องเลือกวันที่')
-    if (!form.nurseName.trim()) errs.push('ต้องระบุพนักงาน')
-    if (!form.shift) errs.push('ต้องเลือกประเภทเวร')
-    if (!form.department) errs.push('ต้องเลือกแผนก')
-
-    const conflictErrors = checkRestConflict(form.nurseName, selectedDate, form.shift, editingId);
-    errs.push(...conflictErrors);
-
-    setErrors(errs)
-    return errs.length === 0
-  }
-
-  function saveSchedule(): boolean {
-    if (!validate()) return false
-
-    if (editingId) {
-      setSchedules((prev) =>
-        prev.map((s) =>
-          s.id === editingId
-            ? {
-                ...s,
-                nurseName: form.nurseName.trim(),
-                shift: form.shift,
-                department: form.department,
-                note: form.note.trim(),
-              }
-            : s
-        )
-      )
-    } else {
-      setSchedules((prev) => [
-        ...prev,
-        {
-          id: generateId(),
-          date: selectedDate!,
-          nurseName: form.nurseName.trim(),
-          shift: form.shift,
-          department: form.department,
-          note: form.note.trim(),
-        },
-      ])
-    }
-    return true
-  }
-
-  // ลบเวร
-  function deleteSchedule(id: string) {
-    setSchedules((prev) => prev.filter((s) => s.id !== id))
-    closeModal()
   }
 
   function getSchedulesForDate(date: Date | null): Schedule[] {
@@ -229,8 +203,8 @@ export default function useScheduleModal(
     return schedules.filter((s) => new Date(s.date).toDateString() === dateStr)
   }
 
-  function getShiftColor(shift: string): string {
-    const found = SHIFT_TYPES.find((s) => s.value === shift)
+  function getShiftColor(roomName: string): string {
+    const found = roomTypes.find((r) => r.label === roomName)
     return found ? found.color : '#64748b'
   }
 
@@ -239,10 +213,11 @@ export default function useScheduleModal(
     selectedDate,
     editingId,
     errors,
-    shiftTypes: SHIFT_TYPES,
-    departments: deptData.map(d => d.dept_name),
-    deptData, // Add full objects
+    roomTypes,
+    departments: Object.keys(DEPARTMENT_HIERARCHY),
+    units: availableUnits,
     employees,
+    deptData,
     form,
     setForm,
     isEditing,
@@ -253,6 +228,6 @@ export default function useScheduleModal(
     deleteSchedule,
     getSchedulesForDate,
     getShiftColor,
-    checkRestConflict,
+    checkRoomConflict,
   }
 }
