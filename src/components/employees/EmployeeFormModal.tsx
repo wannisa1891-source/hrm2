@@ -369,7 +369,7 @@ export default function EmployeeFormModal({
                     </select>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: 'span 2' }}>
-                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัดหน่วยงาน (Dept > Unit)</label>
+                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัดหน่วยงาน (Dept &gt; Unit)</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>แผนก</label>

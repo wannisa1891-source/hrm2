@@ -9,8 +9,8 @@ export async function GET() {
     let dirContents = [];
     try {
       dirContents = fs.readdirSync(uploadDir);
-    } catch (e) {
-      dirContents = [e.message];
+    } catch (e: any) {
+      dirContents = [e.message || String(e)];
     }
 
     const [matchImage] = await pool.query('SELECT emp_id, image FROM tbl_employees WHERE image LIKE "%1773808015435%"');

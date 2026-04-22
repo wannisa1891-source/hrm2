@@ -70,6 +70,8 @@ export interface ProfessionalLicense {
 export interface Department {
   dept_id: string
   dept_name: string
+  division?: string
+  sub_dept?: string
   description?: string
   head_emp_id?: string
   phone?: string

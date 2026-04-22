@@ -140,7 +140,6 @@ export default function ResetPasswordPage() {
         position: 'relative', 
         zIndex: 10, 
         width: '100%', 
-        maxWight: '480px', 
         maxWidth: '480px',
         padding: '0',
         borderRadius: '24px',

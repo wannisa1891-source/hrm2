@@ -431,14 +431,14 @@ function EmployeesContent() {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterDiv} onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); setFilterSub('all'); }}>
                 <option value="all">ทุกแผนก</option>
-                {Array.from(new Set(departments.map(d => d.division?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th')).map(div => (
+                {Array.from(new Set(departments.map((d: any) => d.division?.trim()))).filter(Boolean).sort((a: any, b: any) => (a || '').localeCompare(b || '', 'th')).map(div => (
                   <option key={div as string} value={div as string}>{div as string}</option>
                 ))}
               </select>
 
               <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterGrp} onChange={e => { setFilterGrp(e.target.value); setFilterSub('all'); }} disabled={filterDiv === 'all'}>
                 <option value="all">ทุกหน่วยงาน</option>
-                {Array.from(new Set(departments.filter(d => d.division?.trim() === filterDiv).map(d => d.dept_name?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th')).map(grp => (
+                {Array.from(new Set(departments.filter((d: any) => d.division?.trim() === filterDiv).map((d: any) => d.dept_name?.trim()))).filter(Boolean).sort((a: any, b: any) => (a || '').localeCompare(b || '', 'th')).map(grp => (
                   <option key={grp as string} value={grp as string}>{grp as string}</option>
                 ))}
               </select>
