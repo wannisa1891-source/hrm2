@@ -962,15 +962,9 @@ export default function TransferPage() {
                   </div>
                 )}
 
-<<<<<<< HEAD
                 <div style={{ display: 'flex', gap: 16, marginTop: 24, flexWrap: 'wrap' }}>
-                  {viewingTransfer.order_file && (
-                    <a href={`/uploads/${viewingTransfer.order_file}`} target="_blank" rel="noreferrer" 
-=======
-                {viewingTransfer.transfer_file && (
-                  <div style={{ marginTop: 24 }}>
+                  {viewingTransfer.transfer_file && (
                     <a href={`/uploads/${viewingTransfer.transfer_file}`} target="_blank" rel="noreferrer" 
->>>>>>> a355ea78ab67e766ab24688b269f893c381973fc
                       style={{ background: '#eff6ff', padding: '12px 20px', borderRadius: '12px', color: '#2563eb', fontSize: 15, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', transition: 'background 0.2s' }}
                       onMouseOver={e => e.currentTarget.style.background = '#dbeafe'}
                       onMouseOut={e => e.currentTarget.style.background = '#eff6ff'}>
