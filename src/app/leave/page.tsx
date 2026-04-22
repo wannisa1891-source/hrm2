@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useDepartments } from '@/hooks/useDepartments';
 import { Leave } from '@/services/apiService';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
@@ -39,6 +40,7 @@ export default function LeavePage() {
   const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
   const { leaves, loading, loadLeaves, addLeave, changeLeaveStatus } = useLeaves();
   const { employees, loadEmployees } = useEmployees();
+  const { departments, loadDepartments } = useDepartments();
   const searchParams = useSearchParams();
   const leaveIdParam = searchParams.get('id');
 
@@ -69,7 +71,7 @@ export default function LeavePage() {
     return Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 3600 * 24)) + 1;
   };
 
-  useEffect(() => { loadLeaves(); loadEmployees(); }, [loadLeaves, loadEmployees]);
+  useEffect(() => { loadLeaves(); loadEmployees(); loadDepartments(); }, [loadLeaves, loadEmployees, loadDepartments]);
   useEffect(() => { setPage(1); }, [filterStatus, searchQuery]);
 
   useEffect(() => {
@@ -344,9 +346,9 @@ export default function LeavePage() {
             </div>
 
             {isAdmin && (() => {
-              const divisions = Array.from(new Set(employees.map(e => e.division).filter(Boolean))).sort();
+              const divisions = Array.from(new Set(departments.map(d => d.division).filter(Boolean))).sort();
               const deptsInDiv = selectedDivision 
-                ? Array.from(new Set(employees.filter(e => e.division === selectedDivision).map(e => e.dept_name).filter(Boolean))).sort()
+                ? Array.from(new Set(departments.filter(d => d.division === selectedDivision).map(d => d.dept_name).filter(Boolean))).sort()
                 : [];
               const empsInDept = selectedDept
                 ? employees.filter(e => e.division === selectedDivision && e.dept_name === selectedDept)
@@ -561,10 +563,10 @@ export default function LeavePage() {
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>ขั้นตอนการอนุมัติ (Approval Stages)</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {[
-                    { id: 'Head of Dept', label: '1. หัวหน้าแผนก', status: selectedLeave.dept_head_status },
-                    { id: 'Administration', label: '2. ธุรการ', status: selectedLeave.admin_status },
-                    { id: 'Housekeeper', label: '3. พ่อบ้าน', status: selectedLeave.housekeeper_status },
-                    { id: 'Director', label: '4. ผอ.', status: selectedLeave.director_status },
+                    { id: 'Head of Dept', label: 'หัวหน้าแผนก', status: selectedLeave.dept_head_status },
+                    { id: 'Administration', label: 'ธุรการ', status: selectedLeave.admin_status },
+                    { id: 'Housekeeper', label: 'พ่อบ้าน', status: selectedLeave.housekeeper_status },
+                    { id: 'Director', label: 'ผอ.', status: selectedLeave.director_status },
                   ].map((s, i) => {
                     const isCurrent = selectedLeave.current_stage === s.id;
                     const isDone = s.status === 'Approved';
