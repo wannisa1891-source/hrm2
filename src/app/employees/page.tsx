@@ -138,7 +138,8 @@ function EmployeesContent() {
           last_name_th: row['นามสกุล (TH)'] || row['นามสกุล(TH)'] || row['นามสกุล'] || row['last_name_th'] || '',
           first_name_en: row['ชื่อ (EN)'] || row['first_name_en'] || '',
           last_name_en: row['นามสกุล (EN)'] || row['last_name_en'] || '',
-          gender: row['เพศ'] || row['gender'] || 'ชาย',
+          nickname: row['ชื่อเล่น'] || row['nickname'] || '',
+          gender: row['เพศ'] || row['gender'] || '',
           birth_date: row['วัน/เดือน/ปีเกิด'] || row['วันเกิด'] || row['birth_date'] || null,
           citizen_id: row['บัตรประชาชน'] || row['เลขบัตรประชาชน'] || row['citizen_id'] || '',
           phone: row['เบอร์โทร'] || row['เบอร์โทรศัพท์'] || row['phone'] || '',
@@ -235,7 +236,7 @@ function EmployeesContent() {
       const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
       const dept = departments.find(d => d.dept_id === e.dept_id);
       const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
-                        (filterGrp === 'all' || dept?.dept_name === filterGrp);
+        (filterGrp === 'all' || dept?.dept_name === filterGrp);
       const matchPos = filterPos === 'all' || e.pos_id === filterPos;
       const matchStatus = filterStatus === 'all' || e.status === filterStatus;
 
@@ -333,7 +334,7 @@ function EmployeesContent() {
 
   const exportToCSV = () => {
     const headers = [
-      'รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อ (EN)', 'นามสกุล (EN)',
+      'รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อ (EN)', 'นามสกุล (EN)', 'ชื่อเล่น',
       'เพศ', 'วัน/เดือน/ปีเกิด', 'บัตรประชาชน', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่',
       'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน', 'เงินเดือน',
       'สถานะการทำงาน', 'คะแนน CNEU/CME', 'ข้อมูลใบอนุญาต'
@@ -470,9 +471,11 @@ function EmployeesContent() {
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
                   <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
+                  <th>ชื่อเล่น</th>
                   <th>ตำแหน่ง</th>
                   <th>แผนก</th>
                   <th>หน่วยงาน</th>
+                  <th>หน่วยปฏิบัติงานที่</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
@@ -511,7 +514,7 @@ function EmployeesContent() {
                       <td>{departments.find(d => String(d.dept_id) === String(emp.dept_id))?.division || '-'}</td>
                       <td>{departments.find(d => String(d.dept_id) === String(emp.dept_id))?.dept_name || '-'}</td>
                       <td style={{ textAlign: 'center' }}>
-                         <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} />
+                        <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} />
                       </td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <div className="action-btn-group" style={{ justifyContent: 'center' }}>
@@ -764,9 +767,9 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
     'Terminated': 'ให้ออก'
   };
 
-  const currentStatus = statusOptions.find(o => o.value === emp.status || o.label === emp.status) || 
-                        statusOptions.find(o => o.value === statusMapping[emp.status]) || 
-                        statusOptions[0];
+  const currentStatus = statusOptions.find(o => o.value === emp.status || o.label === emp.status) ||
+    statusOptions.find(o => o.value === statusMapping[emp.status]) ||
+    statusOptions[0];
 
   const handleUpdate = async (newStatus: string) => {
     if (newStatus === emp.status) {
@@ -783,7 +786,7 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
 
   return (
     <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
-      <div 
+      <div
         onClick={(e) => {
           if (!isAdmin) return;
           e.stopPropagation();
@@ -814,7 +817,7 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
       </div>
 
       {isOpen && isAdmin && (
-        <div 
+        <div
           style={{
             position: 'absolute',
             [openUp ? 'bottom' : 'top']: 'calc(100% + 8px)',
