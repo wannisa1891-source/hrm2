@@ -37,6 +37,7 @@ interface TransferRecord {
   new_salary: number;
   remark: string;
   transfer_file: string | null;
+  order_file: string | null;
   status: string;
   emp_dob?: string;
   emp_id_card?: string;

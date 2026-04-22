@@ -10,6 +10,11 @@ import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
+import { 
+  User, Mail, Phone, MapPin, Calendar, Briefcase, 
+  Award, ShieldCheck, Lock, CreditCard, FileText, 
+  ChevronRight, Camera, Edit3, Fingerprint, Globe
+} from 'lucide-react';
 
 interface ProfileData {
   profile: {
@@ -24,6 +29,8 @@ interface ProfileData {
     pos_name: string;
     dept_name: string;
     hire_date: string;
+    admission_date?: string;
+    retirement_date?: string;
     mobile_no?: string;
     email?: string;
     citizen_id?: string;
@@ -42,16 +49,14 @@ export default function MyProfilePage() {
   const { user, isLoggedIn, login } = useAuth();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password' | 'training'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password' | 'certificates' | 'training'>('info');
   const router = useRouter();
 
   const [showEditModal, setShowEditModal] = useState(false);
-  // Full data fetching for the Modal
   const { employees, editEmployee, loadEmployees } = useEmployees();
   const { departments } = useDepartments();
   const { positions } = usePositions();
 
-  // Find the fully details of current user from employees array (contains licenses, address, etc)
   const fullProfile = employees.find((e: any) => e.emp_id === user?.emp_id) || null;
 
   const [oldPassword, setOldPassword] = useState('');
@@ -101,36 +106,18 @@ export default function MyProfilePage() {
       const res = await fetch('/api/profile/password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          emp_id: data?.profile.emp_id,
-          oldPassword,
-          newPassword
-        })
+        body: JSON.stringify({ emp_id: data?.profile.emp_id, oldPassword, newPassword })
       });
       const result = await res.json();
-      if (!res.ok) {
-        throw new Error(result.error || 'เกิดข้อผิดพลาด');
-      }
+      if (!res.ok) throw new Error(result.error || 'เกิดข้อผิดพลาด');
       Swal.fire('สำเร็จ', 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว', 'success');
-      setOldPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
-    }
+      setOldPassword(''); setNewPassword(''); setConfirmPassword('');
+    } catch (error: any) { Swal.fire('ข้อผิดพลาด', error.message, 'error'); }
   };
 
   const handleResetPasswordViaEmail = async () => {
     if (!data?.profile?.emp_id) return;
-    const result = await Swal.fire({
-      title: 'ยืนยันการรีเซ็ตรหัสผ่าน',
-      text: `คุณต้องการรีเซ็ตรหัสผ่านใหม่ ระบบจะสุ่มรหัสและส่งเข้าอีเมลของคุณ ใช่หรือไม่?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'ยืนยันการรีเซ็ต',
-      cancelButtonText: 'ยกเลิก',
-      confirmButtonColor: '#3085d6'
-    });
+    const result = await Swal.fire({ title: 'ยืนยันการรีเซ็ตรหัสผ่าน', text: `คุณต้องการรีเซ็ตรหัสผ่านใหม่ ใช่หรือไม่?`, icon: 'warning', showCancelButton: true });
     if (!result.isConfirmed) return;
 
     Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -138,19 +125,12 @@ export default function MyProfilePage() {
     try {
       const res = await fetch(`/api/employees/${data.profile.emp_id}/reset-password`, { method: 'POST' });
       const resData = await res.json();
-      if (res.ok) {
-        Swal.fire('สำเร็จ', resData.message, 'success');
-      } else {
-        Swal.fire('เกิดข้อผิดพลาด', resData.error || 'ไม่สามารถรีเซ็ตรหัสผ่านได้', 'error');
-      }
-    } catch (err) {
-      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-    }
+      if (res.ok) Swal.fire('สำเร็จ', resData.message, 'success');
+      else Swal.fire('เกิดข้อผิดพลาด', resData.error || 'ไม่สามารถรีเซ็ตรหัสผ่านได้', 'error');
+    } catch (err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error'); }
   };
 
-  const handleEditInfoClick = () => {
-    setShowEditModal(true);
-  };
+  const handleEditInfoClick = () => setShowEditModal(true);
 
   const fetchProfile = async () => {
     const targetId = user?.emp_id || user?.username;
@@ -162,59 +142,29 @@ export default function MyProfilePage() {
     try {
       const res = await fetch(`/api/profile?emp_id=${targetId}`);
       const result = await res.json();
-      if (result.success) {
-        setData(result.data);
-      } else {
-        Swal.fire('เกิดข้อผิดพลาด', result.error, 'error');
-      }
-    } catch (err) {
-      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้', 'error');
-    } finally {
-      setLoading(false);
-    }
+      if (result.success) setData(result.data);
+      else Swal.fire('เกิดข้อผิดพลาด', result.error, 'error');
+    } catch (err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้', 'error'); } finally { setLoading(false); }
   };
 
   const handleSaveProfile = async (fd: FormData, isEditing: boolean) => {
     if (!fullProfile?.emp_id) return { success: false, message: 'ไม่พบข้อมูลบัญชี' };
     const res = await editEmployee(fullProfile.emp_id, fd);
     if (res.success) {
-      if (user) {
-        login({ ...user, image: res.image || user.image });
-      }
-      setShowEditModal(false);
-      await fetchProfile(); // Reload local profile API
-      await loadEmployees(); // Reload extensive employees array
+      if (user) login({ ...user, image: res.image || user.image });
+      setShowEditModal(false); await fetchProfile(); await loadEmployees();
       Swal.fire({ title: 'สำเร็จ!', text: 'อัปเดตข้อมูลส่วนตัวเสร็จสมบูรณ์', icon: 'success', timer: 1500, showConfirmButton: false });
-    } else {
-      Swal.fire('ข้อผิดพลาด', res.message || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
-    }
+    } else Swal.fire('ข้อผิดพลาด', res.message || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
     return res;
   };
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      router.push('/login');
-    } else {
-      loadEmployees();
-      if (user) {
-        fetchProfile();
-      }
-    }
+    if (!isLoggedIn) router.push('/login');
+    else { loadEmployees(); if (user) fetchProfile(); }
   }, [isLoggedIn, router, user]);
 
-  if (loading) return (
-    <AppLayout>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-        <div className="spinner">กำลังโหลดข้อมูล...</div>
-      </div>
-    </AppLayout>
-  );
-
-  if (!data) return (
-    <AppLayout>
-      <div style={{ textAlign: 'center', padding: '50px' }}>ไม่พบข้อมูลโปรไฟล์</div>
-    </AppLayout>
-  );
+  if (loading) return <AppLayout><div style={{ textAlign: 'center', padding: '50px' }}>กำลังโหลดข้อมูล...</div></AppLayout>;
+  if (!data) return <AppLayout><div style={{ textAlign: 'center', padding: '50px' }}>ไม่พบข้อมูลโปรไฟล์</div></AppLayout>;
 
   const { profile, leaves, payroll, trainings = [] } = data;
   const fullName = `${profile.prefix || ''} ${profile.first_name_th} ${profile.last_name_th}`;
@@ -223,218 +173,247 @@ export default function MyProfilePage() {
     <AppLayout>
       <style dangerouslySetInnerHTML={{
         __html: `
-        .profile-container { display: grid; grid-template-columns: 320px 1fr; gap: 24px; padding: 24px; max-width: 1400px; margin: 0 auto; }
+        .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 32px; max-width: 1500px; margin: 0 auto; min-height: calc(100vh - 100px); }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); transition: all 0.3s ease; }
+        .left-card { position: sticky; top: 100px; height: fit-content; text-align: center; overflow: hidden; }
+        .profile-avatar-wrap { width: 160px; height: 160px; border-radius: 40px; margin: 0 auto 24px; padding: 6px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); position: relative; transform: rotate(-3deg); transition: transform 0.3s; }
+        .profile-avatar-wrap:hover { transform: rotate(0deg); }
+        .profile-avatar { width: 100%; height: 100%; border-radius: 36px; object-fit: cover; border: 4px solid white; background: #f1f5f9; }
+        .camera-btn { position: absolute; bottom: -10px; right: -10px; width: 40px; height: 40px; border-radius: 14px; background: white; color: #2563eb; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; cursor: pointer; }
         
-        .profile-avatar-wrap { width: 140px; height: 140px; border-radius: 50%; margin: 0 auto 20px; padding: 4px; border: 4px solid #f8fafc; box-shadow: 0 10px 25px -10px rgba(0,0,0,0.1); position: relative; }
-        .profile-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .profile-name { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-        .profile-title { color: #2563eb; font-weight: 700; font-size: 14px; margin-bottom: 20px; }
-        .profile-meta { border-top: 1px solid #f1f5f9; padding-top: 20px; text-align: left; }
-        .meta-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; color: #64748b; font-size: 14px; }
+        .profile-name { font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px; }
+        .profile-title { display: inline-block; padding: 4px 12px; background: #eff6ff; color: #2563eb; font-weight: 700; font-size: 13px; border-radius: 99px; margin-bottom: 24px; }
+        
+        .quick-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; text-align: left; }
+        .stat-item { background: #f8fafc; padding: 12px; border-radius: 16px; border: 1px solid #f1f5f9; }
+        .stat-label { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .stat-val { font-size: 14px; font-weight: 800; color: #334155; }
+        
+        .profile-meta { border-top: 1px dashed #e2e8f0; padding-top: 24px; text-align: left; }
+        .meta-item { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; color: #64748b; font-size: 14px; }
+        .meta-icon { width: 36px; height: 36px; border-radius: 10px; background: #f8fafc; color: #3b82f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .meta-label { font-size: 12px; color: #94a3b8; display: block; }
         .meta-val { color: #334155; font-weight: 600; }
         
-        /* Right Column: Main Content */
         .profile-main { display: flex; flex-direction: column; gap: 24px; }
-        .profile-tabs { display: flex; gap: 12px; background: #f8fafc; padding: 6px; border-radius: 12px; align-self: flex-start; border: 1px solid #e2e8f0; }
-        .tab-btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: #64748b; background: none; }
-        .tab-btn.active { background: white; color: #2563eb; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .profile-tabs { display: flex; gap: 8px; background: #f1f5f9; padding: 8px; border-radius: 20px; align-self: flex-start; margin-bottom: 8px; }
+        .tab-btn { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border: none; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; color: #64748b; background: transparent; }
+        .tab-btn:hover { color: #3b82f6; }
+        .tab-btn.active { background: white; color: #2563eb; box-shadow: 0 4px 15px -5px rgba(0,0,0,0.1); }
         
-        /* Content Card */
-        .card-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
-        .card-title::before { content: ''; display: block; width: 4px; height: 20px; background: #2563eb; border-radius: 2px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+        .info-section { background: white; border-radius: 24px; padding: 24px; border: 1px solid #f1f5f9; }
+        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid #f8fafc; padding-bottom: 16px; }
+        .section-icon { width: 40px; height: 40px; border-radius: 12px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; }
+        .section-title { font-size: 16px; font-weight: 800; color: #0f172a; }
         
-        /* Grid Info */
-        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-        .field-label { font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-        .field-val { font-size: 15px; color: #1e293b; font-weight: 600; padding: 12px 16px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .data-list { display: flex; flex-direction: column; gap: 16px; }
+        .data-item { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: flex-start; }
+        .data-label { font-size: 13px; color: #94a3b8; font-weight: 600; }
+        .data-val { font-size: 14px; color: #334155; font-weight: 500; word-break: break-all; }
+        
+        .card-title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+        .card-title-icon { color: #3b82f6; }
+        
+        .badge { padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; display: inline-flex; items-center; gap: 6px; }
+        .badge-success { background: #ecfdf5; color: #10b981; }
+        .badge-warning { background: #fff7ed; color: #f97316; }
+        .badge-danger { background: #fef2f2; color: #ef4444; }
+        .badge-info { background: #eff6ff; color: #3b82f6; }
+        
+        .payroll-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; transition: all 0.2s; cursor: pointer; }
+        .payroll-item:hover { border-color: #3b82f6; background: white; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .form-label { font-size: 14px; font-weight: 700; color: #475569; }
+        .form-input { padding: 12px 16px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; outline: none; transition: all 0.2s; font-size: 14px; }
+        .form-input:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        
+        .btn-primary { background: #2563eb; color: white; border: none; padding: 14px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+        .btn-primary:hover { background: #1d4ed8; transform: translateY(-2px); }
+        
+        .leave-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+        .leave-stat { background: white; padding: 16px; border-radius: 16px; border: 1px solid #f1f5f9; text-align: center; }
+        .leave-stat-val { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .leave-stat-label { font-size: 12px; color: #64748b; font-weight: 600; }
 
-        /* Leve Stats */
-        .leave-stats { grid-column: span 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
-        .leave-stat { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
-        .leave-stat-val { font-size: 28px; font-weight: 800; color: #2563eb; }
-        .leave-stat-label { font-size: 13px; color: #64748b; font-weight: 600; }
-
-        /* Badges */
-        .badge { padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; display: inline-block; }
-        .badge-success { background: #ecfdf5; color: #059669; }
-        .badge-pending { background: #fffbeb; color: #d97706; }
-        
         @media (max-width: 1024px) {
           .profile-container { grid-template-columns: 1fr; }
-          .left-card { order: 1; }
-          .profile-main { order: 2; }
-          .info-grid { grid-template-columns: 1fr; }
-          .leave-stats { grid-template-columns: 1fr; }
+          .left-card { position: static; }
         }
       `}} />
 
       <div className="profile-container">
         {/* Left Column */}
-        <div className="glass-card left-card" style={{ padding: '32px 24px', textAlign: 'center' }}>
-          <div className="profile-avatar-wrap" style={{ overflow: 'hidden' }}>
-            <Image
-              src={profile.image ? `/uploads/${profile.image}` : (profile.photo ? `/uploads/${profile.photo}` : 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png')}
-              alt="avatar"
-              className="profile-avatar"
+        <div className="glass-card left-card" style={{ padding: '32px 24px' }}>
+          <div className="profile-avatar-wrap">
+            <Image 
+              src={profile.image ? `/uploads/${profile.image}` : (profile.photo ? `/uploads/${profile.photo}` : 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png')} 
+              alt="Avatar" 
+              className="profile-avatar" 
               fill
               unoptimized
-              onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }}
             />
+            <button className="camera-btn" onClick={handleEditInfoClick} title="แก้ไขโปรไฟล์">
+              <Camera size={20} />
+            </button>
           </div>
+          
           <h2 className="profile-name">{fullName}</h2>
-          <div className="profile-title">{profile.pos_name}</div>
-
+          <span className="profile-title">{profile.pos_name}</span>
+          
+          <div className="quick-stats">
+            <div className="stat-item">
+              <span className="stat-label">รหัสพนักงาน</span>
+              <span className="stat-val">{profile.emp_id}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">อายุงาน</span>
+              <span className="stat-val">
+                {profile.hire_date ? `${Math.floor((new Date().getTime() - new Date(profile.hire_date).getTime()) / (1000 * 60 * 60 * 24 * 365))} ปี` : '-'}
+              </span>
+            </div>
+          </div>
+          
           <div className="profile-meta">
             <div className="meta-item">
-              <span className="icon">🆔</span>
-              <span>รหัส: <span className="meta-val">{profile.emp_id}</span></span>
+              <div className="meta-icon"><Mail size={18} /></div>
+              <div>
+                <span className="meta-label">อีเมล</span>
+                <span className="meta-val">{profile.email || '-'}</span>
+              </div>
             </div>
             <div className="meta-item">
-              <span className="icon">🏢</span>
-              <span>สังกัด: <span className="meta-val">{profile.dept_name}</span></span>
+              <div className="meta-icon"><Phone size={18} /></div>
+              <div>
+                <span className="meta-label">เบอร์โทรศัพท์</span>
+                <span className="meta-val">{profile.mobile_no || '-'}</span>
+              </div>
             </div>
             <div className="meta-item">
-              <span className="icon">📅</span>
-              <span>เริ่มงาน: <span className="meta-val">{profile.hire_date?.split('T')[0] || '—'}</span></span>
+              <div className="meta-icon"><MapPin size={18} /></div>
+              <div>
+                <span className="meta-label">แผนก</span>
+                <span className="meta-val">{profile.dept_name}</span>
+              </div>
             </div>
           </div>
+          
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%', marginTop: '24px', justifyContent: 'center' }}
+            onClick={handleEditInfoClick}
+          >
+            <Edit3 size={18} /> แก้ไขข้อมูลส่วนตัว
+          </button>
         </div>
 
-        {/* Right Column */}
         <div className="profile-main">
           <div className="profile-tabs">
-            <button className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>ข้อมูลทั่วไป</button>
-            <button className={`tab-btn ${activeTab === 'leave' ? 'active' : ''}`} onClick={() => setActiveTab('leave')}>ประวัติการลา</button>
-            <button className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')}>ประวัติการอบรม</button>
-            <button className={`tab-btn ${activeTab === 'payroll' ? 'active' : ''}`} onClick={() => setActiveTab('payroll')}>สรุปเงินเดือน</button>
-            <button className={`tab-btn ${activeTab === 'password' ? 'active' : ''}`} onClick={() => setActiveTab('password')}>เปลี่ยนรหัสผ่าน</button>
+            <button className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
+              <User size={16} /> ข้อมูลทั่วไป
+            </button>
+            <button className={`tab-btn ${activeTab === 'leave' ? 'active' : ''}`} onClick={() => setActiveTab('leave')}>
+              <Calendar size={16} /> ประวัติการลา
+            </button>
+            <button className={`tab-btn ${activeTab === 'payroll' ? 'active' : ''}`} onClick={() => setActiveTab('payroll')}>
+              <CreditCard size={16} /> สรุปเงินเดือน
+            </button>
+            <button className={`tab-btn ${activeTab === 'certificates' ? 'active' : ''}`} onClick={() => setActiveTab('certificates')}>
+              <Award size={16} /> ใบอนุญาต
+            </button>
+            <button className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')}>
+              <FileText size={16} /> ประวัติอบรม
+            </button>
+            <button className={`tab-btn ${activeTab === 'password' ? 'active' : ''}`} onClick={() => setActiveTab('password')}>
+              <Lock size={16} /> ความปลอดภัย
+            </button>
           </div>
 
           {activeTab === 'info' && (
-            <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
-              <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
-                <h3 className="card-title" style={{ margin: 0 }}>รายละเอียดแฟ้มประวัติ (Profile Details)</h3>
-                <button onClick={handleEditInfoClick} style={{ padding: '8px 20px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                  แก้ไขประวัติส่วนตัว
-                </button>
+            <div className="info-grid">
+              <div className="info-section">
+                <div className="section-header">
+                  <div className="section-icon"><User size={20} /></div>
+                  <h3 className="section-title">ข้อมูลส่วนบุคคล</h3>
+                </div>
+                <div className="data-list">
+                  <div className="data-item">
+                    <span className="data-label">ชื่อ-นามสกุล (TH)</span>
+                    <span className="data-val">{profile.prefix} {profile.first_name_th} {profile.last_name_th}</span>
+                  </div>
+                  <div className="data-item">
+                    <span className="data-label">ชื่อ-นามสกุล (EN)</span>
+                    <span className="data-val">{profile.first_name_en} {profile.last_name_en}</span>
+                  </div>
+                  <div className="data-item">
+                    <span className="data-label">เลขบัตรประชาชน</span>
+                    <span className="data-val">{profile.citizen_id || '-'}</span>
+                  </div>
+                  <div className="data-item">
+                    <span className="data-label">วันเกิด</span>
+                    <span className="data-val">{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('th-TH') : '-'}</span>
+                  </div>
+                  <div className="data-item">
+                    <span className="data-label">เพศ</span>
+                    <span className="data-val">{profile.gender || '-'}</span>
+                  </div>
+                </div>
               </div>
 
-              <div style={{ padding: '32px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-
-                  {/* Personal & Contact */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
-                      <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#2563eb' }}>▍</span> ข้อมูลการติดต่อ
-                      </h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
-                          <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 600 }}>เบอร์โทรศัพท์</span>
-                          <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 500 }}>{fullProfile?.phone || profile.mobile_no || '—'}</span>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
-                          <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 600 }}>อีเมล</span>
-                          <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 500 }}>{fullProfile?.email || profile.email || '—'}</span>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'flex-start' }}>
-                          <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>ที่อยู่ปัจจุบัน</span>
-                          <span style={{ color: '#0f172a', fontSize: '14px', lineHeight: '1.6' }}>{fullProfile?.address || '—'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
-                      <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#10b981' }}>▍</span> ข้อมูลส่วนบุคคล
-                      </h4>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div>
-                          <div className="field-label">เลขบัตรประจำตัวประชาชน</div>
-                          <div className="field-val">{fullProfile?.citizen_id || profile.citizen_id || '—'}</div>
-                        </div>
-                        <div>
-                          <div className="field-label">วัน/เดือน/ปีเกิด</div>
-                          <div className="field-val">
-                            {fullProfile?.birth_date ? new Date(fullProfile.birth_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="field-label">เพศ</div>
-                          <div className="field-val">{fullProfile?.gender || profile.gender || '—'}</div>
-                        </div>
-                        <div>
-                          <div className="field-label">สถานะพนักงาน</div>
-                          <div className="field-val" style={{ color: fullProfile?.status === 'Active' ? '#059669' : '#dc2626', fontWeight: 800 }}>
-                            {fullProfile?.status || '—'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+              <div className="info-section">
+                <div className="section-header">
+                  <div className="section-icon"><Briefcase size={20} /></div>
+                  <h3 className="section-title">ข้อมูลการทำงาน</h3>
+                </div>
+                <div className="data-list">
+                  <div className="data-item">
+                    <span className="data-label">กลุ่มงาน/ฝ่าย</span>
+                    <span className="data-val">{profile.dept_name}</span>
                   </div>
+                  <div className="data-item">
+                    <span className="data-label">ตำแหน่ง</span>
+                    <span className="data-val">{profile.pos_name}</span>
+                  </div>
+                  <div className="data-item">
+                    <span className="data-label">วันที่เริ่มงาน</span>
+                    <span className="data-val">{profile.hire_date ? new Date(profile.hire_date).toLocaleDateString('th-TH') : '-'}</span>
+                  </div>
+                  <div className="data-item">
+                    <span className="data-label">วันที่บรรจุ</span>
+                    <span className="data-val">{profile.admission_date ? new Date(profile.admission_date).toLocaleDateString('th-TH') : '-'}</span>
+                  </div>
+                  <div className="data-item">
+                    <span className="data-label">วันที่เกษียณ</span>
+                    <span className="data-val">{profile.retirement_date ? new Date(profile.retirement_date).toLocaleDateString('th-TH') : '-'}</span>
+                  </div>
+                </div>
+                
+                <div className="leave-stats">
+                  <div className="leave-stat">
+                    <div className="leave-stat-val" style={{ color: '#059669' }}>{profile.quota_vacation || 0}</div>
+                    <div className="leave-stat-label">พักร้อน</div>
+                  </div>
+                  <div className="leave-stat">
+                    <div className="leave-stat-val" style={{ color: '#ef4444' }}>{profile.quota_sick || 0}</div>
+                    <div className="leave-stat-label">ลาป่วย</div>
+                  </div>
+                  <div className="leave-stat">
+                    <div className="leave-stat-val" style={{ color: '#f59e0b' }}>{profile.quota_personal || 0}</div>
+                    <div className="leave-stat-label">ลากิจ</div>
+                  </div>
+                </div>
+              </div>
 
-                  {/* Licenses & Leave */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
-                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
-                      <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ color: '#8b5cf6' }}>▍</span> ใบประกอบวิชาชีพ
-                        </div>
-                        <span style={{ background: '#f1f5f9', color: '#475569', fontSize: '12px', padding: '2px 10px', borderRadius: '20px' }}>
-                          {fullProfile?.licenses?.length || 0} รายการ
-                        </span>
-                      </h4>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {!fullProfile?.licenses || fullProfile.licenses.length === 0 ? (
-                          <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '14px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
-                            ไม่มีข้อมูลใบอนุญาตวิชาชีพ
-                          </div>
-                        ) : (
-                          fullProfile.licenses.map((lic: any, idx: number) => (
-                            <div key={idx} style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <div>
-                                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{lic.license_no || 'ไม่ระบุเลขที่'}</div>
-                                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>{lic.institution || 'ไม่ระบุแพทยสภา'}</div>
-                                {(lic.issue_date || lic.expire_date) && (
-                                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '8px', background: '#e2e8f0', display: 'inline-block', padding: '2px 8px', borderRadius: '10px' }}>
-                                    {[lic.issue_date?.split('T')[0], lic.expire_date?.split('T')[0]].filter(Boolean).join(' ถึง ')}
-                                  </div>
-                                )}
-                              </div>
-                              {lic.status && (
-                                <span className={`badge ${lic.status === 'Active' ? 'badge-success' : lic.status === 'Suspended' ? 'badge-pending' : ''}`} style={{ background: lic.status === 'Expired' ? '#fef2f2' : undefined, color: lic.status === 'Expired' ? '#ef4444' : undefined }}>
-                                  {lic.status}
-                                </span>
-                              )}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
-                      <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#f59e0b' }}>▍</span> สิทธิ์การลาคงเหลือประจำปี
-                      </h4>
-                      <div className="leave-stats" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: 0 }}>
-                        <div className="leave-stat" style={{ background: '#fff' }}>
-                          <div className="leave-stat-val" style={{ color: '#059669' }}>{profile.quota_vacation || 0}</div>
-                          <div className="leave-stat-label">พักร้อน</div>
-                        </div>
-                        <div className="leave-stat" style={{ background: '#fff' }}>
-                          <div className="leave-stat-val" style={{ color: '#ef4444' }}>{profile.quota_sick || 0}</div>
-                          <div className="leave-stat-label">ลาป่วย</div>
-                        </div>
-                        <div className="leave-stat" style={{ background: '#fff' }}>
-                          <div className="leave-stat-val" style={{ color: '#f59e0b' }}>{profile.quota_personal || 0}</div>
-                          <div className="leave-stat-label">ลากิจ</div>
-                        </div>
-                      </div>
-                    </div>
-
+              <div className="info-section" style={{ gridColumn: 'span 2' }}>
+                <div className="section-header">
+                  <div className="section-icon"><MapPin size={20} /></div>
+                  <h3 className="section-title">ข้อมูลที่อยู่</h3>
+                </div>
+                <div className="data-list">
+                  <div className="data-item">
+                    <span className="data-label">ที่อยู่ปัจจุบัน</span>
+                    <div className="data-val">{fullProfile?.address || '—'}</div>
                   </div>
                 </div>
               </div>
@@ -443,196 +422,232 @@ export default function MyProfilePage() {
 
           {activeTab === 'leave' && (
             <div className="glass-card" style={{ padding: '32px' }}>
-              <h3 className="card-title">ประวัติการลา 10 รายการล่าสุด</h3>
-              <div style={{ overflowX: 'auto' }} className="custom-scroll">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>วันที่เริ่ม</th>
-                      <th>สิ้นสุด</th>
-                      <th>ประเภท</th>
-                      <th>เหตุผล</th>
-                      <th>สถานะ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leaves.length === 0 ? (
-                      <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>ไม่พบรายการการลา</td></tr>
-                    ) : (
-                      leaves.map((l: any, i: number) => (
-                        <tr key={i}>
-                          <td>{l.start_date?.split('T')[0]}</td>
-                          <td>{l.end_date?.split('T')[0]}</td>
-                          <td>{l.leave_type_id}</td>
+              <h3 className="card-title">
+                <Calendar className="card-title-icon" size={24} /> ประวัติการลางานล่าสุด
+              </h3>
+              {leaves?.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
+                  <Calendar size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                  <p>ยังไม่มีประวัติการลางาน</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>วันที่ลา</th>
+                        <th>ประเภทการลา</th>
+                        <th>จำนวนวัน</th>
+                        <th>เหตุผล</th>
+                        <th>สถานะ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaves.map((l: any, idx: number) => (
+                        <tr key={idx}>
+                          <td>{new Date(l.start_date).toLocaleDateString('th-TH')} - {new Date(l.end_date).toLocaleDateString('th-TH')}</td>
+                          <td>{l.leave_type || l.leave_type_id}</td>
+                          <td>{l.total_days} วัน</td>
                           <td>{l.reason || '—'}</td>
                           <td>
-                            <span className={`badge ${l.status === 'Approved' ? 'badge-success' : 'badge-pending'}`}>
-                              {l.status === 'Approved' ? 'อนุมัติแล้ว' : 'รออนุมัติ'}
+                            <span className={`badge ${l.status === 'Approved' ? 'badge-success' : l.status === 'Pending' ? 'badge-warning' : 'badge-danger'}`}>
+                              {l.status === 'Approved' ? 'อนุมัติแล้ว' : l.status === 'Pending' ? 'รออนุมัติ' : 'ไม่อนุมัติ'}
                             </span>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'training' && (
-            <div className="glass-card" style={{ padding: '32px' }}>
-              <h3 className="card-title">ประวัติการอบรม (Training History)</h3>
-
-              <form onSubmit={handleAddTraining} style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#334155' }}>เพิ่มประวัติการอบรม</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>ชื่อหลักสูตร / โครงการ</label>
-                    <input type="text" value={newTraining.course_name} onChange={e => setNewTraining({ ...newTraining, course_name: e.target.value })} required className="form-input" placeholder="ระบุชื่อหลักสูตรที่เข้าอบรม..." />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>หน่วยงานที่จัดบรรยาย</label>
-                    <input type="text" value={newTraining.institution} onChange={e => setNewTraining({ ...newTraining, institution: e.target.value })} className="form-input" placeholder="ระบุหน่วยงาน..." />
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>วันที่เริ่มต้น</label>
-                    <input type="date" value={newTraining.start_date} onChange={e => setNewTraining({ ...newTraining, start_date: e.target.value })} className="form-input" />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>วันที่สิ้นสุด</label>
-                    <input type="date" value={newTraining.end_date} onChange={e => setNewTraining({ ...newTraining, end_date: e.target.value })} className="form-input" />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>ไฟล์แนบเกียรติบัตร (ถ้ามี)</label>
-                    <input type="file" accept="image/*,.pdf" onChange={e => setTrainingFile(e.target.files?.[0] || null)} className="form-input" style={{ padding: '8px' }} />
-                  </div>
-                </div>
-                <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start', padding: '10px 24px', borderRadius: '8px', border: 'none', background: '#2563eb', color: 'white', fontWeight: 600, cursor: 'pointer' }}>
-                  บันทึกประวัติ
-                </button>
-              </form>
-
-              <div style={{ overflowX: 'auto' }} className="custom-scroll">
-                <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-                  <thead>
-                    <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 700 }}>วันที่อบรม</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 700 }}>หลักสูตร</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 700 }}>หน่วยงาน</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>เกียรติบัตร</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {trainings.length === 0 ? (
-                      <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>ไม่มีประวัติการอบรม</td></tr>
-                    ) : (
-                      trainings.map((t: any, i: number) => (
-                        <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '12px 16px' }}>
-                            {t.start_date ? new Date(t.start_date).toLocaleDateString('th-TH') : '—'}
-                            {t.end_date && t.end_date !== t.start_date ? ` - ${new Date(t.end_date).toLocaleDateString('th-TH')}` : ''}
-                          </td>
-                          <td style={{ padding: '12px 16px', fontWeight: 600, color: '#1e293b' }}>{t.course_name}</td>
-                          <td style={{ padding: '12px 16px', color: '#475569' }}>{t.institution || '—'}</td>
-                          <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                            {t.certificate_file ? (
-                              <a href={`/uploads/${t.certificate_file}`} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500 }}>ดูไฟล์</a>
-                            ) : (
-                              <span style={{ color: '#94a3b8' }}>ไม่มี</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              )}
             </div>
           )}
 
           {activeTab === 'payroll' && (
             <div className="glass-card" style={{ padding: '32px' }}>
-              <h3 className="card-title">สรุปเงินเพิ่ม/ลด (12 เดือนล่าสุด)</h3>
-              <div style={{ overflowX: 'auto' }} className="custom-scroll">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>งวดเดือน</th>
-                      <th>เงินเดือน</th>
-                      <th>รายได้พิเศษ</th>
-                      <th>หักภาษี/อื่นๆ</th>
-                      <th>สุทธิ</th>
-                      <th>สถานะ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payroll.length === 0 ? (
-                      <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>ไม่พบข้อมูลการจ่ายเงิน</td></tr>
-                    ) : (
-                      payroll.map((p: any, i: number) => {
-                        const base = Number(p.base_salary || 0);
-                        const extra = Number(p.bonus || 0) + Number(p.overtime || 0) + Number(p.position_allowance || 0);
-                        const deduct = Number(p.tax || 0) + Number(p.social_security || 0) + Number(p.other_deductions || 0);
-                        return (
-                          <tr key={i}>
-                            <td style={{ fontWeight: 700 }}>{p.pay_month}/{p.pay_year}</td>
-                            <td>{base.toLocaleString()}</td>
-                            <td style={{ color: '#059669' }}>+{extra.toLocaleString()}</td>
-                            <td style={{ color: '#dc2626' }}>-{deduct.toLocaleString()}</td>
-                            <td style={{ fontWeight: 800, color: '#2563eb' }}>{Number(p.net_salary || 0).toLocaleString()}</td>
-                            <td>
-                              <span className={`badge ${p.status === 'Paid' ? 'badge-success' : 'badge-pending'}`}>
-                                {p.status === 'Paid' ? 'จ่ายแล้ว' : p.status}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              <h3 className="card-title">
+                <CreditCard className="card-title-icon" size={24} /> สรุปรายการเงินเดือน
+              </h3>
+              {payroll?.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
+                  <CreditCard size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                  <p>ยังไม่มีข้อมูลเงินเดือนในระบบ</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  {payroll.map((p: any, idx: number) => (
+                    <div key={idx} className="payroll-item">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <FileText size={20} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#0f172a' }}>รอบเดือน {p.pay_month}/{p.pay_year}</div>
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>วันที่จ่าย: {new Date(p.pay_date).toLocaleDateString('th-TH')}</div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 800, color: '#059669', fontSize: '16px' }}>฿{Number(p.net_salary || 0).toLocaleString()}</div>
+                        <div className={`badge ${p.status === 'Paid' ? 'badge-info' : 'badge-warning'}`} style={{ marginTop: '4px', fontSize: '10px' }}>
+                          {p.status === 'Paid' ? 'โอนสำเร็จ' : 'รอดำเนินการ'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'certificates' && (
+            <div className="glass-card" style={{ padding: '32px' }}>
+              <h3 className="card-title">
+                <Award className="card-title-icon" size={24} /> รายการใบอนุญาตและวุฒิบัตร
+              </h3>
+              {!fullProfile?.licenses || fullProfile.licenses.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+                  <Award size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                  <p>ยังไม่มีข้อมูลใบอนุญาต</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                  {fullProfile.licenses.map((lic: any, idx: number) => (
+                    <div key={idx} style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{lic.license_name || lic.license_no || 'ใบอนุญาต'}</div>
+                      <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>ออกให้โดย: {lic.institution || '-'}</div>
+                      {(lic.issue_date || lic.expire_date) && (
+                        <div style={{ fontSize: '12px', color: '#3b82f6', background: '#eff6ff', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', fontWeight: 600 }}>
+                          {[lic.issue_date?.split('T')[0], lic.expire_date?.split('T')[0]].filter(Boolean).join(' ถึง ')}
+                        </div>
+                      )}
+                      {lic.status && (
+                        <div style={{ marginTop: '8px' }}>
+                          <span className={`badge ${lic.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                            {lic.status}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'training' && (
+            <div className="glass-card" style={{ padding: '32px' }}>
+              <h3 className="card-title">
+                <FileText className="card-title-icon" size={24} /> ประวัติการฝึกอบรม
+              </h3>
+              
+              <form onSubmit={handleAddTraining} style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#334155' }}>เพิ่มประวัติการอบรม</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">ชื่อหลักสูตร / โครงการ</label>
+                    <input type="text" value={newTraining.course_name} onChange={e => setNewTraining({ ...newTraining, course_name: e.target.value })} required className="form-input" placeholder="ระบุชื่อหลักสูตร..." />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">หน่วยงานที่จัดบรรยาย</label>
+                    <input type="text" value={newTraining.institution} onChange={e => setNewTraining({ ...newTraining, institution: e.target.value })} className="form-input" placeholder="ระบุหน่วยงาน..." />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">วันที่เริ่มต้น</label>
+                    <input type="date" value={newTraining.start_date} onChange={e => setNewTraining({ ...newTraining, start_date: e.target.value })} className="form-input" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">วันที่สิ้นสุด</label>
+                    <input type="date" value={newTraining.end_date} onChange={e => setNewTraining({ ...newTraining, end_date: e.target.value })} className="form-input" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">ไฟล์แนบเกียรติบัตร</label>
+                    <input type="file" accept="image/*,.pdf" onChange={e => setTrainingFile(e.target.files?.[0] || null)} className="form-input" style={{ padding: '8px' }} />
+                  </div>
+                </div>
+                <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start', padding: '10px 24px' }}>
+                  บันทึกประวัติ
+                </button>
+              </form>
+
+              {!trainings || trainings.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+                  <FileText size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                  <p>ยังไม่มีประวัติการอบรม</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                  {trainings.map((tr: any, idx: number) => (
+                    <div key={idx} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '20px', overflow: 'hidden', transition: 'all 0.3s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                      {tr.image_file && (
+                        <div style={{ position: 'relative', width: '100%', height: '160px' }}>
+                          <Image src={`/uploads/${tr.image_file}`} alt="Training" fill style={{ objectFit: 'cover' }} unoptimized />
+                        </div>
+                      )}
+                      <div style={{ padding: '20px' }}>
+                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '15px', marginBottom: '8px' }}>{tr.course_name}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#64748b' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={12} /> {tr.location || '-'}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Briefcase size={12} /> {tr.institution || '-'}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Calendar size={12} /> 
+                            {tr.start_date ? new Date(tr.start_date).toLocaleDateString('th-TH') : ''} 
+                            {tr.end_date && tr.end_date !== tr.start_date ? ` - ${new Date(tr.end_date).toLocaleDateString('th-TH')}` : ''}
+                          </div>
+                        </div>
+                        {tr.certificate_file && (
+                          <a href={`/uploads/${tr.certificate_file}`} target="_blank" rel="noreferrer" style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#2563eb', fontWeight: 700, textDecoration: 'none', background: '#eff6ff', padding: '8px 12px', borderRadius: '10px' }}>
+                            <Award size={14} /> ดูเกียรติบัตร
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'password' && (
             <div className="glass-card" style={{ padding: '32px' }}>
-              <h3 className="card-title">เปลี่ยนรหัสผ่าน</h3>
+              <h3 className="card-title">
+                <ShieldCheck className="card-title-icon" size={24} /> เปลี่ยนรหัสผ่านความปลอดภัย
+              </h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+                <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 20px 0', fontWeight: 600 }}>เปลี่ยนรหัสผ่านด้วยตนเอง</h4>
+                  <div className="form-group">
+                    <label className="form-label">รหัสผ่านเดิม</label>
+                    <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านเดิม..." />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">รหัสผ่านใหม่</label>
+                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-input" placeholder="อย่างน้อย 6 ตัวอักษร" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">ยืนยันรหัสผ่านใหม่</label>
+                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" />
+                  </div>
+                  <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                    <Fingerprint size={18} /> ยืนยันการเปลี่ยนรหัสผ่าน
+                  </button>
+                </form>
 
-              {/* Manual Form */}
-              <form onSubmit={handleChangePassword} style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px', background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 12px 0', fontWeight: 600 }}>เปลี่ยนรหัสผ่านด้วยตนเอง</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>รหัสผ่านเดิม (หรือเลขบัตรประชาชนสำหรับเข้าสู่ระบบครั้งแรก)</label>
-                  <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านเดิม..." />
+                <div style={{ background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 12px 0', fontWeight: 600 }}>
+                    รีเซ็ตรหัสผ่านแบบอัตโนมัติ
+                  </h4>
+                  <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 24px 0', lineHeight: '1.6' }}>
+                    ระบบจะดำเนินการสุ่มรหัสผ่านใหม่เพื่อความปลอดภัย
+                    และจัดส่งการแจ้งเตือนไปยังอีเมลของคุณ
+                    (โปรดตรวจสอบให้แน่ใจว่าอีเมลในประวัติส่วนตัวมีความถูกต้อง)
+                  </p>
+                  <button type="button" onClick={handleResetPasswordViaEmail} className="btn-primary" style={{ width: '100%', justifyContent: 'center', background: '#d97706' }}>
+                    <Mail size={18} /> ส่งอีเมลรีเซ็ตรหัสผ่าน
+                  </button>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>รหัสผ่านใหม่</label>
-                  <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านใหม่..." />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>ยืนยันรหัสผ่านใหม่</label>
-                  <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านใหม่อีกครั้ง..." />
-                </div>
-                <button type="submit" className="btn-primary" style={{ marginTop: '12px', padding: '12px', width: '100%' }}>
-                  บันทึกรหัสผ่านใหม่
-                </button>
-              </form>
-
-              <div style={{ maxWidth: '500px', background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 12px 0', fontWeight: 600 }}>
-                  รีเซ็ตรหัสผ่านแบบอัตโนมัติ
-                </h4>
-                <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 24px 0', lineHeight: '1.6' }}>
-                  ระบบจะดำเนินการสุ่มรหัสผ่านใหม่เพื่อความปลอดภัย
-                  และจัดส่งการแจ้งเตือนไปยังอีเมลของคุณ
-                  (โปรดตรวจสอบให้แน่ใจว่าอีเมลในประวัติส่วนตัวมีความถูกต้อง)
-                </p>
-                <button type="button" onClick={handleResetPasswordViaEmail} style={{ padding: '10px 20px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s', fontSize: '14px', display: 'inline-flex', alignItems: 'center' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#334155'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#0f172a'; }}>
-                  รีเซ็ตรหัสผ่านและส่งเข้าอีเมล
-                </button>
               </div>
             </div>
           )}
@@ -642,9 +657,8 @@ export default function MyProfilePage() {
       <EmployeeFormModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        employee={fullProfile}
+        employee={fullProfile || data.profile}
         onSave={handleSaveProfile}
-        viewMode={false}
         isProfileMode={true}
         departments={departments}
         positions={positions}

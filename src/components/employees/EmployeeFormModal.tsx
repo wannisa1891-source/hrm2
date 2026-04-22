@@ -373,8 +373,8 @@ export default function EmployeeFormModal({
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>แผนก</label>
-                        <select 
-                          value={departments.find(d => d.dept_id === formData.dept_id)?.division || ''} 
+                        <select
+                          value={departments.find(d => d.dept_id === formData.dept_id)?.division || ''}
                           onChange={e => {
                             const div = e.target.value;
                             if (!div) setField('dept_id', '');
@@ -391,9 +391,9 @@ export default function EmployeeFormModal({
                       </div>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>หน่วยงาน</label>
-                        <select 
-                          value={formData.dept_id || ''} 
-                          onChange={e => setField('dept_id', e.target.value)} 
+                        <select
+                          value={formData.dept_id || ''}
+                          onChange={e => setField('dept_id', e.target.value)}
                           style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
                         >
                           <option value="">[ เลือกหน่วยงาน ]</option>
@@ -544,7 +544,7 @@ export default function EmployeeFormModal({
                       <td style={{ padding: '12px' }}>{h.license_no}</td>
                       <td style={{ padding: '12px' }}>{h.expire_date ? new Date(h.expire_date).toLocaleDateString('th-TH') : '-'}</td>
                       <td style={{ padding: '12px' }}>
-                        <span style={{ 
+                        <span style={{
                           padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600,
                           background: h.status === 'Active' ? '#dcfce7' : h.status === 'Renewed' ? '#dbeafe' : '#fee2e2',
                           color: h.status === 'Active' ? '#166534' : h.status === 'Renewed' ? '#1e40af' : '#991b1b'

@@ -29,12 +29,19 @@ export async function GET(req: NextRequest) {
     let employeePayrollQuery: Promise<any> = Promise.resolve([[]]);
 
     if (empId) {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const isPostOct = now.getMonth() >= 9;
+      const fyStart = isPostOct ? `${currentYear}-10-01` : `${currentYear - 1}-10-01`;
+      const fyEnd = isPostOct ? `${currentYear + 1}-09-30` : `${currentYear}-09-30`;
+
       employeeQuotaQuery = pool.query('SELECT quota_vacation, quota_personal, quota_sick FROM tbl_employees WHERE emp_id = ?', [empId]);
       employeeUsedLeavesQuery = pool.query(`
         SELECT leave_type_id, DATEDIFF(end_date, start_date) + 1 AS used_days 
         FROM tbl_leaves 
         WHERE emp_id = ? AND status = 'Approved'
-      `, [empId]);
+        AND start_date >= ? AND start_date <= ?
+      `, [empId, fyStart, fyEnd]);
       employeeRecentLeavesQuery = pool.query(`
         SELECT * 
         FROM tbl_leaves 
