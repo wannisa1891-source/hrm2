@@ -76,14 +76,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const filteredMenuItems = useMemo(() => {
     return menuItems.reduce<any[]>((acc, item) => {
       if (!isAdmin) {
-        // Special mapping for users
-        if (item.id === 'finance') {
-          acc.push({
-            ...item,
-            label: 'เงินเดือนของฉัน'
-          });
-          return acc;
-        }
 
         if (item.id === 'personnel' || item.id === 'audit') return acc;
 

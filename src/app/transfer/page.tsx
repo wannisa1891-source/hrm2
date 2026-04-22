@@ -139,13 +139,13 @@ export default function TransferPage() {
 
   const selectEmployee = (emp: SearchResult) => {
     setSelected(emp);
-    setForm(f => ({ 
-      ...f, 
-      empId: emp.id, 
-      oldPos: emp.pos_id || '', 
+    setForm(f => ({
+      ...f,
+      empId: emp.id,
+      oldPos: emp.pos_id || '',
       oldPosName: emp.pos,
       oldDeptId: emp.dept_id || '',
-      oldDept: emp.dept, 
+      oldDept: emp.dept,
       oldSalary: emp.salary,
       oldLevel: emp.level || '',
       oldPosNo: emp.pos_no || '',
@@ -201,12 +201,12 @@ export default function TransferPage() {
       confirmButtonColor: '#ef4444'
     });
     if (!result.isConfirmed) return;
-    
+
     const res = await fetch(`/api/transfers?id=${id}`, { method: 'DELETE' });
     const data = await res.json();
-    if (data.success) { 
+    if (data.success) {
       Swal.fire({ title: 'ลบสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
-      loadTransfers(); 
+      loadTransfers();
     }
     else Swal.fire('เกิดข้อผิดพลาด', data.error, 'error');
   };
@@ -223,7 +223,7 @@ export default function TransferPage() {
       confirmButtonColor: newStatus === 'Approved' ? '#10b981' : '#ef4444'
     });
     if (!result.isConfirmed) return;
-    
+
     // Convert to update form format
     const updForm = {
       transfer_id: t.transfer_id,
@@ -252,7 +252,7 @@ export default function TransferPage() {
       request_file: t.request_file,
       status: newStatus
     };
-    
+
     const fd = new FormData();
     fd.append('data', JSON.stringify(updForm));
     const res = await fetch('/api/transfers', { method: 'PUT', body: fd });
@@ -280,23 +280,23 @@ export default function TransferPage() {
   }, [visibleTransfers]);
 
   const handleSave = async () => {
-    if (!selected || !form.orderNo || !form.newDeptId) { 
-      Swal.fire('ข้อความแจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning'); 
-      return; 
+    if (!selected || !form.orderNo || !form.newDeptId) {
+      Swal.fire('ข้อความแจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning');
+      return;
     }
     setSaving(true);
     const fd = new FormData();
     fd.append('data', JSON.stringify(form));
     if (orderFile) fd.append('order_file', orderFile);
     if (requestFile) fd.append('request_file', requestFile);
-    
+
     const method = form.transfer_id ? 'PUT' : 'POST';
     const res = await fetch('/api/transfers', { method, body: fd });
     const data = await res.json();
     setSaving(false);
     if (data.success) {
       Swal.fire({
-        title: 'สำเร็จ!', 
+        title: 'สำเร็จ!',
         text: `${form.transfer_id ? 'แก้ไข' : 'บันทึก'}คำสั่งย้ายสำเร็จ! \nข้อมูลพนักงานได้รับการอัปเดตเรียบร้อยแล้ว`,
         icon: 'success',
         timer: 2000,
@@ -322,7 +322,8 @@ export default function TransferPage() {
 
   return (
     <AppLayout>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .tr-page { display: flex; flex-direction: column; gap: 24px; padding: 24px; min-height: calc(100vh - 65px); }
 
         /* Premium Stat Cards */
@@ -544,130 +545,130 @@ export default function TransferPage() {
             </div>
             <div className="tr-table-wrap custom-scroll">
               <table className="data-table">
-              <thead>
-                <tr>
-                  <th>เลขที่คำสั่ง</th>
-                  <th>วันที่มีผล</th>
-                  <th>ข้าราชการ / พนง.</th>
-                  <th>ประเภท</th>
-                  <th>หน่วยงานใหม่</th>
-                  <th>สถานะ</th>
-                  <th style={{ textAlign: 'center' }}>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingList ? (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>กำลังโหลด...</td></tr>
-                ) : (() => {
-                  const q = listSearch.toLowerCase();
-                  const filtered = q
-                    ? visibleTransfers.filter(t =>
+                <thead>
+                  <tr>
+                    <th>เลขที่คำสั่ง</th>
+                    <th>วันที่มีผล</th>
+                    <th>ข้าราชการ / พนง.</th>
+                    <th>ประเภท</th>
+                    <th>หน่วยงานใหม่</th>
+                    <th>สถานะ</th>
+                    <th style={{ textAlign: 'center' }}>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loadingList ? (
+                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>กำลังโหลด...</td></tr>
+                  ) : (() => {
+                    const q = listSearch.toLowerCase();
+                    const filtered = q
+                      ? visibleTransfers.filter(t =>
                         t.order_no?.toLowerCase().includes(q) ||
                         t.emp_name?.toLowerCase().includes(q) ||
                         t.new_dept_name?.toLowerCase().includes(q)
                       )
-                    : visibleTransfers;
+                      : visibleTransfers;
 
-                  const totalPages = Math.ceil(filtered.length / perPage);
-                  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+                    const totalPages = Math.ceil(filtered.length / perPage);
+                    const paged = filtered.slice((page - 1) * perPage, page * perPage);
 
-                  return filtered.length === 0 ? (
-                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8', fontSize: 14 }}>ยังไม่มีประวัติการย้าย — {isAdmin && <span>กด <strong>สร้างคำสั่งย้ายใหม่</strong> เพื่อเริ่มต้น</span>}</td></tr>
-                  ) : paged.map(t => (
-                    <tr key={t.transfer_id} className="clickable-row" onClick={() => setViewingTransfer(t)} title="คลิกเพื่อดูรายละเอียด">
-                      <td><span style={{ fontFamily: 'monospace', fontSize: 12, background: '#f1f5f9', padding: '2px 8px', borderRadius: 6, color: '#64748b' }}>{t.order_no}</span></td>
-                      <td style={{ fontSize: 13, color: '#64748b' }}>{t.effective_date?.split('T')[0] || '—'}</td>
-                      <td>
-                        <div className="emp-val" style={{ fontWeight: 600, color: '#1e293b', transition: 'color 0.2s' }}>{t.emp_name || '—'}</div>
-                        <div style={{ fontSize: 12, color: '#94a3b8' }}>{t.old_pos_name || t.old_position || '—'} → {t.new_pos_name || t.new_position || '—'}</div>
-                      </td>
-                      <td style={{ fontSize: 13, color: '#475569' }}>{t.transfer_type || '—'}</td>
-                      <td style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>{t.new_dept_name || '—'}</td>
-                      <td>
-                        {t.status === 'Approved' ? (
-                          <span className="status-badge badge-approved"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg> อนุมัติแล้ว</span>
-                        ) : t.status === 'Rejected' ? (
-                          <span className="status-badge badge-rejected"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg> ไม่อนุมัติ</span>
-                        ) : (
-                          <span className="status-badge badge-pending"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> รออนุมัติ</span>
-                        )}
-                      </td>
-                      <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
-                          {isAdmin && t.status === 'Pending' && (
-                            <>
-                              <button className="action-btn action-approve" title="อนุมัติการย้าย" onClick={() => setTransferStatus(t, 'Approved')}>
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    return filtered.length === 0 ? (
+                      <tr><td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8', fontSize: 14 }}>ยังไม่มีประวัติการย้าย — {isAdmin && <span>กด <strong>สร้างคำสั่งย้ายใหม่</strong> เพื่อเริ่มต้น</span>}</td></tr>
+                    ) : paged.map(t => (
+                      <tr key={t.transfer_id} className="clickable-row" onClick={() => setViewingTransfer(t)} title="คลิกเพื่อดูรายละเอียด">
+                        <td><span style={{ fontFamily: 'monospace', fontSize: 12, background: '#f1f5f9', padding: '2px 8px', borderRadius: 6, color: '#64748b' }}>{t.order_no}</span></td>
+                        <td style={{ fontSize: 13, color: '#64748b' }}>{t.effective_date?.split('T')[0] || '—'}</td>
+                        <td>
+                          <div className="emp-val" style={{ fontWeight: 600, color: '#1e293b', transition: 'color 0.2s' }}>{t.emp_name || '—'}</div>
+                          <div style={{ fontSize: 12, color: '#94a3b8' }}>{t.old_pos_name || t.old_position || '—'} → {t.new_pos_name || t.new_position || '—'}</div>
+                        </td>
+                        <td style={{ fontSize: 13, color: '#475569' }}>{t.transfer_type || '—'}</td>
+                        <td style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>{t.new_dept_name || '—'}</td>
+                        <td>
+                          {t.status === 'Approved' ? (
+                            <span className="status-badge badge-approved"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> อนุมัติแล้ว</span>
+                          ) : t.status === 'Rejected' ? (
+                            <span className="status-badge badge-rejected"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg> ไม่อนุมัติ</span>
+                          ) : (
+                            <span className="status-badge badge-pending"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> รออนุมัติ</span>
+                          )}
+                        </td>
+                        <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+                            {isAdmin && t.status === 'Pending' && (
+                              <>
+                                <button className="action-btn action-approve" title="อนุมัติการย้าย" onClick={() => setTransferStatus(t, 'Approved')}>
+                                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                </button>
+                                <button className="action-btn action-del" title="ไม่อนุมัติ" onClick={() => setTransferStatus(t, 'Rejected')}>
+                                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                              </>
+                            )}
+                            <button className="action-btn action-view" title="ดูรายละเอียด" onClick={() => setViewingTransfer(t)}>
+                              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            </button>
+                            {t.status === 'Approved' && (
+                              <button className="action-btn action-print" title="พิมพ์หนังสือคำสั่ง (PDF)" onClick={() => handlePrint(t)}>
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                               </button>
-                              <button className="action-btn action-del" title="ไม่อนุมัติ" onClick={() => setTransferStatus(t, 'Rejected')}>
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                            )}
+                            {isAdmin && t.status !== 'Approved' && (
+                              <button className="action-btn action-edit" title="แก้ไข" onClick={() => handleEdit(t)}>
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                               </button>
-                            </>
-                          )}
-                          <button className="action-btn action-view" title="ดูรายละเอียด" onClick={() => setViewingTransfer(t)}>
-                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                          </button>
-                          {t.status === 'Approved' && (
-                            <button className="action-btn action-print" title="พิมพ์หนังสือคำสั่ง (PDF)" onClick={() => handlePrint(t)}>
-                              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                            </button>
-                          )}
-                          {isAdmin && t.status !== 'Approved' && (
-                            <button className="action-btn action-edit" title="แก้ไข" onClick={() => handleEdit(t)}>
-                              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                            </button>
-                          )}
-                          {t.transfer_file && (
-                            <a href={`/uploads/${t.transfer_file}`} target="_blank" rel="noreferrer" className="action-btn action-file" title="ดูไฟล์แนบ">
-                              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            </a>
-                          )}
-                          {isAdmin && (
-                            <button className="action-btn action-del" title="ลบ" onClick={() => handleDelete(t.transfer_id)}>
-                              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ));
-                })()}
-              </tbody>
-            </table>
-          </div>
-          {/* Pagination */}
-          {!loadingList && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
-              <span style={{ fontSize: 13, color: '#64748b' }}>
-                แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length)} จาก {listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length} รายการ
-              </span>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
-                  ก่อนหน้า
-                </button>
-                {Array.from({ length: Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage) }, (_, i) => (
-                  <button key={i} onClick={() => setPage(i + 1)}
-                    style={{
-                      padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                      border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
-                      background: page === i + 1 ? '#3b82f6' : 'white',
-                      color: page === i + 1 ? 'white' : '#334155'
-                    }}>{i + 1}</button>
-                ))}
-                <button onClick={() => setPage(p => Math.min(Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage), p + 1))} disabled={page === Math.max(1, Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage))}
-                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.max(1, Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage)) ? 'default' : 'pointer', fontSize: 13, color: page === Math.max(1, Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage)) ? '#94a3b8' : '#334155', fontWeight: 600 }}>
-                  ถัดไป
-                </button>
-              </div>
+                            )}
+                            {t.transfer_file && (
+                              <a href={`/uploads/${t.transfer_file}`} target="_blank" rel="noreferrer" className="action-btn action-file" title="ดูไฟล์แนบ">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                              </a>
+                            )}
+                            {isAdmin && (
+                              <button className="action-btn action-del" title="ลบ" onClick={() => handleDelete(t.transfer_id)}>
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
+                </tbody>
+              </table>
             </div>
-          )}
+            {/* Pagination */}
+            {!loadingList && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
+                <span style={{ fontSize: 13, color: '#64748b' }}>
+                  แสดง {(page - 1) * perPage + 1}-{Math.min(page * perPage, listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length)} จาก {listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length} รายการ
+                </span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                    style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === 1 ? 'default' : 'pointer', fontSize: 13, color: page === 1 ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                    ก่อนหน้า
+                  </button>
+                  {Array.from({ length: Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage) }, (_, i) => (
+                    <button key={i} onClick={() => setPage(i + 1)}
+                      style={{
+                        padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                        border: page === i + 1 ? 'none' : '1px solid #cbd5e1',
+                        background: page === i + 1 ? '#3b82f6' : 'white',
+                        color: page === i + 1 ? 'white' : '#334155'
+                      }}>{i + 1}</button>
+                  ))}
+                  <button onClick={() => setPage(p => Math.min(Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage), p + 1))} disabled={page === Math.max(1, Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage))}
+                    style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', cursor: page === Math.max(1, Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage)) ? 'default' : 'pointer', fontSize: 13, color: page === Math.max(1, Math.ceil((listSearch ? visibleTransfers.filter(t => t.order_no?.toLowerCase().includes(listSearch.toLowerCase()) || t.emp_name?.toLowerCase().includes(listSearch.toLowerCase()) || t.new_dept_name?.toLowerCase().includes(listSearch.toLowerCase())).length : visibleTransfers.length) / perPage)) ? '#94a3b8' : '#334155', fontWeight: 600 }}>
+                    ถัดไป
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* ── FORM (3 sections) ── */}
         {showForm && (
-          <div className="glass-card" style={{ padding: 0 }}>           
+          <div className="glass-card" style={{ padding: 0 }}>
             <div className="tr-section-header tr-section-1">
               ข้อมูลคำสั่ง
             </div>
@@ -704,7 +705,7 @@ export default function TransferPage() {
 
             {/* ─── SECTION 2: รายละเอียดการเปลี่ยนแปลง ─── */}
             <div className="tr-section-header tr-section-2">
-            รายละเอียดการเปลี่ยนแปลง
+              รายละเอียดการเปลี่ยนแปลง
             </div>
             <div className="tr-section-body">
 
@@ -811,20 +812,13 @@ export default function TransferPage() {
                       <input className="tr-input" style={{ padding: '6px 10px', fontSize: 13 }} placeholder="เลขที่ตำแหน่งใหม่" value={form.newPosNo} onChange={e => setF('newPosNo', e.target.value)} />
                     </td>
                   </tr>
-                  <tr>
-                    <td>เงินเดือน (บาท)</td>
-                    <td className="old-val">{selected ? form.oldSalary.toLocaleString() : '—'}</td>
-                    <td className="new-val">
-                      <input type="number" className="tr-input" style={{ padding: '6px 10px', fontSize: 13 }} placeholder="เงินเดือนใหม่" value={form.newSalary || ''} onChange={e => setF('newSalary', Number(e.target.value))} />
-                    </td>
-                  </tr>
                 </tbody>
               </table>
             </div>
 
             {/* ─── SECTION 3: เอกสารแนบ ─── */}
             <div className="tr-section-header tr-section-3">
-            เอกสารแนบ และบันทึกข้อความ
+              เอกสารแนบ และบันทึกข้อความ
             </div>
             <div className="tr-section-body">
               <div className="tr-form-row">
@@ -879,7 +873,7 @@ export default function TransferPage() {
             <div className="tr-modal" onClick={e => e.stopPropagation()}>
               <div className="tr-modal-header">
                 <span className="tr-modal-title">รายละเอียดคำสั่งย้าย</span>
-                <button onClick={() => setViewingTransfer(null)} style={{ background:'none', border:'none', fontSize:24, cursor:'pointer', color:'#94a3b8' }}>&times;</button>
+                <button onClick={() => setViewingTransfer(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#94a3b8' }}>&times;</button>
               </div>
               <div className="tr-modal-body">
                 <div className="detail-grid" style={{ marginBottom: 28 }}>
@@ -965,7 +959,7 @@ export default function TransferPage() {
 
                 <div style={{ display: 'flex', gap: 16, marginTop: 24, flexWrap: 'wrap' }}>
                   {viewingTransfer.transfer_file && (
-                    <a href={`/uploads/${viewingTransfer.transfer_file}`} target="_blank" rel="noreferrer" 
+                    <a href={`/uploads/${viewingTransfer.transfer_file}`} target="_blank" rel="noreferrer"
                       style={{ background: '#eff6ff', padding: '12px 20px', borderRadius: '12px', color: '#2563eb', fontSize: 15, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', transition: 'background 0.2s' }}
                       onMouseOver={e => e.currentTarget.style.background = '#dbeafe'}
                       onMouseOut={e => e.currentTarget.style.background = '#eff6ff'}>
@@ -975,7 +969,7 @@ export default function TransferPage() {
                   )}
 
                   {viewingTransfer.request_file && (
-                    <a href={`/uploads/${viewingTransfer.request_file}`} target="_blank" rel="noreferrer" 
+                    <a href={`/uploads/${viewingTransfer.request_file}`} target="_blank" rel="noreferrer"
                       style={{ background: '#f0fdf4', padding: '12px 20px', borderRadius: '12px', color: '#16a34a', fontSize: 15, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', transition: 'background 0.2s' }}
                       onMouseOver={e => e.currentTarget.style.background = '#dcfce7'}
                       onMouseOut={e => e.currentTarget.style.background = '#f0fdf4'}>
