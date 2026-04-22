@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     // Fetch active employees
     const [employees] = await connection.query(`
-      SELECT emp_id, base_salary, citizen_id FROM tbl_employees WHERE status = 'Active'
+      SELECT emp_id, citizen_id FROM tbl_employees WHERE status = 'Active'
     `);
 
     if ((employees as any[]).length === 0) {
