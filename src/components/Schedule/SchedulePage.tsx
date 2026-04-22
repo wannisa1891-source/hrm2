@@ -547,8 +547,11 @@ export default function SchedulePage() {
               )}
 
               {/* Form */}
-              <div>
-                <div className="sp-form-group">
+              {/* Form */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                
+                {/* Row 1: Meeting Subject */}
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
                   <label>หัวข้อการประชุม <span className="sp-req">*</span></label>
                   <input className="sp-field" value={form.subject}
                     disabled={!isAdmin}
@@ -556,7 +559,64 @@ export default function SchedulePage() {
                     placeholder="เช่น ประชุมสรุปผลการดำเนินงานประจำปี" />
                 </div>
 
-                <div className="sp-form-group">
+                {/* Row 2: Booker Name & Contact Phone */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>ชื่อผู้จัด/ผู้ประสานงาน <span className="sp-req">*</span></label>
+                    <input className="sp-field" value={form.bookerName}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, bookerName: e.target.value }))}
+                      placeholder="ระบุชื่อผู้ติดต่อ" />
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เบอร์โทรศัพท์ติดต่อ</label>
+                    <input className="sp-field" value={form.contactPhone}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, contactPhone: e.target.value }))}
+                      placeholder="0xx-xxxxxxx" />
+                  </div>
+                </div>
+
+                {/* Row 3: Department & Unit */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>หน่วยงานผู้จัด <span className="sp-req">*</span></label>
+                    <select className="sp-field" value={form.organizer} disabled={!isAdmin}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, organizer: e.target.value }))}>
+                      <option value="">เลือกหน่วยงาน/แผนก</option>
+                      {departments.map((d) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>แผนกที่รับผิดชอบ <span className="sp-req">*</span></label>
+                    <select className="sp-field" value={form.unit}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, unit: e.target.value }))}>
+                      <option value="">เลือกกลุ่มงาน/แผนกย่อย</option>
+                      {units.map((u) => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Row 4: Day & Time Selection */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>วันที่ประชุม</label>
+                    <div style={{ padding: '8px 12px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', fontWeight: 600 }}>
+                      {selectedDate?.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เวลาเริ่ม <span className="sp-req">*</span></label>
+                    <input type="time" className="sp-field" value={form.startTime}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, startTime: e.target.value }))} />
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เวลาสิ้นสุด <span className="sp-req">*</span></label>
+                    <input type="time" className="sp-field" value={form.endTime}
+                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, endTime: e.target.value }))} />
+                  </div>
+                </div>
+
+                {/* Row 5: Room Selection */}
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
                   <label>สถานที่/ห้องประชุม <span className="sp-req">*</span></label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
                     {roomTypes.map((st: any) => (
@@ -572,16 +632,15 @@ export default function SchedulePage() {
                           boxShadow: form.room === st.value ? `0 0 0 3px ${st.color}20` : 'none'
                         }}>
                         {st.image ? (
-                          <div style={{ height: '80px', width: '100%', background: '#f1f5f9', position: 'relative' }}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <div style={{ height: '60px', width: '100%', background: '#f1f5f9', position: 'relative' }}>
                             <img src={st.image} alt={st.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </div>
                         ) : (
-                          <div style={{ height: '80px', width: '100%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e2e8f0' }}>
-                            <svg width="32" height="32" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                          <div style={{ height: '60px', width: '100%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e2e8f0' }}>
+                            <svg width="24" height="24" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                           </div>
                         )}
-                        <div style={{ padding: '8px', textAlign: 'center', fontSize: '13px', fontWeight: form.room === st.value ? 700 : 500, color: form.room === st.value ? st.color : '#475569' }}>
+                        <div style={{ padding: '6px', textAlign: 'center', fontSize: '12px', fontWeight: form.room === st.value ? 700 : 500, color: form.room === st.value ? st.color : '#475569' }}>
                           {st.label}
                         </div>
                       </div>
@@ -589,15 +648,8 @@ export default function SchedulePage() {
                   </div>
                 </div>
 
-                <div className="sp-form-group">
-                  <label>หน่วยงานผู้จัด <span className="sp-req">*</span></label>
-                  <select className="sp-field" value={form.organizer} disabled={!isAdmin}
-                    onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, organizer: e.target.value }))}>
-                    <option value="">เลือกหน่วยงาน/แผนก</option>
-                    {departments.map((d) => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div className="sp-form-group">
+                {/* Row 6: Remark */}
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
                   <label>หมายเหตุ</label>
                   <input className="sp-field" value={form.note}
                     onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, note: e.target.value }))}
