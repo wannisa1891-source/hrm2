@@ -56,6 +56,7 @@ export interface Employee {
   quota_personal?: number
   quota_sick?: number
   quota_vacation?: number
+  accumulated_vacation?: number
   trainings?: Training[]
 }
 
@@ -107,7 +108,9 @@ export interface Leave {
   quota_sick?: number
   quota_personal?: number
   quota_vacation?: number
+  accumulated_vacation?: number
   emp_type?: string
+  start_date_work?: string
 }
 
 export interface ScheduleRecord {

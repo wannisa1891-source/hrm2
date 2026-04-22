@@ -10,6 +10,7 @@ import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { useSearchParams } from 'next/navigation';
 import { getCurrentFiscalYearRange, toDateStr } from '@/lib/dateUtils';
+import { getQuotaByType } from '@/constants/leaveRules';
 
 const CATEGORIES = [
   { id: 'Sick', name: 'ลาป่วย', color: '#f59e0b' },
@@ -28,6 +29,19 @@ const LEAVE_TYPES = [
   { id: 'T07', name: 'ลูกจ้างเหมา', p_qt: 0, s_qt: 0, v_qt: 0, rule: '-', color: '#64748b' },
   { id: 'T08', name: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#334155' },
 ];
+
+const getQuotaForEmployee = (empType: string, leaveTypeId: string, startDate?: string) => {
+  const type = (empType || '').trim();
+  const quotaObj = getQuotaByType(type, startDate);
+
+  if (leaveTypeId === 'L01') return quotaObj.sick;
+  if (leaveTypeId === 'L02') return quotaObj.personal;
+  if (leaveTypeId === 'L03') return quotaObj.vacation;
+  if (leaveTypeId === 'L04') return 90; // ลาคลอด (General rule)
+  if (leaveTypeId === 'L05') return 15; // ลาช่วยภริยาคลอด
+  if (leaveTypeId === 'L06') return 120; // ลาอุปสมบท/ฮัจญ์
+  return 0;
+};
 
 export default function LeavePage() {
   const { user } = useAuth();
@@ -410,10 +424,18 @@ export default function LeavePage() {
         const days = calculateDays(selectedLeave.start_date, selectedLeave.end_date);
         const typeCfg = LEAVE_TYPES.find(t => t.id === selectedLeave.leave_type_id);
         const ql = typeCfg?.name || 'การลา';
-        // Quota display logic
-        const s_qt = typeCfg?.s_qt || 0;
-        const p_qt = typeCfg?.p_qt || 0;
-        const v_qt = typeCfg?.v_qt || 0;
+        
+        // Quota logic using getQuotaByType for robustness
+        const quotaObj = getQuotaByType(selectedLeave.emp_type || '', selectedLeave.start_date_work);
+        
+        let qt = 0;
+        const cat = (selectedLeave as any).leave_category || 'Sick';
+        if (cat === 'Sick') qt = quotaObj.sick || typeCfg?.s_qt || 0;
+        else if (cat === 'Personal') qt = quotaObj.personal || typeCfg?.p_qt || 0;
+        else if (cat === 'Vacation') qt = quotaObj.vacation || typeCfg?.v_qt || 0;
+
+        const acc = (selectedLeave as any).accumulated_vacation || 0;
+        const totalQt = qt + acc;
 
 
         // Calculate used days in current fiscal year FOR THIS CATEGORY
@@ -423,29 +445,19 @@ export default function LeavePage() {
             l.status === 'Approved' && 
             (l as any).leave_category === (selectedLeave as any).leave_category &&
             new Date(l.start_date) >= getCurrentFiscalYearRange().start &&
-            new Date(l.start_date) <= getCurrentFiscalYearRange().end
+            new Date(l.start_date) <= getCurrentFiscalYearRange().end &&
+            l.leave_id !== selectedLeave.leave_id // Don't count current if editing
           )
           .reduce((sum, l) => sum + calculateDays(l.start_date, l.end_date), 0);
 
-        // Map category to quota field
-        let qt = 0;
-        const cat = (selectedLeave as any).leave_category || 'Sick';
-        if (cat === 'Sick') qt = typeCfg?.s_qt || 0;
-        else if (cat === 'Personal') qt = typeCfg?.p_qt || 0;
-        else if (cat === 'Vacation') {
-          qt = typeCfg?.v_qt || 0;
-          // Add accumulation from user profile if vacation
-          qt += (selectedLeave as any).accumulated_vacation || 0;
-        }
-
-        const rem = qt - usedInFiscalYear;
-        const over = rem < days;
-        const finalRem = rem - days;
+        const rem = totalQt - usedInFiscalYear - days;
+        const over = rem < 0;
+        const finalRem = rem;
 
         return (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}
             onClick={e => e.target === e.currentTarget && setShowReviewModal(false)}>
-            <div style={{ background: 'white', borderRadius: 24, padding: 32, width: 480, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', animation: 'fadeIn 0.2s ease-out' }}>
+          <div style={{ background: 'white', borderRadius: 24, padding: '24px 32px', width: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', animation: 'fadeIn 0.2s ease-out' }} className="custom-scroll">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                 <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0f172a' }}>รายละเอียดการลา</h3>
                 <button onClick={() => setShowReviewModal(false)} style={{ width: 32, height: 32, borderRadius: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
@@ -511,7 +523,7 @@ export default function LeavePage() {
                   </div>
                   <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                    <span style={{ fontWeight: 700, color: '#0f172a' }}>คงเหลือสุทธิ</span>
+                    <span style={{ fontWeight: 700, color: '#0f172a' }}>คงเหลือสุทธิหลังอนุมัติ</span>
                     <span style={{ fontWeight: 800, color: finalRem < 0 ? '#ef4444' : '#10b981', fontSize: 18 }}>{finalRem} วัน</span>
                   </div>
                 </div>
