@@ -398,7 +398,18 @@ export default function DepartmentAndEmployeePage() {
         <div className="no-scrollbar" style={{ flex: 1, padding: '32px 40px 180px', overflowY: 'auto', overflowX: 'hidden' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' }}>
             <div style={{ minWidth: '300px' }}>
-              <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', wordBreak: 'keep-all', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #1e293b 0%, #4f46e5 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <h1 style={{ 
+                display: 'inline-block',
+                fontSize: '32px', 
+                fontWeight: 800, 
+                margin: 0, 
+                lineHeight: '1.6', 
+                padding: '10px 0', 
+                whiteSpace: 'nowrap', 
+                background: 'linear-gradient(135deg, #1e293b 0%, #4f46e5 100%)', 
+                WebkitBackgroundClip: 'text', 
+                WebkitTextFillColor: 'transparent' 
+              }}>
                 {selectedDeptId === 'interns' ? 'รายชื่อนักศึกษาฝึกงานทั้งหมด' : (selectedDeptId ? `${getDeptName(selectedDeptId)} (${departments.find(d => d.dept_id === selectedDeptId)?.sub_dept || ''})` : selectedGrp ? selectedGrp : selectedDiv ? selectedDiv : 'รายชื่อบุคลากรทั้งหมด')}
               </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#64748b', margin: '8px 0 0', fontSize: '15px' }}>
@@ -445,11 +456,12 @@ export default function DepartmentAndEmployeePage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                      <th style={{ ...styles.th, width: '80px' }}>รูปภาพ</th>
                       <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
                       <th style={styles.th}>บุคลากร</th>
-                      <th style={styles.th}>ตำแหน่ง</th>
                       <th style={styles.th}>แผนก</th>
                       <th style={styles.th}>หน่วยงาน</th>
+                      <th style={styles.th}>ตำแหน่ง</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
                       <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
                     </tr>
@@ -486,11 +498,12 @@ export default function DepartmentAndEmployeePage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                      <th style={{ ...styles.th, width: '80px' }}>รูปภาพ</th>
                       <th style={{ ...styles.th, width: '100px' }}>รหัส</th>
                       <th style={styles.th}>ชื่อ-สกุล</th>
-                      <th style={styles.th}>คณะ / ตำแหน่ง</th>
                       <th style={styles.th}>แผนก</th>
                       <th style={styles.th}>หน่วยงาน</th>
+                      <th style={styles.th}>ตำแหน่ง</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
                       <th style={{ ...styles.th, width: '80px', textAlign: 'right' }}>จัดการ</th>
                     </tr>
@@ -568,9 +581,6 @@ export default function DepartmentAndEmployeePage() {
                   <>
                     <button style={styles.mainEditBtn} onClick={() => router.push(`/employees?q=${selectedEmp.emp_id}`)}>
                       <Edit2 size={18} /> แก้ไขแฟ้มประวัติ
-                    </button>
-                    <button onClick={handleDeleteEmployee} style={styles.deleteBtn} title="ลบข้อมูล">
-                      <Trash2 size={18} />
                     </button>
                   </>
                 )}
@@ -811,15 +821,6 @@ export default function DepartmentAndEmployeePage() {
                         onMouseOut={e => e.currentTarget.style.background = '#0f172a'}
                       >
                         <Edit2 size={16} /> แก้ไขข้อมูลแผนก
-                      </button>
-                      <button
-                        onClick={(e) => handleDeleteDepartment(deptForm.id, e)}
-                        style={{ width: '56px', borderRadius: '12px', border: '1px solid #fca5a5', background: '#fff', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
-                        title="ลบแผนก"
-                        onMouseOver={e => e.currentTarget.style.background = '#fef2f2'}
-                        onMouseOut={e => e.currentTarget.style.background = '#fff'}
-                      >
-                        <Trash2 size={20} />
                       </button>
                     </div>
                   )}
@@ -1124,23 +1125,20 @@ function EmployeeRow({
       }}
       style={styles.tableRow}
     >
+      <td style={styles.td}>
+        <div style={styles.avatar}>
+          {emp.image ? (
+            <Image fill unoptimized src={`/uploads/${emp.image}`} alt="pic" style={{ objectFit: 'cover', borderRadius: '12px' }} />
+          ) : (
+            <span>{emp.first_name_th?.[0] || 'U'}</span>
+          )}
+        </div>
+      </td>
       <td style={{ ...styles.td, fontWeight: 700, color: '#475569' }}>
         {emp.emp_id}
       </td>
       <td style={styles.td}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={styles.avatar}>
-            {emp.image ? (
-              <Image fill unoptimized src={`/uploads/${emp.image}`} alt="pic" style={{ objectFit: 'cover', borderRadius: '12px' }} />
-            ) : (
-              <span>{emp.first_name_th?.[0] || 'U'}</span>
-            )}
-          </div>
-          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
-        </div>
-      </td>
-      <td style={{ ...styles.td, fontWeight: 600, color: '#334155', fontSize: '14px' }}>
-        {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}
+        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
       </td>
       <td style={{ ...styles.td, color: '#4f46e5', fontSize: '14px', fontWeight: 600 }}>
         {departments.find((d: any) => String(d.dept_id) === String(emp.dept_id))?.division || '-'}
@@ -1151,6 +1149,9 @@ function EmployeeRow({
           if (!dept) return '-';
           return dept.dept_name || '-';
         })()}
+      </td>
+      <td style={{ ...styles.td, fontWeight: 600, color: '#334155', fontSize: '14px' }}>
+        {formatPosName(getPosName(emp.pos_id), emp.gender, emp.prefix)}
       </td>
       <td style={{ ...styles.td, textAlign: 'center', position: 'relative', zIndex: isOpen ? 50 : 1 }}>
         <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} isOpen={isOpen} setIsOpen={setIsOpen} />
