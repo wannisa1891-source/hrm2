@@ -83,19 +83,25 @@ export default function EmployeeFormModal({
   const setField = (key: keyof Employee, value: any) => setFormData(f => ({ ...f, [key]: value }));
 
   const setLicenseField = (index: number, key: keyof ProfessionalLicense, value: any) => {
-    const updated = [...(formData.licenses || [])];
-    updated[index] = { ...updated[index], [key]: value };
-    setField('licenses', updated);
+    setFormData(f => {
+      const updated = [...(f.licenses || [])];
+      updated[index] = { ...updated[index], [key]: value };
+      return { ...f, licenses: updated };
+    });
   };
 
   const handleAddLicense = () => {
-    const current = formData.licenses || [];
-    setField('licenses', [...current, { license_name: '', license_type: '', license_no: '', institution: '', issue_date: '', expire_date: '', status: 'Active' }]);
+    setFormData(f => {
+      const current = f.licenses || [];
+      return { ...f, licenses: [...current, { license_name: '', license_type: '', license_no: '', institution: '', issue_date: '', expire_date: '', status: 'Active' }] };
+    });
   };
   const handleRemoveLicense = (index: number) => {
-    const updated = [...(formData.licenses || [])];
-    updated.splice(index, 1);
-    setField('licenses', updated);
+    setFormData(f => {
+      const updated = [...(f.licenses || [])];
+      updated.splice(index, 1);
+      return { ...f, licenses: updated };
+    });
   };
 
   const handleSaveSubmit = async (e: React.FormEvent) => {
@@ -120,13 +126,19 @@ export default function EmployeeFormModal({
 
     const filteredLicenses = (formData.licenses || []).filter(l => l.license_name && l.license_no);
     fd.append('licenses_data', JSON.stringify(filteredLicenses.map(l => {
-      const { file, previewUrl, ...rest } = l as any;
+      const { file, files, previewUrl, ...rest } = l as any;
       return rest;
     })));
 
     filteredLicenses.forEach((l: any, idx) => {
-      if (l.file) {
-        fd.append(`license_file_${idx}`, l.file);
+      if (l.files && l.files.length > 0) {
+        l.files.forEach((f: File, fIdx: number) => {
+          fd.append(`license_file_${idx}_${fIdx}`, f);
+        });
+        fd.append(`license_file_count_${idx}`, String(l.files.length));
+      } else if (l.file) {
+        fd.append(`license_file_${idx}_0`, l.file);
+        fd.append(`license_file_count_${idx}`, '1');
       }
     });
 
@@ -430,15 +442,15 @@ export default function EmployeeFormModal({
                 {/* Professional Licenses Sub-section */}
                 <div style={{ marginTop: '24px', background: '#ffffff', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0', borderLeft: '4px solid #10b981' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', marginBottom: '16px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: 0 }}>ข้อมูลใบประกอบวิชาชีพและวุฒิบัตร</label>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: 0 }}>ข้อมูลใบประกอบวิชาชีพ</label>
                     <div style={{ display: 'flex', gap: '15px', background: '#f1f5f9', padding: '6px 12px', borderRadius: '12px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer' }}>
                         <input type="radio" checked={formData.has_license === true || (formData.has_license as any) === 1} onChange={() => setField('has_license', true)} style={{ width: '16px', height: '16px' }} />
-                        มีใบประกอบฯ / ใบประกาศ
+                        มีใบประกอบวิชาชีพ / ใบรับรอง
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer' }}>
                         <input type="radio" checked={formData.has_license !== true && (formData.has_license as any) !== 1} onChange={() => setField('has_license', false)} style={{ width: '16px', height: '16px' }} />
-                        ไม่มี / ไม่ระบุ
+                        ไม่มี
                       </label>
                     </div>
                   </div>
@@ -469,12 +481,7 @@ export default function EmployeeFormModal({
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <label style={{ fontSize: '12px', color: '#64748b' }}>ประเภทวิชาชีพ</label>
-                            <select value={lic.license_type || ''} onChange={e => setLicenseField(index, 'license_type', e.target.value)} style={addrInputStyle}>
-                              <option value="">เลือกประเภท</option>
-                              <option value="พยาบาล (RN)">พยาบาล (RN)</option>
-                              <option value="แพทย์ (MD)">แพทย์ (MD)</option>
-                              <option value="อื่นๆ">อื่นๆ</option>
-                            </select>
+                            <input type="text" value={lic.license_type || ''} onChange={e => setLicenseField(index, 'license_type', e.target.value)} style={addrInputStyle} />
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <label style={{ fontSize: '12px', color: '#64748b' }}>เลขที่ใบอนุญาต</label>
@@ -493,14 +500,69 @@ export default function EmployeeFormModal({
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
                           <label style={{ fontSize: '12px', color: '#64748b' }}>ไฟล์ภาพอ้างอิง (Image / PDF)</label>
-                          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                            <button type="button" onClick={() => document.getElementById(`licenseFile_${index}`)?.click()} style={{ padding: '6px 14px', background: '#cbd5e1', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}>เลือกไฟล์แนบ</button>
-                            <input id={`licenseFile_${index}`} type="file" accept="image/*,.pdf" onChange={e => {
-                              const f = e.target.files?.[0];
-                              if (f) setLicenseField(index, 'file', f);
-                            }} style={{ display: 'none' }} />
-                            {(lic as any).file && <span style={{ fontSize: '12px', color: '#10b981' }}>เลือกไฟล์แล้ว: {(lic as any).file.name}</span>}
-                            {!(lic as any).file && lic.file_path && <span style={{ fontSize: '12px', color: '#3b82f6' }}>มีไฟล์ในระบบแล้ว</span>}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <button type="button" onClick={() => document.getElementById(`licenseFile_${index}`)?.click()} style={{ padding: '6px 14px', background: '#cbd5e1', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}>เลือกไฟล์แนบ</button>
+                              <input id={`licenseFile_${index}`} type="file" multiple accept="image/*,.pdf" onChange={e => {
+                                const newFiles = Array.from(e.target.files || []);
+                                if (newFiles.length > 0) {
+                                  const existingFiles = (lic as any).files || [];
+                                  const mergedFiles = [...existingFiles, ...newFiles];
+                                  setLicenseField(index, 'files', mergedFiles);
+                                  setLicenseField(index, 'file', mergedFiles[0]); // fallback
+                                }
+                                e.target.value = ''; // Reset input to allow selecting the same file again
+                              }} style={{ display: 'none' }} />
+                            </div>
+                            
+                            {/* แสดงไฟล์ที่เพิ่งเลือก (New files) */}
+                            {((lic as any).files && (lic as any).files.length > 0) ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '10px' }}>
+                                <span style={{ fontSize: '12px', color: '#64748b' }}>ไฟล์ที่เลือกใหม่:</span>
+                                {Array.from((lic as any).files as File[]).map((f, fi) => (
+                                  <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <a href={URL.createObjectURL(f)} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#10b981', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      📄 {f.name}
+                                    </a>
+                                    <button type="button" onClick={() => {
+                                      const updated = [...(lic as any).files];
+                                      updated.splice(fi, 1);
+                                      setLicenseField(index, 'files', updated);
+                                      if (updated.length > 0) setLicenseField(index, 'file', updated[0]);
+                                      else setLicenseField(index, 'file', null);
+                                    }} style={{ background: '#fee2e2', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>ลบ</button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (lic as any).file ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '10px' }}>
+                                <span style={{ fontSize: '12px', color: '#64748b' }}>ไฟล์ที่เลือกใหม่:</span>
+                                <a href={URL.createObjectURL((lic as any).file)} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#10b981', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  📄 {(lic as any).file.name}
+                                </a>
+                              </div>
+                            ) : null}
+
+                            {/* แสดงไฟล์เดิมในระบบ (Existing files) */}
+                            {!((lic as any).files && (lic as any).files.length > 0) && !(lic as any).file && lic.file_path && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '10px' }}>
+                                <span style={{ fontSize: '12px', color: '#64748b' }}>ไฟล์ในระบบ:</span>
+                                {(() => {
+                                  let fileList: string[] = [];
+                                  try {
+                                    const parsed = JSON.parse(lic.file_path);
+                                    if (Array.isArray(parsed)) fileList = parsed;
+                                    else fileList = [lic.file_path];
+                                  } catch(e) { fileList = [lic.file_path]; }
+                                  
+                                  return fileList.map((fPath, fi) => (
+                                    <a key={fi} href={`/uploads/${fPath}`} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      📎 ไฟล์แนบที่ {fi + 1}
+                                    </a>
+                                  ));
+                                })()}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

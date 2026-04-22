@@ -81,8 +81,8 @@ export interface ProfessionalLicense {
   issue_date?: string
   expire_date?: string
   status?: string
-  file_path?: string
-  file?: File | null
+  file_path?: string | string[]
+  files?: File[]
   previewUrl?: string | null
 }
 
