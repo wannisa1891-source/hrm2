@@ -58,6 +58,7 @@ export default function LeavePage() {
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
   const perPage = 8;
+  const [showRules, setShowRules] = useState(false);
 
   const calculateDays = (start: string, end: string) => {
     if (!start || !end) return 0;
@@ -167,6 +168,20 @@ export default function LeavePage() {
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .lv-quota-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        @media (max-width: 900px) { .lv-quota-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 600px) { .lv-quota-grid { grid-template-columns: 1fr; } }
+        .lv-quota-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; transition: all 0.2s; }
+        .lv-quota-card:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.07); transform: translateY(-2px); }
+        .lv-rules-wrap { background: white; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; margin-top: 16px; }
+        .lv-rules-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .lv-rules-tbl th { background: #f8fafc; padding: 10px 14px; font-weight: 700; color: #374151; border-bottom: 1px solid #e2e8f0; text-align: center; }
+        .lv-rules-tbl th:first-child { text-align: left; }
+        .lv-rules-tbl td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; color: #374151; text-align: center; }
+        .lv-rules-tbl td:first-child { text-align: left; font-weight: 600; }
+        .lv-rules-tbl tr:last-child td { border-bottom: none; }
+        .lv-rules-tbl tr:hover td { background: #fafafa; }
+        .lv-no { color: #9ca3af; font-style: italic; font-size: 11px; }
       `}} />
 
       <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
@@ -204,6 +219,135 @@ export default function LeavePage() {
           );
         })}
       </div>
+
+      {/* ─── Quota Summary Panel ─── */}
+      {(() => {
+        const empId = user?.emp_id || user?.username || (user as any)?.name;
+        const myEmp = employees.find(e => e.emp_id === empId) ?? null;
+        const fyRange = getCurrentFiscalYearRange();
+        const thY = (y: number) => y + 543;
+        const fyLabel = `1 ต.ค. ${thY(fyRange.start.getFullYear())} – 30 ก.ย. ${thY(fyRange.end.getFullYear())}`;
+
+        const myApproved = leaves.filter(l =>
+          l.emp_id === empId && l.status === 'Approved' &&
+          new Date(l.start_date) >= fyRange.start && new Date(l.start_date) <= fyRange.end
+        );
+        const usedSick = myApproved.filter(l => l.leave_type_id === 'L01').reduce((s, l) => s + calculateDays(l.start_date, l.end_date), 0);
+        const usedPersonal = myApproved.filter(l => l.leave_type_id === 'L02').reduce((s, l) => s + calculateDays(l.start_date, l.end_date), 0);
+        const usedVacation = myApproved.filter(l => l.leave_type_id === 'L03').reduce((s, l) => s + calculateDays(l.start_date, l.end_date), 0);
+
+        const quota = myEmp ? getQuotaByType(myEmp.emp_type || '', myEmp.start_date) : null;
+        const accVac = myEmp?.accumulated_vacation || 0;
+        const totalVac = quota ? quota.vacation + accVac : 0;
+
+        const rulesData = [
+          { type: 'ราชการ', personal: '45', sick: '60', vacation: '10/ปี', acc: 'สะสมได้ไม่จำกัด' },
+          { type: 'พนักงานราชการ', personal: '10', sick: '30', vacation: '15/ปี', acc: 'สะสมได้ไม่จำกัด' },
+          { type: 'ลูกจ้างพนักงานกระทรวง', personal: '15', sick: '45', vacation: '15/ปี', acc: 'สะสมไม่เกิน 15 วัน' },
+          { type: 'ลูกจ้างชั่วคราว (นักเรียนทุน)', personal: '-', sick: '15', vacation: '10/ปี', acc: 'ไม่สะสม' },
+          { type: 'ลูกจ้างรายเดือน', personal: '-', sick: '15', vacation: '10/ปี', acc: 'ไม่สะสม' },
+          { type: 'ลูกจ้างรายวัน', personal: '-', sick: '8 (ปีแรก) / 15 (ครบปี)', vacation: '10/ปี', acc: 'ไม่สะสม' },
+          { type: 'ลูกจ้างเหมา', personal: '-', sick: '-', vacation: '-', acc: '-' },
+          { type: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', personal: '-', sick: '15', vacation: '10/ปี', acc: 'ไม่สะสม' },
+        ];
+
+        const qCards = quota ? [
+          { label: 'ลาป่วย', used: usedSick, total: quota.sick, color: '#f59e0b', typeId: 'L01', acc: null },
+          { label: 'ลากิจ', used: usedPersonal, total: quota.personal, color: '#6366f1', typeId: 'L02', acc: null },
+          { label: 'ลาพักผ่อน', used: usedVacation, total: totalVac, color: '#10b981', typeId: 'L03',
+            acc: quota.canAccumulateVacation ? `รวมสะสม ${accVac} วัน` : 'ไม่สะสม', base: quota.vacation },
+        ] : [];
+
+        return (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>สรุปโควตาวันลา</span>
+                {myEmp?.emp_type && <span style={{ fontSize: 11, background: '#f1f5f9', color: '#475569', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{myEmp.emp_type}</span>}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, background: '#eff6ff', color: '#2563eb', padding: '4px 12px', borderRadius: 20, fontWeight: 600 }}>📅 {fyLabel}</span>
+                <button onClick={() => setShowRules(v => !v)}
+                  style={{ fontSize: 12, background: '#f8fafc', color: '#475569', padding: '4px 12px', borderRadius: 20, fontWeight: 600, border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+                  {showRules ? '▲ ซ่อนตารางสิทธิ์' : '▼ ดูตารางสิทธิ์ทุกประเภท'}
+                </button>
+              </div>
+            </div>
+
+            {quota && (
+              <div className="lv-quota-grid">
+                {qCards.map((qc, i) => {
+                  const rem = qc.total - qc.used;
+                  const pct = qc.total > 0 ? Math.min(100, Math.round((qc.used / qc.total) * 100)) : 0;
+                  const isOver = rem < 0;
+                  const barColor = isOver ? '#ef4444' : pct >= 80 ? '#f59e0b' : qc.color;
+                  if (qc.total === 0) return (
+                    <div key={i} className="lv-quota-card" style={{ opacity: 0.65 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#374151' }}>{qc.label}</span>
+                        <span style={{ fontSize: 11, background: '#f3f4f6', color: '#9ca3af', padding: '3px 8px', borderRadius: 6, fontWeight: 600 }}>ไม่มีสิทธิ์</span>
+                      </div>
+                      <div style={{ height: 6, background: '#f3f4f6', borderRadius: 3 }} />
+                    </div>
+                  );
+                  return (
+                    <div key={i} className="lv-quota-card">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#374151' }}>{qc.label}</span>
+                        {isOver
+                          ? <span style={{ fontSize: 11, background: '#fef2f2', color: '#dc2626', padding: '3px 8px', borderRadius: 6, fontWeight: 700 }}>เกินโควตา!</span>
+                          : <span style={{ fontSize: 28, fontWeight: 800, color: qc.color, lineHeight: 1 }}>{rem}</span>}
+                      </div>
+                      {!isOver && <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 10 }}>วันคงเหลือ (ใช้ไป {qc.used}/{qc.total} วัน)</div>}
+                      {isOver && <div style={{ fontSize: 11, color: '#dc2626', marginBottom: 10 }}>ใช้ไป {qc.used} วัน เกิน {Math.abs(rem)} วัน</div>}
+                      <div style={{ height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 3, transition: 'width 0.6s ease' }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#9ca3af' }}>
+                        <span>{pct}% ใช้แล้ว</span>
+                        {qc.acc && <span style={{ color: qc.acc === 'ไม่สะสม' ? '#9ca3af' : '#10b981', fontWeight: 600 }}>{qc.acc}</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {showRules && (
+              <div className="lv-rules-wrap">
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0', fontWeight: 700, fontSize: 14, color: '#0f172a' }}>ตารางสิทธิ์การลาตามประเภทบุคลากร (ปีงบประมาณ 1 ต.ค. – 30 ก.ย.)</div>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="lv-rules-tbl">
+                    <thead>
+                      <tr>
+                        <th style={{ minWidth: 180 }}>ประเภทบุคลากร</th>
+                        <th>ลากิจ</th>
+                        <th>ลาป่วย</th>
+                        <th>ลาพักผ่อน/ปี</th>
+                        <th>การสะสมพักผ่อน</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rulesData.map((r, i) => (
+                        <tr key={i} style={{ background: myEmp?.emp_type === r.type || (r.type === 'ลูกจ้างชั่วคราว (นักเรียนทุน)' && myEmp?.emp_type === 'ลูกจ้างชั่วคราว(นักเรียนทุน)') ? '#eff6ff' : undefined }}>
+                          <td style={{ fontWeight: 600, color: (myEmp?.emp_type === r.type || (r.type === 'ลูกจ้างชั่วคราว (นักเรียนทุน)' && myEmp?.emp_type === 'ลูกจ้างชั่วคราว(นักเรียนทุน)')) ? '#2563eb' : '#111827' }}>
+                            {r.type}
+                            {(myEmp?.emp_type === r.type || (r.type === 'ลูกจ้างชั่วคราว (นักเรียนทุน)' && myEmp?.emp_type === 'ลูกจ้างชั่วคราว(นักเรียนทุน)')) && <span style={{ marginLeft: 6, fontSize: 10, background: '#2563eb', color: 'white', padding: '1px 6px', borderRadius: 4 }}>ท่าน</span>}
+                          </td>
+                          <td>{r.personal === '-' ? <span className="lv-no">ไม่มีสิทธิ์</span> : `${r.personal} วัน`}</td>
+                          <td>{r.sick === '-' ? <span className="lv-no">ไม่มีสิทธิ์</span> : r.sick.includes('/') ? r.sick : `${r.sick} วัน`}</td>
+                          <td>{r.vacation === '-' ? <span className="lv-no">ไม่มีสิทธิ์</span> : r.vacation}</td>
+                          <td style={{ color: r.acc === 'ไม่สะสม' || r.acc === '-' ? '#9ca3af' : '#059669', fontWeight: r.acc.includes('สะสมได้') ? 600 : 400 }}>{r.acc}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Main Panel */}
       <div className="glass-card" style={{ marginBottom: 24, borderRadius: 16 }}>
