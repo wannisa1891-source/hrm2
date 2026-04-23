@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
         WHERE emp_id = ?
         ORDER BY pay_year DESC, pay_month DESC
         LIMIT 5
-      `, [empId]);
+      `, [empId]).catch(() => [[]]);
     }
 
     // Execute all queries in parallel

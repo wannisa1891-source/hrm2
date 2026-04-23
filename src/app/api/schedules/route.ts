@@ -136,19 +136,29 @@ export async function GET(req: NextRequest) {
     const [rows]: any = await pool.query(sql, values);
 
     // Keep field names compatible with frontend for now to avoid breaking UI until phase 3
-    const mappedRows = rows.map((r: any) => ({
-      id: r.id.toString(),
-      nurse_name: r.nurse_name,
-      shift: r.shift,
-      department: r.department,
-      booker_name: r.booker_name,
-      contact_phone: r.contact_phone,
-      unit_name: r.unit_name,
-      schedule_date: r.schedule_date,
-      note: r.note,
-      startTime: new Date(r.schedule_date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }),
-      endTime: new Date(r.end_time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }),
-    }));
+    const mappedRows = rows.map((r: any) => {
+      const sDate = new Date(r.schedule_date);
+      const eDate = r.end_time ? new Date(r.end_time) : null;
+      
+      const formatT = (d: Date | null) => {
+        if (!d || isNaN(d.getTime())) return '00:00';
+        return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+      };
+
+      return {
+        id: r.id.toString(),
+        nurse_name: r.nurse_name,
+        shift: r.shift,
+        department: r.department,
+        booker_name: r.booker_name,
+        contact_phone: r.contact_phone,
+        unit_name: r.unit_name,
+        schedule_date: r.schedule_date,
+        note: r.note,
+        startTime: formatT(sDate),
+        endTime: formatT(eDate),
+      };
+    });
 
     return NextResponse.json(mappedRows);
   } catch (err: any) {
