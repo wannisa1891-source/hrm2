@@ -12,7 +12,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing emp_id' }, { status: 400 });
     }
 
-    // Execute all queries concurrently
+    const payrollPromise = pool.query(
+      `SELECT * FROM tbl_payroll WHERE emp_id = ? ORDER BY pay_year DESC, pay_month DESC LIMIT 12`,
+      [emp_id]
+    ).catch(err => {
+      console.warn('Payroll table error:', err.message);
+      return [[]]; // Return empty rows on error
+    });
+
     const [
       empResult,
       leaveResult,
@@ -31,10 +38,7 @@ export async function GET(req: NextRequest) {
         `SELECT * FROM tbl_leaves WHERE emp_id = ? ORDER BY start_date DESC LIMIT 10`,
         [emp_id]
       ),
-      pool.query(
-        `SELECT * FROM tbl_payroll WHERE emp_id = ? ORDER BY pay_year DESC, pay_month DESC LIMIT 12`,
-        [emp_id]
-      ),
+      payrollPromise,
       pool.query(
         `SELECT * FROM tbl_employee_trainings WHERE emp_id = ? ORDER BY start_date DESC`,
         [emp_id]

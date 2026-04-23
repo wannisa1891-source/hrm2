@@ -43,7 +43,7 @@ export default function RegisterPage() {
   });
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  
+
   // Fake API for username duplicate check
   const takenUsernames = ['admin', 'hr', 'test', 'user', 'director'];
 
@@ -113,7 +113,7 @@ export default function RegisterPage() {
     const errs: FieldErrors = {};
     if (!form.first_name) errs.first_name = 'กรุณากรอกชื่อ';
     if (!form.last_name) errs.last_name = 'กรุณากรอกนามสกุล';
-    
+
     if (!form.date_of_birth) errs.date_of_birth = 'กรุณากรอกวันเกิด';
     else {
       const today = new Date();
@@ -133,7 +133,7 @@ export default function RegisterPage() {
     const errs: FieldErrors = {};
     if (!form.position) errs.position = 'กรุณาเลือกตำแหน่ง';
     if (!form.department) errs.department = 'กรุณาเลือกแผนก';
-    
+
     if (!form.start_date) errs.start_date = 'กรุณากรอกวันที่เริ่มงาน';
     else {
       const today = new Date();
@@ -199,9 +199,9 @@ export default function RegisterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      
+
       const data = await res.json().catch(() => ({}));
-      
+
       if (res.ok && data.success) {
         setSuccessMessage('สมัครสมาชิกสำเร็จ! กำลังพาท่านไปหน้าเข้าสู่ระบบ...');
         setTimeout(() => {
@@ -219,7 +219,8 @@ export default function RegisterPage() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .register-wrapper {
           min-height: 100vh;
           width: 100%;
@@ -357,7 +358,7 @@ export default function RegisterPage() {
                 </div>
                 {fieldErrors.username && <span className="field-error-msg">{fieldErrors.username}</span>}
                 {!fieldErrors.username && usernameStatus === 'available' && <span className="field-success-msg">✅ Username นี้เว้นว่างและสามารถใช้งานได้</span>}
-                {!fieldErrors.username && usernameStatus === 'checking' && <span className="field-success-msg" style={{color: '#94a3b8'}}>กำลังตรวจสอบ...</span>}
+                {!fieldErrors.username && usernameStatus === 'checking' && <span className="field-success-msg" style={{ color: '#94a3b8' }}>กำลังตรวจสอบ...</span>}
               </div>
 
               <div className="input-group">
@@ -456,16 +457,16 @@ export default function RegisterPage() {
             <div className="input-row two-cols">
               <div className="input-group">
                 <label>วันเกิด (Birthday) <span className="required">*</span></label>
-                <div className={`input-field ${fieldErrors.date_of_birth ? 'error' : ''}`}>
-                  <span className="field-icon">🎂</span>
-                  <input
-                    type="date"
-                    value={form.date_of_birth}
-                    onChange={e => { setForm(f => ({ ...f, date_of_birth: e.target.value })); if (fieldErrors.date_of_birth) setFieldErrors(e => ({ ...e, date_of_birth: '' })); }}
-                    onBlur={() => handleBlur(validateStep2)}
-                    max={new Date().toISOString().split('T')[0]}
-                  />
-                </div>
+                  <div className={`input-field ${fieldErrors.date_of_birth ? 'error' : ''}`}>
+                    <span className="field-icon">🎂</span>
+                    <input
+                      type="date"
+                      value={form.date_of_birth}
+                      onChange={e => { setForm(f => ({ ...f, date_of_birth: e.target.value })); if (fieldErrors.date_of_birth) setFieldErrors(e => ({ ...e, date_of_birth: '' })); }}
+                      onBlur={() => handleBlur(validateStep2)}
+                      max={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
                 {fieldErrors.date_of_birth && <span className="field-error-msg">{fieldErrors.date_of_birth}</span>}
               </div>
 

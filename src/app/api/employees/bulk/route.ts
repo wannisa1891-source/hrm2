@@ -21,10 +21,10 @@ export async function POST(req: NextRequest) {
       for (const emp of data) {
         try {
           const sql = `INSERT INTO tbl_employees 
-            (emp_id, prefix, first_name_th, last_name_th, first_name_en, last_name_en, 
+            (emp_id, prefix, first_name_th, last_name_th, 
              birth_date, gender, address, citizen_id, phone, email, password, role, 
-             emp_type, dept_id, pos_id, start_date, base_salary, status, image, cneu_cme_points) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?)`;
+             emp_type, dept_id, pos_id, start_date, status, image, cneu_cme_points) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?)`;
 
           // Default password for excel import is the citizen_id or '123456'
           const plainPass = emp.citizen_id ? String(emp.citizen_id) : '123456';
@@ -36,9 +36,7 @@ export async function POST(req: NextRequest) {
             emp.prefix || '-',
             emp.first_name_th || '',
             emp.last_name_th || '',
-            emp.first_name_en || '',
-            emp.last_name_en || '',
-            emp.birth_date || null,
+            emp.birth_date && emp.birth_date !== '' ? emp.birth_date : '1900-01-01',
             emp.gender || 'ชาย',
             emp.address || '',
             emp.citizen_id || null,
@@ -50,7 +48,6 @@ export async function POST(req: NextRequest) {
             emp.dept_id || '',
             emp.pos_id || '',
             emp.start_date || new Date().toISOString().split('T')[0],
-            emp.base_salary ? parseFloat(emp.base_salary) : 0,
             null, // image
             0     // cneu_cme_points
           ];

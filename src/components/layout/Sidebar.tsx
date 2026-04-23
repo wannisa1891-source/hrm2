@@ -71,30 +71,42 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+  const role = user?.role || 'User';
+  const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
+  const isHR = role === 'HR';
+  const isHead = ['Head', 'หัวหน้า'].includes(role);
+  const isManagement = isSuperAdmin || isHR || isHead;
 
   const filteredMenuItems = useMemo(() => {
     return menuItems.reduce<any[]>((acc, item) => {
-      if (!isAdmin) {
+      // 1. Audit Logs: Super Admin only
+      if (item.id === 'audit' && !isSuperAdmin) return acc;
 
-        if (item.id === 'personnel' || item.id === 'audit') return acc;
+      // 2. Personnel: Management only (Admin, HR, Head)
+      if (item.id === 'personnel' && !isManagement) return acc;
 
+      // 3. Regular items or filtered children for Employees
+      if (!isManagement) {
         if (item.children) {
           item.children.forEach(child => {
-            acc.push({
-              id: child.id,
-              label: child.label,
-              icon: child.icon || item.icon,
-              href: child.href
-            });
+            // Employees see only Leave and Schedule within children if applicable
+            if (['schedule', 'leave-sys'].includes(child.id)) {
+              acc.push({
+                id: child.id,
+                label: child.label,
+                icon: child.icon || item.icon,
+                href: child.href
+              });
+            }
           });
           return acc;
         }
       }
+
       acc.push(item);
       return acc;
     }, []);
-  }, [isAdmin, user]);
+  }, [isSuperAdmin, isManagement, user]);
 
   const toggleMenu = (id: string) => {
     if (collapsed) {

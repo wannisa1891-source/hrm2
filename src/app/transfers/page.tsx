@@ -70,8 +70,10 @@ function formatDate(raw?: string) {
 function TransfersListPageInner() {
   const router        = useRouter();
   const searchParams  = useSearchParams();
-  const { user }      = useAuth();
-  const isAdmin       = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role ?? '');
+  const role = user?.role || 'User';
+  const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
+  const isHR = role === 'HR';
+  const isAdmin = isSuperAdmin || isHR;
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [records, setRecords]       = useState<TransferRecord[]>([]);

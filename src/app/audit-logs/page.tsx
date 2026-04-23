@@ -14,7 +14,8 @@ interface AuditLog {
 
 export default function AuditLogsPage() {
   const { user } = useAuth();
-  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+  const role = user?.role || 'User';
+  const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
   const router = useRouter();
 
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -26,10 +27,10 @@ export default function AuditLogsPage() {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    if (user && !isAdmin) {
+    if (user && !isSuperAdmin) {
       router.push('/dashboard');
     }
-  }, [user, isAdmin, router]);
+  }, [user, isSuperAdmin, router]);
 
   useEffect(() => {
     fetch('/api/audit-logs')

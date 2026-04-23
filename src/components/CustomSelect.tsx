@@ -38,9 +38,9 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
       <div
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          padding: '12px 16px',
+          padding: '12px 20px',
           border: `1.5px solid ${isOpen ? '#2563eb' : '#cbd5e1'}`,
-          borderRadius: '16px',
+          borderRadius: '50px',
           background: disabled ? '#f8fafc' : 'white',
           fontSize: '14px',
           cursor: 'pointer',
@@ -74,7 +74,7 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
             left: 0,
             right: 0,
             background: 'white',
-            borderRadius: '16px',
+            borderRadius: '24px',
             boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
             zIndex: 50,
             maxHeight: '300px',
@@ -99,8 +99,8 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
                 setIsOpen(false);
               }}
               style={{
-                padding: '10px 14px',
-                borderRadius: '10px',
+                padding: '10px 16px',
+                borderRadius: '12px',
                 cursor: 'pointer',
                 fontSize: '14px',
                 background: String(opt.value) === String(value) ? '#eff6ff' : 'transparent',
