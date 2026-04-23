@@ -99,7 +99,16 @@ export default function SchedulePage() {
   
   // --- REIMBURSEMENT STATE ---
   const [showClaimModal, setShowClaimModal] = useState(false);
-  const [claimForm, setClaimForm] = useState({
+  const [claimForm, setClaimForm] = useState<{
+    topic: string;
+    memoFile: File | string;
+    projectFile: File | string;
+    transportCost: number;
+    accommodationCost: number;
+    organizerPay: number;
+    parentPay: number;
+    date: string;
+  }>({
     topic: '',
     memoFile: '',
     projectFile: '',
@@ -116,10 +125,21 @@ export default function SchedulePage() {
       return;
     }
     try {
+      const fd = new FormData();
+      fd.append('empId', (user as any)?.emp_id || 'UNKNOWN');
+      fd.append('topic', claimForm.topic);
+      fd.append('date', claimForm.date);
+      fd.append('transportCost', claimForm.transportCost.toString());
+      fd.append('accommodationCost', claimForm.accommodationCost.toString());
+      fd.append('organizerPay', claimForm.organizerPay.toString());
+      fd.append('parentPay', claimForm.parentPay.toString());
+      
+      if (claimForm.memoFile instanceof File) fd.append('memoFile', claimForm.memoFile);
+      if (claimForm.projectFile instanceof File) fd.append('projectFile', claimForm.projectFile);
+
       const res = await fetch('/api/reimbursements', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...claimForm, empId: (user as any)?.emp_id || 'UNKNOWN' })
+        body: fd
       });
       if (res.ok) {
         Swal.fire('สำเร็จ', 'บันทึกข้อมูลการเบิกจ่ายเรียบร้อยแล้ว', 'success');
@@ -786,19 +806,19 @@ export default function SchedulePage() {
                     <input type="date" className="sp-field" value={claimForm.date}
                       onChange={(e) => setClaimForm(f => ({ ...f, date: e.target.value }))} />
                   </div>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>บันทึกข้อความ/คำสั่ง</label>
-                    <input className="sp-field" value={claimForm.memoFile}
-                      onChange={(e) => setClaimForm(f => ({ ...f, memoFile: e.target.value }))}
-                      placeholder="ชื่อไฟล์หรือลิงก์เอกสาร" />
-                  </div>
                 </div>
 
-                <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                  <label>โครงการ/กำหนดการ</label>
-                  <input className="sp-field" value={claimForm.projectFile}
-                    onChange={(e) => setClaimForm(f => ({ ...f, projectFile: e.target.value }))}
-                    placeholder="ชื่อไฟล์หรือลิงก์เอกสาร" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>แนบไฟล์บันทึกข้อความ/คำสั่ง</label>
+                    <input type="file" className="sp-field" 
+                      onChange={(e) => setClaimForm(f => ({ ...f, memoFile: e.target.files?.[0] || '' }))} />
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>แนบไฟล์โครงการ/กำหนดการ</label>
+                    <input type="file" className="sp-field" 
+                      onChange={(e) => setClaimForm(f => ({ ...f, projectFile: e.target.files?.[0] || '' }))} />
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
