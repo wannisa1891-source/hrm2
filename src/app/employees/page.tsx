@@ -137,7 +137,7 @@ function EmployeesContent() {
           first_name_th: row['ชื่อ'] || row['ชื่อ'] || row['ชื่อ'] || row['first_name_th'] || '',
           last_name_th: row['นามสกุล'] || row['นามสกุล'] || row['นามสกุล'] || row['last_name_th'] || '',
           gender: row['เพศ'] || row['gender'] || '',
-          birth_date: row['วัน/เดือน/ปีเกิด'] || row['วันเกิด'] || row['birth_date'] || null,
+          birth_date: row['เดือน/วัน/ปีเกิด'] || row['วันเกิด'] || row['birth_date'] || null,
           citizen_id: row['บัตรประชาชน'] || row['เลขบัตรประชาชน'] || row['citizen_id'] || '',
           phone: row['เบอร์โทร'] || row['เบอร์โทรศัพท์'] || row['phone'] || '',
           email: row['อีเมล'] || row['อีเมลล์'] || row['email'] || '',
