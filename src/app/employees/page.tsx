@@ -20,7 +20,7 @@ import CustomSelect from '@/components/CustomSelect';
 const EMPTY_FORM: Partial<Employee> = {
   prefix: 'นาย', first_name_th: '', last_name_th: '',
   birth_date: '', gender: 'ชาย', citizen_id: '',
-  emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
+  emp_id: '', dept_id: '', pos_id: '', emp_type: 'ข้าราชการ', start_date: '',
   phone: '', address: '', status: 'Active',
   addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
   has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: []
