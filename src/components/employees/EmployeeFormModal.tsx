@@ -5,6 +5,87 @@ import Image from 'next/image';
 import type { Employee, ProfessionalLicense } from '@/services/apiService';
 import { useAuth } from '@/contexts/AuthContext';
 
+const THAI_MONTHS = [
+  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+];
+
+interface ThaiDateInputProps {
+  label: string;
+  value: string | undefined;
+  onChange: (val: string) => void;
+  required?: boolean;
+  style?: React.CSSProperties;
+}
+
+const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInputProps) => {
+  const dateVal = value ? value.substring(0, 10) : '';
+  let d = '', m = '', yBE = '';
+  if (dateVal) {
+    const parts = dateVal.split('-');
+    if (parts.length === 3) {
+      yBE = (parseInt(parts[0]) + 543).toString();
+      m = parseInt(parts[1]).toString();
+      d = parseInt(parts[2]).toString();
+    }
+  }
+
+  const handleUpdate = (newD: string, newM: string, newYBE: string) => {
+    if (newD && newM && newYBE) {
+      const yAD = parseInt(newYBE) - 543;
+      const val = `${yAD}-${newM.padStart(2, '0')}-${newD.padStart(2, '0')}`;
+      onChange(val);
+    } else {
+      onChange('');
+    }
+  };
+
+  const currentYearBE = new Date().getFullYear() + 543;
+  // Range: current + 10 to current - 100
+  const years = Array.from({ length: 111 }, (_, i) => (currentYearBE + 10) - i);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{label}</label>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr 1.5fr', gap: '8px' }}>
+        <select 
+          value={d} 
+          onChange={e => handleUpdate(e.target.value, m, yBE)} 
+          required={required} 
+          style={{ ...style, padding: '10px 8px' }}
+        >
+          <option value="">วัน</option>
+          {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+            <option key={day} value={day.toString()}>{day}</option>
+          ))}
+        </select>
+        <select 
+          value={m} 
+          onChange={e => handleUpdate(d, e.target.value, yBE)} 
+          required={required} 
+          style={{ ...style, padding: '10px 8px' }}
+        >
+          <option value="">เดือน</option>
+          {THAI_MONTHS.map((name, idx) => (
+            <option key={idx} value={(idx + 1).toString()}>{name}</option>
+          ))}
+        </select>
+        <select 
+          value={yBE} 
+          onChange={e => handleUpdate(d, m, e.target.value)} 
+          required={required} 
+          style={{ ...style, padding: '10px 8px' }}
+        >
+          <option value="">ปี พ.ศ.</option>
+          {years.map(year => (
+            <option key={year} value={year.toString()}>{year}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+};
+
 interface EmployeeFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -245,10 +326,13 @@ export default function EmployeeFormModal({
 
 
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วัน/เดือน/ปีเกิด</label>
-                      <input type="date" value={formData.birth_date ? formData.birth_date.substring(0, 10) : ''} onChange={e => setField('birth_date', e.target.value)} required style={inputStyle} />
-                    </div>
+                    <ThaiDateInput 
+                      label="วัน/เดือน/ปีเกิด (พ.ศ.)" 
+                      value={formData.birth_date} 
+                      onChange={val => setField('birth_date', val)} 
+                      required 
+                      style={inputStyle} 
+                    />
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เพศ</label>
