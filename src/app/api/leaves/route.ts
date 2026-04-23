@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/hrm_db';
 import { logAudit } from '@/lib/audit';
+import fs from 'fs';
+import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,8 +24,6 @@ export async function GET() {
   }
 }
 
-import fs from 'fs';
-import path from 'path';
 
 export async function POST(req: NextRequest) {
   try {
