@@ -292,13 +292,10 @@ export default function EmployeeFormModal({
 
 
 
-                    <ThaiDateInput
-                      label="วัน/เดือน/ปีเกิด (พ.ศ.)"
-                      value={formData.birth_date}
-                      onChange={val => setField('birth_date', val)}
-                      required
-                      style={inputStyle}
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วัน/เดือน/ปีเกิด</label>
+                      <input type="date" value={formData.birth_date ? formData.birth_date.substring(0, 10) : ''} onChange={e => setField('birth_date', e.target.value)} required style={inputStyle} />
+                    </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เพศ</label>
@@ -403,14 +400,10 @@ export default function EmployeeFormModal({
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เลขประจำตำแหน่ง</label>
                     <input type="text" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} required readOnly={isEditing} style={{ ...inputStyle, background: isEditing ? '#f1f5f9' : '#ffffff', cursor: isEditing ? 'not-allowed' : 'text' }} />
                   </div>
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน</label>
-                    <ThaiDateInput
-                      value={formData.start_date || ''}
-                      onChange={val => setField('start_date', val)}
-                      required
-                      style={inputStyle}
-                    />
+                    <input type="date" value={formData.start_date ? formData.start_date.substring(0, 10) : ''} onChange={e => setField('start_date', e.target.value)} required style={inputStyle} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
@@ -422,11 +415,10 @@ export default function EmployeeFormModal({
                         { value: 'ลูกจ้างประจำ', label: 'ลูกจ้างประจำ' },
                         { value: 'พนักงานราชการ', label: 'พนักงานราชการ' },
                         { value: 'พนักงานกระทรวงสาธารณสุข', label: 'พนักงานกระทรวงสาธารณสุข' },
-                        { value: 'ลูกจ้างชั่วคราว(นักเรียนทุน)', label: 'ลูกจ้างชั่วคราว(นักเรียนทุน)' },
                         { value: 'ลูกจ้างรายเดือน', label: 'ลูกจ้างรายเดือน' },
                         { value: 'ลูกจ้างรายวัน', label: 'ลูกจ้างรายวัน' },
                         { value: 'ลูกจ้างเหมาบริการ', label: 'ลูกจ้างเหมาบริการ' },
-                        { value: 'ลูกจ้างเเบ่งเปอร์เซ็นต์', label: 'ลูกจ้างเเบ่งเปอร์เซ็นต์' },
+                        { value: 'ลูกจ้างแบ่งเปอร์เซนต์', label: 'ลูกจ้างแบ่งเปอร์เซนต์' },
                         { value: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', label: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี' },
                         { value: 'นักศึกษาฝึกงาน', label: 'นักศึกษาฝึกงาน' }
                       ]}
@@ -519,18 +511,14 @@ export default function EmployeeFormModal({
                       </div>
                     </div>
                   </div>
-                  <ThaiDateInput
-                    label="วันที่บรรจุ (Admission Date)"
-                    value={formData.admission_date}
-                    onChange={val => setField('admission_date', val)}
-                    style={inputStyle}
-                  />
-                  <ThaiDateInput
-                    label="วันที่เกษียณ (Retirement Date)"
-                    value={formData.retirement_date}
-                    onChange={val => setField('retirement_date', val)}
-                    style={inputStyle}
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่บรรจุ (Admission Date)</label>
+                    <input type="date" value={formData.admission_date ? formData.admission_date.substring(0, 10) : ''} onChange={e => setField('admission_date', e.target.value)} style={inputStyle} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เกษียณ (Retirement Date)</label>
+                    <input type="date" value={formData.retirement_date ? formData.retirement_date.substring(0, 10) : ''} onChange={e => setField('retirement_date', e.target.value)} style={inputStyle} />
+                  </div>
                 </div>
 
 
