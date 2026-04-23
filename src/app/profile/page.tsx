@@ -13,8 +13,11 @@ import { usePositions } from '@/hooks/usePositions';
 import { 
   User, Mail, Phone, MapPin, Calendar, Briefcase, 
   Award, ShieldCheck, Lock, CreditCard, FileText, 
-  ChevronRight, Camera, Edit3, Fingerprint, Globe
+  ChevronRight, Camera, Edit3, Fingerprint, Globe, Bell
 } from 'lucide-react';
+import { useAnnouncements } from '@/hooks/useAnnouncements';
+import Modal from '@/components/common/Modal';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 
 interface ProfileData {
   profile: {
@@ -60,6 +63,9 @@ export default function MyProfilePage() {
   const { employees, editEmployee, loadEmployees } = useEmployees();
   const { departments } = useDepartments();
   const { positions } = usePositions();
+  
+  const { announcements } = useAnnouncements();
+  const [selectedNews, setSelectedNews] = useState<any>(null);
 
   const fullProfile = employees.find((e: any) => e.emp_id === user?.emp_id) || null;
 
@@ -182,13 +188,22 @@ export default function MyProfilePage() {
   const { profile, leaves, payroll, trainings = [] } = data;
   const fullName = `${profile.prefix || ''} ${profile.first_name_th} ${profile.last_name_th}`;
 
+  const today = new Date().toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
   return (
     <AppLayout>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 32px; max-width: 1500px; margin: 0 auto; min-height: calc(100vh - 100px); }
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '24px' }}>
+        <DashboardHeader today={today} />
+        
+        <style dangerouslySetInnerHTML={{
+          __html: `
+        .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 0 8px 32px; max-width: 1500px; margin: 0 auto; min-height: calc(100vh - 100px); }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); transition: all 0.3s ease; }
-        .left-card { position: sticky; top: 100px; height: fit-content; text-align: center; overflow: hidden; }
+        .left-card { position: sticky; top: 24px; height: fit-content; text-align: center; }
         .profile-avatar-wrap { width: 160px; height: 160px; border-radius: 40px; margin: 0 auto 24px; padding: 6px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); position: relative; transform: rotate(-3deg); transition: transform 0.3s; }
         .profile-avatar-wrap:hover { transform: rotate(0deg); }
         .profile-avatar { width: 100%; height: 100%; border-radius: 36px; object-fit: cover; border: 4px solid white; background: #f1f5f9; }
@@ -322,15 +337,41 @@ export default function MyProfilePage() {
         </div>
 
         <div className="profile-main">
+          {/* News Banner for Users */}
+          {announcements.length > 0 && (
+            <div className="glass-card" style={{ padding: '20px 24px', background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Bell size={20} />
+                  </div>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#1e293b' }}>ข่าวสารและประกาศล่าสุด</h3>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                {announcements.slice(0, 2).map((news: any, i: number) => (
+                  <div key={i} onClick={() => setSelectedNews(news)} style={{ cursor: 'pointer', background: 'white', borderRadius: '16px', padding: '12px', border: '1px solid #e2e8f0', display: 'flex', gap: '16px', transition: 'all 0.2s' }} className="hover-lift">
+                    {news.image && (
+                      <div style={{ width: '80px', height: '60px', borderRadius: '10px', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+                        <Image src={news.image} alt={news.title} fill style={{ objectFit: 'cover' }} unoptimized />
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{news.title}</div>
+                      <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{news.date}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="profile-tabs">
             <button className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
               <User size={16} /> ข้อมูลทั่วไป
             </button>
             <button className={`tab-btn ${activeTab === 'leave' ? 'active' : ''}`} onClick={() => setActiveTab('leave')}>
               <Calendar size={16} /> ประวัติการลา
-            </button>
-            <button className={`tab-btn ${activeTab === 'payroll' ? 'active' : ''}`} onClick={() => setActiveTab('payroll')}>
-              <CreditCard size={16} /> สรุปเงินเดือน
             </button>
             <button className={`tab-btn ${activeTab === 'certificates' ? 'active' : ''}`} onClick={() => setActiveTab('certificates')}>
               <Award size={16} /> ใบอนุญาต
@@ -482,41 +523,6 @@ export default function MyProfilePage() {
             </div>
           )}
 
-          {activeTab === 'payroll' && (
-            <div className="glass-card" style={{ padding: '32px' }}>
-              <h3 className="card-title">
-                <CreditCard className="card-title-icon" size={24} /> สรุปรายการเงินเดือน
-              </h3>
-              {payroll?.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
-                  <CreditCard size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-                  <p>ยังไม่มีข้อมูลเงินเดือนในระบบ</p>
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gap: '12px' }}>
-                  {payroll.map((p: any, idx: number) => (
-                    <div key={idx} className="payroll-item">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <FileText size={20} />
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, color: '#0f172a' }}>รอบเดือน {p.pay_month}/{p.pay_year}</div>
-                          <div style={{ fontSize: '12px', color: '#64748b' }}>วันที่จ่าย: {new Date(p.pay_date).toLocaleDateString('th-TH')}</div>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 800, color: '#059669', fontSize: '16px' }}>฿{Number(p.net_salary || 0).toLocaleString()}</div>
-                        <div className={`badge ${p.status === 'Paid' ? 'badge-info' : 'badge-warning'}`} style={{ marginTop: '4px', fontSize: '10px' }}>
-                          {p.status === 'Paid' ? 'โอนสำเร็จ' : 'รอดำเนินการ'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
           {activeTab === 'certificates' && (
             <div className="glass-card" style={{ padding: '32px' }}>
@@ -682,6 +688,35 @@ export default function MyProfilePage() {
         departments={departments}
         positions={positions}
       />
+
+      <Modal
+        isOpen={!!selectedNews}
+        onClose={() => setSelectedNews(null)}
+        title="รายละเอียดข่าวประกาศ"
+      >
+        {selectedNews && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {selectedNews.image && (
+              <div style={{ width: '100%', height: 240, position: 'relative', borderRadius: 16, overflow: 'hidden', background: '#f1f5f9' }}>
+                <Image fill unoptimized src={selectedNews.image} alt={selectedNews.title} style={{ objectFit: 'cover' }} />
+              </div>
+            )}
+            <div>
+              <h3 style={{ margin: 0, fontSize: 20, color: '#0f172a', fontWeight: 800 }}>{selectedNews.title}</h3>
+              <div style={{ fontSize: 13, color: '#64748b', marginTop: 4, fontWeight: 600 }}>{selectedNews.date}</div>
+            </div>
+            <div style={{ padding: '20px', borderRadius: '16px', background: '#f8fafc', border: '1px solid #f1f5f9' }}>
+              <p style={{ margin: 0, fontSize: 15, color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{selectedNews.content}</p>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+              <button className="btn-primary" onClick={() => setSelectedNews(null)} style={{ padding: '10px 32px' }}>
+                ปิดหน้าต่าง
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+      </div>
     </AppLayout>
   );
 }

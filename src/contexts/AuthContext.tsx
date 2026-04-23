@@ -6,20 +6,25 @@ import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   isLoggedIn: boolean;
+  isFirstLogin: boolean;
   user: { username: string; emp_id?: string; dept_id?: string; role?: string; name?: string; image?: string | null; emp_type?: string } | null;
-  login: (userData: { username: string; emp_id?: string; dept_id?: string; role?: string; name?: string; image?: string | null; emp_type?: string }) => void;
+  login: (userData: { username: string; emp_id?: string; dept_id?: string; role?: string; name?: string; image?: string | null; emp_type?: string }, firstLogin?: boolean) => void;
   logout: () => void;
+  setFirstLogin: (val: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
+  isFirstLogin: false,
   user: null,
   login: () => { },
   logout: () => { },
+  setFirstLogin: () => { },
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [user, setUser] = useState<{ username: string; emp_id?: string; dept_id?: string; role?: string; name?: string; image?: string | null; emp_type?: string } | null>(null);
   const router = useRouter();
 
@@ -28,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (stored) {
       setUser(JSON.parse(stored));
       setIsLoggedIn(true);
+      setIsFirstLogin(localStorage.getItem('is_first_login') === 'true');
     }
     
     // Global fetch interceptor for Audit Logs
@@ -52,10 +58,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   }, []);
 
-  const login = (userData: { username: string; emp_id?: string; role?: string; name?: string; image?: string | null; emp_type?: string }) => {
+  const login = (userData: { username: string; emp_id?: string; role?: string; name?: string; image?: string | null; emp_type?: string }, firstLogin = false) => {
     localStorage.setItem('hrm_user', JSON.stringify(userData));
+    localStorage.setItem('is_first_login', String(firstLogin));
     setUser(userData);
     setIsLoggedIn(true);
+    setIsFirstLogin(firstLogin);
+  };
+
+  const setFirstLogin = (val: boolean) => {
+    localStorage.setItem('is_first_login', String(val));
+    setIsFirstLogin(val);
   };
 
   const logout = async () => {
@@ -72,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, isFirstLogin, user, login, logout, setFirstLogin }}>
       {children}
     </AuthContext.Provider>
   );

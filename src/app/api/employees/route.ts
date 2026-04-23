@@ -102,8 +102,7 @@ export async function POST(req: NextRequest) {
       if (d.birth_date && d.birth_date.includes('-')) {
         const parts = d.birth_date.split('T')[0].split('-'); // [YYYY, MM, DD]
         if (parts.length === 3) {
-          const beYear = parseInt(parts[0]) + 543;
-          autoPassword = `${parts[2]}${parts[1]}${beYear}`; // DDMMYYYY (BE)
+          autoPassword = `${parts[2]}${parts[1]}${parts[0]}`; // DDMMYYYY (AD)
         }
       }
       

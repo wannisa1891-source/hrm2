@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import ReactQueryProvider from '@/providers/ReactQueryProvider'
+import FirstLoginModal from '@/components/auth/FirstLoginModal'
 
 export const metadata: Metadata = {
   title: {
@@ -21,6 +22,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <ReactQueryProvider>
           <AuthProvider>
+            <FirstLoginModal />
             {children}
           </AuthProvider>
         </ReactQueryProvider>

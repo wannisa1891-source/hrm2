@@ -96,7 +96,7 @@ export interface Leave {
   end_date: string
   reason?: string
   status: string
-  photo?: string
+  image?: string
   current_stage?: string
   dept_head_status?: string
   admin_status?: string
@@ -108,6 +108,8 @@ export interface Leave {
   accumulated_vacation?: number
   emp_type?: string
   start_date_work?: string
+  dept_id?: string
+  leave_category?: string
 }
 
 export interface ScheduleRecord {

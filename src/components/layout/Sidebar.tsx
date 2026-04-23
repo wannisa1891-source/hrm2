@@ -26,10 +26,10 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: icons.dashboard,
-    href: '/dashboard',
+    id: 'profile-main',
+    label: 'โปรไฟล์ของฉัน',
+    icon: icons.profile,
+    href: '/profile',
   },
   {
     id: 'personnel',

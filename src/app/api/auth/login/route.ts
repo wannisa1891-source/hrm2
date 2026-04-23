@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Query จาก tbl_employees โดยเช็ค emp_id, username หรือ email
     const [rows]: any = await pool.query(
-      'SELECT emp_id, username, first_name_th, last_name_th, email, role, status, password, citizen_id, image, photo, login_attempts, dept_id FROM tbl_employees WHERE emp_id = ? OR username = ? OR email = ? OR citizen_id = ?',
+      'SELECT emp_id, username, first_name_th, last_name_th, email, role, status, password, citizen_id, birth_date, image, login_attempts, dept_id, last_login FROM tbl_employees WHERE emp_id = ? OR username = ? OR email = ? OR citizen_id = ?',
       [cleanUsername, cleanUsername, cleanUsername, cleanUsername]
     );
 
@@ -83,10 +83,39 @@ export async function POST(req: NextRequest) {
       } else if (user.password === password_hash || user.password === cleanPassword) {
         isMatch = true;
       }
+
+      // 6. Fallback: Check Birth Date (DDMMYYYY BE)
+      if (!isMatch && user.birth_date) {
+        try {
+          // birth_date is usually 'YYYY-MM-DD' or a Date object
+          let dateStr = '';
+          if (user.birth_date instanceof Date) {
+            const y = user.birth_date.getFullYear();
+            const m = String(user.birth_date.getMonth() + 1).padStart(2, '0');
+            const d = String(user.birth_date.getDate()).padStart(2, '0');
+            dateStr = `${y}-${m}-${d}`;
+          } else {
+            dateStr = String(user.birth_date).split('T')[0];
+          }
+
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            const adYear = parts[0]; // YYYY (AD)
+            const birthPass = `${parts[2]}${parts[1]}${adYear}`; // DDMMYYYY (AD)
+            
+            if (cleanPassword === birthPass) {
+              isMatch = true;
+            }
+          }
+        } catch (e) {
+          console.error('Birth date fallback error:', e);
+        }
+      }
     }
 
     if (isMatch) {
       // Success: Reset login_attempts and update last_login
+      const isFirstLogin = user.last_login === null;
       await pool.query(
         'UPDATE tbl_employees SET login_attempts = 0, last_login = NOW() WHERE emp_id = ?',
         [user.emp_id]
@@ -100,7 +129,7 @@ export async function POST(req: NextRequest) {
         name: `${user.first_name_th} ${user.last_name_th}`,
         email: user.email || '',
         role: user.role || 'User',
-        image: user.image || user.photo || null
+        image: user.image || null
       };
       const token = await signJWT(payload, '24h');
 
@@ -116,7 +145,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         token: token,
-        user: payload
+        user: payload,
+        isFirstLogin: isFirstLogin
       });
     } else {
       // Failure: Increment login_attempts
