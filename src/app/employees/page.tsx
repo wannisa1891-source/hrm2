@@ -132,7 +132,7 @@ function EmployeesContent() {
         const pos = positions.find(p => p.pos_name.trim() === posName || p.pos_id === posName);
 
         return {
-          emp_id: row['รหัสพนักงาน'] || row['emp_id'] || '',
+          emp_id: row['เลขประจำตำแหน่ง'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
           first_name_th: row['ชื่อ'] || row['ชื่อ'] || row['ชื่อ'] || row['first_name_th'] || '',
           last_name_th: row['นามสกุล'] || row['นามสกุล'] || row['นามสกุล'] || row['last_name_th'] || '',
@@ -331,7 +331,7 @@ function EmployeesContent() {
 
   const exportToCSV = () => {
     const headers = [
-      'รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อเล่น',
+      'เลขประจำตำแหน่ง', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อเล่น',
       'เพศ', 'วัน/เดือน/ปีเกิด', 'บัตรประชาชน', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่',
       'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน', 'เงินเดือน',
       'สถานะการทำงาน', 'คะแนน CNEU/CME', 'ข้อมูลใบอนุญาต'
@@ -419,7 +419,7 @@ function EmployeesContent() {
           <div className="filter-bar">
             <div className="search-input-wrap" style={{ flex: '1 1 300px' }}>
               <svg className="search-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              <input type="text" placeholder="ค้นหาชื่อหรือรหัสพนักงาน..." value={search} onChange={e => setSearch(e.target.value)} />
+              <input type="text" placeholder="ค้นหาชื่อพนักงาน..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -464,7 +464,7 @@ function EmployeesContent() {
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
-                  <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
+                  <th style={{ textAlign: 'center' }}>เลขประจำตำแหน่ง</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
                   <th>ชื่อเล่น</th>
                   <th>ตำแหน่ง</th>
