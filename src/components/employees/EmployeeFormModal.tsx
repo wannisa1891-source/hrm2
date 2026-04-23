@@ -48,12 +48,12 @@ const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInpu
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{label}</label>
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr 1.5fr', gap: '8px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1.2fr', gap: '12px' }}>
         <select
           value={d}
           onChange={e => handleUpdate(e.target.value, m, yBE)}
           required={required}
-          style={{ ...style, padding: '10px 8px' }}
+          style={{ ...style, padding: '8px 12px', borderRadius: '16px', height: '42px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px' }}
         >
           <option value="">วัน</option>
           {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
@@ -64,7 +64,7 @@ const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInpu
           value={m}
           onChange={e => handleUpdate(d, e.target.value, yBE)}
           required={required}
-          style={{ ...style, padding: '10px 8px' }}
+          style={{ ...style, padding: '8px 12px', borderRadius: '16px', height: '42px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px' }}
         >
           <option value="">เดือน</option>
           {THAI_MONTHS.map((name, idx) => (
@@ -75,7 +75,7 @@ const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInpu
           value={yBE}
           onChange={e => handleUpdate(d, m, e.target.value)}
           required={required}
-          style={{ ...style, padding: '10px 8px' }}
+          style={{ ...style, padding: '8px 12px', borderRadius: '16px', height: '42px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px' }}
         >
           <option value="">ปี พ.ศ.</option>
           {years.map(year => (
@@ -487,10 +487,13 @@ export default function EmployeeFormModal({
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ลำดับที่ </label>
                     <input type="text" value={formData.staff_no || 'Auto-generated'} readOnly style={{ ...inputStyle, background: '#f1f5f9', cursor: 'not-allowed', color: '#64748b' }} />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน</label>
-                    <input type="date" value={formData.start_date ? formData.start_date.substring(0, 10) : ''} onChange={e => setField('start_date', e.target.value)} required style={inputStyle} />
-                  </div>
+                  <ThaiDateInput
+                    label="วันที่เริ่มงาน"
+                    value={formData.start_date}
+                    onChange={val => setField('start_date', val)}
+                    required
+                    style={inputStyle}
+                  />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
                       <CustomSelect
@@ -590,14 +593,18 @@ export default function EmployeeFormModal({
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่บรรจุ (Admission Date)</label>
-                    <input type="date" value={formData.admission_date ? formData.admission_date.substring(0, 10) : ''} onChange={e => setField('admission_date', e.target.value)} style={inputStyle} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เกษียณ (Retirement Date)</label>
-                    <input type="date" value={formData.retirement_date ? formData.retirement_date.substring(0, 10) : ''} onChange={e => setField('retirement_date', e.target.value)} style={inputStyle} />
-                  </div>
+                  <ThaiDateInput
+                    label="วันที่บรรจุ (Admission Date)"
+                    value={formData.admission_date}
+                    onChange={val => setField('admission_date', val)}
+                    style={inputStyle}
+                  />
+                  <ThaiDateInput
+                    label="วันที่เกษียณ (Retirement Date)"
+                    value={formData.retirement_date}
+                    onChange={val => setField('retirement_date', val)}
+                    style={inputStyle}
+                  />
                 </div>
 
 

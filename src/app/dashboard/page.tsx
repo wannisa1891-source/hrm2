@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function DashboardPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const isAdmin = ['Super Admin', 'Admin', 'admin', 'HR', 'Head', 'หัวหน้า'].includes(user?.role || '');
 
   // React Query Hooks
   const { dashboardData, loading, error, loadDashboard } = useDashboard(user?.emp_id, user?.role)
@@ -100,7 +101,7 @@ export default function DashboardPage() {
     day: 'numeric'
   })
 
-  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+
 
   const newsContent = (
     <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 340, maxHeight: 420, padding: isAdmin ? '24px' : '32px' }}>
