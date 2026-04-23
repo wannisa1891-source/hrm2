@@ -110,6 +110,7 @@ export interface Leave {
   start_date_work?: string
   dept_id?: string
   leave_category?: string
+  attachment?: string
 }
 
 export interface ScheduleRecord {
@@ -237,10 +238,9 @@ export const deleteDepartment = (id: string) => apiFetch<{ message: string }>(`/
 export const fetchPositions = () => apiFetch<Position[]>('/api/positions')
 
 export const fetchLeaves = () => apiFetch<Leave[]>('/api/leaves')
-export const createLeave = (body: any) => apiFetch<{ success: boolean }>('/api/leaves', {
+export const createLeave = (fd: FormData) => apiFetch<{ success: boolean }>('/api/leaves', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(body),
+  body: fd,
 })
 export const updateLeaveStatus = (id: string | number, status: string, stage?: string) => apiFetch<{ success: boolean }>(`/api/leaves/${id}`, {
   method: 'PUT',

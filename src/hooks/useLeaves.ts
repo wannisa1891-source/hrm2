@@ -26,16 +26,10 @@ export function useLeaves() {
   }, [])
 
   const addLeave = useCallback(
-    async (body: {
-      emp_id: string
-      leave_type_id: string
-      start_date: string
-      end_date: string
-      reason: string
-    }): Promise<boolean> => {
+    async (fd: FormData): Promise<boolean> => {
       try {
         setError(null)
-        await createLeave(body)
+        await createLeave(fd)
         await loadLeaves()
         return true
       } catch (err) {

@@ -298,7 +298,7 @@ export default function MyProfilePage() {
             <div className="stat-item">
               <span className="stat-label">อายุงาน</span>
               <span className="stat-val">
-                {profile.hire_date ? `${Math.floor((new Date().getTime() - new Date(profile.hire_date).getTime()) / (1000 * 60 * 60 * 24 * 365))} ปี` : '-'}
+                {profile?.start_date ? formatDurationThai(calculateWorkDuration(profile.start_date)) : (profile?.hire_date ? formatDurationThai(calculateWorkDuration(profile.hire_date)) : '-')}
               </span>
             </div>
           </div>

@@ -1,3 +1,8 @@
+const THAI_MONTHS = [
+  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+];
+
 /**
  * Returns the start and end dates of the current fiscal year (Oct 1 - Sep 30).
  * @param date Reference date (default now)
@@ -43,3 +48,62 @@ export const toDateStr = (date: Date | string | null): string => {
   return `${year}-${month}-${day}`;
 };
 
+/**
+ * Calculates work duration in years, months, and days.
+ */
+export const calculateWorkDuration = (startDate: string | Date | null, endDate: string | Date = new Date()) => {
+  if (!startDate) return null;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  if (isNaN(start.getTime())) return null;
+
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
+  let days = end.getDate() - start.getDate();
+
+  if (days < 0) {
+    months--;
+    const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  return { years, months, days };
+};
+
+/**
+ * Formats duration object into a Thai string.
+ */
+export const formatDurationThai = (duration: { years: number, months: number, days: number } | null) => {
+  if (!duration) return '-';
+  const parts = [];
+  if (duration.years > 0) parts.push(`${duration.years} ปี`);
+  if (duration.months > 0) parts.push(`${duration.months} เดือน`);
+  if (duration.days > 0) parts.push(`${duration.days} วัน`);
+  return parts.length > 0 ? parts.join(' ') : '0 วัน';
+};
+/**
+ * Formats a date into a formal Thai string (e.g., 23 เมษายน 2567).
+ */
+export const formatThaiDate = (date: string | Date | null, includeTime: boolean = false) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '-';
+
+  const day = d.getDate();
+  const month = THAI_MONTHS[d.getMonth()];
+  const year = d.getFullYear() + 543;
+
+  let result = `${day} ${month} ${year}`;
+  if (includeTime) {
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    result += ` ${hours}:${minutes} น.`;
+  }
+  return result;
+};

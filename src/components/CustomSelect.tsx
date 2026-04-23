@@ -15,10 +15,12 @@ interface CustomSelectProps {
   prefix?: string;
   minWidth?: string;
   disabled?: boolean;
+  showSearch?: boolean;
 }
 
-export default function CustomSelect({ value, onChange, options, placeholder = 'เลือก', prefix, minWidth = '140px', disabled = false }: CustomSelectProps) {
+export default function CustomSelect({ value, onChange, options, placeholder = 'เลือก', prefix, minWidth = '140px', disabled = false, showSearch = false }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,7 +33,10 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => { if (!isOpen) setSearch(''); }, [isOpen]);
+
   const selectedOption = options.find(o => String(o.value) === String(value));
+  const filteredOptions = options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: 'auto', minWidth, opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
@@ -91,7 +96,21 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
               to { opacity: 1; transform: translateY(0); }
             }
           `}</style>
-          {options.map((opt) => (
+          {showSearch && (
+            <div style={{ padding: '8px', position: 'sticky', top: 0, background: 'white', zIndex: 1, borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}>
+              <input
+                type="text"
+                placeholder="ค้นหา..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '13px' }}
+                autoFocus
+              />
+            </div>
+          )}
+          {filteredOptions.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>ไม่พบข้อมูล</div>
+          ) : filteredOptions.map((opt) => (
             <div
               key={opt.value}
               onClick={() => {
