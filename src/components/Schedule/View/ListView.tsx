@@ -13,9 +13,9 @@ interface ListViewProps {
 
 const getRoomImage = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes('ห้องประชุม 1') || n.includes('room 1')) return '/meeting_room_a.png';
-  if (n.includes('ห้องประชุม 2') || n.includes('room 2')) return '/meeting_room_b.png';
-  return '/meeting_room_c.png';
+  if (n.includes('ห้องประชุม 1') || n.includes('room 1')) return '/images/meeting_room_a.png';
+  if (n.includes('ห้องประชุม 2') || n.includes('room 2')) return '/images/meeting_room_b.png';
+  return '/images/meeting_room_c.png';
 };
 
 export default function ListView({

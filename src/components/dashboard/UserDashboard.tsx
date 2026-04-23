@@ -36,15 +36,37 @@ export default function UserDashboard({
   return (
     <div style={{ padding: '0px 24px 40px', maxWidth: '1400px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', fontFamily: "'Sarabun', sans-serif" }}>
 
-      {/* Welcome Banner */}
-      <div style={{ padding: '20px 0' }}>
-        <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#1e293b' }}>
-          สวัสดีครับ, {user?.name || user?.username || 'User'}
-        </h1>
-        <p style={{ margin: '8px 0 0 0', fontSize: 16, color: '#64748b', fontWeight: 500 }}>
-          คุณมีวันลาพักร้อนคงเหลือ <span style={{ color: '#3b82f6', fontWeight: 800, fontSize: 18 }}>{leaveStats.vacation.remain} วัน</span>
-        </p>
-      </div>
+      {/* News Slider - Matches Screenshot */}
+      {newsList.length > 0 && (
+        <div style={{ background: '#ffffff', borderRadius: 24, padding: '32px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <div style={{ width: 6, height: 24, background: '#3b82f6', borderRadius: 4 }}></div>
+            <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0f172a' }}>ข่าวสารและประกาศองค์กร</h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+            {newsList.slice(0, 3).map((news, i) => (
+              <div key={i} onClick={() => onSelectNews(news)} style={{ cursor: 'pointer', background: '#f8fafc', borderRadius: 24, overflow: 'hidden', border: '1px solid #f1f5f9', transition: 'all 0.3s' }} className="hover-lift">
+                <div style={{ height: 180, position: 'relative', overflow: 'hidden' }}>
+                  {news.image ? (
+                    <div style={{ width: '100%', height: '100%', backgroundImage: `url(${news.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                       <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
+                    </div>
+                  )}
+                </div>
+                <div style={{ padding: 24 }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 10, color: '#1e293b', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{news.title}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
+                    <div style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>{news.date}</div>
+                    <div style={{ color: '#3b82f6', fontSize: 14, fontWeight: 800 }}>อ่านเพิ่มเติม →</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Leave & License Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
@@ -155,21 +177,6 @@ export default function UserDashboard({
 
       </div>
 
-      {/* News Slider */}
-      <div style={{ background: '#ffffff', borderRadius: 24, padding: 32, border: '1px solid #e2e8f0' }}>
-        <h3 style={{ margin: '0 0 20px 0', fontSize: 18, fontWeight: 800 }}>ข่าวสารและประกาศ</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-          {newsList.slice(0, 3).map((news, i) => (
-            <div key={i} onClick={() => onSelectNews(news)} style={{ cursor: 'pointer', background: '#f8fafc', borderRadius: 16, overflow: 'hidden', border: '1px solid #f1f5f9' }}>
-              {news.image && <div style={{ height: 120, backgroundImage: `url(${news.image})`, backgroundSize: 'cover' }} />}
-              <div style={{ padding: 16 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: '#1e293b' }}>{news.title}</div>
-                <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{news.date}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

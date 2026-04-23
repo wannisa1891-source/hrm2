@@ -45,12 +45,12 @@ export default function LoginPage() {
           localStorage.setItem('token', result.token);
         }
         if (result.user) {
-           login({ ...result.user, username: username });
+          login({ ...result.user, username: username }, !!result.isFirstLogin);
         } else {
-           login({ username: username });
+          login({ username: username }, !!result.isFirstLogin);
         }
-        // redirect ไปหน้า dashboard
-        router.push('/dashboard');
+        // Always redirect to profile as per user request
+        router.push('/profile');
       } else {
         setErrorMessage(result.message || 'รหัสผ่านหรือผู้ใช้ไม่ถูกต้อง');
       }

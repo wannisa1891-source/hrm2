@@ -914,9 +914,13 @@ export default function DepartmentAndEmployeePage() {
                     <input
                       type="text"
                       value={deptForm.phone}
-                      onChange={(e) => setDeptForm({ ...deptForm, phone: e.target.value })}
+                      maxLength={10}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setDeptForm({ ...deptForm, phone: val });
+                      }}
                       style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
-                      placeholder="เบอร์โทร/อีเมล"
+                      placeholder="08X-XXXXXXX"
                     />
                   </div>
                 </div>

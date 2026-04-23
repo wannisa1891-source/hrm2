@@ -509,7 +509,7 @@ export default function TransferCreatePage() {
                   </svg>
                   <span>
                     {pdfFile
-                      ? `✓  ${pdfFile.name}  (${(pdfFile.size / 1024).toFixed(0)} KB)`
+                      ? `${pdfFile.name}  (${(pdfFile.size / 1024).toFixed(0)} KB)`
                       : 'คลิกเพื่อเลือกหรือลากมาวางไฟล์ PDF ที่นี่'}
                   </span>
                   <input

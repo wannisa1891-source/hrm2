@@ -47,14 +47,14 @@ const STATUS_OPTIONS = [
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { cls: string; icon: string; label: string }> = {
-    Approved: { cls: 'badge-approved', icon: '✓', label: 'อนุมัติแล้ว' },
-    Rejected: { cls: 'badge-rejected', icon: '✕', label: 'ไม่อนุมัติ' },
-    Pending:  { cls: 'badge-pending',  icon: '⏳', label: 'รออนุมัติ' },
+    Approved: { cls: 'badge-approved', icon: '', label: 'อนุมัติแล้ว' },
+    Rejected: { cls: 'badge-rejected', icon: '', label: 'ไม่อนุมัติ' },
+    Pending:  { cls: 'badge-pending',  icon: '', label: 'รออนุมัติ' },
   };
   const s = map[status] ?? { cls: 'badge-pending', icon: '?', label: status };
   return (
     <span className={`status-badge ${s.cls}`}>
-      {s.icon} {s.label}
+      {s.icon && `${s.icon} `}{s.label}
     </span>
   );
 }
@@ -71,7 +71,10 @@ function TransfersListPageInner() {
   const router        = useRouter();
   const searchParams  = useSearchParams();
   const { user }      = useAuth();
-  const isAdmin       = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role ?? '');
+  const role = user?.role || 'User';
+  const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
+  const isHR = role === 'HR';
+  const isAdmin = isSuperAdmin || isHR;
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [records, setRecords]       = useState<TransferRecord[]>([]);

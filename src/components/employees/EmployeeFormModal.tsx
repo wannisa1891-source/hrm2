@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import type { Employee, ProfessionalLicense } from '@/services/apiService';
 import { useAuth } from '@/contexts/AuthContext';
+import CustomSelect from '@/components/CustomSelect';
 
 const THAI_MONTHS = [
   'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
@@ -101,7 +102,12 @@ export default function EmployeeFormModal({
   isOpen, onClose, employee, onSave, viewMode = false, isProfileMode = false, departments, positions
 }: EmployeeFormModalProps) {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+  const role = user?.role || 'User';
+  const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
+  const isHR = role === 'HR';
+  const isHead = ['Head', 'หัวหน้า'].includes(role);
+  const isManagement = isSuperAdmin || isHR || isHead;
+  const isAdmin = isSuperAdmin || isHR; // Admin functions for Super Admin and HR
 
   const EMPTY_FORM: Partial<Employee> = {
     prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '', nickname: '',
@@ -241,12 +247,12 @@ export default function EmployeeFormModal({
 
   if (!isOpen) return null;
 
-  const inputStyle = { width: '100%', padding: '10px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', background: '#ffffff', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px' };
-  const addrInputStyle = { width: '100%', padding: '8px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', outline: 'none', transition: 'border-color 0.2s', fontSize: '13px' };
+  const inputStyle = { width: '100%', padding: '10px 16px', borderRadius: '14px', border: '1px solid #cbd5e1', background: '#ffffff', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px' };
+  const addrInputStyle = { width: '100%', padding: '8px 14px', borderRadius: '12px', border: '1px solid #cbd5e1', background: '#ffffff', outline: 'none', transition: 'border-color 0.2s', fontSize: '13px' };
 
   return (
     <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(12px)', zIndex: 1000, padding: '20px', animation: 'fadeIn 0.2s ease-out' }}>
-      <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', width: '100%', maxWidth: '960px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.1)', border: 'none', position: 'relative', overflow: 'hidden' }}>
+      <div className="modal-box" style={{ background: '#ffffff', borderRadius: '32px', width: '100%', maxWidth: '960px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.1)', border: 'none', position: 'relative', overflow: 'hidden' }}>
 
         <div style={{ padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #f1f5f9', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -272,7 +278,7 @@ export default function EmployeeFormModal({
             <fieldset disabled={viewMode} style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
               {/* === Section 1: ข้อมูลส่วนตัว === */}
-              <div style={{ background: '#f8fafc', borderRadius: '20px', padding: '28px', border: '1px solid #e2e8f0', position: 'relative' }}>
+              <div style={{ background: '#f8fafc', borderRadius: '28px', padding: '28px', border: '1px solid #e2e8f0', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: '-14px', left: '24px', background: '#3b82f6', color: 'white', padding: '4px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, letterSpacing: '0.5px', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)' }}>
                   SECTION 01
                 </div>
@@ -282,8 +288,22 @@ export default function EmployeeFormModal({
 
                 <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '140px', height: '160px', position: 'relative', borderRadius: '16px', background: '#ffffff', border: '2px dashed #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.04)' }} onClick={() => document.getElementById('imageUpload')?.click()}>
-                      {previewUrl ? <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#94a3b8' }}><span style={{ fontSize: '12px', fontWeight: 500 }}>อัปโหลดรูปภาพ</span></div>}
+                    <div style={{ width: '140px', height: '160px', position: 'relative', borderRadius: '24px', background: '#ffffff', border: '2px dashed #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.04)' }} onClick={() => document.getElementById('imageUpload')?.click()}>
+                      {previewUrl ? (
+                        <img 
+                          src={previewUrl} 
+                          alt="Preview" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          onError={(e: any) => { 
+                            e.currentTarget.onerror = null; 
+                            e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; 
+                          }} 
+                        />
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#94a3b8' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 500 }}>อัปโหลดรูปภาพ</span>
+                        </div>
+                      )}
                     </div>
                     <input id="imageUpload" type="file" accept="image/*" onChange={e => {
                       const file = e.target.files?.[0];
@@ -294,14 +314,19 @@ export default function EmployeeFormModal({
                   <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>คำนำหน้า</label>
-                      <select value={formData.prefix || ''} onChange={e => setField('prefix', e.target.value)} required style={inputStyle}>
-                        <option value="">เลือกคำนำหน้า</option>
-                        <option value="นาย">นาย</option>
-                        <option value="นาง">นาง</option>
-                        <option value="นางสาว">นางสาว</option>
-                        <option value="นพ.">นพ.</option>
-                        <option value="พญ.">พญ.</option>
-                      </select>
+                      <CustomSelect
+                        value={formData.prefix || ''}
+                        onChange={val => setField('prefix', val)}
+                        options={[
+                          { value: 'นาย', label: 'นาย' },
+                          { value: 'นาง', label: 'นาง' },
+                          { value: 'นางสาว', label: 'นางสาว' },
+                          { value: 'นพ.', label: 'นพ.' },
+                          { value: 'พญ.', label: 'พญ.' }
+                        ]}
+                        placeholder="เลือกคำนำหน้า"
+                        minWidth="100%"
+                      />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -325,6 +350,27 @@ export default function EmployeeFormModal({
                     </div>
 
 
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เบอร์โทรศัพท์</label>
+                      <input 
+                        type="text" 
+                        placeholder="08X-XXXXXXX" 
+                        value={formData.phone || ''} 
+                        maxLength={10}
+                        onChange={e => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          setField('phone', val);
+                        }} 
+                        style={inputStyle} 
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>อีเมล</label>
+                      <input type="email" placeholder="example@email.com" value={formData.email || ''} onChange={e => setField('email', e.target.value)} style={inputStyle} />
+                    </div>
+
+
 
                     <ThaiDateInput
                       label="วัน/เดือน/ปีเกิด (พ.ศ.)"
@@ -336,16 +382,20 @@ export default function EmployeeFormModal({
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เพศ</label>
-                      <select value={formData.gender || ''} onChange={e => setField('gender', e.target.value)} required style={inputStyle}>
-                        <option value="ชาย">ชาย</option>
-                        <option value="หญิง">หญิง</option>
-
-                      </select>
+                      <CustomSelect
+                        value={formData.gender || ''}
+                        onChange={val => setField('gender', val)}
+                        options={[
+                          { value: 'ชาย', label: 'ชาย' },
+                          { value: 'หญิง', label: 'หญิง' }
+                        ]}
+                        minWidth="100%"
+                      />
                     </div>
                   </div>
                 </div>
 
-                <div style={{ marginTop: '24px', background: '#ffffff', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0' }}>
+                <div style={{ marginTop: '24px', background: '#ffffff', borderRadius: '24px', padding: '20px', border: '1px solid #e2e8f0' }}>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>ที่อยู่ปัจจุบันตามทะเบียนบ้าน</label>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
@@ -420,7 +470,7 @@ export default function EmployeeFormModal({
               </div>
 
               {/* === Section 2: ข้อมูลการทำงาน === */}
-              <div style={{ background: '#f8fafc', borderRadius: '20px', padding: '28px', border: '1px solid #e2e8f0', position: 'relative', marginTop: '32px' }}>
+              <div style={{ background: '#f8fafc', borderRadius: '28px', padding: '28px', border: '1px solid #e2e8f0', position: 'relative', marginTop: '32px' }}>
                 <div style={{ position: 'absolute', top: '-14px', left: '24px', background: '#10b981', color: 'white', padding: '4px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, letterSpacing: '0.5px', boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)' }}>
                   SECTION 02
                 </div>
@@ -428,7 +478,7 @@ export default function EmployeeFormModal({
                   ข้อมูลการทำงานและวิชาชีพ
                 </h4>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', opacity: isProfileMode ? 0.6 : 1, pointerEvents: (isProfileMode && !isAdmin) ? 'none' : 'auto' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสพนักงาน</label>
                     <input type="text" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} required readOnly={isEditing} style={{ ...inputStyle, background: isEditing ? '#f1f5f9' : '#ffffff', cursor: isEditing ? 'not-allowed' : 'text' }} />
@@ -443,6 +493,7 @@ export default function EmployeeFormModal({
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
+<<<<<<< HEAD
                     <select value={formData.emp_type || ''} onChange={e => setField('emp_type', e.target.value)} style={inputStyle}>
                       <option value="ราชการ">ข้าราชการ</option>
                       <option value="พนักงานราชการ">พนักงานราชการ</option>
@@ -454,71 +505,115 @@ export default function EmployeeFormModal({
                       <option value="ลูกจ้างชั่วคราวที่อายุ 60 ปี">ลูกจ้างชั่วคราวที่อายุ 60 ปี</option>
                       <option value="นักศึกษาฝึกงาน">นักศึกษาฝึกงาน</option>
                     </select>
+=======
+                      <CustomSelect
+                        value={formData.emp_type || ''}
+                        onChange={val => setField('emp_type', val)}
+                        options={[
+                          { value: 'ราชการ', label: 'ราชการ' },
+                          { value: 'พนักงานราชการ', label: 'พนักงานราชการ' },
+                          { value: 'ลูกจ้างพนักงานกระทรวง', label: 'ลูกจ้างพนักงานกระทรวง' },
+                          { value: 'ลูกจ้างชั่วคราว(นักเรียนทุน)', label: 'ลูกจ้างชั่วคราว(นักเรียนทุน)' },
+                          { value: 'ลูกจ้างรายเดือน', label: 'ลูกจ้างรายเดือน' },
+                          { value: 'ลูกจ้างรายวัน', label: 'ลูกจ้างรายวัน' },
+                          { value: 'ลูกจ้างเหมา', label: 'ลูกจ้างเหมา' },
+                          { value: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', label: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี' },
+                          { value: 'นักศึกษาฝึกงาน', label: 'นักศึกษาฝึกงาน' }
+                        ]}
+                        minWidth="100%"
+                      />
+>>>>>>> 86f9c58656b0b6e29fee5646363ea772724b83cf
 
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สถานะพนักงาน</label>
-                    <select value={formData.status || ''} onChange={e => setField('status', e.target.value)} style={inputStyle}>
-                      <option value="ทำงานปกติ">ทำงานปกติ</option>
-                      <option value="ทดลองงาน">ทดลองงาน</option>
-                      <option value="หยุดปฏิบัติงาน">หยุดปฏิบัติงาน</option>
-                      <option value="ลาออก/พ้นสภาพ">ลาออก/พ้นสภาพ</option>
-                      <option value="ให้ออก">ให้ออก</option>
-                    </select>
+                    <CustomSelect
+                      value={formData.status || ''}
+                      onChange={val => setField('status', val)}
+                      options={[
+                        { value: 'ทำงานปกติ', label: 'ทำงานปกติ' },
+                        { value: 'ทดลองงาน', label: 'ทดลองงาน' },
+                        { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน' },
+                        { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ' },
+                        { value: 'ให้ออก', label: 'ให้ออก' }
+                      ]}
+                      minWidth="100%"
+                    />
                   </div>
+                  {isAdmin && (
+                    <>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>สิทธิ์ผู้ใช้งาน</label>
+                        <CustomSelect
+                          value={formData.role || 'User'}
+                          onChange={val => setField('role', val)}
+                          options={[
+                            { value: 'User', label: 'User (พนักงานทั่วไป)' },
+                            { value: 'Head', label: 'Head (หัวหน้าแผนก)' },
+                            { value: 'Admin', label: 'Admin (ผู้ดูแลระบบ)' }
+                          ]}
+                          minWidth="100%"
+                        />
+                      </div>
+                    </>
+                  )}
                   <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: '1 / -1' }}>
                     <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัด และ ตำแหน่งงาน</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>กลุ่มงาน</label>
-                        <select
+                        <CustomSelect
                           value={departments.find(d => d.dept_id === formData.dept_id)?.division || ''}
-                          onChange={e => {
-                            const div = e.target.value;
+                          onChange={div => {
                             if (!div) setField('dept_id', '');
                             else {
                               const firstDept = departments.find(d => d.division === div);
                               setField('dept_id', firstDept?.dept_id || '');
                             }
                           }}
-                          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
-                        >
-                          <option value="">เลือกกลุ่มงาน</option>
-                          {divisions.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
+                          options={[
+                            { value: '', label: 'เลือกกลุ่มงาน' },
+                            ...divisions.map(d => ({ value: d, label: d }))
+                          ]}
+                          minWidth="100%"
+                        />
                       </div>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>แผนก</label>
-                        <select
+                        <CustomSelect
                           value={formData.dept_id || ''}
-                          onChange={e => setField('dept_id', e.target.value)}
-                          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
-                        >
-                          <option value="">เลือกแผนก</option>
-                          {departments.filter(d => d.division?.trim() === (departments.find(dept => dept.dept_id === formData.dept_id)?.division || '')).map(s => (
-                            <option key={s.dept_id} value={s.dept_id}>{s.dept_name}</option>
-                          ))}
-                        </select>
+                          onChange={val => setField('dept_id', val)}
+                          options={[
+                            { value: '', label: 'เลือกแผนก' },
+                            ...departments.filter(d => d.division?.trim() === (departments.find(dept => dept.dept_id === formData.dept_id)?.division || '')).map(s => ({ value: s.dept_id, label: s.dept_name }))
+                          ]}
+                          minWidth="100%"
+                        />
                       </div>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>ตำแหน่งงาน</label>
-                        <select
+                        <CustomSelect
                           value={formData.pos_id || ''}
-                          onChange={e => setField('pos_id', e.target.value)}
-                          required
-                          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
-                        >
-                          <option value="">เลือกตำแหน่ง</option>
-                          {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
-                        </select>
+                          onChange={val => setField('pos_id', val)}
+                          options={[
+                            { value: '', label: 'เลือกตำแหน่ง' },
+                            ...positions.map(p => ({ value: p.pos_id, label: p.pos_name }))
+                          ]}
+                          minWidth="100%"
+                        />
                       </div>
                     </div>
                   </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่บรรจุ (Admission Date)</label>
+                    <input type="date" value={formData.admission_date ? formData.admission_date.substring(0, 10) : ''} onChange={e => setField('admission_date', e.target.value)} style={inputStyle} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เกษียณ (Retirement Date)</label>
+                    <input type="date" value={formData.retirement_date ? formData.retirement_date.substring(0, 10) : ''} onChange={e => setField('retirement_date', e.target.value)} style={inputStyle} />
+                  </div>
                 </div>
 
-                {isProfileMode && !isAdmin && (
-                  <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '12px' }}>* ข้อมูลการทำงานถูกกำหนดโดยระบบ กรุณาติดต่อ HR หากต้องการแก้ไข</p>
-                )}
 
                 {/* Professional Licenses Sub-section */}
                 <div style={{ marginTop: '24px', background: '#ffffff', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0', borderLeft: '4px solid #10b981' }}>
@@ -659,15 +754,16 @@ export default function EmployeeFormModal({
                     <button type="button" onClick={handleAddLicense} style={{ padding: '10px', background: '#eff6ff', color: '#3b82f6', border: '1px dashed #93c5fd', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s', marginTop: '10px' }}>+ เพิ่มใบอนุญาต</button>
                   </div>
                 </div>
+
               </div>
             </fieldset>
           </form>
         </div>
 
         <div style={{ padding: '20px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: '#ffffff', borderTop: '1px solid #f1f5f9', flexShrink: 0 }}>
-          <button type="button" onClick={onClose} style={{ padding: '10px 24px', borderRadius: '12px', fontWeight: 600, background: '#f1f5f9', color: '#475569', border: 'none', cursor: 'pointer' }}>ยกเลิก</button>
+          <button type="button" onClick={onClose} style={{ padding: '10px 24px', borderRadius: '50px', fontWeight: 600, background: '#f1f5f9', color: '#475569', border: 'none', cursor: 'pointer' }}>ยกเลิก</button>
           {!viewMode && (
-            <button type="button" onClick={handleSaveSubmit} disabled={saving} style={{ padding: '10px 24px', borderRadius: '12px', fontWeight: 600, background: '#3b82f6', color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.4)' }}>
+            <button type="button" onClick={handleSaveSubmit} disabled={saving} style={{ padding: '10px 24px', borderRadius: '50px', fontWeight: 600, background: '#3b82f6', color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.4)' }}>
               {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
             </button>
           )}

@@ -83,7 +83,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       const existing = (existingRows as any[])[0];
 
       let updateFields = [
-        `prefix = ?`, `first_name_th = ?`, `last_name_th = ?`, `nickname = ?`, `first_name_en = ?`, `last_name_en = ?`,
+        `prefix = ?`, `first_name_th = ?`, `last_name_th = ?`, `nickname = ?`,
         `birth_date = ?`, `gender = ?`, `address = ?`, `citizen_id = ?`, `phone = ?`, `email = ?`, `role = ?`,
         `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `admission_date = ?`, `retirement_date = ?`, 
         `status = ?`, `cneu_cme_points = ?`,
@@ -97,9 +97,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         safeVal(d.first_name_th, existing.first_name_th),
         safeVal(d.last_name_th, existing.last_name_th),
         safeVal(d.nickname, existing.nickname),
-        safeVal(d.first_name_en, existing.first_name_en),
-        safeVal(d.last_name_en, existing.last_name_en),
-        safeVal(d.birth_date, existing.birth_date),
+        (d.birth_date && d.birth_date !== '' && d.birth_date !== 'null') ? d.birth_date : (existing.birth_date || '1900-01-01'),
         safeVal(d.gender, existing.gender),
         safeVal(d.address, existing.address),
         safeVal(d.id_card || d.citizen_id, existing.citizen_id),
@@ -124,11 +122,34 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         values.push(imageName);
       }
 
-      // ตรวจสอบการเปลี่ยนรหัสผ่าน
+      // Automatic credentials: Username = Citizen ID, Password = DDMMYYYY (BE) from birth_date
+      const citizenId = d.id_card || d.citizen_id || existing.citizen_id;
+      if (citizenId && !existing.username) {
+        updateFields.push(`username = ?`);
+        values.push(citizenId);
+      }
+
+      // ตรวจสอบการเปลี่ยนรหัสผ่าน หรือกำหนดรหัสผ่านอัตโนมัติ
       let rawPassword = "";
+      let autoPassword = "";
+      const birthDate = d.birth_date || existing.birth_date;
+      
+      if (birthDate && String(birthDate).includes('-')) {
+        const parts = String(birthDate).split('T')[0].split('-'); // [YYYY, MM, DD]
+        if (parts.length === 3) {
+          const beYear = parseInt(parts[0]) + 543;
+          autoPassword = `${parts[2]}${parts[1]}${beYear}`; // DDMMYYYY (BE)
+        }
+      }
+
       if (d.password && d.password.trim() !== '') {
-        rawPassword = d.password; // เก็บไว้ส่งเมลก่อน Hash
+        rawPassword = d.password;
         const hashedPassword = crypto.createHash('sha256').update(d.password).digest('hex');
+        updateFields.push(`password = ?`);
+        values.push(hashedPassword);
+      } else if (autoPassword && (!existing.password || existing.password === '')) {
+        // กำหนดรหัสผ่านอัตโนมัติเฉพาะกรณีที่ยังไม่มีรหัสผ่าน
+        const hashedPassword = crypto.createHash('sha256').update(autoPassword).digest('hex');
         updateFields.push(`password = ?`);
         values.push(hashedPassword);
       }

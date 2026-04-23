@@ -10,8 +10,6 @@ export interface Employee {
   prefix: string
   first_name_th: string
   last_name_th: string
-  first_name_en?: string
-  last_name_en?: string
   nickname?: string
   birth_date: string
   gender: string
@@ -22,7 +20,6 @@ export interface Employee {
   dept_id: string
   pos_id: string
   start_date: string
-  base_salary: number
   status: string
   image: string
 
@@ -99,7 +96,7 @@ export interface Leave {
   end_date: string
   reason?: string
   status: string
-  photo?: string
+  image?: string
   current_stage?: string
   dept_head_status?: string
   admin_status?: string
@@ -111,6 +108,8 @@ export interface Leave {
   accumulated_vacation?: number
   emp_type?: string
   start_date_work?: string
+  dept_id?: string
+  leave_category?: string
 }
 
 export interface ScheduleRecord {

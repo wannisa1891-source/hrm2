@@ -64,7 +64,10 @@ export default function TransferPage() {
     router.replace('/transfers');
   }, [router]);
 
-  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+  const role = user?.role || 'User';
+  const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
+  const isHR = role === 'HR';
+  const isAdmin = isSuperAdmin || isHR;
 
   useEffect(() => {
     if (user && !isAdmin) {

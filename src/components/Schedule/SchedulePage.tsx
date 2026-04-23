@@ -56,7 +56,10 @@ function toDateStr(date: Date): string {
 
 export default function SchedulePage() {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+  const role = user?.role || 'User';
+  const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
+  const isHR = role === 'HR';
+  const isAdmin = isSuperAdmin || isHR;
   const { schedules: apiSchedules, loading, error, loadSchedules, addSchedule, editSchedule, removeSchedule } = useSchedules()
 
   // แปลง ScheduleRecord[] → Schedule[] สำหรับ component ต่างๆ
@@ -666,7 +669,11 @@ export default function SchedulePage() {
                   <div className="sp-form-group" style={{ marginBottom: 0 }}>
                     <label>เบอร์โทรศัพท์ติดต่อ</label>
                     <input className="sp-field" value={form.contactPhone}
-                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, contactPhone: e.target.value }))}
+                      maxLength={10}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setForm((f: ScheduleForm) => ({ ...f, contactPhone: val }));
+                      }}
                       placeholder="0xx-xxxxxxx" />
                   </div>
                 </div>

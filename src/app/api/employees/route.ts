@@ -94,25 +94,41 @@ export async function POST(req: NextRequest) {
     try {
       await connection.beginTransaction();
 
+      // Automatic credentials: Username = Citizen ID, Password = DDMMYYYY (BE) from birth_date
+      const citizenId = d.citizen_id || d.id_card || '';
+      const username = d.username || citizenId;
+      
+      let autoPassword = '';
+      if (d.birth_date && d.birth_date.includes('-')) {
+        const parts = d.birth_date.split('T')[0].split('-'); // [YYYY, MM, DD]
+        if (parts.length === 3) {
+          autoPassword = `${parts[2]}${parts[1]}${parts[0]}`; // DDMMYYYY (AD)
+        }
+      }
+      
+      const rawPassword = d.password || autoPassword || '12345678';
+      const hashedPassword = crypto.createHash('sha256').update(rawPassword).digest('hex');
+
       const sql = `INSERT INTO tbl_employees 
-        (emp_id, prefix, first_name_th, last_name_th, first_name_en, last_name_en, nickname,
+        (emp_id, username, prefix, first_name_th, last_name_th, nickname,
          birth_date, gender, address, citizen_id, phone, email, password, role, 
-         emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, status, image, cneu_cme_points,
+         emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, status, 
+         image, cneu_cme_points,
          quota_personal, quota_vacation, quota_sick) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)`;
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)`;
 
-      const hashedPassword = d.password ? crypto.createHash('sha256').update(d.password).digest('hex') : '';
-
+      const tempCitizenId = `9${Date.now().toString().slice(-12)}`; // Generate a unique 13-digit number starting with 9
       const values = [
-        d.emp_id || '', d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
-        d.first_name_en || '', d.last_name_en || '', d.nickname || '',
-        d.birth_date || null, d.gender || 'ชาย', d.address || '',
-        d.id_card || d.citizen_id || '0000000000000', d.phone || '',
+        d.emp_id || '', username, d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
+        d.nickname || '',
+        (d.birth_date && d.birth_date !== '') ? d.birth_date : (d.date_of_birth && d.date_of_birth !== '') ? d.date_of_birth : '1900-01-01',
+        d.gender || 'ชาย', d.address || '',
+        d.id_card || d.citizen_id || tempCitizenId, d.phone || '',
         d.email || null, hashedPassword, d.role || 'User',
         d.emp_type || 'พนักงานประจำ', d.dept_id || '', d.pos_id || '', 
         d.start_date || new Date().toISOString().split('T')[0],
         d.admission_date || null, d.retirement_date || null,
-        imageName,
+        imageName, // Save only to image
         d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0,
         d.quota_personal ? parseInt(d.quota_personal) : 0,
         d.quota_vacation ? parseInt(d.quota_vacation) : 0,

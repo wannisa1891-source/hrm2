@@ -12,7 +12,8 @@ export default function AppLayout({ children, hideScrollbar = false }: { childre
   const { isLoggedIn } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const isDashboard = pathname === '/dashboard' || pathname === '/';
+  const isDashboard = pathname === '/dashboard' || pathname === '/profile' || pathname === '/';
+
 
   useEffect(() => {
     if (!isLoggedIn) {

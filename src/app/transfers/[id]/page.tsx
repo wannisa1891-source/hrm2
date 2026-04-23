@@ -44,9 +44,9 @@ function formatMoney(val?: number | null) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { cls: string; label: string }> = {
-    Approved: { cls: 'badge-approved', label: '✓ อนุมัติแล้ว' },
-    Rejected: { cls: 'badge-rejected', label: '✕ ไม่อนุมัติ' },
-    Pending:  { cls: 'badge-pending',  label: '⏳ รออนุมัติ' },
+    Approved: { cls: 'badge-approved', label: 'อนุมัติแล้ว' },
+    Rejected: { cls: 'badge-rejected', label: 'ไม่อนุมัติ' },
+    Pending:  { cls: 'badge-pending',  label: 'รออนุมัติ' },
   };
   const s = map[status] ?? { cls: 'badge-pending', label: status };
   return <span className={`status-badge ${s.cls}`}>{s.label}</span>;
