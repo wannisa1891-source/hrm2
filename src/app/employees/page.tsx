@@ -354,7 +354,7 @@ function EmployeesContent() {
         e.first_name_th || '',
         e.last_name_th || '',
         e.gender || '',
-        e.birth_date ? new Date(e.birth_date).toLocaleDateString('en-GB') : '',
+        e.birth_date ? new Date(e.birth_date).toLocaleDateString('th-GB') : '',
         e.citizen_id || '',
         e.phone || '',
         e.email || '',
@@ -454,16 +454,17 @@ function EmployeesContent() {
                 ]}
                 minWidth="160px"
               />
-
-              <CustomSelect
-                prefix="ตำแหน่ง"
-                value={filterPos}
-                onChange={val => setFilterPos(val)}
-                options={[
-                  { value: 'all', label: 'ทั้งหมด' },
-                  ...positions.map(p => ({ value: p.pos_id, label: p.pos_name }))
-                ]}
-                minWidth="160px"
+              <input
+                type="text"
+                placeholder="ค้นหาตำแหน่ง..."
+                value={filterPos === 'all' ? '' : filterPos} // ถ้าค่าเป็น all ให้แสดงเป็นว่างเปล่า
+                onChange={e => setFilterPos(e.target.value)}
+                style={{
+                  minWidth: "160px",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc"
+                }}
               />
 
               <CustomSelect
