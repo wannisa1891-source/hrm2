@@ -99,7 +99,7 @@ export default function SchedulePage() {
 
   const { totalSchedules, todaySchedules, monthSchedules } = useScheduleSummary(schedules)
   const { departmentStatus } = useScheduleStatus(schedules)
-  
+
   // --- REIMBURSEMENT STATE ---
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimForm, setClaimForm] = useState<{
@@ -136,7 +136,7 @@ export default function SchedulePage() {
       fd.append('accommodationCost', claimForm.accommodationCost.toString());
       fd.append('organizerPay', claimForm.organizerPay.toString());
       fd.append('parentPay', claimForm.parentPay.toString());
-      
+
       if (claimForm.memoFile instanceof File) fd.append('memoFile', claimForm.memoFile);
       if (claimForm.projectFile instanceof File) fd.append('projectFile', claimForm.projectFile);
 
@@ -435,7 +435,7 @@ export default function SchedulePage() {
             </h1>
             <p className="page-subtitle">จัดการตารางการประชุมและการจองห้องประชุมแบบครบวงจร</p>
           </div>
-          <button 
+          <button
             onClick={() => setShowClaimModal(true)}
             style={{
               padding: '12px 24px',
@@ -818,28 +818,16 @@ export default function SchedulePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div className="sp-form-group" style={{ marginBottom: 0 }}>
                     <label>แนบไฟล์บันทึกข้อความ/คำสั่ง</label>
-                    <input type="file" className="sp-field" 
+                    <input type="file" className="sp-field"
                       onChange={(e) => setClaimForm(f => ({ ...f, memoFile: e.target.files?.[0] || '' }))} />
                   </div>
                   <div className="sp-form-group" style={{ marginBottom: 0 }}>
                     <label>แนบไฟล์โครงการ/กำหนดการ</label>
-                    <input type="file" className="sp-field" 
+                    <input type="file" className="sp-field"
                       onChange={(e) => setClaimForm(f => ({ ...f, projectFile: e.target.files?.[0] || '' }))} />
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>ค่าพาหนะ (บาท)</label>
-                    <input type="number" className="sp-field" value={claimForm.transportCost}
-                      onChange={(e) => setClaimForm(f => ({ ...f, transportCost: Number(e.target.value) }))} />
-                  </div>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>ค่าที่พัก (บาท)</label>
-                    <input type="number" className="sp-field" value={claimForm.accommodationCost}
-                      onChange={(e) => setClaimForm(f => ({ ...f, accommodationCost: Number(e.target.value) }))} />
-                  </div>
-                </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div className="sp-form-group" style={{ marginBottom: 0 }}>
