@@ -404,43 +404,16 @@ export default function EmployeeFormModal({
                     <input type="text" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} required readOnly={isEditing} style={{ ...inputStyle, background: isEditing ? '#f1f5f9' : '#ffffff', cursor: isEditing ? 'not-allowed' : 'text' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-<<<<<<< HEAD
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ลำดับที่ </label>
-                    <input type="text" value={formData.staff_no || 'Auto-generated'} readOnly style={{ ...inputStyle, background: '#f1f5f9', cursor: 'not-allowed', color: '#64748b' }} />
-                  </div>
-                  <ThaiDateInput
-                    label="วันที่เริ่มงาน"
-                    value={formData.start_date}
-                    onChange={val => setField('start_date', val)}
-                    required
-                    style={inputStyle}
-                  />
-=======
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน</label>
-                    <input type="date" value={formData.start_date ? formData.start_date.substring(0, 10) : ''} onChange={e => setField('start_date', e.target.value)} required style={inputStyle} />
+                    <ThaiDateInput
+                      value={formData.start_date || ''}
+                      onChange={val => setField('start_date', val)}
+                      required
+                      style={inputStyle}
+                    />
                   </div>
->>>>>>> aa86dda8d70640bcee7c29f1ac470a219a5927fd
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
-<<<<<<< HEAD
-                      <CustomSelect
-                        value={formData.emp_type || ''}
-                        onChange={val => setField('emp_type', val)}
-                        options={[
-                          { value: 'ข้าราชการ', label: 'ข้าราชการ' },
-                          { value: 'ลูกจ้างประจำ', label: 'ลูกจ้างประจำ' },
-                          { value: 'พนักงานราชการ', label: 'พนักงานราชการ' },
-                          { value: 'ลูกจ้างพนักงานกระทรวงสาธารณสุข', label: 'ลูกจ้างพนักงานกระทรวงสาธารณสุข' },
-                          { value: 'ลูกจ้างชั่วคราว(นักเรียนทุน)', label: 'ลูกจ้างชั่วคราว(นักเรียนทุน)' },
-                          { value: 'ลูกจ้างรายเดือน', label: 'ลูกจ้างรายเดือน' },
-                          { value: 'ลูกจ้างรายวัน', label: 'ลูกจ้างรายวัน' },
-                          { value: 'ลูกจ้างเหมาบริการ', label: 'ลูกจ้างเหมาบริการ' },
-                          { value: 'ลูกจ้างเเบ่งเปอร์เซ็นต์', label: 'ลูกจ้างเเบ่งเปอร์เซ็นต์' },
-                          { value: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', label: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี' }
-                        ]}
-                        minWidth="100%"
-                      />
-=======
                     <CustomSelect
                       value={formData.emp_type || ''}
                       onChange={val => setField('emp_type', val)}
@@ -449,16 +422,16 @@ export default function EmployeeFormModal({
                         { value: 'ลูกจ้างประจำ', label: 'ลูกจ้างประจำ' },
                         { value: 'พนักงานราชการ', label: 'พนักงานราชการ' },
                         { value: 'พนักงานกระทรวงสาธารณสุข', label: 'พนักงานกระทรวงสาธารณสุข' },
+                        { value: 'ลูกจ้างชั่วคราว(นักเรียนทุน)', label: 'ลูกจ้างชั่วคราว(นักเรียนทุน)' },
                         { value: 'ลูกจ้างรายเดือน', label: 'ลูกจ้างรายเดือน' },
                         { value: 'ลูกจ้างรายวัน', label: 'ลูกจ้างรายวัน' },
                         { value: 'ลูกจ้างเหมาบริการ', label: 'ลูกจ้างเหมาบริการ' },
-                        { value: 'ลูกจ้างแบ่งเปอร์เซนต์', label: 'ลูกจ้างแบ่งเปอร์เซนต์' },
+                        { value: 'ลูกจ้างเเบ่งเปอร์เซ็นต์', label: 'ลูกจ้างเเบ่งเปอร์เซ็นต์' },
                         { value: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', label: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี' },
                         { value: 'นักศึกษาฝึกงาน', label: 'นักศึกษาฝึกงาน' }
                       ]}
                       minWidth="100%"
                     />
->>>>>>> 39e88d2db65f08b09ba1f1317c7ab01e818c928c
 
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
