@@ -30,9 +30,9 @@ export default function EmployeeFormModal({
   const isAdmin = isSuperAdmin || isHR; // Admin functions for Super Admin and HR
 
   const EMPTY_FORM: Partial<Employee> = {
-    prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '', nickname: '',
+    prefix: 'นาย', first_name_th: '', last_name_th: '', nickname: '',
     birth_date: '', gender: 'ชาย', citizen_id: '',
-    emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานประจำ', start_date: '', base_salary: 0,
+    emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานประจำ', start_date: '',
     phone: '', address: '', status: 'ทำงานปกติ',
     addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
     has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: []
@@ -210,14 +210,14 @@ export default function EmployeeFormModal({
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                     <div style={{ width: '140px', height: '160px', position: 'relative', borderRadius: '24px', background: '#ffffff', border: '2px dashed #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.04)' }} onClick={() => document.getElementById('imageUpload')?.click()}>
                       {previewUrl ? (
-                        <img 
-                          src={previewUrl} 
-                          alt="Preview" 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                          onError={(e: any) => { 
-                            e.currentTarget.onerror = null; 
-                            e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; 
-                          }} 
+                        <img
+                          src={previewUrl}
+                          alt="Preview"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e: any) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>';
+                          }}
                         />
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#94a3b8' }}>
@@ -272,16 +272,16 @@ export default function EmployeeFormModal({
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เบอร์โทรศัพท์</label>
-                      <input 
-                        type="text" 
-                        placeholder="08X-XXXXXXX" 
-                        value={formData.phone || ''} 
+                      <input
+                        type="text"
+                        placeholder="08X-XXXXXXX"
+                        value={formData.phone || ''}
                         maxLength={10}
                         onChange={e => {
                           const val = e.target.value.replace(/[^0-9]/g, '');
                           setField('phone', val);
-                        }} 
-                        style={inputStyle} 
+                        }}
+                        style={inputStyle}
                       />
                     </div>
 
@@ -400,7 +400,7 @@ export default function EmployeeFormModal({
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสพนักงาน</label>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เลขประจำตำแหน่ง</label>
                     <input type="text" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} required readOnly={isEditing} style={{ ...inputStyle, background: isEditing ? '#f1f5f9' : '#ffffff', cursor: isEditing ? 'not-allowed' : 'text' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -416,6 +416,7 @@ export default function EmployeeFormModal({
                   />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
+<<<<<<< HEAD
                       <CustomSelect
                         value={formData.emp_type || ''}
                         onChange={val => setField('emp_type', val)}
@@ -433,6 +434,25 @@ export default function EmployeeFormModal({
                         ]}
                         minWidth="100%"
                       />
+=======
+                    <CustomSelect
+                      value={formData.emp_type || ''}
+                      onChange={val => setField('emp_type', val)}
+                      options={[
+                        { value: 'ข้าราชการ', label: 'ข้าราชการ' },
+                        { value: 'ลูกจ้างประจำ', label: 'ลูกจ้างประจำ' },
+                        { value: 'พนักงานราชการ', label: 'พนักงานราชการ' },
+                        { value: 'พนักงานกระทรวงสาธารณสุข', label: 'พนักงานกระทรวงสาธารณสุข' },
+                        { value: 'ลูกจ้างรายเดือน', label: 'ลูกจ้างรายเดือน' },
+                        { value: 'ลูกจ้างรายวัน', label: 'ลูกจ้างรายวัน' },
+                        { value: 'ลูกจ้างเหมาบริการ', label: 'ลูกจ้างเหมาบริการ' },
+                        { value: 'ลูกจ้างแบ่งเปอร์เซนต์', label: 'ลูกจ้างแบ่งเปอร์เซนต์' },
+                        { value: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', label: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี' },
+                        { value: 'นักศึกษาฝึกงาน', label: 'นักศึกษาฝึกงาน' }
+                      ]}
+                      minWidth="100%"
+                    />
+>>>>>>> 39e88d2db65f08b09ba1f1317c7ab01e818c928c
 
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -501,15 +521,21 @@ export default function EmployeeFormModal({
                         />
                       </div>
                       <div>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>ตำแหน่งงาน</label>
-                        <CustomSelect
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+                          ตำแหน่งงาน
+                        </label>
+                        <input
+                          type="text"
                           value={formData.pos_id || ''}
-                          onChange={val => setField('pos_id', val)}
-                          options={[
-                            { value: '', label: 'เลือกตำแหน่ง' },
-                            ...positions.map(p => ({ value: p.pos_id, label: p.pos_name }))
-                          ]}
-                          minWidth="100%"
+                          onChange={(e) => setField('pos_id', e.target.value)}
+                          placeholder="กรอกตำแหน่งงานที่นี่"
+                          style={{
+                            width: '100%',
+                            padding: '8px',
+                            border: '1px solid #cbd5e1', // ปรับขอบให้เหมือนกับฟิลด์อื่นๆ ในเว็บ
+                            borderRadius: '4px',
+                            fontSize: '14px'
+                          }}
                         />
                       </div>
                     </div>
@@ -604,7 +630,7 @@ export default function EmployeeFormModal({
                                 e.target.value = ''; // Reset input to allow selecting the same file again
                               }} style={{ display: 'none' }} />
                             </div>
-                            
+
                             {/* แสดงไฟล์ที่เพิ่งเลือก (New files) */}
                             {((lic as any).files && (lic as any).files.length > 0) ? (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '10px' }}>
@@ -649,10 +675,10 @@ export default function EmployeeFormModal({
                                     } else if (lic.file_path) {
                                       fileList = [lic.file_path as string];
                                     }
-                                  } catch(e) { 
+                                  } catch (e) {
                                     fileList = typeof lic.file_path === 'string' ? [lic.file_path] : (lic.file_path || []);
                                   }
-                                  
+
                                   return fileList.map((fPath, fi) => (
                                     <a key={fi} href={`/uploads/${fPath}`} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                       📎 ไฟล์แนบที่ {fi + 1}
