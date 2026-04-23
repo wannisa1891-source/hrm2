@@ -127,6 +127,12 @@ export interface ScheduleRecord {
   created_at?: string
   first_name_th?: string
   last_name_th?: string
+  memo_file?: string
+  project_file?: string
+  transport_cost?: number
+  accommodation_cost?: number
+  organizer_pay?: number
+  parent_pay?: number
 }
 
 export interface ScheduleBody {
@@ -140,6 +146,12 @@ export interface ScheduleBody {
   bookerName?: string
   contactPhone?: string
   unitName?: string
+  memoFile?: string
+  projectFile?: string
+  transportCost?: number
+  accommodationCost?: number
+  organizerPay?: number
+  parentPay?: number
 }
 
 export interface Department {
@@ -236,6 +248,8 @@ export const deleteDepartment = (id: string) => apiFetch<{ message: string }>(`/
 
 export const fetchPositions = () => apiFetch<Position[]>('/api/positions')
 
+export const fetchLeaveTypes = () => apiFetch<any[]>('/api/leave-types')
+export const fetchLeaveCategories = () => apiFetch<any[]>('/api/leave-categories')
 export const fetchLeaves = () => apiFetch<Leave[]>('/api/leaves')
 export const createLeave = (body: any) => apiFetch<{ success: boolean }>('/api/leaves', {
   method: 'POST',

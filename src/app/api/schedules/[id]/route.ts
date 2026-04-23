@@ -95,7 +95,10 @@ export async function PUT(
   try {
     const { id } = params;
     const body = await req.json();
-    const { nurseName, shift, department, date, startTime, endTime, note, requestedBy, bookerName, contactPhone, unitName } = body;
+    const { 
+      nurseName, shift, department, date, startTime, endTime, note, requestedBy, bookerName, contactPhone, unitName,
+      memoFile, projectFile, transportCost, accommodationCost, organizerPay, parentPay
+    } = body;
 
     // 1. Validation
     if (!nurseName || !shift || !date) {
@@ -119,9 +122,14 @@ export async function PUT(
     await pool.query(
       `UPDATE tbl_bookings 
        SET subject = ?, room_id = ?, organizer_id = ?, start_time = ?, end_time = ?, description = ?,
-           booker_name = ?, contact_phone = ?, unit_name = ?
+           booker_name = ?, contact_phone = ?, unit_name = ?,
+           memo_file = ?, project_file = ?, transport_cost = ?, accommodation_cost = ?, organizer_pay = ?, parent_pay = ?
        WHERE booking_id = ?`,
-      [nurseName, roomId, department, fullStart, fullEnd, note || '', bookerName || '', contactPhone || '', unitName || '', id]
+      [
+        nurseName, roomId, department, fullStart, fullEnd, note || '', bookerName || '', contactPhone || '', unitName || '', 
+        memoFile || '', projectFile || '', transportCost || 0, accommodationCost || 0, organizerPay || 0, parentPay || 0,
+        id
+      ]
     );
 
     // 4. Email & Audit

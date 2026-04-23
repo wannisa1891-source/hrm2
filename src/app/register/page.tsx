@@ -42,6 +42,14 @@ export default function RegisterPage() {
     position: '', department: '', start_date: '', employee_type: ''
   });
 
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [positions, setPositions] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/departments').then(r => r.json()).then(data => setDepartments(Array.isArray(data) ? data : []));
+    fetch('/api/positions').then(r => r.json()).then(data => setPositions(Array.isArray(data) ? data : []));
+  }, []);
+
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   // Fake API for username duplicate check
@@ -524,13 +532,9 @@ export default function RegisterPage() {
                     onBlur={() => handleBlur(validateStep3)}
                   >
                     <option value="" disabled>เลือกตำแหน่ง</option>
-                    <option value="แพทย์">แพทย์</option>
-                    <option value="พยาบาล">พยาบาล</option>
-                    <option value="เภสัชกร">เภสัชกร</option>
-                    <option value="เจ้าหน้าที่การเงิน">เจ้าหน้าที่การเงิน</option>
-                    <option value="ธุรการ">เจ้าหน้าที่ธุรการ</option>
-                    <option value="พนักงานบัญชี">พนักงานบัญชี</option>
-                    <option value="ไอที">เจ้าหน้าที่ไอที</option>
+                    {positions.map(p => (
+                      <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>
+                    ))}
                   </select>
                 </div>
                 {fieldErrors.position && <span className="field-error-msg">{fieldErrors.position}</span>}
@@ -546,12 +550,9 @@ export default function RegisterPage() {
                     onBlur={() => handleBlur(validateStep3)}
                   >
                     <option value="" disabled>เลือกแผนก</option>
-                    <option value="แผนกผู้ป่วยนอก">แผนกผู้ป่วยนอก (OPD)</option>
-                    <option value="แผนกผู้ป่วยใน">แผนกผู้ป่วยใน (IPD)</option>
-                    <option value="แผนกฉุกเฉิน">แผนกฉุกเฉิน (ER)</option>
-                    <option value="ห้องปฏิบัติการ">ห้องปฏิบัติการ (Lab)</option>
-                    <option value="แผนกเภสัชกรรม">แผนกเภสัชกรรม</option>
-                    <option value="ฝ่ายบริหาร">ฝ่ายบริหาร</option>
+                    {departments.map(d => (
+                      <option key={d.dept_id} value={d.dept_id}>{d.dept_name} ({d.division})</option>
+                    ))}
                   </select>
                 </div>
                 {fieldErrors.department && <span className="field-error-msg">{fieldErrors.department}</span>}

@@ -119,7 +119,8 @@ export async function GET(req: NextRequest) {
     let sql = `
       SELECT b.booking_id as id, b.subject as nurse_name, b.description as note, 
              b.start_time as schedule_date, b.end_time, r.room_name as shift, b.organizer_id as department,
-             b.booker_name, b.contact_phone, b.unit_name
+             b.booker_name, b.contact_phone, b.unit_name,
+             b.memo_file, b.project_file, b.transport_cost, b.accommodation_cost, b.organizer_pay, b.parent_pay
       FROM tbl_bookings b
       LEFT JOIN tbl_meeting_rooms r ON b.room_id = r.room_id
       WHERE 1=1
@@ -157,6 +158,12 @@ export async function GET(req: NextRequest) {
         note: r.note,
         startTime: formatT(sDate),
         endTime: formatT(eDate),
+        memoFile: r.memo_file,
+        projectFile: r.project_file,
+        transportCost: r.transport_cost,
+        accommodationCost: r.accommodation_cost,
+        organizerPay: r.organizer_pay,
+        parentPay: r.parent_pay,
       };
     });
 
@@ -173,7 +180,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { nurseName, shift, department, date, note, startTime, endTime, requestedBy, bookerName, contactPhone, unitName } = body;
+    const { 
+      nurseName, shift, department, date, note, startTime, endTime, requestedBy, bookerName, contactPhone, unitName,
+      memoFile, projectFile, transportCost, accommodationCost, organizerPay, parentPay
+    } = body;
 
     // 1. Validation
     if (!nurseName || !shift || !date) {
@@ -195,8 +205,14 @@ export async function POST(req: NextRequest) {
 
     // 3. Insert
     const [result]: any = await pool.query(
-      'INSERT INTO tbl_bookings (subject, description, room_id, organizer_id, start_time, end_time, booker_name, contact_phone, unit_name) VALUES (?,?,?,?,?,?,?,?,?)',
-      [nurseName, note || '', roomId, department, fullStart, fullEnd, bookerName || '', contactPhone || '', unitName || '']
+      `INSERT INTO tbl_bookings 
+       (subject, description, room_id, organizer_id, start_time, end_time, booker_name, contact_phone, unit_name, 
+        memo_file, project_file, transport_cost, accommodation_cost, organizer_pay, parent_pay) 
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        nurseName, note || '', roomId, department, fullStart, fullEnd, bookerName || '', contactPhone || '', unitName || '',
+        memoFile || '', projectFile || '', transportCost || 0, accommodationCost || 0, organizerPay || 0, parentPay || 0
+      ]
     );
 
     const newId = result.insertId.toString();

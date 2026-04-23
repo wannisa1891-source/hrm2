@@ -30,6 +30,12 @@ function toSchedule(r: ScheduleRecord): Schedule {
     startTime: r.startTime || '09:00',
     endTime: r.endTime || '10:00',
     note: r.note || '',
+    memoFile: r.memo_file || '',
+    projectFile: r.project_file || '',
+    transportCost: Number(r.transport_cost) || 0,
+    accommodationCost: Number(r.accommodation_cost) || 0,
+    organizerPay: Number(r.organizer_pay) || 0,
+    parentPay: Number(r.parent_pay) || 0,
   }
 }
 
@@ -93,6 +99,71 @@ export default function SchedulePage() {
 
   const { totalSchedules, todaySchedules, monthSchedules } = useScheduleSummary(schedules)
   const { departmentStatus } = useScheduleStatus(schedules)
+  
+  // --- REIMBURSEMENT STATE ---
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [claimForm, setClaimForm] = useState<{
+    topic: string;
+    memoFile: File | string;
+    projectFile: File | string;
+    transportCost: number;
+    accommodationCost: number;
+    organizerPay: number;
+    parentPay: number;
+    date: string;
+  }>({
+    topic: '',
+    memoFile: '',
+    projectFile: '',
+    transportCost: 0,
+    accommodationCost: 0,
+    organizerPay: 0,
+    parentPay: 0,
+    date: toDateStr(new Date())
+  });
+
+  async function handleSaveClaim() {
+    if (!claimForm.topic || !claimForm.date) {
+      Swal.fire('คำเตือน', 'กรุณาระบุหัวข้อและวันที่', 'warning');
+      return;
+    }
+    try {
+      const fd = new FormData();
+      fd.append('empId', (user as any)?.emp_id || 'UNKNOWN');
+      fd.append('topic', claimForm.topic);
+      fd.append('date', claimForm.date);
+      fd.append('transportCost', claimForm.transportCost.toString());
+      fd.append('accommodationCost', claimForm.accommodationCost.toString());
+      fd.append('organizerPay', claimForm.organizerPay.toString());
+      fd.append('parentPay', claimForm.parentPay.toString());
+      
+      if (claimForm.memoFile instanceof File) fd.append('memoFile', claimForm.memoFile);
+      if (claimForm.projectFile instanceof File) fd.append('projectFile', claimForm.projectFile);
+
+      const res = await fetch('/api/reimbursements', {
+        method: 'POST',
+        body: fd
+      });
+      if (res.ok) {
+        Swal.fire('สำเร็จ', 'บันทึกข้อมูลการเบิกจ่ายเรียบร้อยแล้ว', 'success');
+        setShowClaimModal(false);
+        setClaimForm({
+          topic: '',
+          memoFile: '',
+          projectFile: '',
+          transportCost: 0,
+          accommodationCost: 0,
+          organizerPay: 0,
+          parentPay: 0,
+          date: toDateStr(new Date())
+        });
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (err) {
+      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+    }
+  }
 
   const conflictErrors = useMemo(() => {
     if (!form.room || !selectedDate || !form.startTime || !form.endTime) return [];
@@ -201,7 +272,13 @@ export default function SchedulePage() {
         startTime: form.startTime || '09:00',
         endTime: form.endTime || '10:00',
         note: form.note || '',
-        date: toDateStr(selectedDate)
+        date: toDateStr(selectedDate),
+        memoFile: form.memoFile || '',
+        projectFile: form.projectFile || '',
+        transportCost: form.transportCost || 0,
+        accommodationCost: form.accommodationCost || 0,
+        organizerPay: form.organizerPay || 0,
+        parentPay: form.parentPay || 0
       };
 
       if (isEditing && editingId) {
@@ -350,7 +427,7 @@ export default function SchedulePage() {
       <div className="schedule-page" style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
 
         {/* HEADER */}
-        <div className="page-header">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <svg width="28" height="28" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
@@ -358,6 +435,29 @@ export default function SchedulePage() {
             </h1>
             <p className="page-subtitle">จัดการตารางการประชุมและการจองห้องประชุมแบบครบวงจร</p>
           </div>
+          <button 
+            onClick={() => setShowClaimModal(true)}
+            style={{
+              padding: '12px 24px',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: 'white',
+              borderRadius: '12px',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            เบิกค่าใช้จ่ายในการประชุม/อบรม
+          </button>
         </div>
 
         {/* ERROR BANNER */}
@@ -685,6 +785,85 @@ export default function SchedulePage() {
           </div>
         )}
 
+        {/* REIMBURSEMENT CLAIM MODAL */}
+        {showClaimModal && (
+          <div className="sp-modal-bg" onClick={() => setShowClaimModal(false)}>
+            <div className="sp-modal-box" onClick={(e) => e.stopPropagation()} style={{ width: '650px' }}>
+              <div className="sp-modal-top">
+                <h3>
+                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  เบิกค่าใช้จ่ายในการประชุม/อบรม
+                </h3>
+                <button className="sp-modal-x" onClick={() => setShowClaimModal(false)}>
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                  <label>หัวข้อการประชุม/อบรม <span className="sp-req">*</span></label>
+                  <input className="sp-field" value={claimForm.topic}
+                    onChange={(e) => setClaimForm(f => ({ ...f, topic: e.target.value }))}
+                    placeholder="เช่น อบรมการใช้งานระบบ HRM ใหม่" />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>วันที่ <span className="sp-req">*</span></label>
+                    <input type="date" className="sp-field" value={claimForm.date}
+                      onChange={(e) => setClaimForm(f => ({ ...f, date: e.target.value }))} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>แนบไฟล์บันทึกข้อความ/คำสั่ง</label>
+                    <input type="file" className="sp-field" 
+                      onChange={(e) => setClaimForm(f => ({ ...f, memoFile: e.target.files?.[0] || '' }))} />
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>แนบไฟล์โครงการ/กำหนดการ</label>
+                    <input type="file" className="sp-field" 
+                      onChange={(e) => setClaimForm(f => ({ ...f, projectFile: e.target.files?.[0] || '' }))} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>ค่าพาหนะ (บาท)</label>
+                    <input type="number" className="sp-field" value={claimForm.transportCost}
+                      onChange={(e) => setClaimForm(f => ({ ...f, transportCost: Number(e.target.value) }))} />
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>ค่าที่พัก (บาท)</label>
+                    <input type="number" className="sp-field" value={claimForm.accommodationCost}
+                      onChange={(e) => setClaimForm(f => ({ ...f, accommodationCost: Number(e.target.value) }))} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เบิกจากผู้จัด (บาท)</label>
+                    <input type="number" className="sp-field" value={claimForm.organizerPay}
+                      onChange={(e) => setClaimForm(f => ({ ...f, organizerPay: Number(e.target.value) }))} />
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เบิกจากต้นสังกัด (บาท)</label>
+                    <input type="number" className="sp-field" value={claimForm.parentPay}
+                      onChange={(e) => setClaimForm(f => ({ ...f, parentPay: Number(e.target.value) }))} />
+                  </div>
+                </div>
+
+                <div className="sp-modal-btns" style={{ marginTop: '12px' }}>
+                  <button className="sp-btn-save" onClick={handleSaveClaim} style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                    บันทึกข้อมูลการเบิกจ่าย
+                  </button>
+                  <button className="sp-btn-cancel" onClick={() => setShowClaimModal(false)}>ยกเลิก</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )
