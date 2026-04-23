@@ -476,9 +476,9 @@ function EmployeesContent() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
                 ) : currentData.length === 0 ? (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
                   currentData.map((emp) => {
                     const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
@@ -506,6 +506,7 @@ function EmployeesContent() {
                             {emp.license_status === 'Expired' && <span className="badge badge-red" title="ใบประกอบวิชาชีพหมดอายุ">หมดอายุ</span>}
                           </div>
                         </td>
+                        <td style={{ color: '#334155' }}>{emp.nickname || '-'}</td>
                         <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
                         <td>{dept?.division || '-'}</td>
                         <td>{dept?.dept_name || '-'}</td>

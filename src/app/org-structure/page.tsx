@@ -269,7 +269,7 @@ export default function DepartmentAndEmployeePage() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Users size={18} />
+                    <Users size={20} />
                     <span>พนักงานทั้งหมด</span>
                   </div>
                 </div>
@@ -285,7 +285,7 @@ export default function DepartmentAndEmployeePage() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Contact size={18} />
+                    <Contact size={20} />
                     <span>นักศึกษาฝึกงาน</span>
                   </div>
                 </div>
@@ -302,7 +302,7 @@ export default function DepartmentAndEmployeePage() {
                   onMouseOver={e => e.currentTarget.style.background = '#eef2ff'}
                   onMouseOut={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <Plus size={16} strokeWidth={3} />
+                  <Plus size={20} strokeWidth={3} />
                 </button>
               )}
             </div>
@@ -329,7 +329,7 @@ export default function DepartmentAndEmployeePage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontWeight: 700 }}>{divName}</span>
                     </div>
-                    <ChevronRight size={16} style={{ transform: isDivExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                    <ChevronRight size={20} style={{ transform: isDivExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
                   </div>
 
                   {isDivExpanded && (
@@ -358,7 +358,7 @@ export default function DepartmentAndEmployeePage() {
                                 <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{grpName}</span>
                               </div>
                               {hasSubDepts && (
-                                <ChevronRight size={14} style={{ transform: isGrpExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }} />
+                                <ChevronRight size={18} style={{ transform: isGrpExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }} />
                               )}
                             </div>
 
@@ -474,7 +474,7 @@ export default function DepartmentAndEmployeePage() {
                     ))}
                     {regularStaff.length === 0 && (
                       <tr>
-                        <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่มีพนักงานในแผนกนี้</td>
+                        <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>ไม่มีพนักงานในแผนกนี้</td>
                       </tr>
                     )}
                   </tbody>
@@ -1159,6 +1159,9 @@ function EmployeeRow({
       </td>
       <td style={styles.td}>
         <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
+      </td>
+      <td style={{ ...styles.td, color: '#334155' }}>
+        {emp.nickname || '-'}
       </td>
       <td style={{ ...styles.td, color: '#4f46e5', fontSize: '14px', fontWeight: 600 }}>
         {departments.find((d: any) => String(d.dept_id) === String(emp.dept_id))?.division || '-'}
