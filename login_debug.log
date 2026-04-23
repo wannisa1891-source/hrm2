@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [LOGIN TEST] 2026-04-23T01:18:48.641Z - Input: admin / Rows: 1
 [LOGIN TEST] 2026-04-23T01:20:04.205Z - Input: admin / Rows: 1
 [LOGIN TEST] 2026-04-23T01:20:18.384Z - Input: admin / Rows: 1
@@ -15,3 +16,13 @@
 [LOGIN TEST] 2026-04-23T01:23:26.235Z - Input: admin / Rows: 1
 [LOGIN TEST] 2026-04-23T01:23:27.360Z - Input: admin / Rows: 1
 [LOGIN TEST] 2026-04-23T01:23:30.258Z - Input: admin / Rows: 1
+=======
+[LOGIN TEST] 2026-04-23T01:21:46.133Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:21:48.589Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:21:49.569Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:21:50.241Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:21:50.501Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:22:03.715Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:24:28.729Z - Input: admin / Password: 1234 / Rows: 1
+[LOGIN RESULT] Match: false (Fail)
+>>>>>>> 21cef4718aaa3b1093c40729b17ee22712cb4cd6

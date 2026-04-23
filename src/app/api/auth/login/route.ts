@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
 
     // Log for debugging
     const fs = require('fs');
-    const logMsg = `[LOGIN TEST] ${new Date().toISOString()} - Input: ${cleanUsername} / Rows: ${rows.length}\n`;
-    fs.appendFileSync('login_debug.log', logMsg);
+    // const logMsg = `[LOGIN TEST] ${new Date().toISOString()} - Input: ${cleanUsername} / Password: ${cleanPassword} / Rows: ${rows.length}\n`;
+    // fs.appendFileSync('login_debug.log', logMsg);
 
     if (rows.length === 0) {
       return NextResponse.json({ success: false, message: 'ไม่พบชื่อผู้ใช้งานนี้ในระบบ' }, { status: 401 });
