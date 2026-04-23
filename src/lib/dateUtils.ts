@@ -43,3 +43,42 @@ export const toDateStr = (date: Date | string | null): string => {
   return `${year}-${month}-${day}`;
 };
 
+/**
+ * Calculates work duration in years, months, and days.
+ */
+export const calculateWorkDuration = (startDate: string | Date | null, endDate: string | Date = new Date()) => {
+  if (!startDate) return null;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  if (isNaN(start.getTime())) return null;
+
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
+  let days = end.getDate() - start.getDate();
+
+  if (days < 0) {
+    months--;
+    const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  return { years, months, days };
+};
+
+/**
+ * Formats duration object into a Thai string.
+ */
+export const formatDurationThai = (duration: { years: number, months: number, days: number } | null) => {
+  if (!duration) return '-';
+  const parts = [];
+  if (duration.years > 0) parts.push(`${duration.years} ปี`);
+  if (duration.months > 0) parts.push(`${duration.months} เดือน`);
+  if (duration.days > 0) parts.push(`${duration.days} วัน`);
+  return parts.length > 0 ? parts.join(' ') : '0 วัน';
+};

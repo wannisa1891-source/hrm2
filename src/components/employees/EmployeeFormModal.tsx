@@ -5,87 +5,13 @@ import Image from 'next/image';
 import type { Employee, ProfessionalLicense } from '@/services/apiService';
 import { useAuth } from '@/contexts/AuthContext';
 import CustomSelect from '@/components/CustomSelect';
+import ThaiDateInput from '@/components/ThaiDateInput';
 
 const THAI_MONTHS = [
   'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
   'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
 ];
 
-interface ThaiDateInputProps {
-  label: string;
-  value: string | undefined;
-  onChange: (val: string) => void;
-  required?: boolean;
-  style?: React.CSSProperties;
-}
-
-const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInputProps) => {
-  const dateVal = value ? value.substring(0, 10) : '';
-  let d = '', m = '', yBE = '';
-  if (dateVal) {
-    const parts = dateVal.split('-');
-    if (parts.length === 3) {
-      yBE = (parseInt(parts[0]) + 543).toString();
-      m = parseInt(parts[1]).toString();
-      d = parseInt(parts[2]).toString();
-    }
-  }
-
-  const handleUpdate = (newD: string, newM: string, newYBE: string) => {
-    if (newD && newM && newYBE) {
-      const yAD = parseInt(newYBE) - 543;
-      const val = `${yAD}-${newM.padStart(2, '0')}-${newD.padStart(2, '0')}`;
-      onChange(val);
-    } else {
-      onChange('');
-    }
-  };
-
-  const currentYearBE = new Date().getFullYear() + 543;
-  // Range: current + 10 to current - 100
-  const years = Array.from({ length: 111 }, (_, i) => (currentYearBE + 10) - i);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{label}</label>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1.2fr', gap: '12px' }}>
-        <select
-          value={d}
-          onChange={e => handleUpdate(e.target.value, m, yBE)}
-          required={required}
-          style={{ ...style, padding: '8px 12px', borderRadius: '16px', height: '42px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px' }}
-        >
-          <option value="">วัน</option>
-          {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-            <option key={day} value={day.toString()}>{day}</option>
-          ))}
-        </select>
-        <select
-          value={m}
-          onChange={e => handleUpdate(d, e.target.value, yBE)}
-          required={required}
-          style={{ ...style, padding: '8px 12px', borderRadius: '16px', height: '42px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px' }}
-        >
-          <option value="">เดือน</option>
-          {THAI_MONTHS.map((name, idx) => (
-            <option key={idx} value={(idx + 1).toString()}>{name}</option>
-          ))}
-        </select>
-        <select
-          value={yBE}
-          onChange={e => handleUpdate(d, m, e.target.value)}
-          required={required}
-          style={{ ...style, padding: '8px 12px', borderRadius: '16px', height: '42px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px' }}
-        >
-          <option value="">ปี พ.ศ.</option>
-          {years.map(year => (
-            <option key={year} value={year.toString()}>{year}</option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
-};
 
 interface EmployeeFormModalProps {
   isOpen: boolean;
