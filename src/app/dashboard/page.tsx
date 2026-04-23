@@ -79,21 +79,23 @@ export default function DashboardPage() {
     }
   }
 
+  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) {
       router.push('/login');
+    } else if (user && !isAdmin) {
+      // Redirect regular users to profile
+      router.push('/profile');
     }
-  }, [router])
-
+  }, [router, user, isAdmin])
 
   const today = new Date().toLocaleDateString('th-TH', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   })
-
-  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
 
   const newsContent = (
     <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 340, maxHeight: 420, padding: isAdmin ? '24px' : '32px' }}>
@@ -242,7 +244,6 @@ export default function DashboardPage() {
                 expiring: dashboardData?.expiringLicenses || 0, 
                 expired: dashboardData?.expiredLicenses || 0 
               }}
-              payrollData={dashboardData?.payrollData || { currentNetSalary: 0, paymentDate: '-', history: [] }}
             />
           )
         )}

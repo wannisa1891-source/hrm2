@@ -85,22 +85,29 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   const filteredMenuItems = useMemo(() => {
     return menuItems.reduce<any[]>((acc, item) => {
+      let newItem = { ...item };
+
       // 1. Audit Logs: Super Admin only
-      if (item.id === 'audit' && !isSuperAdmin) return acc;
+      if (newItem.id === 'audit' && !isSuperAdmin) return acc;
 
       // 2. Personnel: Management only (Admin, HR, Head)
-      if (item.id === 'personnel' && !isManagement) return acc;
+      if (newItem.id === 'personnel' && !isManagement) return acc;
 
-      // 3. Regular items or filtered children for Employees
+      // 3. Dashboard redirect for regular users
+      if (newItem.id === 'dashboard' && !isManagement) {
+        newItem.href = '/profile';
+      }
+
+      // 4. Regular items or filtered children for Employees
       if (!isManagement) {
-        if (item.children) {
-          item.children.forEach(child => {
+        if (newItem.children) {
+          newItem.children.forEach(child => {
             // Employees see only Leave and Schedule within children if applicable
             if (['schedule', 'leave-sys'].includes(child.id)) {
               acc.push({
                 id: child.id,
                 label: child.label,
-                icon: child.icon || item.icon,
+                icon: child.icon || newItem.icon,
                 href: child.href
               });
             }
@@ -109,7 +116,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         }
       }
 
-      acc.push(item);
+      acc.push(newItem);
       return acc;
     }, []);
   }, [isSuperAdmin, isManagement, user]);

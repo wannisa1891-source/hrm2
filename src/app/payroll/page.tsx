@@ -16,6 +16,7 @@ const TrashIcon = <svg width="18" height="18" fill="none" stroke="currentColor" 
 const PrintIcon = <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>;
 
 export default function PayrollDashboardPage() {
+  const { user } = useAuth();
   const role = user?.role || 'User';
   const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
   const isHR = role === 'HR';
@@ -211,7 +212,7 @@ export default function PayrollDashboardPage() {
     // First, filter by role (Own-Data for non-admins)
     let baseEmployees = data?.employees || [];
     if (!isAdmin) {
-      baseEmployees = user?.emp_id ? baseEmployees.filter((emp: any) => emp.emp_id === user.emp_id) : [];
+      baseEmployees = user?.emp_id ? baseEmployees.filter((emp: any) => emp.emp_id === user?.emp_id) : [];
     }
 
     return baseEmployees.filter((emp: any) => {
