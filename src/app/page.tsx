@@ -10,7 +10,7 @@ export default function HomePage() {
   useEffect(() => {
     const user = localStorage.getItem('hrm_user');
     if (user) {
-      router.replace('/profile');
+      router.replace('/dashboard');
     } else {
       router.replace('/login');
     }

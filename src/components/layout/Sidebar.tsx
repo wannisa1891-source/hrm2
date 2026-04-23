@@ -26,6 +26,12 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   {
+    id: 'dashboard',
+    label: 'แผงควบคุมหลัก',
+    icon: icons.dashboard,
+    href: '/dashboard',
+  },
+  {
     id: 'profile-main',
     label: 'โปรไฟล์ของฉัน',
     icon: icons.profile,
