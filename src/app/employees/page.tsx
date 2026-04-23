@@ -424,17 +424,27 @@ function EmployeesContent() {
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterDiv} onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); }}>
-                <option value="all">ทุกแผนก</option>
-                {Array.from(new Set(departments.map(d => String(d.division || '').trim()))).filter(Boolean).sort().map(div => (
-                  <option key={div as string} value={div as string}>{div as string}</option>
-                ))}
+                <option value="all">ทุกกลุ่มงาน</option>
+                {Array.from(new Set(departments.map(d => String(d.division || '').trim())))
+                  .filter(Boolean)
+                  .sort((a, b) => {
+                    const numA = parseInt(a.match(/^\d+/)?.[0] || '999');
+                    const numB = parseInt(b.match(/^\d+/)?.[0] || '999');
+                    return numA - numB || a.localeCompare(b, 'th');
+                  })
+                  .map(div => (
+                    <option key={div as string} value={div as string}>{div as string}</option>
+                  ))}
               </select>
 
               <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterGrp} onChange={e => setFilterGrp(e.target.value)} disabled={filterDiv === 'all'}>
-                <option value="all">ทุกหน่วยงาน</option>
-                {Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim()))).filter(Boolean).sort().map(grp => (
-                  <option key={grp as string} value={grp as string}>{grp as string}</option>
-                ))}
+                <option value="all">ทุกแผนก</option>
+                {Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim())))
+                  .filter(Boolean)
+                  .sort((a, b) => a.localeCompare(b, 'th'))
+                  .map(grp => (
+                    <option key={grp as string} value={grp as string}>{grp as string}</option>
+                  ))}
               </select>
 
             </div>

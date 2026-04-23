@@ -3,25 +3,6 @@ import pool from '@/lib/hrm_db';
 
 export async function GET(request: Request) {
   try {
-    // Auto-setup DB tables if not exist to prevent 500 errors
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS tbl_notifications (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        emp_id VARCHAR(50) NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        message TEXT NOT NULL,
-        is_read BOOLEAN DEFAULT FALSE,
-        metadata TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    try {
-      await pool.query("ALTER TABLE tbl_notifications ADD COLUMN metadata TEXT");
-    } catch(e) {}
-    try {
-      await pool.query("ALTER TABLE tbl_transfers ADD COLUMN status VARCHAR(50) DEFAULT 'Pending'");
-    } catch(e) {}
-
     const { searchParams } = new URL(request.url);
     const empId = searchParams.get('emp_id');
     const isAdmin = searchParams.get('is_admin') === 'true';

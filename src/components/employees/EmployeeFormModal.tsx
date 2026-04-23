@@ -161,7 +161,11 @@ export default function EmployeeFormModal({
   };
 
   // Hierarchical Helpers
-  const divisions = (Array.from(new Set(departments.map(d => d.division?.trim()))).filter(Boolean) as string[]).sort((a, b) => a.localeCompare(b, 'th'));
+  const divisions = (Array.from(new Set(departments.map(d => d.division?.trim()))).filter(Boolean) as string[]).sort((a, b) => {
+    const numA = parseInt(a.match(/^\d+/)?.[0] || '999');
+    const numB = parseInt(b.match(/^\d+/)?.[0] || '999');
+    return numA - numB || a.localeCompare(b, 'th');
+  });
   const getGroupsByDiv = (div: string) => Array.from(new Set(departments.filter(d => d.division?.trim() === div).map(d => d.dept_name?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th'));
   const getSubsByGrp = (div: string, grp: string) => departments.filter(d => d.division?.trim() === div && d.dept_name?.trim() === grp).sort((a, b) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th'));
 
@@ -486,7 +490,12 @@ export default function EmployeeFormModal({
                           onChange={val => setField('dept_id', val)}
                           options={[
                             { value: '', label: 'เลือกแผนก' },
-                            ...departments.filter(d => d.division?.trim() === (departments.find(dept => dept.dept_id === formData.dept_id)?.division || '')).map(s => ({ value: s.dept_id, label: s.dept_name }))
+                            ...departments
+                              .filter(d => {
+                                const currentDiv = departments.find(dept => dept.dept_id === formData.dept_id)?.division;
+                                return d.division?.trim() === currentDiv?.trim();
+                              })
+                              .map(s => ({ value: s.dept_id, label: s.dept_name }))
                           ]}
                           minWidth="100%"
                         />
@@ -502,10 +511,21 @@ export default function EmployeeFormModal({
                           placeholder="กรอกตำแหน่งงานที่นี่"
                           style={{
                             width: '100%',
-                            padding: '8px',
-                            border: '1px solid #cbd5e1', // ปรับขอบให้เหมือนกับฟิลด์อื่นๆ ในเว็บ
-                            borderRadius: '4px',
-                            fontSize: '14px'
+                            padding: '12px 20px',
+                            border: '1.5px solid #cbd5e1',
+                            borderRadius: '50px',
+                            fontSize: '14px',
+                            transition: 'all 0.2s',
+                            background: '#fff',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => {
+                            e.currentTarget.style.borderColor = '#2563eb';
+                            e.currentTarget.style.boxShadow = '0 0 0 4px rgba(37,99,235,0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.currentTarget.style.borderColor = '#cbd5e1';
+                            e.currentTarget.style.boxShadow = 'none';
                           }}
                         />
                       </div>
