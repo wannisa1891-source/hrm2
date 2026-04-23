@@ -91,10 +91,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       // 2. Dashboard: Management only
       if (item.id === 'dashboard' && !isManagement) return acc;
 
-      // 3. Profile: Regular Users only (Hide for Management)
-      if (item.id === 'profile-main' && isManagement) return acc;
-
-      // 4. Personnel: Management only (Admin, HR, Head)
+      // 3. Personnel: Management only (Admin, HR, Head)
       if (item.id === 'personnel' && !isManagement) return acc;
 
       // 3. Regular items or filtered children for Employees
