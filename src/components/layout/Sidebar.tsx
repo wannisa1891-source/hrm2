@@ -26,6 +26,12 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   {
+    id: 'dashboard',
+    label: 'แดชบอร์ด',
+    icon: icons.dashboard,
+    href: '/dashboard',
+  },
+  {
     id: 'profile-main',
     label: 'โปรไฟล์ของฉัน',
     icon: icons.profile,
@@ -82,7 +88,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       // 1. Audit Logs: Super Admin only
       if (item.id === 'audit' && !isSuperAdmin) return acc;
 
-      // 2. Personnel: Management only (Admin, HR, Head)
+      // 2. Dashboard: Management only
+      if (item.id === 'dashboard' && !isManagement) return acc;
+
+      // 3. Personnel: Management only (Admin, HR, Head)
       if (item.id === 'personnel' && !isManagement) return acc;
 
       // 3. Regular items or filtered children for Employees

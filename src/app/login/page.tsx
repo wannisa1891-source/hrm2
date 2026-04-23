@@ -45,12 +45,18 @@ export default function LoginPage() {
           localStorage.setItem('token', result.token);
         }
         if (result.user) {
-          login({ ...result.user, username: username }, !!result.isFirstLogin);
+          login({ ...result.user, username: username }, !!(result as any).isFirstLogin);
         } else {
-          login({ username: username }, !!result.isFirstLogin);
+          login({ username: username }, !!(result as any).isFirstLogin);
         }
-        // Always redirect to profile as per user request
-        router.push('/profile');
+        // Redirect based on role
+        const role = result.user?.role || '';
+        const isAdmin = ['Super Admin', 'Admin', 'admin', 'HR', 'Head', 'หัวหน้า'].includes(role);
+        if (isAdmin) {
+          router.push('/dashboard');
+        } else {
+          router.push('/profile');
+        }
       } else {
         setErrorMessage(result.message || 'รหัสผ่านหรือผู้ใช้ไม่ถูกต้อง');
       }
@@ -113,7 +119,7 @@ export default function LoginPage() {
             value={username}
             onChange={e => setUsername(e.target.value)}
             type="text"
-            placeholder="Username"
+            placeholder="Username / เลขบัตรประชาชน"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             autoComplete="username"
             suppressHydrationWarning
@@ -122,18 +128,22 @@ export default function LoginPage() {
         </div>
 
         {/* Password */}
-        <div style={{ display: 'flex', alignItems: 'center', background: '#f5f7fb', borderRadius: 12, padding: '10px 14px', marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', background: '#f5f7fb', borderRadius: 12, padding: '10px 14px', marginBottom: 4 }}>
           <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" style={{ marginRight: 8, flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           <input
             value={password}
             onChange={e => setPassword(e.target.value)}
             type="password"
-            placeholder="Password"
+            placeholder="Password / วันเกิด (ววดดปปปป)"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             autoComplete="current-password"
             suppressHydrationWarning
             style={{ border: 'none', background: 'none', width: '100%', fontSize: 15, color: '#333', outline: 'none', fontFamily: 'Sarabun, sans-serif' }}
           />
+        </div>
+
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: 12, textAlign: 'left', paddingLeft: 4 }}>
+          * เข้าใช้งานครั้งแรก: ใช้เลขบัตรประชาชน และวันเกิด (เช่น 01012530)
         </div>
 
         {/* Forgot password link was here *}

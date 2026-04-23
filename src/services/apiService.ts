@@ -50,6 +50,7 @@ export interface Employee {
   retirement_date?: string
   department_name?: string
   position_name?: string
+  base_salary?: number
   quota_personal?: number
   quota_sick?: number
   quota_vacation?: number

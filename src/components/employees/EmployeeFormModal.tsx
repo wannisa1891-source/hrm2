@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import type { Employee, ProfessionalLicense } from '@/services/apiService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -110,7 +110,7 @@ export default function EmployeeFormModal({
   const isAdmin = isSuperAdmin || isHR; // Admin functions for Super Admin and HR
 
   const EMPTY_FORM: Partial<Employee> = {
-    prefix: 'นาย', first_name_th: '', last_name_th: '', first_name_en: '', last_name_en: '', nickname: '',
+    prefix: 'นาย', first_name_th: '', last_name_th: '', nickname: '',
     birth_date: '', gender: 'ชาย', citizen_id: '',
     emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานประจำ', start_date: '', base_salary: 0,
     phone: '', address: '', status: 'ทำงานปกติ',
@@ -493,19 +493,6 @@ export default function EmployeeFormModal({
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
-<<<<<<< HEAD
-                    <select value={formData.emp_type || ''} onChange={e => setField('emp_type', e.target.value)} style={inputStyle}>
-                      <option value="ราชการ">ข้าราชการ</option>
-                      <option value="พนักงานราชการ">พนักงานราชการ</option>
-                      <option value="ลูกจ้างพนักงานกระทรวง">ลูกจ้างพนักงานกระทรวง</option>
-                      <option value="ลูกจ้างชั่วคราว(นักเรียนทุน)">ลูกจ้างชั่วคราว(นักเรียนทุน)</option>
-                      <option value="ลูกจ้างรายเดือน">ลูกจ้างรายเดือน</option>
-                      <option value="ลูกจ้างรายวัน">ลูกจ้างรายวัน</option>
-                      <option value="ลูกจ้างเหมา">ลูกจ้างเหมา</option>
-                      <option value="ลูกจ้างชั่วคราวที่อายุ 60 ปี">ลูกจ้างชั่วคราวที่อายุ 60 ปี</option>
-                      <option value="นักศึกษาฝึกงาน">นักศึกษาฝึกงาน</option>
-                    </select>
-=======
                       <CustomSelect
                         value={formData.emp_type || ''}
                         onChange={val => setField('emp_type', val)}
@@ -522,7 +509,6 @@ export default function EmployeeFormModal({
                         ]}
                         minWidth="100%"
                       />
->>>>>>> 86f9c58656b0b6e29fee5646363ea772724b83cf
 
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

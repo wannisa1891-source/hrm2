@@ -101,9 +101,12 @@ export async function POST(req: NextRequest) {
           const parts = dateStr.split('-');
           if (parts.length === 3) {
             const adYear = parts[0]; // YYYY (AD)
-            const birthPass = `${parts[2]}${parts[1]}${adYear}`; // DDMMYYYY (AD)
+            const beYear = String(Number(adYear) + 543); // YYYY (BE)
             
-            if (cleanPassword === birthPass) {
+            const birthPassAD = `${parts[2]}${parts[1]}${adYear}`; // DDMMYYYY (AD)
+            const birthPassBE = `${parts[2]}${parts[1]}${beYear}`; // DDMMYYYY (BE)
+            
+            if (cleanPassword === birthPassAD || cleanPassword === birthPassBE) {
               isMatch = true;
             }
           }

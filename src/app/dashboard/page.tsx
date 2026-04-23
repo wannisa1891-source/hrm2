@@ -46,6 +46,13 @@ export default function DashboardPage() {
     }
   }, [announcements.length])
 
+  // Redirect regular users to profile
+  useEffect(() => {
+    if (user && !isAdmin) {
+      router.replace('/profile');
+    }
+  }, [user, isAdmin, router]);
+
   const submitNews = async () => {
     if (!newNewsForm.title || !newNewsForm.content) {
       Swal.fire('ข้อความแจ้งเตือน', 'กรอกข้อมูลให้ครบ', 'warning')
