@@ -9,7 +9,7 @@ import { Leave } from '@/services/apiService';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { useSearchParams } from 'next/navigation';
-import { getCurrentFiscalYearRange, toDateStr } from '@/lib/dateUtils';
+import { getCurrentFiscalYearRange, toDateStr, formatThaiDate } from '@/lib/dateUtils';
 import { getQuotaByType } from '@/constants/leaveRules';
 import ThaiDateInput from '@/components/ThaiDateInput';
 import CustomSelect from '@/components/CustomSelect';
@@ -44,6 +44,7 @@ export default function LeavePage() {
   const isManagement = isSuperAdmin || isHR || isHead;
 
   const { leaves, loading, loadLeaves, addLeave, changeLeaveStatus } = useLeaves();
+  const dbLeaveTypes: any[] = []; // Fallback if not provided by hook
   const { employees, loadEmployees } = useEmployees();
   const searchParams = useSearchParams();
   const leaveIdParam = searchParams.get('id');
@@ -653,7 +654,8 @@ export default function LeavePage() {
               }}>{saving ? 'กำลังประมวลผล...' : 'ยืนยันส่งใบลา'}</button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
         {/* Review Modal */}
         {showReviewModal && selectedLeave && (() => {
@@ -703,40 +705,7 @@ export default function LeavePage() {
                       style={{ borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0', background: 'white' }}
                     />
                   </div>
-                <div style={{ gridColumn: 'span 2', background: '#f8fafc', padding: '14px 18px', borderRadius: 16, border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>เหตุผลการลา</div>
-                  <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.5 }}>{selectedLeave.reason || 'ไม่ได้ระบุเหตุผล'}</div>
-                </div>
-                {selectedLeave.attachment && (
-                  <div style={{ gridColumn: 'span 2', background: '#eff6ff', padding: '14px 18px', borderRadius: 16, border: '1px solid #bfdbfe' }}>
-                    <div style={{ fontSize: 11, color: '#3b82f6', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>ไฟล์แนบหลักฐาน</div>
-                    <a href={`/uploads/${selectedLeave.attachment}`} target="_blank" rel="noreferrer" style={{ fontSize: 14, color: '#2563eb', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                      เปิดดูไฟล์แนบ
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              {/* Status Alert */}
-              <div style={{ padding: '18px', borderRadius: 20, marginBottom: 28, border: over ? '1px solid #fecaca' : '1px solid #bbf7d0', background: over ? '#fef2f2' : '#f0fdf4' }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: over ? '#b91c1c' : '#166534', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {over ? (
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  ) : (
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4" /></svg>
-                  )}
-                  {over ? 'คำเตือน: วันลาเกินสิทธิ์โควตาที่กำหนด' : 'สถานะวันลาคงเหลือ'}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#475569', fontWeight: 500 }}>
-                    <span>โควตาปีปัจจุบัน</span>
-                    <span style={{ fontWeight: 700 }}>{qt} วัน</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#475569', fontWeight: 500 }}>
-                    <span>ใช้ไปแล้ว (รวมสะสม)</span>
-                    <span style={{ fontWeight: 700, color: '#ef4444' }}>-{usedInFiscalYear} วัน</span>
-                  </div>
+                  <div>
                     <div style={{ fontWeight: 800, color: '#0f172a', fontSize: 16, marginBottom: 2 }}>{selectedLeave.first_name_th} {selectedLeave.last_name_th}</div>
                     <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{selectedLeave.dept_name || 'ไม่ระบุแผนก'}</div>
                   </div>
@@ -771,7 +740,12 @@ export default function LeavePage() {
 
                 <div style={{ padding: '18px', borderRadius: 20, marginBottom: 28, border: over ? '1px solid #fecaca' : '1px solid #bbf7d0', background: over ? '#fef2f2' : '#f0fdf4' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: over ? '#b91c1c' : '#166534', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {over ? '⚠️ วันลาเกินโควตาที่กำหนด' : '✅ สถานะวันลาคงเหลือ'}
+                    {over ? (
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    ) : (
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4" /></svg>
+                    )}
+                    {over ? 'คำเตือน: วันลาเกินสิทธิ์โควตาที่กำหนด' : 'สถานะวันลาคงเหลือ'}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#475569', fontWeight: 500 }}>
