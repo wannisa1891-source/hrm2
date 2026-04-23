@@ -18,7 +18,7 @@ import {
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import Modal from '@/components/common/Modal';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { calculateWorkDuration, formatDurationThai } from '@/lib/dateUtils';
+import { calculateWorkDuration, formatDurationThai, formatThaiDate } from '@/lib/dateUtils';
 
 interface ProfileData {
   profile: {
@@ -299,7 +299,7 @@ export default function MyProfilePage() {
             <div className="stat-item">
               <span className="stat-label">อายุงาน</span>
               <span className="stat-val">
-                {profile.hire_date ? formatDurationThai(calculateWorkDuration(profile.hire_date)) : '-'}
+                {profile.start_date ? formatDurationThai(calculateWorkDuration(profile.start_date)) : (profile.hire_date ? formatDurationThai(calculateWorkDuration(profile.hire_date)) : '-')}
               </span>
             </div>
           </div>
@@ -407,7 +407,7 @@ export default function MyProfilePage() {
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันเกิด</span>
-                    <span className="data-val">{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('th-TH') : '-'}</span>
+                    <span className="data-val">{formatThaiDate(profile.birth_date)}</span>
                   </div>
                   <div className="data-item">
                     <span className="data-label">เพศ</span>
@@ -433,19 +433,19 @@ export default function MyProfilePage() {
                   <div className="data-item">
                     <span className="data-label">วันที่เริ่มงาน</span>
                     <div className="data-val">
-                      <div>{profile.hire_date ? new Date(profile.hire_date).toLocaleDateString('th-TH') : '-'}</div>
+                      <div>{formatThaiDate(profile.start_date || profile.hire_date)}</div>
                       <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 600, marginTop: '2px' }}>
-                        (อายุงาน: {profile.hire_date ? formatDurationThai(calculateWorkDuration(profile.hire_date)) : '-'})
+                        (รวมระยะเวลา: {formatDurationThai(calculateWorkDuration(profile.start_date || profile.hire_date))})
                       </div>
                     </div>
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันที่บรรจุ</span>
-                    <span className="data-val">{profile.admission_date ? new Date(profile.admission_date).toLocaleDateString('th-TH') : '-'}</span>
+                    <span className="data-val">{formatThaiDate(profile.admission_date)}</span>
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันที่เกษียณ</span>
-                    <span className="data-val">{profile.retirement_date ? new Date(profile.retirement_date).toLocaleDateString('th-TH') : '-'}</span>
+                    <span className="data-val">{formatThaiDate(profile.retirement_date)}</span>
                   </div>
                 </div>
                 
