@@ -7,10 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import CustomSelect from '@/components/CustomSelect';
 import ThaiDateInput from '@/components/ThaiDateInput';
 
-const THAI_MONTHS = [
-  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-];
 
 
 interface EmployeeFormModalProps {

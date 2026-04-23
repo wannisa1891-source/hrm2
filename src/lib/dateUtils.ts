@@ -1,3 +1,8 @@
+const THAI_MONTHS = [
+  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+];
+
 /**
  * Returns the start and end dates of the current fiscal year (Oct 1 - Sep 30).
  * @param date Reference date (default now)
@@ -82,3 +87,24 @@ export const formatDurationThai = (duration: { years: number, months: number, da
   if (duration.days > 0) parts.push(`${duration.days} วัน`);
   return parts.length > 0 ? parts.join(' ') : '0 วัน';
 };
+/**
+ * Formats a date into a formal Thai string (e.g., 23 เมษายน 2567).
+ */
+export const formatThaiDate = (date: string | Date | null, includeTime: boolean = false) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '-';
+
+  const day = d.getDate();
+  const month = THAI_MONTHS[d.getMonth()];
+  const year = d.getFullYear() + 543;
+
+  let result = `${day} ${month} ${year}`;
+  if (includeTime) {
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    result += ` ${hours}:${minutes} น.`;
+  }
+  return result;
+};
+

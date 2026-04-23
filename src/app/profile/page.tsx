@@ -299,7 +299,7 @@ export default function MyProfilePage() {
             <div className="stat-item">
               <span className="stat-label">อายุงาน</span>
               <span className="stat-val">
-                {profile.start_date ? formatDurationThai(calculateWorkDuration(profile.start_date)) : (profile.hire_date ? formatDurationThai(calculateWorkDuration(profile.hire_date)) : '-')}
+                {profile?.start_date ? formatDurationThai(calculateWorkDuration(profile.start_date)) : (profile?.hire_date ? formatDurationThai(calculateWorkDuration(profile.hire_date)) : '-')}
               </span>
             </div>
           </div>
