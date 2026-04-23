@@ -107,4 +107,3 @@ export const formatThaiDate = (date: string | Date | null, includeTime: boolean 
   }
   return result;
 };
-

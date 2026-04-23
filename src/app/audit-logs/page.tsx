@@ -16,7 +16,6 @@ export default function AuditLogsPage() {
   const { user } = useAuth();
   const role = user?.role || 'User';
   const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
-  const isAdmin = isSuperAdmin || role === 'HR';
   const router = useRouter();
 
   const [logs, setLogs] = useState<AuditLog[]>([]);

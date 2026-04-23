@@ -18,7 +18,6 @@ import {
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import Modal from '@/components/common/Modal';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { calculateWorkDuration, formatDurationThai, formatThaiDate } from '@/lib/dateUtils';
 
 interface ProfileData {
   profile: {
@@ -197,12 +196,12 @@ export default function MyProfilePage() {
 
   return (
     <AppLayout>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0', padding: '0 24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '24px' }}>
         <DashboardHeader today={today} />
         
         <style dangerouslySetInnerHTML={{
           __html: `
-        .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 20px 0 32px; max-width: 1600px; margin: 0; min-height: calc(100vh - 100px); }
+        .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 0 8px 32px; max-width: 1500px; margin: 0 auto; min-height: calc(100vh - 100px); }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); transition: all 0.3s ease; }
         .left-card { position: sticky; top: 24px; height: fit-content; text-align: center; }
         .profile-avatar-wrap { width: 160px; height: 160px; border-radius: 40px; margin: 0 auto 24px; padding: 6px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); position: relative; transform: rotate(-3deg); transition: transform 0.3s; }
@@ -407,7 +406,7 @@ export default function MyProfilePage() {
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันเกิด</span>
-                    <span className="data-val">{formatThaiDate(profile.birth_date)}</span>
+                    <span className="data-val">{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('th-TH') : '-'}</span>
                   </div>
                   <div className="data-item">
                     <span className="data-label">เพศ</span>
@@ -432,20 +431,15 @@ export default function MyProfilePage() {
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันที่เริ่มงาน</span>
-                    <div className="data-val">
-                      <div>{formatThaiDate(profile.start_date || profile.hire_date)}</div>
-                      <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 600, marginTop: '2px' }}>
-                        (รวมระยะเวลา: {formatDurationThai(calculateWorkDuration(profile.start_date || profile.hire_date))})
-                      </div>
-                    </div>
+                    <span className="data-val">{profile.hire_date ? new Date(profile.hire_date).toLocaleDateString('th-TH') : '-'}</span>
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันที่บรรจุ</span>
-                    <span className="data-val">{formatThaiDate(profile.admission_date)}</span>
+                    <span className="data-val">{profile.admission_date ? new Date(profile.admission_date).toLocaleDateString('th-TH') : '-'}</span>
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันที่เกษียณ</span>
-                    <span className="data-val">{formatThaiDate(profile.retirement_date)}</span>
+                    <span className="data-val">{profile.retirement_date ? new Date(profile.retirement_date).toLocaleDateString('th-TH') : '-'}</span>
                   </div>
                 </div>
                 

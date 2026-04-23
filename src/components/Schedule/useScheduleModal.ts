@@ -14,12 +14,6 @@ export interface Schedule {
   note: string
   startTime: string
   endTime: string
-  memoFile?: string
-  projectFile?: string
-  transportCost?: number
-  accommodationCost?: number
-  organizerPay?: number
-  parentPay?: number
 }
 
 export interface RoomType {
@@ -48,12 +42,6 @@ export interface ScheduleForm {
   note: string
   startTime: string
   endTime: string
-  memoFile: string
-  projectFile: string
-  transportCost: number
-  accommodationCost: number
-  organizerPay: number
-  parentPay: number
 }
 
 const EMPTY_FORM: ScheduleForm = {
@@ -66,23 +54,10 @@ const EMPTY_FORM: ScheduleForm = {
   note: '',
   startTime: '09:00',
   endTime: '10:00',
-  memoFile: '',
-  projectFile: '',
-  transportCost: 0,
-  accommodationCost: 0,
-  organizerPay: 0,
-  parentPay: 0,
 }
 
 const DEPARTMENT_HIERARCHY: Record<string, string[]> = {
   'กลุ่มงานบริหารทั่วไป': ['การเงิน', 'ธุรการ', 'พัสดุ', 'ช่าง', 'สวน', 'พขร.', 'งานโสตฯ'],
-  'กลุ่มงานเทคนิคการแพทย์': [],
-  'กลุ่มงานทันตกรรม': [],
-  'กลุ่มงานเภสัชกรรมและคุ้มครองผู้บริโภค': [],
-  'กลุ่มงานการแพทย์': [],
-  'กลุ่มงานโภชนศาสตร์': [],
-  'กลุ่มงานรังสีวิทยา': [],
-  'กลุ่มงานเวชกรรมฟื้นฟู': [],
   'กลุ่มงานประกันสุขภาพ ยุทธศาสตร์และสารสนเทศทางการแพทย์': ['ประกัน', 'คอมฯ', 'ห้องบัตร'],
   'กลุ่มงานบริการด้านปฐมภูมิและองค์รวม': ['งานจิตเวชและยาเสพติด'],
   'กลุ่มงานการพยาบาล': [
@@ -90,6 +65,13 @@ const DEPARTMENT_HIERARCHY: Record<string, string[]> = {
     'หญิง', 'ชาย', 'ICU', 'พิเศษ', 'ซัพพลาย', 'OPD', 'แม่บ้าน', 'เปล', 'ห้องผ่าตัด'
   ],
   'กลุ่มงานแพทย์แผนไทยและการแพทย์ทางเลือก': ['แผนไทย แบ่งเปอร์เซนต์'],
+  'กลุ่มงานเทคนิคการแพทย์': [],
+  'กลุ่มงานทันตกรรม': [],
+  'กลุ่มงานเภสัชกรรมและคุ้มครองผู้บริโภค': [],
+  'กลุ่มงานการแพทย์': [],
+  'กลุ่มงานโภชนศาสตร์': [],
+  'กลุ่มงานรังสีวิทยา': [],
+  'กลุ่มงานเวชกรรมฟื้นฟู': [],
 }
 
 export default function useScheduleModal(
@@ -164,12 +146,6 @@ export default function useScheduleModal(
       note: schedule.note,
       startTime: schedule.startTime,
       endTime: schedule.endTime,
-      memoFile: schedule.memoFile || '',
-      projectFile: schedule.projectFile || '',
-      transportCost: schedule.transportCost || 0,
-      accommodationCost: schedule.accommodationCost || 0,
-      organizerPay: schedule.organizerPay || 0,
-      parentPay: schedule.parentPay || 0,
     })
     setShowModal(true)
   }, [])

@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import Swal from 'sweetalert2';
-import { 
-  Settings, Plus, Edit2, Trash2, Clock, DollarSign, 
-  Palette, Info, Save, X, ChevronRight, Briefcase 
+import {
+    Settings, Plus, Edit2, Trash2, Clock, DollarSign,
+    Palette, Info, Save, X, ChevronRight, Briefcase
 } from '@/components/Icons';
 
 interface ShiftType {
@@ -62,7 +62,7 @@ export default function MasterPage() {
                 body: JSON.stringify(form)
             });
             if (!res.ok) throw new Error('Failed to save');
-            
+
             resetForm();
             Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
             fetchShifts();
@@ -146,12 +146,12 @@ export default function MasterPage() {
                                 <label style={styles.label}>ชื่อประเภทเวร <span style={{ color: '#ef4444' }}>*</span></label>
                                 <div style={styles.inputWrapper}>
                                     <div style={styles.inputIcon}><Briefcase size={16} /></div>
-                                    <input 
-                                        type="text" 
-                                        value={form.name} 
-                                        onChange={e => setForm({...form, name: e.target.value})} 
-                                        style={styles.input} 
-                                        placeholder="เช่น เวรเช้า, เวรบ่าย" 
+                                    <input
+                                        type="text"
+                                        value={form.name}
+                                        onChange={e => setForm({ ...form, name: e.target.value })}
+                                        style={styles.input}
+                                        placeholder="เช่น เวรเช้า, เวรบ่าย"
                                     />
                                 </div>
                             </div>
@@ -159,12 +159,12 @@ export default function MasterPage() {
                             <div style={styles.formRow}>
                                 <div style={styles.formGroup}>
                                     <label style={styles.label}>รหัสเวร (ตัวย่อ) <span style={{ color: '#ef4444' }}>*</span></label>
-                                    <input 
-                                        type="text" 
-                                        value={form.code} 
-                                        onChange={e => setForm({...form, code: e.target.value})} 
-                                        style={styles.inputSimple} 
-                                        placeholder="ช, บ, ด" 
+                                    <input
+                                        type="text"
+                                        value={form.code}
+                                        onChange={e => setForm({ ...form, code: e.target.value })}
+                                        style={styles.inputSimple}
+                                        placeholder="ช, บ, ด"
                                         maxLength={10}
                                     />
                                 </div>
@@ -172,11 +172,11 @@ export default function MasterPage() {
                                     <label style={styles.label}>สีประจำเวร</label>
                                     <div style={styles.colorPickerWrapper}>
                                         <div style={{ ...styles.colorPreview, background: form.color_code }} />
-                                        <input 
-                                            type="color" 
-                                            value={form.color_code} 
-                                            onChange={e => setForm({...form, color_code: e.target.value})} 
-                                            style={styles.colorInput} 
+                                        <input
+                                            type="color"
+                                            value={form.color_code}
+                                            onChange={e => setForm({ ...form, color_code: e.target.value })}
+                                            style={styles.colorInput}
                                         />
                                         <span style={styles.colorText}>{form.color_code.toUpperCase()}</span>
                                     </div>
@@ -188,11 +188,11 @@ export default function MasterPage() {
                                     <label style={styles.label}>เวลาเริ่มงาน <span style={{ color: '#ef4444' }}>*</span></label>
                                     <div style={styles.inputWrapper}>
                                         <div style={styles.inputIcon}><Clock size={16} /></div>
-                                        <input 
-                                            type="time" 
-                                            value={form.start_time} 
-                                            onChange={e => setForm({...form, start_time: e.target.value})} 
-                                            style={styles.input} 
+                                        <input
+                                            type="time"
+                                            value={form.start_time}
+                                            onChange={e => setForm({ ...form, start_time: e.target.value })}
+                                            style={styles.input}
                                         />
                                     </div>
                                 </div>
@@ -200,11 +200,11 @@ export default function MasterPage() {
                                     <label style={styles.label}>เวลาออกงาน <span style={{ color: '#ef4444' }}>*</span></label>
                                     <div style={styles.inputWrapper}>
                                         <div style={styles.inputIcon}><Clock size={16} /></div>
-                                        <input 
-                                            type="time" 
-                                            value={form.end_time} 
-                                            onChange={e => setForm({...form, end_time: e.target.value})} 
-                                            style={styles.input} 
+                                        <input
+                                            type="time"
+                                            value={form.end_time}
+                                            onChange={e => setForm({ ...form, end_time: e.target.value })}
+                                            style={styles.input}
                                         />
                                     </div>
                                 </div>
@@ -213,24 +213,24 @@ export default function MasterPage() {
                             <div style={styles.formRow}>
                                 <div style={styles.formGroup}>
                                     <label style={styles.label}>ชั่วโมงทำงาน</label>
-                                    <input 
-                                        type="number" 
-                                        value={form.working_hours} 
-                                        onChange={e => setForm({...form, working_hours: Number(e.target.value)})} 
-                                        style={styles.inputSimple} 
-                                        placeholder="8" 
+                                    <input
+                                        type="number"
+                                        value={form.working_hours}
+                                        onChange={e => setForm({ ...form, working_hours: Number(e.target.value) })}
+                                        style={styles.inputSimple}
+                                        placeholder="8"
                                     />
                                 </div>
                                 <div style={styles.formGroup}>
                                     <label style={styles.label}>ค่าเบี้ยเลี้ยง / ค่าเวร (฿)</label>
                                     <div style={styles.inputWrapper}>
                                         <div style={styles.inputIcon}><DollarSign size={16} /></div>
-                                        <input 
-                                            type="number" 
-                                            value={form.allowance} 
-                                            onChange={e => setForm({...form, allowance: Number(e.target.value)})} 
-                                            style={styles.input} 
-                                            placeholder="0.00" 
+                                        <input
+                                            type="number"
+                                            value={form.allowance}
+                                            onChange={e => setForm({ ...form, allowance: Number(e.target.value) })}
+                                            style={styles.input}
+                                            placeholder="0.00"
                                         />
                                     </div>
                                 </div>

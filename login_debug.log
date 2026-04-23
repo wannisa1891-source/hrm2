@@ -1,0 +1,8 @@
+[LOGIN TEST] 2026-04-23T01:21:46.133Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:21:48.589Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:21:49.569Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:21:50.241Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:21:50.501Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:22:03.715Z - Input: admin / Rows: 1
+[LOGIN TEST] 2026-04-23T01:24:28.729Z - Input: admin / Password: 1234 / Rows: 1
+[LOGIN RESULT] Match: false (Fail)

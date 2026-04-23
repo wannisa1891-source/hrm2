@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense, useMemo } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
@@ -15,12 +15,11 @@ import Swal from 'sweetalert2';
 import { useAuth } from '@/contexts/AuthContext';
 import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
 import Image from 'next/image';
-import CustomSelect from '@/components/CustomSelect';
 
 const EMPTY_FORM: Partial<Employee> = {
   prefix: 'นาย', first_name_th: '', last_name_th: '',
   birth_date: '', gender: 'ชาย', citizen_id: '',
-  emp_id: '', dept_id: '', pos_id: '', emp_type: 'ข้าราชการ', start_date: '',
+  emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
   phone: '', address: '', status: 'Active',
   addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
   has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: []
@@ -30,18 +29,13 @@ function EmployeesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
-  const role = user?.role || 'User';
-  const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
-  const isHR = role === 'HR';
-  const isAdmin = isSuperAdmin || isHR;
-  const isHead = ['Head', 'หัวหน้า'].includes(role);
-  const isManagement = isSuperAdmin || isHR || isHead;
+  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
 
   useEffect(() => {
-    if (user && !isManagement) {
+    if (user && !isAdmin) {
       router.push('/dashboard');
     }
-  }, [user, isManagement, router]);
+  }, [user, isAdmin, router]);
 
   const { employees, loading, loadEmployees, addEmployee, editEmployee, removeEmployee } = useEmployees();
   const { departments, loadDepartments } = useDepartments();
@@ -138,7 +132,7 @@ function EmployeesContent() {
         const pos = positions.find(p => p.pos_name.trim() === posName || p.pos_id === posName);
 
         return {
-          emp_id: row['เลขประจำตำแหน่ง'] || row['emp_id'] || '',
+          emp_id: row['รหัสพนักงาน'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
           first_name_th: row['ชื่อ'] || row['ชื่อ'] || row['ชื่อ'] || row['first_name_th'] || '',
           last_name_th: row['นามสกุล'] || row['นามสกุล'] || row['นามสกุล'] || row['last_name_th'] || '',
@@ -150,6 +144,7 @@ function EmployeesContent() {
           address: row['ที่อยู่'] || row['address'] || '',
           emp_type: row['ประเภทพนักงาน'] || row['ประเภทการจ้างงาน'] || row['emp_type'] || 'พนักงานราชการ',
           start_date: row['วันที่เริ่มงาน'] || row['start_date'] || null,
+          base_salary: row['เงินเดือน'] || row['ฐานเงินเดือน'] || row['base_salary'] || 0,
           dept_id: dept ? dept.dept_id : null,
           pos_id: pos ? pos.pos_id : null,
         };
@@ -235,9 +230,6 @@ function EmployeesContent() {
 
   const filteredData = useMemo(() => {
     return employees.filter(e => {
-      // Role-based department filtering for Head
-      if (isHead && e.dept_id !== user?.dept_id) return false;
-
       const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
       const dept = departments.find(d => d.dept_id === e.dept_id);
       const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
@@ -250,7 +242,7 @@ function EmployeesContent() {
 
       return matchSearch && matchDept && matchPos && matchStatus && matchLicense;
     });
-  }, [employees, search, filterDiv, filterGrp, filterPos, filterStatus, filterLicense, departments, isHead, user?.dept_id]);
+  }, [employees, search, filterDiv, filterGrp, filterPos, filterStatus, filterLicense, departments]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -290,8 +282,7 @@ function EmployeesContent() {
 
   const openView = (emp: Employee) => {
     const isOwnProfile = user?.emp_id === emp.emp_id || user?.username === emp.emp_id || (user as any)?.name === emp.emp_id;
-    const canView = isSuperAdmin || isHR || isHead || isOwnProfile;
-    if (!canView) {
+    if (!isAdmin && !isOwnProfile) {
       Swal.fire('ปฏิเสธการเข้าถึง', 'คุณไม่มีสิทธิ์เข้าดูรายละเอียดของพนักงานท่านอื่น', 'warning');
       return;
     }
@@ -340,7 +331,7 @@ function EmployeesContent() {
 
   const exportToCSV = () => {
     const headers = [
-      'เลขประจำตำแหน่ง', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อเล่น',
+      'รหัสพนักงาน', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อเล่น',
       'เพศ', 'วัน/เดือน/ปีเกิด', 'บัตรประชาชน', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่',
       'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน', 'เงินเดือน',
       'สถานะการทำงาน', 'คะแนน CNEU/CME', 'ข้อมูลใบอนุญาต'
@@ -354,7 +345,7 @@ function EmployeesContent() {
         e.first_name_th || '',
         e.last_name_th || '',
         e.gender || '',
-        e.birth_date ? new Date(e.birth_date).toLocaleDateString('th-GB') : '',
+        e.birth_date ? new Date(e.birth_date).toLocaleDateString('en-GB') : '',
         e.citizen_id || '',
         e.phone || '',
         e.email || '',
@@ -363,7 +354,7 @@ function EmployeesContent() {
         getPosName(e.pos_id) || '',
         e.emp_type || '',
         e.start_date ? new Date(e.start_date).toLocaleDateString('en-GB') : '',
-        e.base_salary || 0,
+
         e.status || '',
         e.cneu_cme_points || 0,
         licText.replace(/"/g, '""')
@@ -398,7 +389,7 @@ function EmployeesContent() {
             <div className="page-subtitle">จัดการรายชื่อและข้อมูลส่วนตัวของพนักงานทั้งหมดในระบบ</div>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            {(isSuperAdmin || isHR) && (
+            {isAdmin && (
               <>
                 <button className="btn-outline hover-glow" onClick={exportToCSV} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -428,87 +419,57 @@ function EmployeesContent() {
           <div className="filter-bar">
             <div className="search-input-wrap" style={{ flex: '1 1 300px' }}>
               <svg className="search-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              <input type="text" placeholder="ค้นหาชื่อพนักงาน..." value={search} onChange={e => setSearch(e.target.value)} />
+              <input type="text" placeholder="ค้นหาชื่อหรือรหัสพนักงาน..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <CustomSelect
-                prefix="กลุ่มงาน"
-                value={filterDiv}
-                onChange={val => { setFilterDiv(val); setFilterGrp('all'); }}
-                options={[
-                  { value: 'all', label: 'ทั้งหมด' },
-                  ...Array.from(new Set(departments.map(d => String(d.division || '').trim()))).filter(Boolean).sort().map(div => ({ value: String(div), label: String(div) }))
-                ]}
-                minWidth="160px"
-              />
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterDiv} onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); }}>
+                <option value="all">ทุกแผนก</option>
+                {Array.from(new Set(departments.map(d => String(d.division || '').trim()))).filter(Boolean).sort().map(div => (
+                  <option key={div as string} value={div as string}>{div as string}</option>
+                ))}
+              </select>
 
-              <CustomSelect
-                prefix="แผนก"
-                value={filterGrp}
-                onChange={val => setFilterGrp(val)}
-                disabled={filterDiv === 'all'}
-                options={[
-                  { value: 'all', label: 'ทั้งหมด' },
-                  ...Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim()))).filter(Boolean).sort().map(grp => ({ value: String(grp), label: String(grp) }))
-                ]}
-                minWidth="160px"
-              />
-              <input
-                type="text"
-                placeholder="ค้นหาตำแหน่ง..."
-                value={filterPos === 'all' ? '' : filterPos} // ถ้าค่าเป็น all ให้แสดงเป็นว่างเปล่า
-                onChange={e => setFilterPos(e.target.value)}
-                style={{
-                  minWidth: "160px",
-                  padding: "8px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc"
-                }}
-              />
+              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterGrp} onChange={e => setFilterGrp(e.target.value)} disabled={filterDiv === 'all'}>
+                <option value="all">ทุกหน่วยงาน</option>
+                {Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim()))).filter(Boolean).sort().map(grp => (
+                  <option key={grp as string} value={grp as string}>{grp as string}</option>
+                ))}
+              </select>
 
-              <CustomSelect
-                prefix="สถานะ"
-                value={filterStatus}
-                onChange={val => setFilterStatus(val)}
-                options={[
-                  { value: 'all', label: 'ทั้งหมด' },
-                  { value: 'ทำงานปกติ', label: 'ทำงานปกติ' },
-                  { value: 'ทดลองงาน', label: 'ทดลองงาน' },
-                  { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน' },
-                  { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ' },
-                  { value: 'ให้ออก', label: 'ให้ออก' }
-                ]}
-                minWidth="200px"
-              />
-
-              <CustomSelect
-                prefix="ใบประกอบฯ"
-                value={filterLicense}
-                onChange={val => setFilterLicense(val)}
-                options={[
-                  { value: 'all', label: 'ทั้งหมด' },
-                  { value: 'Active', label: 'ปกติ' },
-                  { value: 'Expiring Soon', label: 'ใกล้หมดอายุ' },
-                  { value: 'Expired', label: 'หมดอายุแล้ว' },
-                  { value: 'Suspended', label: 'พักใช้/ระงับ' }
-                ]}
-                minWidth="180px"
-              />
             </div>
+            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterPos} onChange={e => setFilterPos(e.target.value)}>
+              <option value="all">ทุกตำแหน่ง</option>
+              {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
+            </select>
+            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+              <option value="all">สถานะการทำงาน: ทั้งหมด</option>
+              <option value="ทำงานปกติ">ทำงานปกติ (Active)</option>
+              <option value="ทดลองงาน">ทดลองงาน</option>
+              <option value="หยุดปฏิบัติงาน">หยุดปฏิบัติงาน</option>
+              <option value="ลาออก/พ้นสภาพ">ลาออก/พ้นสภาพ</option>
+              <option value="ให้ออก">ให้ออก</option>
+            </select>
+            <select className="form-select" style={{ width: 'auto', minWidth: '160px' }} value={filterLicense} onChange={e => setFilterLicense(e.target.value)}>
+              <option value="all">ใบประกอบฯ: ทั้งหมด</option>
+              <option value="Active">ปกติ (Active)</option>
+              <option value="Expiring Soon">ใกล้หมดอายุ</option>
+              <option value="Expired">หมดอายุแล้ว</option>
+              <option value="Suspended">พักใช้/ระงับ</option>
+            </select>
           </div>
 
-          <div style={{ overflowX: 'auto', borderRadius: '20px', border: '1px solid #e2e8f0', background: '#ffffff' }}>
+          <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>เลขประจำตำแหน่ง</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>ชื่อ-สกุลพนักงาน</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>ชื่อเล่น</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>ตำแหน่ง</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>แผนก (กลุ่มงาน)</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>หน่วยงาน</th>
+                  <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
+                  <th>ชื่อ-สกุลพนักงาน</th>
+                  <th>ชื่อเล่น</th>
+                  <th>ตำแหน่ง</th>
+                  <th>แผนก (กลุ่มงาน)</th>
+                  <th>หน่วยงาน</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
@@ -530,34 +491,34 @@ function EmployeesContent() {
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = emp.license_status === 'Expired' ? '#fff5f5' : 'transparent'}
                       >
                         <td style={{ textAlign: 'center' }}>
-                          <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '50%', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
+                          <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
                             {emp.image ? <Image fill src={`/uploads/${emp.image}`} alt="" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <span style={{ color: '#94a3b8', fontSize: '20px' }}>👤</span>}
                           </div>
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <div style={{ padding: '4px 12px', background: '#f8fafc', borderRadius: '50px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155', fontSize: '12px' }}>
+                          <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
                             {emp.emp_id}
                           </div>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>
                             {emp.prefix}{emp.first_name_th} {emp.last_name_th}
                             {emp.license_status === 'Expired' && <span className="badge badge-red" title="ใบประกอบวิชาชีพหมดอายุ">หมดอายุ</span>}
                           </div>
                         </td>
-                        <td style={{ color: '#334155', whiteSpace: 'nowrap' }}>{emp.nickname || '-'}</td>
-                        <td style={{ color: '#334155', fontWeight: 500, whiteSpace: 'nowrap' }}>{getPosName(emp.pos_id)}</td>
-                        <td style={{ whiteSpace: 'nowrap' }}>{dept?.division || '-'}</td>
-                        <td style={{ whiteSpace: 'nowrap' }}>{dept?.dept_name || '-'}</td>
+                        <td style={{ color: '#334155' }}>{emp.nickname || '-'}</td>
+                        <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
+                        <td>{dept?.division || '-'}</td>
+                        <td>{dept?.dept_name || '-'}</td>
                         <td style={{ textAlign: 'center' }}>
-                          <StatusPicker emp={emp} isAdmin={isSuperAdmin || isHR} editEmployee={editEmployee} />
+                          <StatusPicker emp={emp} isAdmin={isAdmin} editEmployee={editEmployee} />
                         </td>
                         <td onClick={(e) => e.stopPropagation()}>
                           <div className="action-btn-group" style={{ justifyContent: 'center' }}>
                             <button className="icon-btn hover-glow" onClick={() => { setIsBulkPrinting(false); setSelectedEmpForCard(emp); setShowIdCard(true); }} title="พิมพ์บัตรพนักงาน" style={{ color: '#0ea5e9', background: '#f0f9ff' }}>
                               <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
                             </button>
-                            {(isSuperAdmin || isHR) && (
+                            {isAdmin && (
                               <>
                                 <button className="icon-btn hover-glow" onClick={() => handleResetPassword(emp)} title="ส่งอีเมลรีเซ็ตรหัสผ่าน" style={{ color: '#d97706', background: '#fefce8' }}>
                                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
@@ -624,7 +585,7 @@ function EmployeesContent() {
       {/* ID Card Modal */}
       {showIdCard && (isBulkPrinting ? selectedIds.length > 0 : selectedEmpForCard) && (
         <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 1100 }}>
-          <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', padding: '24px', width: isBulkPrinting ? '700px' : '360px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
+          <div className="modal-box" style={{ background: '#ca8888ff', borderRadius: '24px', padding: '24px', width: isBulkPrinting ? '700px' : '360px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
 
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{isBulkPrinting ? 'บัตรพนักงาน (จำนวนมาก)' : 'บัตรพนักงาน'}</h3>
@@ -733,22 +694,11 @@ function EmployeesContent() {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', fontSize: '12px', fontWeight: 600, color: '#475569' }}>
                           <div>
-                            <div style={{ marginBottom: '6px' }}>
-                              วันที่เริ่มงาน &nbsp;:
-                              <span style={{ color: '#0f172a' }}>
-                                {empForCard.start_date ? new Date(empForCard.start_date).toLocaleString('en-GB') : '-'}
-                              </span>
-                            </div>
-                            <div>
-                              วันหมดอายุ &nbsp;:
-                              <span style={{ color: '#0f172a' }}>
-                                {empForCard.start_date
-                                  ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleString('en-GB')
-                                  : '-'}
-                              </span>
-                            </div>
+                            <div style={{ marginBottom: '6px' }}>วันที่เริ่มงาน &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(empForCard.start_date).toLocaleDateString('en-GB') : '-'}</span></div>
+                            <div>วันหมดอายุ &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleDateString('en-GB') : '-'}</span></div>
                           </div>
                         </div>
+
                         {/* Signature */}
                         <div style={{ marginTop: '40px', textAlign: 'center' }}>
                           <div style={{ fontFamily: "'Brush Script MT', 'Dancing Script', cursive", fontSize: '24px', color: '#0f172a', margin: '0', lineHeight: 1, height: '24px' }}>Wannisa</div>
@@ -831,8 +781,8 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
           setIsOpen(!isOpen);
         }}
         style={{
-          padding: '4px 14px',
-          borderRadius: '50px',
+          padding: '4px 12px',
+          borderRadius: '10px',
           fontSize: '12px',
           fontWeight: 700,
           background: currentStatus.bg,
@@ -862,7 +812,7 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
             left: '50%',
             transform: 'translateX(-50%)',
             background: 'white',
-            borderRadius: '24px',
+            borderRadius: '12px',
             boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
             zIndex: 10,
             padding: '6px',

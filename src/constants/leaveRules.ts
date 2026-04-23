@@ -9,45 +9,26 @@ export interface LeaveQuota {
 }
 
 export const EMPLOYEE_TYPES = [
-  'ข้าราชการ',
-  'ลูกจ้างประจำ',
-  'พนักงานราชการ',
   'ราชการ',
-  'ลูกจ้างพนักงานกระทรวงสาธารณสุข',
+  'พนักงานราชการ',
+  'ลูกจ้างพนักงานกระทรวง',
   'ลูกจ้างชั่วคราว(นักเรียนทุน)',
   'ลูกจ้างรายเดือน',
   'ลูกจ้างรายวัน',
-  'ลูกจ้างเหมาบริการ',
-  'ลูกจ้างเเบ่งเปอร์เซ็นต์',
+  'ลูกจ้างเหมา',
   'ลูกจ้างชั่วคราวที่อายุ 60 ปี',
 ] as const;
 
 export type EmployeeType = (typeof EMPLOYEE_TYPES)[number];
 
 export const LEAVE_RULES: Record<EmployeeType, LeaveQuota> = {
-  'ข้าราชการ': {
-    personal: 45,
-    sick: 60,
-    vacation: 10,
-    canAccumulateVacation: true,
-    accumulatePerYear: 10,
-    note: 'กิจ 45 / ป่วย 60 / พักผ่อนสะสมปีละ 10',
-  },
   'ราชการ': {
     personal: 45,
     sick: 60,
     vacation: 10,
     canAccumulateVacation: true,
     accumulatePerYear: 10,
-    note: 'กิจ 45 / ป่วย 60 / พักผ่อนสะสมปีละ 10',
-  },
-  'ลูกจ้างประจำ': {
-    personal: 45,
-    sick: 60,
-    vacation: 10,
-    canAccumulateVacation: true,
-    accumulatePerYear: 10,
-    note: 'กิจ 45 / ป่วย 60 / พักผ่อนสะสมปีละ 10',
+    note: 'สะสมพักผ่อนได้ทุกปี ปีละ 10 วัน ไม่จำกัด',
   },
   'พนักงานราชการ': {
     personal: 10,
@@ -55,58 +36,51 @@ export const LEAVE_RULES: Record<EmployeeType, LeaveQuota> = {
     vacation: 15,
     canAccumulateVacation: true,
     accumulatePerYear: 15,
-    note: 'กิจ 10 / ป่วย 30 / พักผ่อนสะสมปีละ 15',
+    note: 'สะสมพักผ่อนได้ทุกปี ปีละ 15 วัน ไม่จำกัด',
   },
-  'ลูกจ้างพนักงานกระทรวงสาธารณสุข': {
+  'ลูกจ้างพนักงานกระทรวง': {
     personal: 15,
     sick: 45,
     vacation: 15,
     canAccumulateVacation: true,
     accumulatePerYear: 15,
     maxAccumulated: 15,
-    note: 'กิจ 15 / ป่วย 45 / พักผ่อนสะสมไม่เกิน 15',
+    note: 'สะสมพักผ่อนได้ไม่เกิน 15 วัน',
   },
   'ลูกจ้างชั่วคราว(นักเรียนทุน)': {
     personal: 0,
     sick: 15,
     vacation: 10,
     canAccumulateVacation: false,
-    note: 'ไม่มีกิจ / ป่วย 15 / พักผ่อน 10 ไม่สะสม',
+    note: 'ไม่มีสิทธิ์ลากิจ / ไม่สะสมพักผ่อน',
   },
   'ลูกจ้างรายเดือน': {
     personal: 0,
     sick: 15,
     vacation: 10,
     canAccumulateVacation: false,
-    note: 'ไม่มีกิจ / ป่วย 15 / พักผ่อน 10 ไม่สะสม',
+    note: 'ไม่มีสิทธิ์ลากิจ / ไม่สะสมพักผ่อน',
   },
   'ลูกจ้างรายวัน': {
     personal: 0,
-    sick: 8, // ปีแรก 8, ครบปี 15
+    sick: 8, // ปีแรก 8 วัน, ครบปี 15 วัน (คำนวณใน getSickQuotaForDaily)
     vacation: 10,
     canAccumulateVacation: false,
-    note: 'ไม่มีกิจ / ป่วยปีแรก 8 ครบปี 15 / พักผ่อน 10 ไม่สะสม',
+    note: 'ไม่มีสิทธิ์ลากิจ / ป่วยปีแรก 8 วัน ครบปีแรก 15 วัน / ไม่สะสมพักผ่อน',
   },
-  'ลูกจ้างเหมาบริการ': {
+  'ลูกจ้างเหมา': {
     personal: 0,
-    sick: 15,
-    vacation: 10,
+    sick: 0,
+    vacation: 0,
     canAccumulateVacation: false,
-    note: 'ไม่มีกิจ / ป่วย 15 / พักผ่อน 10 ไม่สะสม',
-  },
-  'ลูกจ้างเเบ่งเปอร์เซ็นต์': {
-    personal: 0,
-    sick: 15,
-    vacation: 10,
-    canAccumulateVacation: false,
-    note: 'ไม่มีกิจ / ป่วย 15 / พักผ่อน 10 ไม่สะสม',
+    note: 'ไม่มีสิทธิ์ลาใดๆ',
   },
   'ลูกจ้างชั่วคราวที่อายุ 60 ปี': {
     personal: 0,
     sick: 15,
     vacation: 10,
     canAccumulateVacation: false,
-    note: 'ไม่มีกิจ / ป่วย 15 / พักผ่อน 10 ไม่สะสม',
+    note: 'ไม่มีสิทธิ์ลากิจ / ไม่สะสมพักผ่อน',
   },
 };
 

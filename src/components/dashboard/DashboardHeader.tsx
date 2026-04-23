@@ -1,7 +1,7 @@
 //วันที่-ข้อความต้อนรับ-ช่องค้นหา-รูปโปรไฟล์
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'

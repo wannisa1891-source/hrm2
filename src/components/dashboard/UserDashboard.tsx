@@ -13,11 +13,7 @@ interface UserDashboardProps {
   onSelectNews: (news: any) => void;
   today: string;
   licenseStats: { expiring: number, expired: number };
-  payrollData?: {
-    currentNetSalary: number;
-    paymentDate: string;
-    history: Array<{ month: string; amount: number; date: string }>;
-  } | null;
+  // ลบ payrollData ออกจาก Props
 }
 
 export default function UserDashboard({

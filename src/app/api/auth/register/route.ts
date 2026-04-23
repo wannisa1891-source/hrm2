@@ -66,19 +66,15 @@ export async function POST(req: NextRequest) {
          WHERE emp_id = ?`,
         [username, password_hash, first_name, last_name, email, phone || '', gender || 'ชาย', date_of_birth || null, final_emp_id]
       );
-      } else {
-        // Insert new record
-        await connection.query(
-          `INSERT INTO tbl_employees 
-            (emp_id, username, password, prefix, first_name_th, last_name_th, email, phone, gender, birth_date, start_date, citizen_id, status, role, dept_id, pos_id, emp_type)
-           VALUES (?, ?, ?, '-', ?, ?, ?, ?, ?, ?, ?, '0000000000000', 'Active', 'User', ?, ?, ?)`,
-          [
-            final_emp_id, username, password_hash, first_name, last_name, email, phone || '', 
-            gender || 'ชาย', date_of_birth || null, start_date || null,
-            department || 'ADM-ADM', position || 'P001', employee_type || 'พนักงานประจำ'
-          ]
-        );
-      }
+    } else {
+      // Insert new record
+      await connection.query(
+        `INSERT INTO tbl_employees 
+          (emp_id, username, password, prefix, first_name_th, last_name_th, email, phone, gender, birth_date, start_date, citizen_id, status, role, dept_id, pos_id)
+         VALUES (?, ?, ?, '-', ?, ?, ?, ?, ?, ?, ?, '0000000000000', 'Active', 'User', 'ADM-FIN', 'P001')`,
+        [final_emp_id, username, password_hash, first_name, last_name, email, phone || '', gender || 'ชาย', date_of_birth || null, start_date || null]
+      );
+    }
 
     await connection.commit();
     console.log('✅ REGISTER SUCCESS:', final_emp_id);
