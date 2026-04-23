@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaves } from '@/hooks/useLeaves';
@@ -26,6 +26,27 @@ const getQuotaForEmployee = (empType: string, leaveCategoryId: string, startDate
   if (leaveCategoryId === 'Ordination') return 120; // ลาอุปสมบท/ฮัจญ์
   return 0;
 };
+
+const CATEGORIES = [
+  { id: 'Sick', name: 'ลาป่วย', color: '#ef4444' },
+  { id: 'Personal', name: 'ลากิจ', color: '#f59e0b' },
+  { id: 'Vacation', name: 'ลาพักผ่อน', color: '#10b981' },
+  { id: 'Maternity', name: 'ลาคลอด', color: '#ec4899' },
+  { id: 'Paternity', name: 'ลาช่วยภริยาคลอด', color: '#8b5cf6' },
+  { id: 'Ordination', name: 'ลาอุปสมบท/ฮัจญ์', color: '#f97316' },
+];
+
+const LEAVE_TYPES = [
+  { id: 'T01', name: 'ราชการ', s_qt: 60, p_qt: 45, v_qt: 10, rule: 'ระเบียบข้าราชการพลเรือน' },
+  { id: 'T02', name: 'พนักงานราชการ', s_qt: 30, p_qt: 10, v_qt: 10, rule: 'ระเบียบพนักงานราชการ' },
+  { id: 'T03', name: 'ลูกจ้างพนักงานกระทรวง', s_qt: 45, p_qt: 15, v_qt: 10, rule: 'ระเบียบพนักงานกระทรวง' },
+  { id: 'T04', name: 'ลูกจ้างชั่วคราว(นักเรียนทุน)', s_qt: 15, p_qt: 0, v_qt: 10, rule: 'ระเบียบลูกจ้างชั่วคราว' },
+  { id: 'T05', name: 'ลูกจ้างรายเดือน', s_qt: 15, p_qt: 0, v_qt: 10, rule: 'ระเบียบลูกจ้างรายเดือน' },
+  { id: 'T06', name: 'ลูกจ้างรายวัน', s_qt: 15, p_qt: 0, v_qt: 10, rule: 'ระเบียบลูกจ้างรายวัน' },
+  { id: 'T07', name: 'ลูกจ้างเหมา', s_qt: 0, p_qt: 0, v_qt: 0, rule: 'สัญญาจ้างเหมาบริการ' },
+  { id: 'T08', name: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', s_qt: 15, p_qt: 0, v_qt: 10, rule: 'ระเบียบลูกจ้างชั่วคราว (60 ปี)' },
+];
+
 
 export default function LeavePage() {
   const { user } = useAuth();
@@ -449,7 +470,7 @@ export default function LeavePage() {
                   </select>
                 </div>
             </div>
-            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
               <div>
                 <label style={{ display: 'block', marginBottom: 8, fontSize: 13, fontWeight: 600, color: '#475569' }}>วันเริ่มต้น</label>
@@ -485,23 +506,17 @@ export default function LeavePage() {
         else if (cat === 'Personal') qt = quotaObj.personal || typeCfg?.p_qt || 0;
         else if (cat === 'Vacation') qt = quotaObj.vacation || typeCfg?.v_qt || 0;
 
-<<<<<<< HEAD
         if (qt === 0) {
           if (selectedLeave.leave_type_id === 'L01') qt = selectedLeave.quota_sick || 0;
           else if (selectedLeave.leave_type_id === 'L02') qt = selectedLeave.quota_personal || 0;
           else if (selectedLeave.leave_type_id === 'L03') qt = selectedLeave.quota_vacation || 0;
         }
 
-        const acc = selectedLeave.leave_type_id === 'L03' ? (selectedLeave.accumulated_vacation || 0) : 0;
-        const totalQt = qt + acc;
-
-=======
         const acc = (selectedLeave as any).accumulated_vacation || 0;
         const totalQt = qt + acc;
 
-
         // Calculate used days in current fiscal year FOR THIS CATEGORY
->>>>>>> 4cb3992ef87eda3d6b6dc9aea0abe4cb91ebead5
+
         const usedInFiscalYear = leaves
           .filter(l => 
             l.emp_id === selectedLeave.emp_id && 

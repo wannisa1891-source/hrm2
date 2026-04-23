@@ -14,6 +14,12 @@ export interface Schedule {
   note: string
   startTime: string
   endTime: string
+  memoFile?: string
+  projectFile?: string
+  transportCost?: number
+  accommodationCost?: number
+  organizerPay?: number
+  parentPay?: number
 }
 
 export interface RoomType {
@@ -42,6 +48,12 @@ export interface ScheduleForm {
   note: string
   startTime: string
   endTime: string
+  memoFile: string
+  projectFile: string
+  transportCost: number
+  accommodationCost: number
+  organizerPay: number
+  parentPay: number
 }
 
 const EMPTY_FORM: ScheduleForm = {
@@ -54,6 +66,12 @@ const EMPTY_FORM: ScheduleForm = {
   note: '',
   startTime: '09:00',
   endTime: '10:00',
+  memoFile: '',
+  projectFile: '',
+  transportCost: 0,
+  accommodationCost: 0,
+  organizerPay: 0,
+  parentPay: 0,
 }
 
 const DEPARTMENT_HIERARCHY: Record<string, string[]> = {
@@ -146,6 +164,12 @@ export default function useScheduleModal(
       note: schedule.note,
       startTime: schedule.startTime,
       endTime: schedule.endTime,
+      memoFile: schedule.memoFile || '',
+      projectFile: schedule.projectFile || '',
+      transportCost: schedule.transportCost || 0,
+      accommodationCost: schedule.accommodationCost || 0,
+      organizerPay: schedule.organizerPay || 0,
+      parentPay: schedule.parentPay || 0,
     })
     setShowModal(true)
   }, [])

@@ -30,6 +30,12 @@ function toSchedule(r: ScheduleRecord): Schedule {
     startTime: r.startTime || '09:00',
     endTime: r.endTime || '10:00',
     note: r.note || '',
+    memoFile: r.memo_file || '',
+    projectFile: r.project_file || '',
+    transportCost: Number(r.transport_cost) || 0,
+    accommodationCost: Number(r.accommodation_cost) || 0,
+    organizerPay: Number(r.organizer_pay) || 0,
+    parentPay: Number(r.parent_pay) || 0,
   }
 }
 
@@ -198,7 +204,13 @@ export default function SchedulePage() {
         startTime: form.startTime || '09:00',
         endTime: form.endTime || '10:00',
         note: form.note || '',
-        date: toDateStr(selectedDate)
+        date: toDateStr(selectedDate),
+        memoFile: form.memoFile || '',
+        projectFile: form.projectFile || '',
+        transportCost: form.transportCost || 0,
+        accommodationCost: form.accommodationCost || 0,
+        organizerPay: form.organizerPay || 0,
+        parentPay: form.parentPay || 0
       };
 
       if (isEditing && editingId) {
@@ -655,6 +667,68 @@ export default function SchedulePage() {
                   <input className="sp-field" value={form.note}
                     onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, note: e.target.value }))}
                     placeholder="ระบุหมายเหตุ (ถ้ามี)" />
+                </div>
+
+                {/* --- REIMBURSEMENT SECTION --- */}
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '2px dashed #e2e8f0' }}>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const section = document.getElementById('reimbursement-section');
+                      if (section) section.style.display = section.style.display === 'none' ? 'block' : 'none';
+                    }}
+                    style={{ 
+                      width: '100%', padding: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', 
+                      borderRadius: '12px', color: '#166534', fontWeight: 700, fontSize: '14px', 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer'
+                    }}
+                  >
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    ข้อมูลการเบิกค่าใช้จ่ายในการประชุม/อบรม
+                  </button>
+
+                  <div id="reimbursement-section" style={{ display: form.transportCost || form.accommodationCost || form.organizerPay || form.parentPay ? 'block' : 'none', marginTop: '16px', animation: 'fadeIn 0.3s ease' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                      <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                        <label>บันทึกข้อความ/คำสั่ง</label>
+                        <input className="sp-field" value={form.memoFile}
+                          onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, memoFile: e.target.value }))}
+                          placeholder="ชื่อไฟล์หรือลิงก์เอกสาร" />
+                      </div>
+                      <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                        <label>โครงการ/กำหนดการ</label>
+                        <input className="sp-field" value={form.projectFile}
+                          onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, projectFile: e.target.value }))}
+                          placeholder="ชื่อไฟล์หรือลิงก์เอกสาร" />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                      <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                        <label>ค่าพาหนะ (บาท)</label>
+                        <input type="number" className="sp-field" value={form.transportCost}
+                          onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, transportCost: Number(e.target.value) }))} />
+                      </div>
+                      <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                        <label>ค่าที่พัก (บาท)</label>
+                        <input type="number" className="sp-field" value={form.accommodationCost}
+                          onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, accommodationCost: Number(e.target.value) }))} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                        <label>เบิกจากผู้จัด (บาท)</label>
+                        <input type="number" className="sp-field" value={form.organizerPay}
+                          onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, organizerPay: Number(e.target.value) }))} />
+                      </div>
+                      <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                        <label>เบิกจากต้นสังกัด (บาท)</label>
+                        <input type="number" className="sp-field" value={form.parentPay}
+                          onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, parentPay: Number(e.target.value) }))} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
