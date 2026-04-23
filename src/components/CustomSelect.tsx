@@ -38,9 +38,9 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
       <div
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          padding: '10px 14px',
-          border: `1px solid ${isOpen ? '#2563eb' : '#e5e7eb'}`,
-          borderRadius: '10px',
+          padding: '12px 16px',
+          border: `1.5px solid ${isOpen ? '#2563eb' : '#cbd5e1'}`,
+          borderRadius: '16px',
           background: disabled ? '#f8fafc' : 'white',
           fontSize: '14px',
           cursor: 'pointer',
@@ -48,9 +48,10 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: '8px',
-          boxShadow: isOpen ? '0 0 0 3px rgba(37,99,235,0.1)' : 'none',
+          boxShadow: isOpen ? '0 0 0 4px rgba(37,99,235,0.1)' : 'inset 0 2px 4px rgba(0,0,0,0.02)',
           transition: 'all 0.2s',
-          color: selectedOption ? '#1e293b' : '#64748b'
+          color: selectedOption ? '#1e293b' : '#64748b',
+          fontWeight: 500
         }}
       >
         <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -60,8 +61,8 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
                 : selectedOption.label) 
             : placeholder}
         </span>
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', flexShrink: 0 }}>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </div>
 
@@ -69,20 +70,27 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
         <div
           style={{
             position: 'absolute',
-            top: 'calc(100% + 4px)',
+            top: 'calc(100% + 8px)',
             left: 0,
             right: 0,
             background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
             zIndex: 50,
             maxHeight: '300px',
             overflowY: 'auto',
             border: '1px solid #f1f5f9',
-            padding: '6px'
+            padding: '8px',
+            animation: 'spSelectIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
           }}
           className="custom-scrollbar"
         >
+          <style>{`
+            @keyframes spSelectIn {
+              from { opacity: 0; transform: translateY(-10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
           {options.map((opt) => (
             <div
               key={opt.value}
@@ -92,13 +100,13 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
               }}
               style={{
                 padding: '10px 14px',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 cursor: 'pointer',
                 fontSize: '14px',
-                background: String(opt.value) === String(value) ? '#f0f9ff' : 'transparent',
-                color: String(opt.value) === String(value) ? '#0ea5e9' : '#334155',
-                fontWeight: String(opt.value) === String(value) ? 600 : 400,
-                transition: 'background 0.15s'
+                background: String(opt.value) === String(value) ? '#eff6ff' : 'transparent',
+                color: String(opt.value) === String(value) ? '#1d4ed8' : '#334155',
+                fontWeight: String(opt.value) === String(value) ? 700 : 500,
+                transition: 'all 0.15s'
               }}
               onMouseEnter={(e) => { if (String(opt.value) !== String(value)) e.currentTarget.style.background = '#f8fafc'; }}
               onMouseLeave={(e) => { if (String(opt.value) !== String(value)) e.currentTarget.style.background = 'transparent'; }}

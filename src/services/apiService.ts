@@ -237,6 +237,8 @@ export const deleteDepartment = (id: string) => apiFetch<{ message: string }>(`/
 
 export const fetchPositions = () => apiFetch<Position[]>('/api/positions')
 
+export const fetchLeaveTypes = () => apiFetch<any[]>('/api/leave-types')
+export const fetchLeaveCategories = () => apiFetch<any[]>('/api/leave-categories')
 export const fetchLeaves = () => apiFetch<Leave[]>('/api/leaves')
 export const createLeave = (body: any) => apiFetch<{ success: boolean }>('/api/leaves', {
   method: 'POST',

@@ -12,6 +12,7 @@ import WeekView from './View/WeekView'
 import MonthView from './View/MonthView'
 import YearView from './View/YearView'
 import { useAuth } from '@/contexts/AuthContext'
+import CustomSelect from '@/components/CustomSelect'
 import type { Schedule, ScheduleForm } from './useScheduleModal'
 import type { ScheduleRecord } from '@/services/apiService'
 
@@ -196,16 +197,14 @@ export default function SchedulePage() {
         contactPhone: form.contactPhone || '',
         startTime: form.startTime || '09:00',
         endTime: form.endTime || '10:00',
-        note: form.note || ''
+        note: form.note || '',
+        date: toDateStr(selectedDate)
       };
 
       if (isEditing && editingId) {
         await editSchedule(editingId, scheduleData, toMonthKey(currentDate))
       } else {
-        await addSchedule({
-          ...scheduleData,
-          date: toDateStr(selectedDate),
-        }, toMonthKey(currentDate))
+        await addSchedule(scheduleData, toMonthKey(currentDate))
       }
 
       if (keepOpen) {
@@ -232,7 +231,7 @@ export default function SchedulePage() {
     const b = new Date(selectedDate)
     if (a.toDateString() === b.toDateString()) return true;
     return false;
-  }).sort((a,b) => a.date.getTime() - b.date.getTime()) : []
+  }).sort((a, b) => a.date.getTime() - b.date.getTime()) : []
 
   return (
     <>
@@ -249,7 +248,7 @@ export default function SchedulePage() {
           --red: #dc2626;
           --card: #ffffff; --bg: #f8fafc; --txt: #1e293b; --txt2: #64748b;
           --bdr: #e2e8f0; --shd: 0 1px 3px rgba(0,0,0,.04); --shd2: 0 4px 12px rgba(0,0,0,.06);
-          --rad: 8px;
+          --rad: 20px;
           font-family: 'Inter', system-ui, sans-serif;
         }
         .sp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--bdr); }
@@ -289,39 +288,51 @@ export default function SchedulePage() {
         .sp-dept-item:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.06); border-color: #cbd5e1; }
         .sp-dept-name { font-weight: 700; color: #334155; font-size: 14px; letter-spacing: 0.2px; }
         .sp-dept-badge { font-size: 12px; color: #1d4ed8; font-weight: 800; background: #eff6ff; padding: 4px 12px; border-radius: 20px; border: 1px solid #bfdbfe; box-shadow: inset 0 1px 2px rgba(255,255,255,0.7); }
-        .sp-modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,.6); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .sp-modal-box { background: var(--card); border-radius: 8px; padding: 24px 32px; width: 500px; max-width: 90vw; max-height: 85vh; overflow-y: auto; box-shadow: var(--shd2); }
-        .sp-modal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--bdr); }
-        .sp-modal-top h3 { margin: 0 0 12px; font-size: 18px; font-weight: 700; color: var(--txt); display: flex; align-items: center; gap: 8px; }
-        .sp-modal-x { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--txt2); padding: 4px; border-radius: 4px; }
-        .sp-modal-x:hover { background: var(--bg); color: var(--txt); }
-        .sp-modal-date { font-size: 13px; color: var(--txt2); margin-bottom: 16px; padding: 8px 12px; background: var(--bg); border-radius: 6px; font-weight: 600; border: 1px solid var(--bdr); }
-        .sp-modal-existing { margin-bottom: 16px; }
-        .sp-existing-title { font-size: 12px; color: var(--txt2); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; }
-        .sp-existing-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #fff; border-radius: 6px; border: 1px solid var(--bdr); margin-bottom: 6px; }
-        .sp-existing-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--txt); font-weight: 500;}
-        .sp-existing-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .sp-existing-actions { display: flex; gap: 4px; }
-        .sp-btn-icon { background: none; border: 1px solid transparent; cursor: pointer; color: var(--txt2); padding: 4px; border-radius: 4px; transition: .2s; display: flex; align-items: center; justify-content: center; }
-        .sp-btn-icon:hover { background: var(--bg); border-color: var(--bdr); color: var(--txt); }
-        .sp-form-group { margin-bottom: 14px; }
-        .sp-form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--txt); margin-bottom: 6px; }
-        .sp-req { color: var(--red); }
-        .sp-field { width: 100%; padding: 8px 12px; border: 1px solid var(--bdr); border-radius: 6px; font-size: 13px; color: var(--txt); background: #fff; transition: .2s; box-sizing: border-box; }
-        .sp-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-lt); }
-        .sp-shift-picker { display: flex; gap: 6px; flex-wrap: wrap; }
-        .sp-shift-opt { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--bdr); cursor: pointer; font-size: 12px; font-weight: 600; background: #fff; color: var(--txt2); transition: .2s; }
-        .sp-shift-opt:hover { background: var(--bg); }
-        .sp-modal-btns { display: flex; gap: 8px; margin-top: 20px; border-top: 1px solid var(--bdr); padding-top: 16px; }
-        .sp-btn-save { flex: 1; padding: 10px; border-radius: 6px; border: none; background: var(--primary); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s; }
-        .sp-btn-save:hover { background: var(--primary-dk); }
-        .sp-btn-save:disabled { opacity: .6; cursor: not-allowed; }
-        .sp-btn-delete { padding: 10px 14px; border-radius: 6px; border: 1px solid #fca5a5; background: #fff; color: var(--red); font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s; }
-        .sp-btn-delete:hover { background: #fef2f2; border-color: var(--red); }
-        .sp-btn-cancel { padding: 10px 14px; border-radius: 6px; border: 1px solid var(--bdr); background: #fff; color: var(--txt2); font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s; }
-        .sp-btn-cancel:hover { background: var(--bg); color: var(--txt); }
-        .sp-loading { text-align: center; padding: 40px; color: var(--txt2); font-size: 14px; }
-        .sp-error { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; color: #b91c1c; font-size: 13px; }
+        .sp-modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,.4); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; transition: all 0.3s ease; }
+        .sp-modal-box { background: #ffffff; border-radius: 32px; padding: 32px 36px; width: 600px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); animation: spModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes spModalIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .sp-modal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #f1f5f9; }
+        .sp-modal-top h3 { margin: 0; font-size: 22px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+        .sp-modal-x { background: #f8fafc; border: 1px solid #e2e8f0; font-size: 18px; cursor: pointer; color: #64748b; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .sp-modal-x:hover { background: #f1f5f9; color: #0f172a; transform: rotate(90deg); }
+        .sp-modal-date { font-size: 14px; color: #3b82f6; margin-bottom: 24px; padding: 12px 16px; background: #eff6ff; border-radius: 16px; font-weight: 700; border: 1px solid #bfdbfe; display: flex; align-items: center; gap: 8px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.5); }
+        .sp-modal-existing { margin-bottom: 24px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .sp-existing-title { font-size: 13px; color: #475569; margin: 0 0 12px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+        .sp-existing-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #fff; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .sp-existing-item:hover { transform: translateX(4px); border-color: #94a3b8; }
+        .sp-existing-info { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #1e293b; font-weight: 600;}
+        .sp-existing-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(0,0,0,0.1); }
+        .sp-existing-actions { display: flex; gap: 6px; }
+        .sp-btn-icon { background: #f1f5f9; border: none; cursor: pointer; color: #475569; width: 32px; height: 32px; border-radius: 8px; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
+        .sp-btn-icon:hover { background: #e2e8f0; color: #0f172a; transform: translateY(-2px); }
+        .sp-form-group { margin-bottom: 20px; }
+        .sp-form-group label { display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px; letter-spacing: 0.2px; }
+        .sp-req { color: #ef4444; margin-left: 2px; }
+        .sp-field { width: 100%; padding: 12px 16px; border: 1.5px solid #cbd5e1; border-radius: 16px; font-size: 14px; color: #0f172a; background: #fff; transition: all 0.2s ease; box-sizing: border-box; font-weight: 500; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .sp-field:hover { border-color: #94a3b8; }
+        .sp-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px #eff6ff; background: #fff; }
+        .sp-field:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; border-color: #e2e8f0; }
+        .sp-shift-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+        .sp-shift-opt { padding: 16px; border-radius: 12px; border: 2px solid #e2e8f0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #fff; transition: all 0.2s ease; position: relative; overflow: hidden; }
+        .sp-shift-opt::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.02)); opacity: 0; transition: 0.2s; }
+        .sp-shift-opt:hover { transform: translateY(-2px); border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .sp-shift-opt:hover::before { opacity: 1; }
+        .sp-shift-opt-active { border-color: #3b82f6; background: #eff6ff; box-shadow: 0 0 0 1px #3b82f6, 0 10px 15px -3px rgba(59,130,246,0.1); }
+        .sp-shift-opt-active .sp-shift-icon { color: #3b82f6; }
+        .sp-shift-opt-active .sp-shift-label { color: #1e3a8a; font-weight: 700; }
+        .sp-shift-icon { color: #64748b; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .sp-shift-label { font-size: 13px; font-weight: 600; color: #475569; text-align: center; z-index: 1; transition: 0.2s; }
+        .sp-modal-btns { display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; background: #fff; }
+        .sp-btn-save { flex: 2; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2), 0 2px 4px -1px rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.5px; }
+        .sp-btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37,99,235,0.3), 0 4px 6px -2px rgba(37,99,235,0.15); }
+        .sp-btn-save:active { transform: translateY(0); }
+        .sp-btn-save:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+        .sp-btn-delete { flex: 1; padding: 14px; border-radius: 16px; border: 1.5px solid #fecaca; background: #fff; color: #ef4444; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .sp-btn-delete:hover { background: #fef2f2; border-color: #ef4444; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(239,68,68,0.1); }
+        .sp-btn-cancel { flex: 1; padding: 14px; border-radius: 16px; border: 1.5px solid #cbd5e1; background: #fff; color: #475569; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .sp-btn-cancel:hover { background: #f8fafc; color: #0f172a; border-color: #94a3b8; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .sp-loading { text-align: center; padding: 40px; color: #64748b; font-size: 15px; font-weight: 500; }
+        .sp-error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin-bottom: 20px; color: #b91c1c; font-size: 14px; font-weight: 500; box-shadow: 0 4px 6px -1px rgba(239,68,68,0.05); }
         /* Fix SVG sizes */
         .schedule-page svg { max-width: 24px; max-height: 24px; flex-shrink: 0; }
         .sp-header-icon svg { width: 28px; height: 28px; max-width: 28px; max-height: 28px; }
@@ -478,7 +489,7 @@ export default function SchedulePage() {
                   ) : (
                     <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                   )}
-                  {isEditing ? 'แก้ไขการประชุม' : 'เพิ่มการประชุม'}
+                  {isEditing ? 'แก้ไขการประชุม' : 'การประชุม'}
                 </h3>
                 <button className="sp-modal-x" onClick={closeModal} aria-label="Close">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -498,8 +509,8 @@ export default function SchedulePage() {
                       <div className="sp-existing-info">
                         <span className="sp-existing-dot" style={{ background: getShiftColor(sch.room) }} />
                         <span>
-                           {sch.subject} — {sch.room} — {sch.organizer} 
-                           {new Date(sch.date).toDateString() !== selectedDate?.toDateString() && <span className="sp-shift-type-badge ml-2 text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">ข้ามคืนจากเมื่อวาน</span>}
+                          {sch.subject} — {sch.room} — {sch.organizer}
+                          {new Date(sch.date).toDateString() !== selectedDate?.toDateString() && <span className="sp-shift-type-badge ml-2 text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">ข้ามคืนจากเมื่อวาน</span>}
                         </span>
                       </div>
                       <div className="sp-existing-actions">
@@ -534,7 +545,7 @@ export default function SchedulePage() {
 
               {/* Form */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                
+
                 {/* Row 1: Meeting Subject */}
                 <div className="sp-form-group" style={{ marginBottom: 0 }}>
                   <label>หัวข้อการประชุม <span className="sp-req">*</span></label>
@@ -564,19 +575,24 @@ export default function SchedulePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div className="sp-form-group" style={{ marginBottom: 0 }}>
                     <label>หน่วยงานผู้จัด <span className="sp-req">*</span></label>
-                    <select className="sp-field" value={form.organizer} disabled={!isAdmin}
-                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, organizer: e.target.value }))}>
-                      <option value="">เลือกหน่วยงาน/แผนก</option>
-                      {departments.map((d) => <option key={d} value={d}>{d}</option>)}
-                    </select>
+                    <CustomSelect
+                      minWidth="100%"
+                      value={form.organizer}
+                      disabled={!isAdmin}
+                      placeholder="เลือกหน่วยงาน/แผนก"
+                      options={departments.map(d => ({ value: d, label: d }))}
+                      onChange={(val) => setForm((f: ScheduleForm) => ({ ...f, organizer: val }))}
+                    />
                   </div>
                   <div className="sp-form-group" style={{ marginBottom: 0 }}>
                     <label>แผนกที่รับผิดชอบ <span className="sp-req">*</span></label>
-                    <select className="sp-field" value={form.unit}
-                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, unit: e.target.value }))}>
-                      <option value="">เลือกกลุ่มงาน/แผนกย่อย</option>
-                      {units.map((u) => <option key={u} value={u}>{u}</option>)}
-                    </select>
+                    <CustomSelect
+                      minWidth="100%"
+                      value={form.unit}
+                      placeholder="เลือกกลุ่มงาน/แผนกย่อย"
+                      options={units.map(u => ({ value: u, label: u }))}
+                      onChange={(val) => setForm((f: ScheduleForm) => ({ ...f, unit: val }))}
+                    />
                   </div>
                 </div>
 
@@ -584,7 +600,7 @@ export default function SchedulePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                   <div className="sp-form-group" style={{ marginBottom: 0 }}>
                     <label>วันที่ประชุม</label>
-                    <div style={{ padding: '8px 12px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', fontWeight: 600 }}>
+                    <div style={{ padding: '12px 16px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '16px', fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>
                       {selectedDate?.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </div>
                   </div>
@@ -609,7 +625,7 @@ export default function SchedulePage() {
                         onClick={() => setForm((f: ScheduleForm) => ({ ...f, room: st.value }))}
                         style={{
                           border: form.room === st.value ? `2px solid ${st.color}` : '1px solid #e2e8f0',
-                          borderRadius: '8px',
+                          borderRadius: '16px',
                           overflow: 'hidden',
                           cursor: 'pointer',
                           background: form.room === st.value ? st.color + '10' : '#fff',

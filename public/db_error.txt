@@ -1,6 +1,6 @@
 Error: Unknown column 'first_name_en' in 'field list'\nError: Unknown column 'first_name_en' in 'field list'
     at PromisePoolConnection.query (webpack-internal:///(rsc)/./node_modules/mysql2/lib/promise/connection.js:29:22)
-    at POST (webpack-internal:///(rsc)/./src/app/api/employees/route.ts:143:30)
+    at POST (webpack-internal:///(rsc)/./src/app/api/employees/route.ts:142:30)
     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
     at async C:\xampp\htdocs\hrm2\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:55038
     at async ek.execute (C:\xampp\htdocs\hrm2\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:45808)
