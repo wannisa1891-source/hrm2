@@ -48,10 +48,10 @@ const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInpu
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{label}</label>
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr 1.5fr', gap: '8px' }}>
-        <select 
-          value={d} 
-          onChange={e => handleUpdate(e.target.value, m, yBE)} 
-          required={required} 
+        <select
+          value={d}
+          onChange={e => handleUpdate(e.target.value, m, yBE)}
+          required={required}
           style={{ ...style, padding: '10px 8px' }}
         >
           <option value="">วัน</option>
@@ -59,10 +59,10 @@ const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInpu
             <option key={day} value={day.toString()}>{day}</option>
           ))}
         </select>
-        <select 
-          value={m} 
-          onChange={e => handleUpdate(d, e.target.value, yBE)} 
-          required={required} 
+        <select
+          value={m}
+          onChange={e => handleUpdate(d, e.target.value, yBE)}
+          required={required}
           style={{ ...style, padding: '10px 8px' }}
         >
           <option value="">เดือน</option>
@@ -70,10 +70,10 @@ const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInpu
             <option key={idx} value={(idx + 1).toString()}>{name}</option>
           ))}
         </select>
-        <select 
-          value={yBE} 
-          onChange={e => handleUpdate(d, m, e.target.value)} 
-          required={required} 
+        <select
+          value={yBE}
+          onChange={e => handleUpdate(d, m, e.target.value)}
+          required={required}
           style={{ ...style, padding: '10px 8px' }}
         >
           <option value="">ปี พ.ศ.</option>
@@ -326,12 +326,12 @@ export default function EmployeeFormModal({
 
 
 
-                    <ThaiDateInput 
-                      label="วัน/เดือน/ปีเกิด (พ.ศ.)" 
-                      value={formData.birth_date} 
-                      onChange={val => setField('birth_date', val)} 
-                      required 
-                      style={inputStyle} 
+                    <ThaiDateInput
+                      label="วัน/เดือน/ปีเกิด (พ.ศ.)"
+                      value={formData.birth_date}
+                      onChange={val => setField('birth_date', val)}
+                      required
+                      style={inputStyle}
                     />
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -443,17 +443,17 @@ export default function EmployeeFormModal({
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
-                      <select value={formData.emp_type || ''} onChange={e => setField('emp_type', e.target.value)} style={inputStyle}>
-                        <option value="ราชการ">ราชการ</option>
-                        <option value="พนักงานราชการ">พนักงานราชการ</option>
-                        <option value="ลูกจ้างพนักงานกระทรวง">ลูกจ้างพนักงานกระทรวง</option>
-                        <option value="ลูกจ้างชั่วคราว(นักเรียนทุน)">ลูกจ้างชั่วคราว(นักเรียนทุน)</option>
-                        <option value="ลูกจ้างรายเดือน">ลูกจ้างรายเดือน</option>
-                        <option value="ลูกจ้างรายวัน">ลูกจ้างรายวัน</option>
-                        <option value="ลูกจ้างเหมา">ลูกจ้างเหมา</option>
-                        <option value="ลูกจ้างชั่วคราวที่อายุ 60 ปี">ลูกจ้างชั่วคราวที่อายุ 60 ปี</option>
-                        <option value="นักศึกษาฝึกงาน">นักศึกษาฝึกงาน</option>
-                      </select>
+                    <select value={formData.emp_type || ''} onChange={e => setField('emp_type', e.target.value)} style={inputStyle}>
+                      <option value="ราชการ">ข้าราชการ</option>
+                      <option value="พนักงานราชการ">พนักงานราชการ</option>
+                      <option value="ลูกจ้างพนักงานกระทรวง">ลูกจ้างพนักงานกระทรวง</option>
+                      <option value="ลูกจ้างชั่วคราว(นักเรียนทุน)">ลูกจ้างชั่วคราว(นักเรียนทุน)</option>
+                      <option value="ลูกจ้างรายเดือน">ลูกจ้างรายเดือน</option>
+                      <option value="ลูกจ้างรายวัน">ลูกจ้างรายวัน</option>
+                      <option value="ลูกจ้างเหมา">ลูกจ้างเหมา</option>
+                      <option value="ลูกจ้างชั่วคราวที่อายุ 60 ปี">ลูกจ้างชั่วคราวที่อายุ 60 ปี</option>
+                      <option value="นักศึกษาฝึกงาน">นักศึกษาฝึกงาน</option>
+                    </select>
 
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -595,7 +595,7 @@ export default function EmployeeFormModal({
                                 e.target.value = ''; // Reset input to allow selecting the same file again
                               }} style={{ display: 'none' }} />
                             </div>
-                            
+
                             {/* แสดงไฟล์ที่เพิ่งเลือก (New files) */}
                             {((lic as any).files && (lic as any).files.length > 0) ? (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '10px' }}>
@@ -640,10 +640,10 @@ export default function EmployeeFormModal({
                                     } else if (lic.file_path) {
                                       fileList = [lic.file_path as string];
                                     }
-                                  } catch(e) { 
+                                  } catch (e) {
                                     fileList = typeof lic.file_path === 'string' ? [lic.file_path] : (lic.file_path || []);
                                   }
-                                  
+
                                   return fileList.map((fPath, fi) => (
                                     <a key={fi} href={`/uploads/${fPath}`} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                       📎 ไฟล์แนบที่ {fi + 1}
