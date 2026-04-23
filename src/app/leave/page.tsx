@@ -12,23 +12,27 @@ import Swal from 'sweetalert2';
 import { useSearchParams } from 'next/navigation';
 import { getCurrentFiscalYearRange, toDateStr } from '@/lib/dateUtils';
 import { getQuotaByType } from '@/constants/leaveRules';
+import ThaiDateInput from '@/components/ThaiDateInput';
+import CustomSelect from '@/components/CustomSelect';
 
 const CATEGORIES = [
-  { id: 'Sick', name: 'ลาป่วย', color: '#f59e0b' },
   { id: 'Personal', name: 'ลากิจ', color: '#6366f1' },
+  { id: 'Sick', name: 'ลาป่วย', color: '#f59e0b' },
   { id: 'Vacation', name: 'ลาพักผ่อน', color: '#10b981' },
-  { id: 'Other', name: 'อื่นๆ', color: '#64748b' },
 ];
 
 const LEAVE_TYPES = [
-  { id: 'T01', name: 'ราชการ', p_qt: 45, s_qt: 60, v_qt: 10, rule: 'สะสมเพิ่มปีละ 10 วัน', color: '#f59e0b' },
-  { id: 'T02', name: 'พนักงานราชการ', p_qt: 10, s_qt: 30, v_qt: 15, rule: 'สะสมเพิ่มปีละ 15 วัน', color: '#6366f1' },
-  { id: 'T03', name: 'ลูกจ้างพนักงานกระทรวง', p_qt: 15, s_qt: 45, v_qt: 15, rule: 'สะสมไม่เกิน 15 วัน/ปี', color: '#10b981' },
-  { id: 'T04', name: 'ลูกจ้างชั่วคราว(นักเรียนทุน)', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#ec4899' },
-  { id: 'T05', name: 'ลูกจ้างรายเดือน', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#8b5cf6' },
-  { id: 'T06', name: 'ลูกจ้างรายวัน', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#f97316' },
-  { id: 'T07', name: 'ลูกจ้างเหมา', p_qt: 0, s_qt: 0, v_qt: 0, rule: '-', color: '#64748b' },
-  { id: 'T08', name: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#334155' },
+  { id: 'T01', name: 'ข้าราชการ', p_qt: 45, s_qt: 60, v_qt: 10, rule: 'สะสมเพิ่มปีละ 10 วัน', color: '#f59e0b' },
+  { id: 'T02', name: 'ลูกจ้างประจำ', p_qt: 45, s_qt: 60, v_qt: 10, rule: 'สะสมเพิ่มปีละ 10 วัน', color: '#6366f1' },
+  { id: 'T03', name: 'พนักงานราชการ', p_qt: 10, s_qt: 30, v_qt: 15, rule: 'สะสมเพิ่มปีละ 15 วัน', color: '#10b981' },
+  { id: 'T04', name: 'ลูกจ้างพนักงานกระทรวง', p_qt: 15, s_qt: 45, v_qt: 15, rule: 'สะสมไม่เกิน 15 วัน/ปี', color: '#ec4899' },
+  { id: 'T05', name: 'ลูกจ้างชั่วคราว(นักเรียนทุน)', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#8b5cf6' },
+  { id: 'T06', name: 'ลูกจ้างรายเดือน', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#f97316' },
+  { id: 'T07', name: 'ลูกจ้างรายวัน', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#64748b' },
+  { id: 'T08', name: 'ลูกจ้างเหมาบริการ', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#334155' },
+  { id: 'T09', name: 'ลูกจ้างชั่วคราวที่อายุ 60 ปี', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#475569' },
+  { id: 'T10', name: 'ลูกจ้างเเบ่งเปอร์เซ็น', p_qt: 0, s_qt: 15, v_qt: 10, rule: 'ไม่สะสม', color: '#1e293b' },
+  { id: 'T11', name: 'ราชการ', p_qt: 45, s_qt: 60, v_qt: 10, rule: 'สะสมเพิ่มปีละ 10 วัน', color: '#f59e0b' },
 ];
 
 export default function LeavePage() {
@@ -55,6 +59,7 @@ export default function LeavePage() {
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [form, setForm] = useState({ emp_id: '', leave_type_id: 'T01', leave_category: 'Sick', start_date: '', end_date: '', reason: '' });
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
   const perPage = 8;
@@ -116,22 +121,41 @@ export default function LeavePage() {
   }), [visibleLeaves]);
 
   const handleSubmit = async () => {
-    const submissionData = { ...form };
     const currentEmpId = user?.emp_id || user?.username || (user as any)?.name;
-    if (!isAdmin && currentEmpId) {
-      submissionData.emp_id = currentEmpId;
-    }
+    const finalEmpId = isAdmin ? form.emp_id : currentEmpId;
 
-    if (!submissionData.emp_id || !submissionData.start_date || !submissionData.end_date) {
-      Swal.fire('ข้อความแจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning');
+    const missing = [];
+    if (!finalEmpId) missing.push('พนักงาน');
+    if (!form.start_date) missing.push('วันที่เริ่มต้น');
+    if (!form.end_date) missing.push('วันที่สิ้นสุด');
+    if (!form.reason.trim()) missing.push('เหตุผลการลา');
+
+    if (missing.length > 0) {
+      Swal.fire({
+        title: '⚠️ ข้อมูลไม่ครบถ้วน',
+        text: `กรุณากรอก: ${missing.join(', ')}`,
+        icon: 'warning',
+        confirmButtonColor: '#3b82f6',
+      });
       return;
     }
+
     setSaving(true);
-    const ok = await addLeave(submissionData);
+    const fd = new FormData();
+    fd.append('emp_id', finalEmpId);
+    fd.append('leave_type_id', form.leave_type_id);
+    fd.append('leave_category', form.leave_category);
+    fd.append('start_date', form.start_date);
+    fd.append('end_date', form.end_date);
+    fd.append('reason', form.reason);
+    if (attachment) fd.append('attachment', attachment);
+
+    const ok = await addLeave(fd);
     setSaving(false);
     if (ok) {
       setShowForm(false);
       setForm({ emp_id: '', leave_type_id: 'T01', leave_category: 'Sick', start_date: '', end_date: '', reason: '' });
+      setAttachment(null);
       Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
     }
   };
@@ -475,10 +499,25 @@ export default function LeavePage() {
               {isAdmin ? (
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>เลือกพนักงาน</label>
-                  <select value={form.emp_id} onChange={e => setForm({ ...form, emp_id: e.target.value })} style={{ ...inp, padding: '11px 14px' }}>
-                    <option value="">-- ค้นหาชื่อพนักงาน --</option>
-                    {employees.map(emp => <option key={emp.emp_id} value={emp.emp_id}>{emp.first_name_th} {emp.last_name_th}</option>)}
-                  </select>
+                  <CustomSelect
+                    showSearch
+                    value={form.emp_id}
+                    onChange={val => {
+                      const emp = employees.find(e => e.emp_id === val || e.citizen_id === val);
+                      if (emp) {
+                        const dbType = dbLeaveTypes.find(t => t.leave_type_id === emp.leave_type_id) || dbLeaveTypes.find(t => t.emp_group_name === emp.emp_type);
+                        setForm({ ...form, emp_id: val, leave_type_id: dbType ? dbType.leave_type_id : form.leave_type_id });
+                      } else {
+                        setForm({ ...form, emp_id: val });
+                      }
+                    }}
+                    options={employees.map(e => ({ 
+                      value: e.citizen_id || e.emp_id, 
+                      label: `${e.first_name_th} ${e.last_name_th} (${e.nickname || 'ไม่มีชื่อเล่น'})` 
+                    }))}
+                    placeholder="-- ค้นหาชื่อพนักงาน --"
+                    minWidth="100%"
+                  />
                 </div>
               ) : (
                 <div style={{ padding: '16px', borderRadius: 16, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -491,39 +530,105 @@ export default function LeavePage() {
                   </div>
                 </div>
               )}
+
+              {/* Real-time Quota Display for Selected Employee */}
+              {(() => {
+                const selectedEmpId = isAdmin ? form.emp_id : user?.emp_id || user?.citizen_id;
+                const emp = employees.find(e => e.emp_id === selectedEmpId || e.citizen_id === selectedEmpId);
+                if (!emp) return null;
+
+                const fyRange = getCurrentFiscalYearRange();
+                const empLeaves = leaves.filter(l => 
+                  l.emp_id === emp.emp_id && 
+                  l.status === 'Approved' &&
+                  new Date(l.start_date) >= fyRange.start && 
+                  new Date(l.start_date) <= fyRange.end
+                );
+
+                // Try to get quota from DB using leave_type_id first, then fallback to name matching
+                const dbType = dbLeaveTypes.find(t => t.leave_type_id === form.leave_type_id) || dbLeaveTypes.find(t => t.emp_group_name === emp.emp_type);
+                let qPersonal = 0, qSick = 0, qVacation = 0;
+
+                if (dbType) {
+                  qPersonal = dbType.personal_quota;
+                  qSick = dbType.sick_quota;
+                  qVacation = dbType.vacation_quota;
+                } else {
+                  const hardQuota = getQuotaByType(emp.emp_type || '', emp.start_date);
+                  qPersonal = hardQuota.personal;
+                  qSick = hardQuota.sick;
+                  qVacation = hardQuota.vacation;
+                }
+
+                const usedSick = empLeaves.filter(l => l.leave_category === 'Sick').reduce((s, l) => s + calculateDays(l.start_date, l.end_date), 0);
+                const usedPersonal = empLeaves.filter(l => l.leave_category === 'Personal').reduce((s, l) => s + calculateDays(l.start_date, l.end_date), 0);
+                const usedVacation = empLeaves.filter(l => l.leave_category === 'Vacation').reduce((s, l) => s + calculateDays(l.start_date, l.end_date), 0);
+                
+                const accVac = emp.accumulated_vacation || 0;
+                const totalVac = qVacation + accVac;
+
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '14px', borderRadius: '16px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                    {[
+                      { label: 'ลากิจ', rem: qPersonal - usedPersonal, total: qPersonal, color: '#6366f1' },
+                      { label: 'ลาป่วย', rem: qSick - usedSick, total: qSick, color: '#f59e0b' },
+                      { label: 'พักผ่อน', rem: totalVac - usedVacation, total: totalVac, color: '#10b981' },
+                    ].map((q, i) => (
+                      <div key={i} style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '2px' }}>{q.label}</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: q.color }}>{q.rem}<span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>/{q.total}</span></div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>ประเภทการลา</label>
-                  <select value={form.leave_category} onChange={e => setForm({ ...form, leave_category: e.target.value })} style={{ ...inp, padding: '11px 14px' }}>
-                    {dbCategories.length > 0 
-                      ? dbCategories.map(c => <option key={c.category_id} value={c.category_id}>{c.category_name}</option>)
-                      : CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)
-                    }
-                  </select>
+                  <CustomSelect
+                    value={form.leave_category}
+                    onChange={val => setForm({ ...form, leave_category: val })}
+                    options={CATEGORIES.map(c => ({ value: c.id, label: c.name }))}
+                    minWidth="100%"
+                  />
                 </div>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>กลุ่มบุคลากร</label>
-                  <select value={form.leave_type_id} onChange={e => setForm({ ...form, leave_type_id: e.target.value })} style={{ ...inp, padding: '11px 14px' }} disabled={!isAdmin}>
-                    {dbLeaveTypes.length > 0
-                      ? dbLeaveTypes.map(t => <option key={t.leave_type_id} value={t.leave_type_id}>{t.emp_group_name}</option>)
-                      : LEAVE_TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)
+                  <CustomSelect
+                    value={form.leave_type_id}
+                    onChange={val => setForm({ ...form, leave_type_id: val })}
+                    disabled={!isAdmin}
+                    options={dbLeaveTypes.length > 0
+                      ? dbLeaveTypes.map(t => ({ value: t.leave_type_id, label: t.emp_group_name }))
+                      : LEAVE_TYPES.map(t => ({ value: t.id, label: t.name }))
                     }
-                  </select>
+                    minWidth="100%"
+                  />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>วันเริ่มต้น</label>
-                  <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} style={{ ...inp, padding: '11px 14px' }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>วันสิ้นสุด</label>
-                  <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} style={{ ...inp, padding: '11px 14px' }} />
-                </div>
+                <ThaiDateInput
+                  label="วันเริ่มต้น"
+                  value={form.start_date}
+                  onChange={val => setForm({ ...form, start_date: val })}
+                  required
+                  style={{ ...inp, background: 'white' }}
+                />
+                <ThaiDateInput
+                  label="วันสิ้นสุด"
+                  value={form.end_date}
+                  onChange={val => setForm({ ...form, end_date: val })}
+                  required
+                  style={{ ...inp, background: 'white' }}
+                />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>เหตุผลความจำเป็น</label>
-                <textarea rows={3} value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} placeholder="ระบุรายละเอียดสั้นๆ..." style={{ ...inp, padding: '12px 14px', resize: 'none' }} />
+                <textarea rows={2} value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} placeholder="ระบุรายละเอียดสั้นๆ..." style={{ ...inp, padding: '12px 14px', resize: 'none', borderRadius: 16 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>แนบไฟล์หลักฐาน (ถ้ามี)</label>
+                <input type="file" onChange={e => setAttachment(e.target.files?.[0] || null)} style={{ ...inp, padding: '8px', borderRadius: 16 }} />
               </div>
               <button onClick={handleSubmit} disabled={saving} style={{
                 marginTop: 8, padding: '14px', borderRadius: 16, border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
@@ -603,6 +708,15 @@ export default function LeavePage() {
                   <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>เหตุผลการลา</div>
                   <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.5 }}>{selectedLeave.reason || 'ไม่ได้ระบุเหตุผล'}</div>
                 </div>
+                {selectedLeave.attachment && (
+                  <div style={{ gridColumn: 'span 2', background: '#eff6ff', padding: '14px 18px', borderRadius: 16, border: '1px solid #bfdbfe' }}>
+                    <div style={{ fontSize: 11, color: '#3b82f6', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>ไฟล์แนบหลักฐาน</div>
+                    <a href={`/uploads/${selectedLeave.attachment}`} target="_blank" rel="noreferrer" style={{ fontSize: 14, color: '#2563eb', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                      เปิดดูไฟล์แนบ
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* Status Alert */}
@@ -638,9 +752,7 @@ export default function LeavePage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
                     { id: 'Head of Dept', label: '1. หัวหน้าแผนก', status: selectedLeave.dept_head_status },
-                    { id: 'Administration', label: '2. ฝ่ายธุรการ', status: selectedLeave.admin_status },
-                    { id: 'Housekeeper', label: '3. ฝ่ายแม่บ้าน/อาคาร', status: selectedLeave.housekeeper_status },
-                    { id: 'Director', label: '4. ผู้อำนวยการ', status: selectedLeave.director_status },
+                    { id: 'Administration', label: '2. ฝ่ายธุรการ (Admin)', status: selectedLeave.admin_status },
                   ].map((s, i) => {
                     const isCurrent = selectedLeave.current_stage === s.id;
                     const isDone = s.status === 'Approved';
