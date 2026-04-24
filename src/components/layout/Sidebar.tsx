@@ -87,7 +87,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     return menuItems.reduce<any[]>((acc, item) => {
       let newItem = { ...item };
 
-      // 1. Audit Logs: Super Admin only
+      // 1. Profile: Hide for Admin accounts as requested
+      if (newItem.id === 'profile-main' && isSuperAdmin) return acc;
+
+      // 2. Audit Logs: Super Admin only
       if (newItem.id === 'audit' && !isSuperAdmin) return acc;
 
       // 2. Personnel: Management only (Admin, HR, Head)

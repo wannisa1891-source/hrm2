@@ -64,7 +64,33 @@ export default function EmployeeFormModal({
 
   useEffect(() => {
     if (isOpen) {
-      setFormData(employee || { ...EMPTY_FORM });
+      const data = employee || { ...EMPTY_FORM };
+      
+      // If split address fields are empty but full address exists, try to parse it
+      if (data.address && !data.addr_province) {
+        const addr = data.address;
+        const noMatch = addr.match(/เลขที่\s*([^\s]+)/);
+        const mooMatch = addr.match(/หมู่\s*(\d+)/);
+        const villageMatch = addr.match(/หมู่บ้าน\s*([^\s]+)/) || addr.match(/หมู่\s*([^\u0E00-\u0E7F\w]+)/); // Try to catch name if not number
+        const soiMatch = addr.match(/ซอย\s*([^\s]+)/);
+        const roadMatch = addr.match(/ถนน\s*([^\s]+)/);
+        const subMatch = addr.match(/ตำบล\/แขวง\s*([^\s]+)/);
+        const distMatch = addr.match(/อำเภอ\/เขต\s*([^\s]+)/);
+        const provMatch = addr.match(/จังหวัด\s*([^\s]+)/);
+        const zipMatch = addr.match(/(\d{5})/);
+
+        if (noMatch) data.addr_no = noMatch[1];
+        if (mooMatch) data.addr_moo = mooMatch[1];
+        if (villageMatch && !mooMatch) data.addr_village = villageMatch[1];
+        if (soiMatch) data.addr_soi = soiMatch[1];
+        if (roadMatch) data.addr_road = roadMatch[1];
+        if (subMatch) data.addr_subdistrict = subMatch[1];
+        if (distMatch) data.addr_district = distMatch[1];
+        if (provMatch) data.addr_province = provMatch[1];
+        if (zipMatch) data.addr_zipcode = zipMatch[1];
+      }
+
+      setFormData(data);
       setPreviewUrl(employee?.image ? `/uploads/${employee.image}` : null);
       setImageFile(null);
     }
