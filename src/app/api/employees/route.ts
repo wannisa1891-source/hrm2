@@ -94,6 +94,17 @@ export async function POST(req: NextRequest) {
     try {
       await connection.beginTransaction();
 
+      const empId = d.emp_id || '';
+      if (!empId) {
+        throw new Error('กรุณาระบุรหัสพนักงาน (Employee ID)');
+      }
+
+      // Check duplicate emp_id
+      const [existing]: any = await connection.query('SELECT emp_id FROM tbl_employees WHERE emp_id = ?', [empId]);
+      if (existing.length > 0) {
+        throw new Error(`รหัสพนักงาน "${empId}" มีอยู่ในระบบแล้ว`);
+      }
+
       // Automatic credentials: Username = Citizen ID, Password = DDMMYYYY (BE) from birth_date
       const citizenId = d.citizen_id || d.id_card || '';
       const username = d.username || citizenId;
