@@ -159,7 +159,35 @@ export default function EmployeeFormModal({
   };
 
   const handleSaveSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+
+    // --- Validation ---
+    if (!formData.emp_id) {
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire('ข้อผิดพลาด', 'กรุณาระบุรหัสพนักงาน (Employee ID)', 'error');
+      return;
+    }
+    if (!formData.first_name_th || !formData.last_name_th) {
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire('ข้อผิดพลาด', 'กรุณาระบุชื่อและนามสกุลพนักงาน', 'error');
+      return;
+    }
+    if (!formData.citizen_id || formData.citizen_id.length !== 13) {
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire('ข้อผิดพลาด', 'กรุณาระบุรหัสบัตรประชาชนให้ครบ 13 หลัก', 'error');
+      return;
+    }
+    if (!formData.dept_id) {
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกกลุ่มงาน/แผนก', 'error');
+      return;
+    }
+    if (!formData.pos_id) {
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกตำแหน่งงาน', 'error');
+      return;
+    }
+
     const fd = new FormData();
     if (imageFile) fd.append('image', imageFile);
 
@@ -301,17 +329,17 @@ export default function EmployeeFormModal({
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสบัตรประชาชน</label>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสบัตรประชาชน <span style={{ color: '#ef4444' }}>*</span></label>
                       <input type="text" placeholder="X-XXXX-XXXXX-XX-X" value={formData.citizen_id || ''} onChange={e => setField('citizen_id', e.target.value)} required maxLength={13} style={inputStyle} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ชื่อ (ภาษาไทย)</label>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ชื่อ (ภาษาไทย) <span style={{ color: '#ef4444' }}>*</span></label>
                       <input type="text" placeholder="ระบุชื่อย่อไทย" value={formData.first_name_th || ''} onChange={e => setField('first_name_th', e.target.value)} required style={inputStyle} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>นามสกุล (ภาษาไทย)</label>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>นามสกุล (ภาษาไทย) <span style={{ color: '#ef4444' }}>*</span></label>
                       <input type="text" placeholder="ระบุนามสกุลไทย" value={formData.last_name_th || ''} onChange={e => setField('last_name_th', e.target.value)} required style={inputStyle} />
                     </div>
 
@@ -344,7 +372,7 @@ export default function EmployeeFormModal({
 
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วัน/เดือน/ปีเกิด</label>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วัน/เดือน/ปีเกิด <span style={{ color: '#ef4444' }}>*</span></label>
                       <input type="date" value={formData.birth_date ? formData.birth_date.substring(0, 10) : ''} onChange={e => setField('birth_date', e.target.value)} required style={inputStyle} />
                     </div>
 
@@ -448,12 +476,12 @@ export default function EmployeeFormModal({
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เลขประจำตำแหน่ง</label>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เลขประจำตำแหน่ง <span style={{ color: '#ef4444' }}>*</span></label>
                     <input type="text" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} required readOnly={isEditing} style={{ ...inputStyle, background: isEditing ? '#f1f5f9' : '#ffffff', cursor: isEditing ? 'not-allowed' : 'text' }} />
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน</label>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน <span style={{ color: '#ef4444' }}>*</span></label>
                     <input type="date" value={formData.start_date ? formData.start_date.substring(0, 10) : ''} onChange={e => setField('start_date', e.target.value)} required style={inputStyle} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -517,7 +545,7 @@ export default function EmployeeFormModal({
                     <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัด และ ตำแหน่งงาน</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                       <div>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>กลุ่มงาน</label>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>กลุ่มงาน <span style={{ color: '#ef4444' }}>*</span></label>
                         <CustomSelect
                           value={departments.find(d => d.dept_id === formData.dept_id)?.division || ''}
                           onChange={div => {
@@ -535,7 +563,7 @@ export default function EmployeeFormModal({
                         />
                       </div>
                       <div>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>แผนก</label>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>แผนก <span style={{ color: '#ef4444' }}>*</span></label>
                         <CustomSelect
                           value={formData.dept_id || ''}
                           onChange={val => setField('dept_id', val)}
@@ -553,31 +581,16 @@ export default function EmployeeFormModal({
                       </div>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
-                          ตำแหน่งงาน
+                          ตำแหน่งงาน <span style={{ color: '#ef4444' }}>*</span>
                         </label>
-                        <input
-                          type="text"
+                        <CustomSelect
                           value={formData.pos_id || ''}
-                          onChange={(e) => setField('pos_id', e.target.value)}
-                          placeholder="กรอกตำแหน่งงานที่นี่"
-                          style={{
-                            width: '100%',
-                            padding: '12px 20px',
-                            border: '1.5px solid #cbd5e1',
-                            borderRadius: '50px',
-                            fontSize: '14px',
-                            transition: 'all 0.2s',
-                            background: '#fff',
-                            outline: 'none'
-                          }}
-                          onFocus={(e) => {
-                            e.currentTarget.style.borderColor = '#2563eb';
-                            e.currentTarget.style.boxShadow = '0 0 0 4px rgba(37,99,235,0.1)';
-                          }}
-                          onBlur={(e) => {
-                            e.currentTarget.style.borderColor = '#cbd5e1';
-                            e.currentTarget.style.boxShadow = 'none';
-                          }}
+                          onChange={val => setField('pos_id', val)}
+                          options={[
+                            { value: '', label: 'เลือกตำแหน่ง' },
+                            ...positions.map(p => ({ value: p.pos_id, label: p.pos_name }))
+                          ]}
+                          minWidth="100%"
                         />
                       </div>
                     </div>
