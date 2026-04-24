@@ -38,7 +38,7 @@ export const isInCurrentFiscalYear = (checkDate: string | Date) => {
 /**
  * Formats a Date object or string to YYYY-MM-DD.
  */
-export const toDateStr = (date: Date | string | null): string => {
+export const toDateStr = (date: Date | string | null | undefined): string => {
   if (!date) return '';
   const d = new Date(date);
   if (isNaN(d.getTime())) return '';
@@ -51,7 +51,7 @@ export const toDateStr = (date: Date | string | null): string => {
 /**
  * Calculates work duration in years, months, and days.
  */
-export const calculateWorkDuration = (startDate: string | Date | null, endDate: string | Date = new Date()) => {
+export const calculateWorkDuration = (startDate: string | Date | null | undefined, endDate: string | Date = new Date()) => {
   if (!startDate) return null;
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -90,7 +90,7 @@ export const formatDurationThai = (duration: { years: number, months: number, da
 /**
  * Formats a date into a formal Thai string (e.g., 23 เมษายน 2567).
  */
-export const formatThaiDate = (date: string | Date | null, includeTime: boolean = false) => {
+export const formatThaiDate = (date: string | Date | null | undefined, includeTime: boolean = false) => {
   if (!date) return '-';
   const d = new Date(date);
   if (isNaN(d.getTime())) return '-';
