@@ -49,8 +49,13 @@ export default function LoginPage() {
         } else {
           login({ username: username }, !!result.isFirstLogin);
         }
-        // Always redirect to profile as per user request
-        router.push('/profile');
+        // Redirect logic: Admins go to dashboard, regular users go to profile
+        const isAdmin = ['Admin', 'HR', 'หัวหน้า'].includes(result.user?.role || '');
+        if (isAdmin) {
+          router.push('/dashboard');
+        } else {
+          router.push('/profile');
+        }
       } else {
         setErrorMessage(result.message || 'รหัสผ่านหรือผู้ใช้ไม่ถูกต้อง');
       }

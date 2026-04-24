@@ -1,6 +1,6 @@
 export interface Training {
-  id?: string
-  emp_id: string
+  id?: number | string
+  emp_id?: string
   course_name: string
   institution?: string
   location?: string
@@ -68,17 +68,6 @@ export interface Employee {
   trainings?: Training[]
 }
 
-export interface Training {
-  id?: number | string
-  emp_id?: string
-  course_name: string
-  institution?: string
-  location?: string
-  start_date?: string
-  end_date?: string
-  certificate_file?: string
-  image_file?: string
-}
 
 export interface ProfessionalLicense {
   id?: number | string
@@ -108,6 +97,9 @@ export interface Leave {
   reason?: string
   status: string
   photo?: string
+  image?: string
+  leave_category?: string
+  dept_id?: string
   current_stage?: string
   dept_head_status?: string
   admin_status?: string

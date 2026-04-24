@@ -29,7 +29,7 @@ function EmployeesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
-  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+  const isAdmin = ['Admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
 
   useEffect(() => {
     if (user && !isAdmin) {

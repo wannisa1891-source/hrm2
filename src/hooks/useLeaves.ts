@@ -26,32 +26,34 @@ export function useLeaves() {
   }, [])
 
   const addLeave = useCallback(
-    async (fd: FormData): Promise<boolean> => {
+    async (fd: FormData): Promise<{ success: boolean; message?: string }> => {
       try {
         setError(null)
         await createLeave(fd)
         await loadLeaves()
-        return true
+        return { success: true }
       } catch (err) {
         console.error('useLeaves - addLeave:', err)
-        setError(err instanceof Error ? err.message : 'บันทึกใบลาไม่สำเร็จ')
-        return false
+        const msg = err instanceof Error ? err.message : 'บันทึกใบลาไม่สำเร็จ'
+        setError(msg)
+        return { success: false, message: msg }
       }
     },
     [loadLeaves]
   )
 
   const changeLeaveStatus = useCallback(
-    async (leave_id: string, status: string, stage?: string): Promise<boolean> => {
+    async (leave_id: string, status: string, stage?: string): Promise<{ success: boolean; message?: string }> => {
       try {
         setError(null)
         await updateLeaveStatus(leave_id, status, stage)
         await loadLeaves()
-        return true
+        return { success: true }
       } catch (err) {
         console.error('useLeaves - changeLeaveStatus:', err)
-        setError(err instanceof Error ? err.message : 'อัปเดตสถานะไม่สำเร็จ')
-        return false
+        const msg = err instanceof Error ? err.message : 'อัปเดตสถานะไม่สำเร็จ'
+        setError(msg)
+        return { success: false, message: msg }
       }
     },
     [loadLeaves]
