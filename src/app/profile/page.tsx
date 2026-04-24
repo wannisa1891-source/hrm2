@@ -19,33 +19,15 @@ import { useAnnouncements } from '@/hooks/useAnnouncements';
 import Modal from '@/components/common/Modal';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { calculateWorkDuration, formatDurationThai, formatThaiDate } from '@/lib/dateUtils';
+import type { Employee } from '@/services/apiService';
 
 interface ProfileData {
-  profile: {
-    emp_id: string;
-    prefix: string;
-    first_name_th: string;
-    last_name_th: string;
-    first_name_en?: string;
-    last_name_en?: string;
-    image?: string;
-    photo?: string;
+  profile: Employee & {
     pos_name: string;
     dept_name: string;
-    hire_date: string;
-    admission_date?: string;
-    retirement_date?: string;
     mobile_no?: string;
-    email?: string;
-    citizen_id?: string;
-    gender?: string;
-    birth_date?: string;
-    quota_personal?: number;
-    quota_vacation?: number;
-    quota_sick?: number;
-    accumulated_vacation?: number;
-    emp_type: string;
-    start_date: string;
+    hire_date?: string;
+    photo?: string;
   };
   leaves: any[];
   payroll: any[];
@@ -167,7 +149,7 @@ export default function MyProfilePage() {
     } catch (err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้', 'error'); } finally { setLoading(false); }
   };
 
-  const handleSaveProfile = async (fd: FormData, isEditing: boolean) => {
+  const handleSaveProfile = async (fd: FormData, isEditing: boolean): Promise<{ success: boolean; message?: string }> => {
     if (!fullProfile?.emp_id) return { success: false, message: 'ไม่พบข้อมูลบัญชี' };
     const res = await editEmployee(fullProfile.emp_id, fd);
     if (res.success) {

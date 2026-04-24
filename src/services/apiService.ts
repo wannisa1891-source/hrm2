@@ -1,4 +1,14 @@
-// src/services/apiService.ts
+export interface Training {
+  id?: string
+  emp_id: string
+  course_name: string
+  institution?: string
+  location?: string
+  start_date?: string
+  end_date?: string
+  image_file?: string
+  certificate_file?: string
+}
 
 export interface Employee {
   emp_id: string
@@ -20,6 +30,8 @@ export interface Employee {
   base_salary: number
   status: string
   image: string
+  position_no?: string
+
 
   addr_no?: string
   addr_moo?: string
@@ -47,6 +59,8 @@ export interface Employee {
   retirement_date?: string
   department_name?: string
   position_name?: string
+  dept_name?: string
+  pos_name?: string
   quota_personal?: number
   quota_sick?: number
   quota_vacation?: number
