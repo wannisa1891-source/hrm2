@@ -33,7 +33,7 @@ export default function EmployeeFormModal({
     prefix: 'นาย', first_name_th: '', last_name_th: '', nickname: '',
     birth_date: '', gender: 'ชาย', citizen_id: '',
     emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
-    phone: '', address: '', status: 'ทำงานปกติ',
+    phone: '', address: '', status: 'ทำงานปกติ', retirement_date: '',
     addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
     has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: []
   };
@@ -69,6 +69,27 @@ export default function EmployeeFormModal({
       setImageFile(null);
     }
   }, [employee, isOpen]);
+
+  // Auto-calculate Retirement Date (Age 60)
+  useEffect(() => {
+    if (formData.birth_date && !viewMode) {
+      const bDate = new Date(formData.birth_date);
+      if (!isNaN(bDate.getTime())) {
+        let retirementYear = bDate.getFullYear() + 60;
+        // Rule: If born after 1 October (2 Oct onwards), retire next year
+        // Month is 0-indexed, so Oct is 9.
+        const month = bDate.getMonth();
+        const day = bDate.getDate();
+        if (month > 9 || (month === 9 && day >= 2)) {
+          retirementYear += 1;
+        }
+        const rDate = `${retirementYear}-09-30`;
+        if (formData.retirement_date !== rDate) {
+          setField('retirement_date', rDate);
+        }
+      }
+    }
+  }, [formData.birth_date, viewMode]);
 
   // Address Data State
   const [thaiAddressData, setThaiAddressData] = useState<any[]>([]);
@@ -408,6 +429,10 @@ export default function EmployeeFormModal({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน</label>
                     <input type="date" value={formData.start_date ? formData.start_date.substring(0, 10) : ''} onChange={e => setField('start_date', e.target.value)} required style={inputStyle} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เกษียณ (ออโต้)</label>
+                    <input type="date" value={formData.retirement_date ? formData.retirement_date.substring(0, 10) : ''} onChange={e => setField('retirement_date', e.target.value)} style={{ ...inputStyle, background: '#f8fafc' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
