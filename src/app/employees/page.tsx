@@ -487,9 +487,9 @@ function EmployeesContent() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
+                  <tr><td colSpan={10} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
                 ) : currentData.length === 0 ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
+                  <tr><td colSpan={10} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
                   currentData.map((emp) => {
                     const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
@@ -510,6 +510,9 @@ function EmployeesContent() {
                           <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
                             {emp.emp_id}
                           </div>
+                        </td>
+                        <td style={{ textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                          {emp.citizen_id ? `${emp.citizen_id.substring(0, 1)}-${emp.citizen_id.substring(1, 5)}-XXXXX-${emp.citizen_id.substring(10, 12)}-${emp.citizen_id.substring(12, 13)}` : '-'}
                         </td>
                         <td>
                           <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>
