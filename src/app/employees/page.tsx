@@ -342,22 +342,39 @@ function EmployeesContent() {
 
 
   const exportToCSV = () => {
+    // 1. สร้างฟังก์ชัน formatDate เพื่อบังคับรูปแบบเป็น dd/mm/yyyy
+    const formatDate = (dateStr: any) => {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear(); // ปี ค.ศ.
+      return `${month}/${day}/${year}`;
+    };
+
     const headers = [
-      'เลขประจำตำแหน่ง', 'คำนำหน้า', 'ชื่อ (TH)', 'นามสกุล (TH)', 'ชื่อเล่น',
+      'เลขประจำตำแหน่ง', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'ชื่อเล่น',
       'เพศ', 'วัน/เดือน/ปีเกิด', 'บัตรประชาชน', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่',
       'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน', 'เงินเดือน',
-      'สถานะการทำงาน', 'คะแนน CNEU/CME', 'ข้อมูลใบอนุญาต'
+      'สถานะการทำงาน', 'คะแนน ', 'ข้อมูลใบอนุญาต'
     ];
 
     const rows = filteredData.map(e => {
-      const licText = e.licenses && e.licenses.length > 0 ? e.licenses.map(l => `${l.license_name || ''} เลขที่:${l.license_no || '-'} (${l.status || ''})`).join(' | ') : 'ไม่มี';
+      const licText = e.licenses && e.licenses.length > 0
+        ? e.licenses.map(l => `${l.license_name || ''} เลขที่:${l.license_no || '-'} (${l.status || ''})`).join(' | ')
+        : 'ไม่มี';
+
       const rowData = [
         e.emp_id || '',
         e.prefix || '',
         e.first_name_th || '',
         e.last_name_th || '',
         e.gender || '',
-        e.birth_date ? new Date(e.birth_date).toLocaleDateString('en-GB') : '',
+
+        // ✅ แก้ไขจุดที่ 1: บังคับให้เป็น Text โดยใส่ =" " ครอบฟังก์ชัน formatDate
+        `="${formatDate(e.birth_date)}"`,
+
         e.citizen_id || '',
         e.phone || '',
         e.email || '',
@@ -365,13 +382,14 @@ function EmployeesContent() {
         getDeptName(e.dept_id) || '',
         getPosName(e.pos_id) || '',
         e.emp_type || '',
-        e.start_date ? new Date(e.start_date).toLocaleDateString('en-GB') : '',
+
+        // ✅ แก้ไขจุดที่ 2: บังคับให้เป็น Text โดยใส่ =" " ครอบฟังก์ชัน formatDate
+        `="${formatDate(e.start_date)}"`,
 
         e.status || '',
         e.cneu_cme_points || 0,
         licText.replace(/"/g, '""')
       ];
-      // Wrap each field in quotes to safely handle commas and spaces
       return rowData.map(value => `"${value}"`);
     });
 
@@ -666,7 +684,7 @@ function EmployeesContent() {
                           <div style={{ color: '#64748b', fontWeight: 600 }}>ID</div>
                           <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.emp_id}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>DOB</div>
-                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.birth_date ? new Date(empForCard.birth_date).toLocaleDateString('en-GB') : '-'}</div>
+                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.birth_date ? new Date(empForCard.birth_date).toLocaleDateString('en-US') : '-'}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>Phone</div>
                           <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.phone || '-'}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>Email</div>
@@ -720,8 +738,8 @@ function EmployeesContent() {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', fontSize: '12px', fontWeight: 600, color: '#475569' }}>
                           <div>
-                            <div style={{ marginBottom: '6px' }}>วันที่เริ่มงาน &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(empForCard.start_date).toLocaleDateString('en-GB') : '-'}</span></div>
-                            <div>วันหมดอายุ &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleDateString('en-GB') : '-'}</span></div>
+                            <div style={{ marginBottom: '6px' }}>วันที่เริ่มงาน &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(empForCard.start_date).toLocaleDateString('en-US') : '-'}</span></div>
+                            <div>วันหมดอายุ &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleDateString('en-US') : '-'}</span></div>
                           </div>
                         </div>
 

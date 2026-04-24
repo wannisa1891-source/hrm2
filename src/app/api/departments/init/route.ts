@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const departments = [
       // 1. กลุ่มงานบริหารทั่วไป
       { id: 'ADM-FIN', division: '1. กลุ่มงานบริหารทั่วไป', name: 'การเงิน' },
+      { id: 'ADM-ACC', division: '1. กลุ่มงานบริหารทั่วไป', name: 'บัญชี' },
       { id: 'ADM-ADM', division: '1. กลุ่มงานบริหารทั่วไป', name: 'ธุรการ' },
       { id: 'ADM-SUP', division: '1. กลุ่มงานบริหารทั่วไป', name: 'พัสดุ' },
       { id: 'ADM-MNT', division: '1. กลุ่มงานบริหารทั่วไป', name: 'ช่าง' },

@@ -362,8 +362,11 @@ export default function EmployeeFormModal({
 
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วัน/เดือน/ปีเกิด</label>
-                      <input type="date" value={formData.birth_date ? formData.birth_date.substring(0, 10) : ''} onChange={e => setField('birth_date', e.target.value)} style={inputStyle} />
+                      <ThaiDateInput
+                        label="วัน/เดือน/ปีเกิด"
+                        value={String(formData.birth_date || '')}
+                        onChange={(val: string) => setField('birth_date', val)}
+                      />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -471,12 +474,18 @@ export default function EmployeeFormModal({
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน</label>
-                    <input type="date" value={formData.start_date ? formData.start_date.substring(0, 10) : ''} onChange={e => setField('start_date', e.target.value)} style={inputStyle} />
+                    <ThaiDateInput
+                      label="วันที่เริ่มงาน"
+                      value={String(formData.start_date || '')}
+                      onChange={(val: string) => setField('start_date', val)}
+                    />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เกษียณ (ออโต้)</label>
-                    <input type="date" value={formData.retirement_date ? formData.retirement_date.substring(0, 10) : ''} onChange={e => setField('retirement_date', e.target.value)} style={{ ...inputStyle, background: '#f8fafc' }} />
+                    <ThaiDateInput
+                      label="วันที่เกษียณ (ออโต้)"
+                      value={String(formData.retirement_date || '')}
+                      onChange={(val: string) => setField('retirement_date', val)}
+                    />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ประเภทการจ้างงาน</label>
@@ -559,12 +568,15 @@ export default function EmployeeFormModal({
                           onChange={val => setField('dept_id', val)}
                           options={[
                             { value: '', label: 'เลือกแผนก' },
-                            ...departments
-                              .filter(d => {
-                                const currentDiv = departments.find(dept => dept.dept_id === formData.dept_id)?.division;
-                                return d.division?.trim() === currentDiv?.trim();
-                              })
-                              .map(s => ({ value: s.dept_id, label: s.dept_name }))
+                            ...(() => {
+                              const currentDiv = departments.find(dept => dept.dept_id === formData.dept_id)?.division;
+                              const filtered = departments.filter(d => d.division?.trim() === currentDiv?.trim());
+                              // Filter by unique name to avoid duplicates in the UI
+                              const uniqueDepts = filtered.filter((d, idx, self) => 
+                                idx === self.findIndex((t) => t.dept_name?.trim() === d.dept_name?.trim())
+                              );
+                              return uniqueDepts.map(s => ({ value: s.dept_id, label: s.dept_name }));
+                            })()
                           ]}
                           minWidth="100%"
                         />
@@ -578,12 +590,18 @@ export default function EmployeeFormModal({
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่บรรจุ (Admission Date)</label>
-                    <input type="date" value={formData.admission_date ? formData.admission_date.substring(0, 10) : ''} onChange={e => setField('admission_date', e.target.value)} style={inputStyle} />
+                    <ThaiDateInput
+                      label="วันที่บรรจุ (Admission Date)"
+                      value={String(formData.admission_date || '')}
+                      onChange={(val: string) => setField('admission_date', val)}
+                    />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เกษียณ (Retirement Date)</label>
-                    <input type="date" value={formData.retirement_date ? formData.retirement_date.substring(0, 10) : ''} onChange={e => setField('retirement_date', e.target.value)} style={inputStyle} />
+                    <ThaiDateInput
+                      label="วันที่เกษียณ (Retirement Date)"
+                      value={String(formData.retirement_date || '')}
+                      onChange={(val: string) => setField('retirement_date', val)}
+                    />
                   </div>
                 </div>
 
@@ -639,12 +657,18 @@ export default function EmployeeFormModal({
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginTop: '16px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '12px', color: '#64748b' }}>วันที่ออกบัตร</label>
-                            <input type="date" value={lic.issue_date ? lic.issue_date.substring(0, 10) : ''} onChange={e => setLicenseField(index, 'issue_date', e.target.value)} style={addrInputStyle} />
+                            <ThaiDateInput
+                              label="วันที่ออกบัตร"
+                              value={String(lic.issue_date || '')}
+                              onChange={(val: string) => setLicenseField(index, 'issue_date', val)}
+                            />
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '12px', color: '#64748b' }}>วันหมดอายุ (Expire Date)</label>
-                            <input type="date" value={lic.expire_date ? lic.expire_date.substring(0, 10) : ''} onChange={e => setLicenseField(index, 'expire_date', e.target.value)} style={addrInputStyle} />
+                            <ThaiDateInput
+                              label="วันหมดอายุ (Expire Date)"
+                              value={String(lic.expire_date || '')}
+                              onChange={(val: string) => setLicenseField(index, 'expire_date', val)}
+                            />
                           </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
@@ -768,7 +792,7 @@ export default function EmployeeFormModal({
                     <tr key={h.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '12px' }}>{historyData.length - i}</td>
                       <td style={{ padding: '12px' }}>{h.license_no}</td>
-                      <td style={{ padding: '12px' }}>{h.expire_date ? new Date(h.expire_date).toLocaleDateString('th-TH') : '-'}</td>
+                      <td style={{ padding: '12px' }}>{h.expire_date ? new Date(h.expire_date).toLocaleDateString('en-US') : '-'}</td>
                       <td style={{ padding: '12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600,
@@ -778,7 +802,7 @@ export default function EmployeeFormModal({
                           {h.status}
                         </span>
                       </td>
-                      <td style={{ padding: '12px', color: '#64748b' }}>{h.created_at ? new Date(h.created_at).toLocaleString('th-TH') : '-'}</td>
+                      <td style={{ padding: '12px', color: '#64748b' }}>{h.created_at ? new Date(h.created_at).toLocaleString('en-US') : '-'}</td>
                     </tr>
                   ))}
                   {historyData.length === 0 && (
