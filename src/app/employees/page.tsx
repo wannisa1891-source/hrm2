@@ -475,6 +475,7 @@ function EmployeesContent() {
                 <tr>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
                   <th style={{ textAlign: 'center' }}>เลขประจำตำแหน่ง</th>
+                  <th style={{ textAlign: 'center' }}>เลขบัตรประชาชน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
                   <th>ชื่อเล่น</th>
                   <th>ตำแหน่ง</th>
