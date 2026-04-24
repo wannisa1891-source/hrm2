@@ -167,11 +167,6 @@ export default function EmployeeFormModal({
       Swal.fire('ข้อผิดพลาด', 'กรุณาระบุชื่อและนามสกุลพนักงาน', 'error');
       return;
     }
-    if (!formData.citizen_id || formData.citizen_id.length !== 13) {
-      const Swal = (await import('sweetalert2')).default;
-      Swal.fire('ข้อผิดพลาด', 'กรุณาระบุรหัสบัตรประชาชนให้ครบ 13 หลัก', 'error');
-      return;
-    }
     if (!formData.dept_id) {
       const Swal = (await import('sweetalert2')).default;
       Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกกลุ่มงาน/แผนก', 'error');
@@ -179,7 +174,7 @@ export default function EmployeeFormModal({
     }
     if (!formData.pos_id) {
       const Swal = (await import('sweetalert2')).default;
-      Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกตำแหน่งงาน', 'error');
+      Swal.fire('ข้อผิดพลาด', 'กรุณาระบุตำแหน่งงาน', 'error');
       return;
     }
 
@@ -324,8 +319,8 @@ export default function EmployeeFormModal({
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสบัตรประชาชน <span style={{ color: '#ef4444' }}>*</span></label>
-                      <input type="text" placeholder="X-XXXX-XXXXX-XX-X" value={formData.citizen_id || ''} onChange={e => setField('citizen_id', e.target.value)} required maxLength={13} style={inputStyle} />
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสบัตรประชาชน</label>
+                      <input type="text" placeholder="X-XXXX-XXXXX-XX-X" value={formData.citizen_id || ''} onChange={e => setField('citizen_id', e.target.value)} maxLength={13} style={inputStyle} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -367,8 +362,8 @@ export default function EmployeeFormModal({
 
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วัน/เดือน/ปีเกิด <span style={{ color: '#ef4444' }}>*</span></label>
-                      <input type="date" value={formData.birth_date ? formData.birth_date.substring(0, 10) : ''} onChange={e => setField('birth_date', e.target.value)} required style={inputStyle} />
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วัน/เดือน/ปีเกิด</label>
+                      <input type="date" value={formData.birth_date ? formData.birth_date.substring(0, 10) : ''} onChange={e => setField('birth_date', e.target.value)} style={inputStyle} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -476,8 +471,8 @@ export default function EmployeeFormModal({
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="date" value={formData.start_date ? formData.start_date.substring(0, 10) : ''} onChange={e => setField('start_date', e.target.value)} required style={inputStyle} />
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เริ่มงาน</label>
+                    <input type="date" value={formData.start_date ? formData.start_date.substring(0, 10) : ''} onChange={e => setField('start_date', e.target.value)} style={inputStyle} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>วันที่เกษียณ (ออโต้)</label>
