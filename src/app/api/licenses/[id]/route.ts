@@ -75,7 +75,7 @@ export async function PUT(
         await connection.beginTransaction();
         const query = `
           INSERT INTO tbl_employee_licenses (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'Active')
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'ปกติ')
         `;
         await connection.query(query, [empId, license_name || null, license_type || null, license_no || null, institution || null, issue_date || null, expire_date || null]);
 

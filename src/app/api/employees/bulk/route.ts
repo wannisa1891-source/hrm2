@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
             (emp_id, prefix, first_name_th, last_name_th, 
              birth_date, gender, address, citizen_id, phone, email, password, role, 
              emp_type, dept_id, pos_id, start_date, status, image, cneu_cme_points) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?)`;
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?, ?)`;
 
           // Default password for excel import is the citizen_id or '123456'
           const plainPass = emp.citizen_id ? String(emp.citizen_id) : '123456';

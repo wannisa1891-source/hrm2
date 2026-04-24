@@ -72,13 +72,13 @@ export async function GET(req: NextRequest) {
       userPayrollResult,
       capacityResult
     ] = await Promise.all([
-      pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status IN ('Active', 'A')"),
+      pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status IN ('Active', 'A', 'ทำงานปกติ')"),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE ? >= start_date AND ? <= end_date", [today, today]),
       pool.query(`
         SELECT p.pos_name as name, COUNT(e.emp_id) as value
         FROM tbl_employees e
         LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id
-        WHERE e.status IN ('Active', 'A')
+        WHERE e.status IN ('Active', 'A', 'ทำงานปกติ')
         GROUP BY p.pos_name
       `),
       pool.query("SELECT COUNT(*) as count FROM tbl_transfers").catch(() => [[{ count: 0 }]]),

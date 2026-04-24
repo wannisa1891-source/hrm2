@@ -57,10 +57,10 @@ export async function POST(req: NextRequest) {
     const user = rows[0];
     const userStatus = String(user.status || '').trim();
 
-    // 4. Check status (รองรับทั้ง 'A', 'Active', 'Active Status', '1', 'ปกติ', หรือ NULL/Empty)
-    const inactiveStatuses = ['I', 'Inactive', 'Suspended', '0', 'ระงับ'];
-    if (userStatus && inactiveStatuses.includes(userStatus)) {
-      return NextResponse.json({ success: false, message: `บัญชีนี้ถูกระงับการใช้งาน (Status: ${userStatus})` }, { status: 403 });
+    // 4. Check status (รองรับทั้งภาษาอังกฤษเดิมและภาษาไทยมาตรฐาน)
+    const inactiveStatuses = ['I', 'Inactive', 'Suspended', '0', 'ระงับ', 'ลาออก/พ้นสภาพ', 'ให้ออก', 'หยุดปฏิบัติงาน'];
+    if (userStatus && inactiveStatuses.some(s => userStatus.toLowerCase().includes(s.toLowerCase()))) {
+      return NextResponse.json({ success: false, message: `บัญชีนี้ถูกระงับการใช้งานหรือพ้นสภาพพนักงาน (Status: ${userStatus})` }, { status: 403 });
     }
 
     let isMatch = false;

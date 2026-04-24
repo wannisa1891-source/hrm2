@@ -32,7 +32,7 @@ export default function EmployeeFormModal({
   const EMPTY_FORM: Partial<Employee> = {
     prefix: 'นาย', first_name_th: '', last_name_th: '', nickname: '',
     birth_date: '', gender: 'ชาย', citizen_id: '',
-    emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานประจำ', start_date: '',
+    emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
     phone: '', address: '', status: 'ทำงานปกติ',
     addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
     has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: []
@@ -100,7 +100,7 @@ export default function EmployeeFormModal({
   const handleAddLicense = () => {
     setFormData(f => {
       const current = f.licenses || [];
-      return { ...f, licenses: [...current, { license_name: '', license_type: '', license_no: '', institution: '', issue_date: '', expire_date: '', status: 'Active' }] };
+      return { ...f, licenses: [...current, { license_name: '', license_type: '', license_no: '', institution: '', issue_date: '', expire_date: '', status: 'ปกติ' }] };
     });
   };
   const handleRemoveLicense = (index: number) => {
@@ -726,8 +726,8 @@ export default function EmployeeFormModal({
                       <td style={{ padding: '12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600,
-                          background: h.status === 'Active' ? '#dcfce7' : h.status === 'Renewed' ? '#dbeafe' : '#fee2e2',
-                          color: h.status === 'Active' ? '#166534' : h.status === 'Renewed' ? '#1e40af' : '#991b1b'
+                          background: (h.status === 'Active' || h.status === 'ทำงานปกติ' || h.status === 'ปกติ') ? '#dcfce7' : h.status === 'Renewed' ? '#dbeafe' : '#fee2e2',
+                          color: (h.status === 'Active' || h.status === 'ทำงานปกติ' || h.status === 'ปกติ') ? '#166534' : h.status === 'Renewed' ? '#1e40af' : '#991b1b'
                         }}>
                           {h.status}
                         </span>

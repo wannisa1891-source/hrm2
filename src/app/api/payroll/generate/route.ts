@@ -41,13 +41,13 @@ export async function POST(req: NextRequest) {
 
     // Fetch active employees
     const [employees] = await connection.query(`
-      SELECT emp_id, citizen_id FROM tbl_employees WHERE status = 'Active'
+      SELECT emp_id, citizen_id FROM tbl_employees WHERE status IN ('Active', 'ทำงานปกติ')
     `);
 
     if ((employees as any[]).length === 0) {
       await connection.rollback();
       connection.release();
-      return NextResponse.json({ error: 'ไม่พบพนักงานที่สถานะ Active' }, { status: 400 });
+      return NextResponse.json({ error: 'ไม่พบพนักงานที่มีสถานะปกติ' }, { status: 400 });
     }
 
     // Insert payroll records with Auto Calculation

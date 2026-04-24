@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
          emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, status, 
          image, cneu_cme_points,
          quota_personal, quota_vacation, quota_sick) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)`;
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?, ?, ?, ?, ?)`;
 
       const tempCitizenId = `9${Date.now().toString().slice(-12)}`; // Generate a unique 13-digit number starting with 9
       const values = [
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
         d.gender || 'ชาย', d.address || '',
         d.id_card || d.citizen_id || tempCitizenId, d.phone || '',
         d.email || null, hashedPassword, d.role || 'User',
-        d.emp_type || 'พนักงานประจำ', d.dept_id || '', d.pos_id || '', 
+        d.emp_type || 'พนักงานราชการ', d.dept_id || '', d.pos_id || '', 
         d.start_date || new Date().toISOString().split('T')[0],
         d.admission_date || null, d.retirement_date || null,
         imageName, // Save only to image
@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
           const licValues = [
             d.emp_id, lic.license_name || null, lic.license_type || null, lic.license_no || null,
             lic.institution || null, lic.issue_date || null, lic.expire_date || null,
-            lic.status || 'Active', finalFilePath
+            lic.status || 'ปกติ', finalFilePath
           ];
           await connection.query(licSql, licValues);
         }

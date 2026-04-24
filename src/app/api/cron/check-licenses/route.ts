@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN tbl_license_configs c ON 
         (c.dept_id IS NULL OR c.dept_id = e.dept_id) AND 
         (c.pos_id IS NULL OR c.pos_id = e.pos_id)
-      WHERE l.status = 'Active' AND e.email IS NOT NULL
+      WHERE l.status IN ('Active', 'ปกติ') AND e.email IS NOT NULL
     `;
     const [rows] = await pool.query(query);
     const licenses = rows as any[];

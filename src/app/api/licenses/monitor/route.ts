@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
       FROM tbl_employees e
       LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
       LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id
-      WHERE e.status = 'Active'
+      WHERE e.status IN ('Active', 'ทำงานปกติ')
     `);
     const [licensesResult] = await pool.query(`
       SELECT * FROM tbl_employee_licenses 
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         const expDate = l.expire_date ? new Date(l.expire_date) : null;
         const isVerified = l.verified_status === 'Verified';
         
-        let lStatus = 'Active';
+        let lStatus = 'ปกติ';
 
         if (!isVerified) {
           lStatus = 'PendingAudit';
@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
         empLicensesDetail.push({ name: l.license_name, status: lStatus });
 
         // Update overall employee status based on priority
-        const priority = { 'Expired': 5, 'PendingAudit': 4, 'Missing': 3, 'Expiring': 2, 'Active': 1, 'Exempt': 0 };
+        const priority = { 'Expired': 5, 'PendingAudit': 4, 'Missing': 3, 'Expiring': 2, 'Active': 1, 'ทำงานปกติ': 1, 'ปกติ': 1, 'Exempt': 0 };
         if (priority[lStatus as keyof typeof priority] > priority[empStatus as keyof typeof priority]) {
           empStatus = lStatus;
         }
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
           empStatus = 'Active';
       }
 
-      const finalStatusName = empStatus === 'Active' ? 'Compliant' : empStatus;
+      const finalStatusName = (empStatus === 'Active' || empStatus === 'ทำงานปกติ' || empStatus === 'ปกติ') ? 'Compliant' : empStatus;
 
       // Update counters
       if (finalStatusName === 'Compliant') summary.compliant++;

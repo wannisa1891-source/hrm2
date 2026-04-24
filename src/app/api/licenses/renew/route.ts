@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         const insertQuery = `
           INSERT INTO tbl_employee_licenses 
           (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, verified_status, remarks, file_path, points, warning_days_override)
-          SELECT emp_id, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, COALESCE(?, file_path), ?, ?
+          SELECT emp_id, ?, ?, ?, ?, ?, ?, 'ปกติ', ?, ?, COALESCE(?, file_path), ?, ?
           FROM tbl_employee_licenses WHERE id = ?
         `;
         
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         const insertQuery = `
           INSERT INTO tbl_employee_licenses 
           (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, verified_status, remarks, file_path, points, warning_days_override)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'ปกติ', ?, ?, ?, ?, ?)
         `;
         const values = [
           emp_id, license_name, license_type, license_no, institution, issue_date, expire_date,

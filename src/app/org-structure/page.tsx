@@ -566,7 +566,7 @@ export default function DepartmentAndEmployeePage() {
                 <div style={styles.infoBox}>
                   <InfoRow label="แผนก/หน่วยงาน" value={getDeptName(selectedEmp.dept_id)} />
                   <InfoRow label="ประเภทจ้างงาน" value={selectedEmp.emp_type || 'ไม่มีระบุ'} />
-                  <InfoRow label="สถานะพนักงาน" value={selectedEmp.status} color={selectedEmp.status === 'Active' ? '#16a34a' : '#64748b'} />
+                  <InfoRow label="สถานะพนักงาน" value={selectedEmp.status} color={(selectedEmp.status === 'Active' || selectedEmp.status === 'ทำงานปกติ') ? '#16a34a' : '#64748b'} />
                 </div>
 
                 <div style={styles.sectionDivider}>

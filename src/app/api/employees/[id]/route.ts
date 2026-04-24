@@ -209,7 +209,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
           const licValues = [
             empId, lic.license_name || null, lic.license_type || null, lic.license_no || null,
             lic.institution || null, lic.issue_date || null, lic.expire_date || null,
-            lic.status || 'Active', finalFilePath
+            lic.status || 'ปกติ', finalFilePath
           ];
           await connection.query(licSql, licValues);
         }

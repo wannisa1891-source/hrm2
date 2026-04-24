@@ -5,7 +5,7 @@ export async function GET(_req: NextRequest, { params }: { params: { deptId: str
   try {
     const sql = `SELECT e.*, p.pos_name FROM tbl_employees e 
       LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id 
-      WHERE e.dept_id = ? AND e.status = 'Active'`;
+      WHERE e.dept_id = ? AND e.status IN ('Active', 'ทำงานปกติ')`;
     const [rows] = await pool.query(sql, [params.deptId]);
     return NextResponse.json(rows);
   } catch (err: unknown) {

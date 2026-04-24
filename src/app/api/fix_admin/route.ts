@@ -12,13 +12,13 @@ export async function GET() {
     
     if (rows.length === 0) {
       await pool.query(
-        "INSERT INTO tbl_employees (emp_id, username, password, first_name_th, last_name_th, role, status, dept_id, pos_id, citizen_id) VALUES ('admin', 'admin', ?, 'System', 'Admin', 'Admin', 'Active', 'ADM-FIN', 'P001', 'ADMIN-ID')",
+        "INSERT INTO tbl_employees (emp_id, username, password, first_name_th, last_name_th, role, status, dept_id, pos_id, citizen_id) VALUES ('admin', 'admin', ?, 'System', 'Admin', 'Admin', 'ทำงานปกติ', 'ADM-FIN', 'P001', 'ADMIN-ID')",
         [hash]
       );
       return NextResponse.json({ message: 'Admin user created successfully in tbl_employees.' });
     } else {
       await pool.query(
-        "UPDATE tbl_employees SET password = ?, role = 'Admin', status = 'Active', username = 'admin' WHERE emp_id = ? OR username = 'admin'",
+        "UPDATE tbl_employees SET password = ?, role = 'Admin', status = 'ทำงานปกติ', username = 'admin' WHERE emp_id = ? OR username = 'admin'",
         [hash, rows[0].emp_id]
       );
       return NextResponse.json({ message: 'Admin user updated successfully in tbl_employees.' });

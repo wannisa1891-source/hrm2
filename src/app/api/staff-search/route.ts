@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id 
       LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id 
       WHERE (e.first_name_th LIKE ? OR e.emp_id LIKE ?)
-      AND e.status = 'Active'  
+      AND e.status IN ('Active', 'ทำงานปกติ')  
       LIMIT 10`;
     const [rows] = await pool.query(sql, [`%${query}%`, `%${query}%`]);
     return NextResponse.json(rows);

@@ -553,7 +553,7 @@ export default function MyProfilePage() {
                       )}
                       {lic.status && (
                         <div style={{ marginTop: '8px' }}>
-                          <span className={`badge ${lic.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                          <span className={`badge ${(lic.status === 'Active' || lic.status === 'ปกติ' || lic.status === 'ทำงานปกติ') ? 'badge-success' : 'badge-danger'}`}>
                             {lic.status}
                           </span>
                         </div>
