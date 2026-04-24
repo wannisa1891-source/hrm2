@@ -14,7 +14,8 @@ export const loginUser = async (username: string, password: string) => {
         return { 
           success: true, 
           token: data.token,
-          user: data.user   // { user_id, username, first_name, last_name, email, role, status }
+          user: data.user,   // { user_id, username, first_name, last_name, email, role, status }
+          isFirstLogin: !!data.isFirstLogin
         };
       } else {
         return { 

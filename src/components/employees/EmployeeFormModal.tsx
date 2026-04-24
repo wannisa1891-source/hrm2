@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { Employee, ProfessionalLicense, Department, Position } from '@/services/apiService';
 import { useAuth } from '@/contexts/AuthContext';
 import CustomSelect from '@/components/CustomSelect';
+import ThaiDateInput from '@/components/ThaiDateInput';
 
 interface EmployeeFormModalProps {
   isOpen: boolean;

@@ -79,7 +79,7 @@ export default function DashboardPage() {
     }
   }
 
-  const isAdmin = ['Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
+  const isAdmin = ['Admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
