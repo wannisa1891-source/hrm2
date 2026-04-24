@@ -459,6 +459,7 @@ export default function DepartmentAndEmployeePage() {
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                       <th style={{ ...styles.th, width: '80px' }}>รูปภาพ</th>
                       <th style={{ ...styles.th, width: '100px' }}>เลขประจำตำแหน่ง</th>
+                      <th style={{ ...styles.th, width: '100px' }}>เลขบัตรประชาชน</th>
                       <th style={styles.th}>ชื่อ-สกุล</th>
                       <th style={styles.th}>ชื่อเล่น</th>
                       <th style={styles.th}>แผนก</th>
