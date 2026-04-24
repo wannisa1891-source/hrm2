@@ -19,8 +19,8 @@ import Image from 'next/image';
 const EMPTY_FORM: Partial<Employee> = {
   prefix: 'นาย', first_name_th: '', last_name_th: '',
   birth_date: '', gender: 'ชาย', citizen_id: '',
-  emp_id: '', position_no: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
-  phone: '', address: '', status: 'ทำงานปกติ',
+  emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
+  phone: '', address: '', status: 'Active',
   addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
   has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: []
 };
@@ -230,7 +230,7 @@ function EmployeesContent() {
 
   const filteredData = useMemo(() => {
     return employees.filter(e => {
-      const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id} ${e.position_no || ''}`.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
       const dept = departments.find(d => d.dept_id === e.dept_id);
       const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
         (filterGrp === 'all' || dept?.dept_name === filterGrp);
@@ -248,7 +248,7 @@ function EmployeesContent() {
   const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const openAdd = () => {
-    setFormData({ ...EMPTY_FORM, emp_id: '', licenses: [{ status: 'ปกติ' }] });
+    setFormData({ ...EMPTY_FORM, emp_id: '', licenses: [{ status: 'Active' }] });
     setIsEditing(false);
     setViewMode(false);
     setShowForm(true);
@@ -303,20 +303,8 @@ function EmployeesContent() {
 
     if (res.success) {
       setShowForm(false);
-
-      // 👇 ส่วนที่แก้ไข: เพิ่ม .then() เข้าไปตรงนี้ครับ
-      Swal.fire({
-        title: 'สำเร็จ!',
-        text: res.message || (editing ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มพนักงานสำเร็จ'),
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-      }).then(() => {
-        loadEmployees(); // ดึงข้อมูลใหม่
-        window.location.reload(); // บังคับรีเฟรชหน้าเว็บให้ข้อมูลอัปเดตทันที
-      });
-      // 👆 สิ้นสุดส่วนที่แก้ไข
-
+      Swal.fire({ title: 'สำเร็จ!', text: res.message || (editing ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มพนักงานสำเร็จ'), icon: 'success', timer: 1500, showConfirmButton: false });
+      loadEmployees();
     } else {
       Swal.fire('ข้อผิดพลาด', res.message || 'บันทึกไม่สำเร็จ', 'error');
     }
@@ -499,9 +487,9 @@ function EmployeesContent() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={10} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
                 ) : currentData.length === 0 ? (
-                  <tr><td colSpan={10} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
                   currentData.map((emp) => {
                     const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
@@ -520,11 +508,8 @@ function EmployeesContent() {
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
-                            {emp.position_no || '-'}
+                            {emp.emp_id}
                           </div>
-                        </td>
-                        <td style={{ textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
-                          {emp.citizen_id ? `${emp.citizen_id.substring(0, 1)}-${emp.citizen_id.substring(1, 5)}-XXXXX-${emp.citizen_id.substring(10, 12)}-${emp.citizen_id.substring(12, 13)}` : '-'}
                         </td>
                         <td>
                           <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>
@@ -795,9 +780,6 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
     const res = await editEmployee(emp.emp_id, formData);
     if (res.success) {
       setIsOpen(false);
-      // ✅ เพิ่ม 2 บรรทัดนี้ เพื่อให้ตารางอัปเดตสถานะทันที
-      const router = require('next/navigation').useRouter; // ดึง router มาใช้
-      window.location.reload(); // บังคับรีเฟรชเพื่อให้เห็นแถบสีสถานะใหม่
     }
   };
 

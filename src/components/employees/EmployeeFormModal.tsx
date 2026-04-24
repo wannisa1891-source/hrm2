@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import type { Employee, ProfessionalLicense } from '@/services/apiService';
+import type { Employee, ProfessionalLicense, Department, Position } from '@/services/apiService';
 import { useAuth } from '@/contexts/AuthContext';
 import CustomSelect from '@/components/CustomSelect';
-import ThaiDateInput from '@/components/ThaiDateInput';
 
 interface EmployeeFormModalProps {
   isOpen: boolean;
@@ -14,8 +13,8 @@ interface EmployeeFormModalProps {
   onSave: (fd: FormData, isEditing: boolean) => Promise<{ success: boolean; message?: string }>;
   viewMode?: boolean;
   isProfileMode?: boolean;
-  departments: any[];
-  positions: any[];
+  departments: Department[];
+  positions: Position[];
 }
 
 export default function EmployeeFormModal({
@@ -35,7 +34,7 @@ export default function EmployeeFormModal({
     emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
     phone: '', address: '', status: 'ทำงานปกติ', retirement_date: '',
     addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
-    has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: []
+    has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: [], position_no: ''
   };
 
   const isEditing = !!employee?.emp_id;
@@ -65,7 +64,7 @@ export default function EmployeeFormModal({
   useEffect(() => {
     if (isOpen) {
       const data = employee || { ...EMPTY_FORM };
-      
+
       // If split address fields are empty but full address exists, try to parse it
       if (data.address && !data.addr_province) {
         const addr = data.address;
@@ -158,7 +157,7 @@ export default function EmployeeFormModal({
     });
   };
 
-  const handleSaveSubmit = async (e: React.FormEvent) => {
+  const handleSaveSubmit = async (e?: any) => {
     if (e && e.preventDefault) e.preventDefault();
 
     // --- Validation ---
@@ -231,8 +230,6 @@ export default function EmployeeFormModal({
     const numB = parseInt(b.match(/^\d+/)?.[0] || '999');
     return numA - numB || a.localeCompare(b, 'th');
   });
-  const getGroupsByDiv = (div: string) => Array.from(new Set(departments.filter(d => d.division?.trim() === div).map(d => d.dept_name?.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th'));
-  const getSubsByGrp = (div: string, grp: string) => departments.filter(d => d.division?.trim() === div && d.dept_name?.trim() === grp).sort((a, b) => (a.sub_dept || '').localeCompare(b.sub_dept || '', 'th'));
 
   if (!isOpen) return null;
 
