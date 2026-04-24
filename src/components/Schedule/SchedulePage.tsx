@@ -94,6 +94,59 @@ export default function SchedulePage() {
   const { totalSchedules, todaySchedules, monthSchedules } = useScheduleSummary(schedules)
   const { departmentStatus } = useScheduleStatus(schedules)
 
+  // --- Reimbursement States ---
+  const [showReimModal, setShowReimModal] = useState(false);
+  const [submittingReim, setSubmittingReim] = useState(false);
+  const [reimForm, setReimForm] = useState({
+    title: '',
+    date: '',
+    organizerAmount: '',
+    parentAmount: '',
+    file: null as File | null
+  });
+
+  const handleReimSubmit = async () => {
+    if (!reimForm.title || !reimForm.date) {
+      Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลหัวข้อและวันที่ให้ครบถ้วน', 'warning');
+      return;
+    }
+
+    setSubmittingReim(true);
+    try {
+      const formData = new FormData();
+      formData.append('title', reimForm.title);
+      formData.append('date', reimForm.date);
+      formData.append('organizer_amount', reimForm.organizerAmount);
+      formData.append('parent_amount', reimForm.parentAmount);
+      if (reimForm.file) {
+        formData.append('file', reimForm.file);
+      }
+
+      const res = await fetch('/api/reimbursements', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save reimbursement');
+
+      Swal.fire({
+        title: 'บันทึกสำเร็จ',
+        text: 'ข้อมูลการเบิกงบประมาณถูกบันทึกเรียบร้อยแล้ว',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+      setShowReimModal(false);
+      setReimForm({ title: '', date: '', organizerAmount: '', parentAmount: '', file: null });
+    } catch (err: any) {
+      Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
+    } finally {
+      setSubmittingReim(false);
+    }
+  };
+
   const conflictErrors = useMemo(() => {
     if (!form.room || !selectedDate || !form.startTime || !form.endTime) return [];
     return checkRoomConflict(form.room, selectedDate, form.startTime, form.endTime, editingId);
@@ -350,7 +403,7 @@ export default function SchedulePage() {
       <div className="schedule-page" style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
 
         {/* HEADER */}
-        <div className="page-header">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <svg width="28" height="28" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
@@ -358,6 +411,28 @@ export default function SchedulePage() {
             </h1>
             <p className="page-subtitle">จัดการตารางการประชุมและการจองห้องประชุมแบบครบวงจร</p>
           </div>
+          <button 
+            onClick={() => setShowReimModal(true)}
+            className="hover-glow"
+            style={{ 
+              background: 'linear-gradient(135deg, #059669, #10b981)',
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '16px',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.2)',
+              transition: 'all 0.2s'
+            }}
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            เพิ่มการเบิกงบประมาณประชุม/อบรม
+          </button>
         </div>
 
         {/* ERROR BANNER */}
@@ -680,6 +755,75 @@ export default function SchedulePage() {
                   </button>
                 )}
                 <button className="sp-btn-cancel" onClick={closeModal}>ยกเลิก</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* REIMBURSEMENT MODAL */}
+        {showReimModal && (
+          <div className="sp-modal-bg" onClick={() => setShowReimModal(false)}>
+            <div className="sp-modal-box" onClick={(e) => e.stopPropagation()} style={{ width: '500px' }}>
+              <div className="sp-modal-top">
+                <h3>
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  เพิ่มการเบิกงบประมาณประชุม/อบรม
+                </h3>
+                <button className="sp-modal-x" onClick={() => setShowReimModal(false)}>
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                  <label>การประชุม/อบรม <span className="sp-req">*</span></label>
+                  <input className="sp-field" 
+                    value={reimForm.title}
+                    onChange={(e) => setReimForm({ ...reimForm, title: e.target.value })}
+                    placeholder="ระบุหัวข้อการประชุมหรือการอบรม" />
+                </div>
+
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                  <label>วัน/เดือน/ปี <span className="sp-req">*</span></label>
+                  <input type="date" className="sp-field" 
+                    value={reimForm.date}
+                    onChange={(e) => setReimForm({ ...reimForm, date: e.target.value })} />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เบิกจากผู้จัด (บาท)</label>
+                    <input type="number" className="sp-field" 
+                      value={reimForm.organizerAmount}
+                      onChange={(e) => setReimForm({ ...reimForm, organizerAmount: e.target.value })}
+                      placeholder="0.00" />
+                  </div>
+                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                    <label>เบิกจากต้นสังกัด (บาท)</label>
+                    <input type="number" className="sp-field" 
+                      value={reimForm.parentAmount}
+                      onChange={(e) => setReimForm({ ...reimForm, parentAmount: e.target.value })}
+                      placeholder="0.00" />
+                  </div>
+                </div>
+
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                  <label>ไฟล์เอกสารบันทึกข้อความการเบิกเงิน</label>
+                  <input type="file" className="sp-field" 
+                    onChange={(e) => setReimForm({ ...reimForm, file: e.target.files ? e.target.files[0] : null })}
+                    style={{ padding: '8px' }} />
+                  <p style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>รองรับไฟล์ภาพ หรือ PDF</p>
+                </div>
+              </div>
+
+              <div className="sp-modal-btns">
+                <button className="sp-btn-save" 
+                  onClick={handleReimSubmit} 
+                  disabled={submittingReim}
+                  style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+                  {submittingReim ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
+                </button>
+                <button className="sp-btn-cancel" onClick={() => setShowReimModal(false)}>ยกเลิก</button>
               </div>
             </div>
           </div>

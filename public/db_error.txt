@@ -1,6 +1,5 @@
-Error: Duplicate entry '' for key 'PRIMARY'\nError: Duplicate entry '' for key 'PRIMARY'
-    at PromisePoolConnection.query (webpack-internal:///(rsc)/./node_modules/mysql2/lib/promise/connection.js:29:22)
-    at POST (webpack-internal:///(rsc)/./src/app/api/employees/route.ts:154:30)
+Error: รหัสพนักงาน "-" มีอยู่ในระบบแล้ว\nError: รหัสพนักงาน "-" มีอยู่ในระบบแล้ว
+    at POST (webpack-internal:///(rsc)/./src/app/api/employees/route.ts:116:23)
     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
     at async C:\xampp\htdocs\hrm2\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:55038
     at async ek.execute (C:\xampp\htdocs\hrm2\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:45808)
