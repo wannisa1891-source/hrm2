@@ -303,8 +303,20 @@ function EmployeesContent() {
 
     if (res.success) {
       setShowForm(false);
-      Swal.fire({ title: 'สำเร็จ!', text: res.message || (editing ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มพนักงานสำเร็จ'), icon: 'success', timer: 1500, showConfirmButton: false });
-      loadEmployees();
+
+      // 👇 ส่วนที่แก้ไข: เพิ่ม .then() เข้าไปตรงนี้ครับ
+      Swal.fire({
+        title: 'สำเร็จ!',
+        text: res.message || (editing ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มพนักงานสำเร็จ'),
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        loadEmployees(); // ดึงข้อมูลใหม่
+        window.location.reload(); // บังคับรีเฟรชหน้าเว็บให้ข้อมูลอัปเดตทันที
+      });
+      // 👆 สิ้นสุดส่วนที่แก้ไข
+
     } else {
       Swal.fire('ข้อผิดพลาด', res.message || 'บันทึกไม่สำเร็จ', 'error');
     }
@@ -783,6 +795,9 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
     const res = await editEmployee(emp.emp_id, formData);
     if (res.success) {
       setIsOpen(false);
+      // ✅ เพิ่ม 2 บรรทัดนี้ เพื่อให้ตารางอัปเดตสถานะทันที
+      const router = require('next/navigation').useRouter; // ดึง router มาใช้
+      window.location.reload(); // บังคับรีเฟรชเพื่อให้เห็นแถบสีสถานะใหม่
     }
   };
 
