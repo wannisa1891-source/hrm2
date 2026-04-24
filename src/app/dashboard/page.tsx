@@ -240,9 +240,9 @@ export default function DashboardPage() {
               newsList={announcements}
               onSelectNews={setSelectedNews}
               today={today}
-              licenseStats={{ 
-                expiring: dashboardData?.expiringLicenses || 0, 
-                expired: dashboardData?.expiredLicenses || 0 
+              licenseStats={{
+                expiring: dashboardData?.expiringLicenses || 0,
+                expired: dashboardData?.expiredLicenses || 0
               }}
             />
           )
