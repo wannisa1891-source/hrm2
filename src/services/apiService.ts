@@ -1,15 +1,12 @@
-// ============================================================
-//  HRM API Service Layer
-//  ใช้ fetch() เรียก Next.js API routes
-// ============================================================
-
-// ---------- Types ----------
+// src/services/apiService.ts
 
 export interface Employee {
   emp_id: string
   prefix: string
   first_name_th: string
   last_name_th: string
+  first_name_en?: string
+  last_name_en?: string
   nickname?: string
   birth_date: string
   gender: string
@@ -20,10 +17,10 @@ export interface Employee {
   dept_id: string
   pos_id: string
   start_date: string
+  base_salary: number
   status: string
   image: string
 
-  // -- UI Mock Fields & Additional Info --
   addr_no?: string
   addr_moo?: string
   addr_village?: string
@@ -96,7 +93,7 @@ export interface Leave {
   end_date: string
   reason?: string
   status: string
-  image?: string
+  photo?: string
   current_stage?: string
   dept_head_status?: string
   admin_status?: string
@@ -108,9 +105,6 @@ export interface Leave {
   accumulated_vacation?: number
   emp_type?: string
   start_date_work?: string
-  dept_id?: string
-  leave_category?: string
-  attachment?: string
 }
 
 export interface ScheduleRecord {
@@ -118,7 +112,7 @@ export interface ScheduleRecord {
   nurse_name: string
   shift: string
   department: string
-  schedule_date: string   // "YYYY-MM-DD"
+  schedule_date: string
   note: string
   startTime?: string
   endTime?: string
@@ -128,19 +122,31 @@ export interface ScheduleRecord {
   created_at?: string
   first_name_th?: string
   last_name_th?: string
+  memo_file?: string
+  project_file?: string
+  transport_cost?: number
+  accommodation_cost?: number
+  organizer_pay?: number
+  parent_pay?: number
 }
 
 export interface ScheduleBody {
   nurseName: string
   shift: string
   department: string
-  date: string            // "YYYY-MM-DD"
+  date: string
   startTime?: string
   endTime?: string
   note?: string
   bookerName?: string
   contactPhone?: string
   unitName?: string
+  memoFile?: string
+  projectFile?: string
+  transportCost?: number
+  accommodationCost?: number
+  organizerPay?: number
+  parentPay?: number
 }
 
 export interface Department {
@@ -205,8 +211,6 @@ export interface DashboardData {
   } | null
 }
 
-// ---------- API Services ----------
-
 const apiFetch = async <T>(url: string, options?: RequestInit): Promise<T> => {
   const res = await fetch(url, options)
   if (!res.ok) {
@@ -237,10 +241,13 @@ export const deleteDepartment = (id: string) => apiFetch<{ message: string }>(`/
 
 export const fetchPositions = () => apiFetch<Position[]>('/api/positions')
 
+export const fetchLeaveTypes = () => apiFetch<any[]>('/api/leave-types')
+export const fetchLeaveCategories = () => apiFetch<any[]>('/api/leave-categories')
 export const fetchLeaves = () => apiFetch<Leave[]>('/api/leaves')
-export const createLeave = (fd: FormData) => apiFetch<{ success: boolean }>('/api/leaves', {
+export const createLeave = (body: any) => apiFetch<{ success: boolean }>('/api/leaves', {
   method: 'POST',
-  body: fd,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
 })
 export const updateLeaveStatus = (id: string | number, status: string, stage?: string) => apiFetch<{ success: boolean }>(`/api/leaves/${id}`, {
   method: 'PUT',

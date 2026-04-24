@@ -94,9 +94,12 @@ export async function POST(req: NextRequest) {
     try {
       await connection.beginTransaction();
 
-      const empId = d.emp_id || '';
+      let empId = d.emp_id || '';
+      const citizenId = d.id_card || d.citizen_id || '';
+      
       if (!empId) {
-        throw new Error('กรุณาระบุรหัสพนักงาน (Employee ID)');
+        // If emp_id is missing, use citizen_id as internal ID
+        empId = citizenId || 'E' + Date.now().toString().slice(-8);
       }
 
       // Check duplicate emp_id
@@ -106,7 +109,6 @@ export async function POST(req: NextRequest) {
       }
 
       // Automatic credentials: Username = Citizen ID, Password = DDMMYYYY (BE) from birth_date
-      const citizenId = d.citizen_id || d.id_card || '';
       const username = d.username || citizenId;
       
       let autoPassword = '';
@@ -124,13 +126,13 @@ export async function POST(req: NextRequest) {
         (emp_id, username, prefix, first_name_th, last_name_th, nickname,
          birth_date, gender, address, citizen_id, phone, email, password, role, 
          emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, status, 
-         image, cneu_cme_points,
+         image, cneu_cme_points, position_no,
          quota_personal, quota_vacation, quota_sick) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?, ?, ?, ?, ?)`;
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?, ?, ?, ?, ?, ?)`;
 
       const tempCitizenId = `9${Date.now().toString().slice(-12)}`; // Generate a unique 13-digit number starting with 9
       const values = [
-        d.emp_id || '', username, d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
+        empId, username, d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
         d.nickname || '',
         (d.birth_date && d.birth_date !== '') ? d.birth_date : (d.date_of_birth && d.date_of_birth !== '') ? d.date_of_birth : '1900-01-01',
         d.gender || 'ชาย', d.address || '',
@@ -141,6 +143,7 @@ export async function POST(req: NextRequest) {
         d.admission_date || null, d.retirement_date || null,
         imageName, // Save only to image
         d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0,
+        d.position_no || null,
         d.quota_personal ? parseInt(d.quota_personal) : 0,
         d.quota_vacation ? parseInt(d.quota_vacation) : 0,
         d.quota_sick ? parseInt(d.quota_sick) : 0
@@ -160,7 +163,7 @@ export async function POST(req: NextRequest) {
               const licFile = formData.get(`license_file_${i}_${j}`) as File | null;
               if (licFile && licFile.size > 0) {
                 const ext = path.extname(licFile.name);
-                const licFileName = `lic_${d.emp_id}_${i}_${j}_${Date.now()}${ext}`;
+                const licFileName = `lic_${empId}_${i}_${j}_${Date.now()}${ext}`;
                 const buffer = Buffer.from(await licFile.arrayBuffer());
                 fs.writeFileSync(path.join(uploadDir, licFileName), buffer);
                 fileNames.push(licFileName);
@@ -171,7 +174,7 @@ export async function POST(req: NextRequest) {
             const licFile = formData.get(`license_file_${i}`) as File | null;
             if (licFile && licFile.size > 0) {
               const ext = path.extname(licFile.name);
-              const licFileName = `lic_${d.emp_id}_${i}_${Date.now()}${ext}`;
+              const licFileName = `lic_${empId}_${i}_${Date.now()}${ext}`;
               const buffer = Buffer.from(await licFile.arrayBuffer());
               fs.writeFileSync(path.join(uploadDir, licFileName), buffer);
               fileNames.push(licFileName);
@@ -184,7 +187,7 @@ export async function POST(req: NextRequest) {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
           const finalFilePath = fileNames.length > 0 ? JSON.stringify(fileNames) : null;
           const licValues = [
-            d.emp_id, lic.license_name || null, lic.license_type || null, lic.license_no || null,
+            empId, lic.license_name || null, lic.license_type || null, lic.license_no || null,
             lic.institution || null, lic.issue_date || null, lic.expire_date || null,
             lic.status || 'ปกติ', finalFilePath
           ];
@@ -201,13 +204,13 @@ export async function POST(req: NextRequest) {
           const cf = formData.get(`training_cert_${i}`) as File | null;
           if (cf && cf.size > 0) {
             const ext = path.extname(cf.name);
-            certFile = `tr_cert_${d.emp_id}_${i}_${Date.now()}${ext}`;
+            certFile = `tr_cert_${empId}_${i}_${Date.now()}${ext}`;
             fs.writeFileSync(path.join(uploadDir, certFile), Buffer.from(await cf.arrayBuffer()));
           }
           const imf = formData.get(`training_img_${i}`) as File | null;
           if (imf && imf.size > 0) {
             const ext = path.extname(imf.name);
-            imgFile = `tr_img_${d.emp_id}_${i}_${Date.now()}${ext}`;
+            imgFile = `tr_img_${empId}_${i}_${Date.now()}${ext}`;
             fs.writeFileSync(path.join(uploadDir, imgFile), Buffer.from(await imf.arrayBuffer()));
           }
 
@@ -216,7 +219,7 @@ export async function POST(req: NextRequest) {
             (emp_id, course_name, institution, location, start_date, end_date, certificate_file, image_file)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
           const trValues = [
-            d.emp_id, tr.course_name, tr.institution || null, tr.location || null,
+            empId, tr.course_name, tr.institution || null, tr.location || null,
             tr.start_date || null, tr.end_date || null, certFile, imgFile
           ];
           await connection.query(trSql, trValues);
@@ -224,7 +227,7 @@ export async function POST(req: NextRequest) {
       }
 
       await connection.commit();
-      await logAudit(req.headers.get('x-user-id'), `เพิ่มประวัติพนักงานใหม่: ${d.emp_id} (${d.first_name_th} ${d.last_name_th})`, connection);
+      await logAudit(req.headers.get('x-user-id'), `เพิ่มประวัติพนักงานใหม่: ${empId} (${d.first_name_th} ${d.last_name_th})`, connection);
       connection.release();
 
       return NextResponse.json({ message: '✅ บันทึกพนักงานใหม่สำเร็จ!' });

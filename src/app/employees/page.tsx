@@ -19,7 +19,7 @@ import Image from 'next/image';
 const EMPTY_FORM: Partial<Employee> = {
   prefix: 'นาย', first_name_th: '', last_name_th: '',
   birth_date: '', gender: 'ชาย', citizen_id: '',
-  emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
+  emp_id: '', position_no: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
   phone: '', address: '', status: 'ทำงานปกติ',
   addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
   has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: []
@@ -230,7 +230,7 @@ function EmployeesContent() {
 
   const filteredData = useMemo(() => {
     return employees.filter(e => {
-      const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id} ${e.position_no || ''}`.toLowerCase().includes(search.toLowerCase());
       const dept = departments.find(d => d.dept_id === e.dept_id);
       const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
         (filterGrp === 'all' || dept?.dept_name === filterGrp);
@@ -508,7 +508,7 @@ function EmployeesContent() {
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
-                            {emp.emp_id}
+                            {emp.position_no || '-'}
                           </div>
                         </td>
                         <td style={{ textAlign: 'center', color: '#64748b', fontSize: '13px' }}>

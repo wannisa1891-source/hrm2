@@ -44,7 +44,7 @@ async function sendEmailNotification(to: string, employeeName: string, newPasswo
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const empId = params.id;
+  let empId = params.id;
   if (!empId) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
 
   try {
@@ -86,7 +86,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         `prefix = ?`, `first_name_th = ?`, `last_name_th = ?`, `nickname = ?`,
         `birth_date = ?`, `gender = ?`, `address = ?`, `citizen_id = ?`, `phone = ?`, `email = ?`, `role = ?`,
         `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `admission_date = ?`, `retirement_date = ?`, 
-        `status = ?`, `cneu_cme_points = ?`,
+        `status = ?`, `cneu_cme_points = ?`, `position_no = ?`,
         `quota_personal = ?`, `quota_vacation = ?`, `quota_sick = ?`
       ];
 
@@ -112,6 +112,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         safeVal(d.retirement_date, existing.retirement_date),
         safeVal(d.status, existing.status),
         d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : existing.cneu_cme_points,
+        safeVal(d.position_no, existing.position_no),
         d.quota_personal ? parseInt(d.quota_personal) : existing.quota_personal,
         d.quota_vacation ? parseInt(d.quota_vacation) : existing.quota_vacation,
         d.quota_sick ? parseInt(d.quota_sick) : existing.quota_sick
@@ -154,10 +155,34 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         values.push(hashedPassword);
       }
 
-      values.push(empId);
+      // Check if emp_id has changed
+      let newEmpId = empId;
+      if (d.emp_id && d.emp_id !== empId) {
+        newEmpId = d.emp_id;
+        updateFields.push(`emp_id = ?`);
+        // Insert newEmpId before the last element of values (which is empId for WHERE clause)
+        values.push(newEmpId); 
+      }
+
+      // Re-order values to match SET fields + WHERE clause
+      // The last value in 'values' should be the original 'empId' for the WHERE clause
+      const finalValues = [...values, empId];
 
       const sql = `UPDATE tbl_employees SET ${updateFields.join(', ')} WHERE emp_id = ?`;
-      await connection.query(sql, values);
+      await connection.query(sql, finalValues);
+
+      // If emp_id changed, update references in other tables
+      if (newEmpId !== empId) {
+        await connection.query('UPDATE tbl_employee_licenses SET emp_id = ? WHERE emp_id = ?', [newEmpId, empId]);
+        await connection.query('UPDATE tbl_employee_trainings SET emp_id = ? WHERE emp_id = ?', [newEmpId, empId]);
+        await connection.query('UPDATE tbl_leaves SET emp_id = ? WHERE emp_id = ?', [newEmpId, empId]);
+        await connection.query('UPDATE tbl_payroll SET emp_id = ? WHERE emp_id = ?', [newEmpId, empId]);
+        await connection.query('UPDATE tbl_transfers SET emp_id = ? WHERE emp_id = ?', [newEmpId, empId]);
+        await connection.query('UPDATE tbl_notifications SET emp_id = ? WHERE emp_id = ?', [newEmpId, empId]);
+        
+        // Use the new ID for subsequent queries in this request (licenses/trainings)
+        empId = newEmpId; 
+      }
 
       await connection.query('DELETE FROM tbl_employee_licenses WHERE emp_id = ?', [empId]);
 

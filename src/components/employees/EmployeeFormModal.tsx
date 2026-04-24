@@ -162,11 +162,6 @@ export default function EmployeeFormModal({
     if (e && e.preventDefault) e.preventDefault();
 
     // --- Validation ---
-    if (!formData.emp_id) {
-      const Swal = (await import('sweetalert2')).default;
-      Swal.fire('ข้อผิดพลาด', 'กรุณาระบุรหัสพนักงาน (Employee ID)', 'error');
-      return;
-    }
     if (!formData.first_name_th || !formData.last_name_th) {
       const Swal = (await import('sweetalert2')).default;
       Swal.fire('ข้อผิดพลาด', 'กรุณาระบุชื่อและนามสกุลพนักงาน', 'error');
@@ -476,8 +471,8 @@ export default function EmployeeFormModal({
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เลขประจำตำแหน่ง <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="text" value={formData.emp_id || ''} onChange={e => setField('emp_id', e.target.value)} required readOnly={isEditing} style={{ ...inputStyle, background: isEditing ? '#f1f5f9' : '#ffffff', cursor: isEditing ? 'not-allowed' : 'text' }} />
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เลขประจำตำแหน่ง</label>
+                    <input type="text" value={formData.position_no || ''} onChange={e => setField('position_no', e.target.value)} style={inputStyle} placeholder="ถ้าไม่มีให้เว้นว่างไว้" />
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -583,15 +578,7 @@ export default function EmployeeFormModal({
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                           ตำแหน่งงาน <span style={{ color: '#ef4444' }}>*</span>
                         </label>
-                        <CustomSelect
-                          value={formData.pos_id || ''}
-                          onChange={val => setField('pos_id', val)}
-                          options={[
-                            { value: '', label: 'เลือกตำแหน่ง' },
-                            ...positions.map(p => ({ value: p.pos_id, label: p.pos_name }))
-                          ]}
-                          minWidth="100%"
-                        />
+                        <input type="text" value={formData.pos_id || ''} onChange={e => setField('pos_id', e.target.value)} style={inputStyle} placeholder="พิมพ์ตำแหน่งงาน" />
                       </div>
                     </div>
                   </div>
