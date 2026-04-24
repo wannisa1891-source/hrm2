@@ -44,12 +44,12 @@ const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInpu
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const formatDateThai = (date: Date | null) => {
+  const formatDateDisplay = (date: Date | null) => {
     if (!date || isNaN(date.getTime())) return '';
-    const d = date.getDate();
-    const m = THAI_MONTHS_SHORT[date.getMonth()];
-    const y = date.getFullYear() + 543;
-    return `${d} ${m} ${y}`;
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${m}/${d}/${y}`;
   };
 
   const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -109,7 +109,7 @@ const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInpu
           fontWeight: selectedDate ? 600 : 400
         }}
       >
-        <span>{selectedDate ? formatDateThai(selectedDate) : 'เลือกวันที่...'}</span>
+        <span>{selectedDate ? formatDateDisplay(selectedDate) : 'เลือกวันที่...'}</span>
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ opacity: 0.5 }}>
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
