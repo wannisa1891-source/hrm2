@@ -438,42 +438,6 @@ export default function SchedulePage() {
         {/* ERROR BANNER */}
         {error && <div className="sp-error">เกิดข้อผิดพลาด: {error}</div>}
 
-        {/* SUMMARY */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
-          <div className="glass-card hover-glow"
-            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
-            onClick={() => changeView('month')}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-            </div>
-            <div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{totalSchedules}</div>
-              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>การประชุมทั้งหมด</div>
-            </div>
-          </div>
-          <div className="glass-card hover-glow"
-            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
-            onClick={() => { goToday(); changeView('list'); }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-            <div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{todaySchedules}</div>
-              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>การประชุมวันนี้</div>
-            </div>
-          </div>
-          <div className="glass-card hover-glow"
-            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
-            onClick={() => changeView('month')}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: '#fffbeb', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            </div>
-            <div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e2433', lineHeight: 1 }}>{monthSchedules}</div>
-              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>การประชุมเดือนนี้</div>
-            </div>
-          </div>
-        </div>
 
         {/* CALENDAR CARD */}
         <div className="glass-card" style={{ padding: '32px', marginBottom: '32px', overflow: 'hidden', border: 'none' }}>
@@ -538,23 +502,6 @@ export default function SchedulePage() {
           )}
         </div>
 
-        {/* DEPARTMENT STATUS */}
-        {Object.keys(departmentStatus).length > 0 && (
-          <div className="glass-card" style={{ padding: '32px', border: 'none' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1e2433', margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="24" height="24" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-              สถานะการจองแต่ละแผนก
-            </h3>
-            <div className="sp-dept-grid">
-              {Object.entries(departmentStatus).map(([dept, count]) => (
-                <div key={dept} className="sp-dept-item">
-                  <span className="sp-dept-name">{dept}</span>
-                  <span className="sp-dept-badge">{count} ครั้ง</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* MODAL */}
         {showModal && (
