@@ -26,13 +26,12 @@ const ISSUERS = [
 const COUNCIL_LINKS: Record<string, string> = {
    'สภาการพยาบาล': 'https://services.tnmc.or.th/',
    'แพทยสภา': 'https://checkmd.tmc.or.th/',
-   'สภาเทคนิคการแพทย์': 'https://www.mtcouncil.org/',
-   'สภาเภสัชกรรม': 'https://www.pharmacycouncil.org/',
-   'สภากายภาพบำบัด': 'https://www.pt.or.th/',
    'ทันตแพทยสภา': 'https://www.dentalcouncil.or.th/check_list/',
+   'สภาเทคนิคการแพทย์': 'https://www.mtcouncil.org/',
+   'สภาเภสัชกรรม': 'https://www.pharmacycouncil.org/search_member',
+   'สภากายภาพบำบัด': 'https://www.pt.or.th/',
    'คุรุสภา': 'https://www.ksp.or.th/service/license_search.php',
    'สภาวิศวกร': 'https://service.coe.or.th/verify_license',
-   'สถาบันการแพทย์ฉุกเฉินแห่งชาติ (สพฉ.)': 'https://www.niems.go.th/',
    'กรมสนับสนุนบริการสุขภาพ': 'https://hss-db.hss.moph.go.th/',
    'คณะกรรมการวิชาชีพสาขารังสีเทคนิค': 'https://mrd.hss.moph.go.th/mrd1_hss/?cat=66',
    'สภาการแพทย์แผนไทย': 'https://www.thaimed.or.th/'
