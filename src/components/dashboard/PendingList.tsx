@@ -27,7 +27,7 @@ export default function PendingList({
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <Link
-                    href="/transfer"
+                    href="/transfers"
                     className="hover-lift"
                     style={{
                         display: "flex",
