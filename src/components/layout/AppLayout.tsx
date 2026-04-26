@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import BackButton from '@/components/common/BackButton';
+import NotificationBell from '@/components/layout/NotificationBell';
 
 export default function AppLayout({ children, hideScrollbar = false }: { children: React.ReactNode, hideScrollbar?: boolean }) {
   const [collapsed, setCollapsed] = useState(true);
@@ -34,7 +35,7 @@ export default function AppLayout({ children, hideScrollbar = false }: { childre
       <main className={`main-content${collapsed ? ' expanded' : ''}${hideScrollbar ? ' no-scrollbar' : ''}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 8px', width: '100%' }}>
           <div>{!isDashboard && <BackButton />}</div>
-          <div></div>
+          <div><NotificationBell /></div>
         </div>
 
         {children}

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { calculateWorkDuration, formatDurationThai, formatThaiDate } from '@/lib/dateUtils';
 import Modal from '@/components/common/Modal';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import type { Employee } from '@/services/apiService';
 
 interface ProfileData {
@@ -68,6 +69,7 @@ function ProfileContent() {
   const [trainingFile, setTrainingFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [selectedTraining, setSelectedTraining] = useState<any>(null);
+  const [selectedLicense, setSelectedLicense] = useState<any>(null);
 
   const handleAddTraining = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,6 +209,7 @@ function ProfileContent() {
   return (
     <AppLayout>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 16px 16px', width: '100%', marginTop: '24px' }}>
+        {!empIdParam && <DashboardHeader today={today} />}
         
         <style dangerouslySetInnerHTML={{
           __html: `
@@ -555,7 +558,7 @@ function ProfileContent() {
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                   {fullProfile.licenses.map((lic: any, idx: number) => (
-                    <div key={idx} style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <div key={idx} onClick={() => setSelectedLicense(lic)} style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer' }} className="hover-lift">
                       <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{lic.license_name || lic.license_no || 'ใบอนุญาต'}</div>
                       <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>ออกให้โดย: {lic.institution || '-'}</div>
                       {(lic.issue_date || lic.expire_date) && (
@@ -749,6 +752,65 @@ function ProfileContent() {
         positions={positions}
       />
 
+
+      <Modal
+        isOpen={!!selectedLicense}
+        onClose={() => setSelectedLicense(null)}
+        title="รายละเอียดใบอนุญาต / วุฒิบัตร"
+      >
+        {selectedLicense && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ padding: '20px', borderRadius: '16px', background: '#f8fafc', border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ fontSize: '15px', color: '#334155' }}>
+                <strong>ชื่อใบอนุญาต:</strong> {selectedLicense.license_name || selectedLicense.license_no}
+              </div>
+              <div style={{ fontSize: '15px', color: '#334155' }}>
+                <strong>หน่วยงานที่ออกให้:</strong> {selectedLicense.institution || '-'}
+              </div>
+              <div style={{ fontSize: '15px', color: '#334155' }}>
+                <strong>วันที่ออก:</strong> {selectedLicense.issue_date ? new Date(selectedLicense.issue_date).toLocaleDateString('th-TH') : '-'}
+              </div>
+              <div style={{ fontSize: '15px', color: '#334155' }}>
+                <strong>วันที่หมดอายุ:</strong> {selectedLicense.expire_date ? new Date(selectedLicense.expire_date).toLocaleDateString('th-TH') : '-'}
+              </div>
+              <div style={{ fontSize: '15px', color: '#334155' }}>
+                <strong>สถานะ:</strong> {selectedLicense.status || '-'}
+              </div>
+            </div>
+            
+            {(() => {
+              let files: string[] = [];
+              if (selectedLicense.file_path) {
+                if (typeof selectedLicense.file_path === 'string' && selectedLicense.file_path.startsWith('[')) {
+                  try { files = JSON.parse(selectedLicense.file_path); } catch { files = [selectedLicense.file_path]; }
+                } else if (Array.isArray(selectedLicense.file_path)) {
+                  files = selectedLicense.file_path;
+                } else {
+                  files = [selectedLicense.file_path];
+                }
+              }
+              return files.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>ไฟล์เอกสารแนบ:</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    {files.map((f, i) => (
+                      <a key={i} href={f.startsWith('/uploads') || f.startsWith('http') || f.startsWith('blob:') ? f : `/uploads/${f}`} target="_blank" rel="noreferrer" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', background: '#eff6ff', color: '#2563eb', textDecoration: 'none' }}>
+                        <FileText size={16} /> ดูไฟล์ที่ {i + 1}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+              <button className="btn-primary" onClick={() => setSelectedLicense(null)} style={{ padding: '10px 32px' }}>
+                ปิดหน้าต่าง
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         isOpen={!!selectedTraining}
