@@ -5,6 +5,17 @@ import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET(req: NextRequest) {
+  try {
+    await ensureTableExists();
+    const [rows] = await pool.query('SELECT * FROM tbl_reimbursements ORDER BY reimbursement_date DESC, id DESC');
+    return NextResponse.json(rows);
+  } catch (err: any) {
+    console.error('Reimbursement GET API Error:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 /**
  * Auto-create table tbl_reimbursements if it doesn't exist
  */

@@ -2,51 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import Swal from 'sweetalert2'
-import useScheduleControls, { VIEWS } from './useScheduleControls'
-import useScheduleModal from './useScheduleModal'
-import useScheduleSummary from './useScheduleSummary'
-import useScheduleStatus from './useScheduleStatus'
-import { useSchedules } from '@/hooks/useSchedules'
-import ListView from './View/ListView'
-import WeekView from './View/WeekView'
-import MonthView from './View/MonthView'
-import YearView from './View/YearView'
 import { useAuth } from '@/contexts/AuthContext'
 import CustomSelect from '@/components/CustomSelect'
-import type { Schedule, ScheduleForm } from './useScheduleModal'
-import type { ScheduleRecord } from '@/services/apiService'
-
-// แปลง ScheduleRecord (จาก API) → Schedule (ใช้ใน component)
-function toSchedule(r: ScheduleRecord): Schedule {
-  return {
-    id: r.id,
-    date: new Date(r.schedule_date),
-    subject: r.nurse_name,
-    room: r.shift,
-    organizer: r.department,
-    unit: r.unit_name,
-    bookerName: r.booker_name,
-    contactPhone: r.contact_phone,
-    startTime: r.startTime || '09:00',
-    endTime: r.endTime || '10:00',
-    note: r.note || '',
-  }
-}
-
-// ฟอร์แมต "YYYY-MM" จากวันที่
-function toMonthKey(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  return `${y}-${m}`
-}
-
-// ฟอร์แมต "YYYY-MM-DD" จากวันที่
-function toDateStr(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
 
 export default function SchedulePage() {
   const { user } = useAuth();
@@ -54,45 +11,27 @@ export default function SchedulePage() {
   const isSuperAdmin = ['Super Admin', 'Admin', 'admin'].includes(role);
   const isHR = role === 'HR';
   const isAdmin = isSuperAdmin || isHR;
-  const { schedules: apiSchedules, loading, error, loadSchedules, addSchedule, editSchedule, removeSchedule } = useSchedules()
+  const [reimbursementsList, setReimbursementsList] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // แปลง ScheduleRecord[] → Schedule[] สำหรับ component ต่างๆ
-  const schedules: Schedule[] = useMemo(() => apiSchedules.map(toSchedule), [apiSchedules])
+  const loadHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const res = await fetch('/api/reimbursements');
+      if (res.ok) {
+        const data = await res.json();
+        setReimbursementsList(data);
+      }
+    } catch (err) {
+      console.error('Failed to load reimbursement history', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
-  const {
-    currentDate,
-    setCurrentDate,
-    currentView,
-    formatDisplay,
-    formatDate,
-    goPrev,
-    goNext,
-    goToday,
-    changeView,
-  } = useScheduleControls()
-
-  const {
-    showModal,
-    selectedDate,
-    editingId,
-    errors,
-    roomTypes,
-    departments,
-    employees,
-    form,
-    setForm,
-    isEditing,
-    openModal,
-    openEditModal,
-    closeModal,
-    deptData,
-    units,
-    checkRoomConflict,
-    getShiftColor,
-  } = useScheduleModal(schedules, () => loadSchedules(toMonthKey(currentDate)))
-
-  const { totalSchedules, todaySchedules, monthSchedules } = useScheduleSummary(schedules)
-  const { departmentStatus } = useScheduleStatus(schedules)
+  useEffect(() => {
+    loadHistory();
+  }, []);
 
   // --- Reimbursement States ---
   const [showReimModal, setShowReimModal] = useState(false);
@@ -140,6 +79,7 @@ export default function SchedulePage() {
 
       setShowReimModal(false);
       setReimForm({ title: '', date: '', organizerAmount: '', parentAmount: '', file: null });
+      loadHistory();
     } catch (err: any) {
       Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
     } finally {
@@ -147,147 +87,7 @@ export default function SchedulePage() {
     }
   };
 
-  const conflictErrors = useMemo(() => {
-    if (!form.room || !selectedDate || !form.startTime || !form.endTime) return [];
-    return checkRoomConflict(form.room, selectedDate, form.startTime, form.endTime, editingId);
-  }, [form.room, selectedDate, form.startTime, form.endTime, editingId, schedules, checkRoomConflict]);
 
-  const hasConflicts = conflictErrors.length > 0;
-
-  const yesterdayStr = useMemo(() => selectedDate ? new Date(selectedDate.getTime() - 86400000).toDateString() : '', [selectedDate]);
-  const todayStr = useMemo(() => selectedDate ? selectedDate.toDateString() : '', [selectedDate]);
-  const tomorrowStr = useMemo(() => selectedDate ? new Date(selectedDate.getTime() + 86400000).toDateString() : '', [selectedDate]);
-
-  const empContextSchedules = useMemo(() => {
-    if (!form.subject || !selectedDate) return [];
-    const empIdOnly = form.subject.split(' - ')[0].trim();
-    return schedules.filter(s => {
-      const sEmpIdOnly = s.subject ? s.subject.split(' - ')[0].trim() : '';
-      if (sEmpIdOnly !== empIdOnly) return false;
-      if (editingId && s.id === editingId) return false;
-      const dStr = s.date.toDateString();
-      return dStr === yesterdayStr || dStr === todayStr || dStr === tomorrowStr;
-    }).sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [form.subject, selectedDate, schedules, editingId, yesterdayStr, todayStr, tomorrowStr]);
-
-  // โหลดการประชุมของเดือนที่กำลังดูอยู่
-  useEffect(() => {
-    loadSchedules(toMonthKey(currentDate))
-  }, [currentDate, loadSchedules])
-
-  useEffect(() => {
-    if (showModal && !isEditing && !isAdmin && user && employees.length > 0) {
-      const u = user as any;
-      const expectedName = `${u.emp_id || ''} - ${u.name || u.username || ''}`;
-      let expectedDept = '';
-
-      const empData = employees.find(e => e.emp_id === u.emp_id);
-      if (empData && empData.dept_id && deptData) {
-        const d = (deptData as any[])?.find(d => d.dept_id === empData.dept_id);
-        if (d && d.division) expectedDept = d.division;
-      }
-
-      setForm((f: ScheduleForm) => {
-        if (f.subject === expectedName && f.organizer === expectedDept) {
-          return f; // Prevent infinite loop
-        }
-        return { ...f, subject: expectedName, organizer: expectedDept, bookerName: u.name || u.username || '' };
-      });
-    }
-  }, [showModal, isEditing, isAdmin, user, setForm, departments, employees])
-
-  function openMonth(monthIndex: number) {
-    const newDate = new Date(currentDate)
-    newDate.setMonth(monthIndex)
-    setCurrentDate(newDate)
-    changeView('month')
-  }
-
-  function openDay(date: Date) {
-    setCurrentDate(date)
-    changeView('list')
-  }
-
-  async function confirmDelete(id: string) {
-    const result = await Swal.fire({
-      title: 'ยืนยันการลบการประชุม',
-      text: 'คุณต้องการลบการประชุมนี้ใช่ไหม?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      confirmButtonText: 'ลบการประชุม',
-      cancelButtonText: 'ยกเลิก'
-    });
-    if (result.isConfirmed) {
-      try {
-        await removeSchedule(id, toMonthKey(currentDate));
-        closeModal();
-        Swal.fire({ title: 'ลบการประชุมสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
-      } catch (err: any) {
-        Swal.fire('ลบการประชุมไม่สำเร็จ', err.message || 'Error deleting schedule', 'error');
-      }
-    }
-  }
-
-  // บันทึกการประชุม (เพิ่ม / แก้ไข) ผ่าน API
-  async function handleSave(keepOpen: boolean = false) {
-    if (!selectedDate) return
-    if (!form.subject.trim() || !form.room || !form.organizer) {
-      Swal.fire('ข้อความแจ้งเตือน', 'กรุณาระบุข้อมูลจำเป็นให้ครบถ้วน', 'warning');
-      return;
-    }
-
-    try {
-      // Extract Emp ID from nurseName if it's in format "ID - Name"
-      let empIdOnly = form.subject.split(' - ')[0].trim();
-      if (!empIdOnly) {
-        empIdOnly = form.subject.replace(' - ', '').trim();
-      }
-
-      const scheduleData = {
-        nurseName: empIdOnly,
-        shift: form.room,
-        department: form.organizer,
-        unitName: form.unit || '',
-        bookerName: form.bookerName || '',
-        contactPhone: form.contactPhone || '',
-        startTime: form.startTime || '09:00',
-        endTime: form.endTime || '10:00',
-        note: form.note || '',
-        date: toDateStr(selectedDate)
-      };
-
-      if (isEditing && editingId) {
-        await editSchedule(editingId, scheduleData, toMonthKey(currentDate))
-      } else {
-        await addSchedule(scheduleData, toMonthKey(currentDate))
-      }
-
-      if (keepOpen) {
-        setForm({ ...form, subject: '', note: '' });
-      } else {
-        closeModal()
-      }
-      Swal.fire({ title: 'บันทึกสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
-    } catch (err: any) {
-      Swal.fire('ข้อผิดพลาด', err.message || 'Error saving schedule', 'error');
-    }
-  }
-
-  const handleEditCheck = (sch: Schedule) => {
-    if (isAdmin || sch.subject.includes((user as any)?.emp_id || 'UNKNOWN_EMP')) {
-      openEditModal(sch)
-    } else {
-      Swal.fire('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์แก้ไขการประชุมของผู้อื่น', 'error')
-    }
-  }
-
-  const daySchedules = selectedDate ? schedules.filter(s => {
-    const a = new Date(s.date)
-    const b = new Date(selectedDate)
-    if (a.toDateString() === b.toDateString()) return true;
-    return false;
-  }).sort((a, b) => a.date.getTime() - b.date.getTime()) : []
 
   return (
     <>
@@ -406,10 +206,10 @@ export default function SchedulePage() {
         <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="28" height="28" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-              ตารางการประชุม
+              <svg width="28" height="28" style={{ color: '#059669' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              ประวัติการเบิกงบประมาณ
             </h1>
-            <p className="page-subtitle">จัดการตารางการประชุมและการจองห้องประชุมแบบครบวงจร</p>
+            <p className="page-subtitle">บันทึกและจัดการประวัติการเบิกงบประมาณประชุม/อบรมวิชาการ</p>
           </div>
           <button 
             onClick={() => setShowReimModal(true)}
@@ -435,277 +235,62 @@ export default function SchedulePage() {
           </button>
         </div>
 
-        {/* ERROR BANNER */}
-        {error && <div className="sp-error">เกิดข้อผิดพลาด: {error}</div>}
 
-
-        {/* CALENDAR CARD */}
+        {/* REIMBURSEMENT HISTORY CARD */}
         <div className="glass-card" style={{ padding: '32px', marginBottom: '32px', overflow: 'hidden', border: 'none' }}>
-          <div className="sp-cal-controls">
-            <div className="sp-cal-nav">
-              <button className="sp-btn-nav" onClick={goPrev}>
-                <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-              </button>
-              <h2 className="sp-cal-month">{formatDisplay}</h2>
-              <button className="sp-btn-nav" onClick={goNext}>
-                <svg width="16" height="16" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-              </button>
-              <button className="sp-btn-today" onClick={() => { goToday(); changeView('list'); }}>วันนี้</button>
-            </div>
-            <div className="sp-cal-views">
-              {VIEWS.map((v) => (
-                <button
-                  key={v}
-                  className={`sp-btn-view${currentView === v ? ' active' : ''}`}
-                  onClick={() => changeView(v)}
-                >{v === 'list' ? 'วัน' : v === 'week' ? 'สัปดาห์' : v === 'month' ? 'เดือน' : 'ปี'}</button>
-              ))}
-            </div>
+          <div style={{ marginBottom: '20px' }}>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1e293b' }}>ประวัติการเบิกงบประมาณ</h2>
+            <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>รายการบันทึกคำขอเบิกงบประมาณสนับสนุนการประชุมและอบรมวิชาการ</p>
           </div>
 
-          {/* Loading indicator */}
-          {loading && <div className="sp-loading">กำลังโหลดตารางการประชุม...</div>}
-
-          {/* Views */}
-          {!loading && currentView === 'list' && (
-            <ListView currentDate={currentDate} schedules={schedules}
-              roomTypes={roomTypes}
-              onOpenDay={openModal}
-              onOpenEditModal={handleEditCheck} />
-          )}
-          {!loading && currentView === 'week' && (
-            <WeekView currentDate={currentDate} schedules={schedules}
-              getShiftColor={getShiftColor}
-              onOpenDay={openModal}
-              onOpenEditModal={handleEditCheck} />
-          )}
-          {!loading && currentView === 'month' && (
-            <MonthView currentDate={currentDate} schedules={schedules}
-              getShiftColor={getShiftColor}
-              onOpenDay={openModal}
-              onOpenEditModal={handleEditCheck} />
-          )}
-          {!loading && currentView === 'year' && (
-            <YearView currentDate={currentDate} schedules={schedules} onOpenMonth={openMonth} />
-          )}
-
-          {/* Shift Legend */}
-          {currentView !== 'year' && (
-            <div className="sp-shift-legend">
-              {roomTypes.map((st) => (
-                <div key={st.value} className="sp-legend-item">
-                  <span className="sp-legend-dot" style={{ background: st.color }} />
-                  <span>{st.label}</span>
-                </div>
-              ))}
+          {loadingHistory ? (
+            <div className="sp-loading">กำลังดึงข้อมูลประวัติการเบิกงบประมาณ...</div>
+          ) : reimbursementsList.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', fontSize: '14px' }}>
+              ไม่มีประวัติข้อมูลการเบิกงบประมาณ
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569' }}>หัวข้อการประชุม/อบรม</th>
+                    <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569' }}>วันที่</th>
+                    <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', textAlign: 'right' }}>เบิกจากผู้จัด</th>
+                    <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', textAlign: 'right' }}>เบิกจากต้นสังกัด</th>
+                    <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>เอกสารแนบ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reimbursementsList.map((r: any) => (
+                    <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }} className="hover:bg-slate-50">
+                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{r.title}</td>
+                      <td style={{ padding: '16px', fontSize: '14px', color: '#64748b' }}>{new Date(r.reimbursement_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td style={{ padding: '16px', fontSize: '14px', color: '#0f172a', fontWeight: 600, textAlign: 'right' }}>
+                        {r.organizer_amount ? parseFloat(r.organizer_amount).toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '0.00'} บาท
+                      </td>
+                      <td style={{ padding: '16px', fontSize: '14px', color: '#0f172a', fontWeight: 600, textAlign: 'right' }}>
+                        {r.parent_amount ? parseFloat(r.parent_amount).toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '0.00'} บาท
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        {r.memo_file ? (
+                          <a href={`/uploads/${r.memo_file}`} target="_blank" rel="noreferrer" style={{ fontSize: '12px', background: '#eff6ff', color: '#1d4ed8', padding: '4px 10px', borderRadius: '8px', fontWeight: 700, textDecoration: 'none', border: '1px solid #bfdbfe' }} className="hover-glow">
+                            เปิดดูไฟล์
+                          </a>
+                        ) : (
+                          <span style={{ fontSize: '12px', color: '#94a3b8' }}>- ไม่มีไฟล์ -</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
 
 
-        {/* MODAL */}
-        {showModal && (
-          <div className="sp-modal-bg" onClick={closeModal}>
-            <div className="sp-modal-box" onClick={(e) => e.stopPropagation()}>
-              <div className="sp-modal-top">
-                <h3>
-                  {isEditing ? (
-                    <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                  ) : (
-                    <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                  )}
-                  {isEditing ? 'แก้ไขการประชุม' : 'การประชุม'}
-                </h3>
-                <button className="sp-modal-x" onClick={closeModal} aria-label="Close">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
 
-              <div className="sp-modal-date">
-                วันที่: {formatDate(selectedDate)}
-              </div>
-
-              {/* Existing schedules for day */}
-              {!isEditing && daySchedules.length > 0 && (
-                <div className="sp-modal-existing">
-                  <p className="sp-existing-title">การประชุมที่มีอยู่ในวันนี้:</p>
-                  {daySchedules.map((sch) => (
-                    <div key={sch.id} className="sp-existing-item">
-                      <div className="sp-existing-info">
-                        <span className="sp-existing-dot" style={{ background: getShiftColor(sch.room) }} />
-                        <span>
-                          {sch.subject} — {sch.room} — {sch.organizer}
-                          {new Date(sch.date).toDateString() !== selectedDate?.toDateString() && <span className="sp-shift-type-badge ml-2 text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">ข้ามคืนจากเมื่อวาน</span>}
-                        </span>
-                      </div>
-                      <div className="sp-existing-actions">
-                        <button className="sp-btn-icon" onClick={() => openEditModal(sch)} title="แก้ไข">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                        </button>
-                        <button className="sp-btn-icon" onClick={() => confirmDelete(sch.id)} title="ลบ">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Validation errors */}
-              {conflictErrors.length > 0 && (
-                <div className="sp-error" style={{ background: '#fef2f2', border: '1px solid #ef4444', color: '#b91c1c' }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>⚠️ พบข้อผิดพลาดของเวลาพัก/กะชน:</div>
-                  {conflictErrors.map((err, i) => (
-                    <div key={i} className="mb-1 text-sm">- {err}</div>
-                  ))}
-                </div>
-              )}
-              {errors.length > 0 && (
-                <div className="sp-error">
-                  {errors.map((err, i) => (
-                    <div key={i} className="mb-1">ข้อผิดพลาด: {err}</div>
-                  ))}
-                </div>
-              )}
-
-              {/* Form */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-                {/* Row 1: Meeting Subject */}
-                <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                  <label>หัวข้อการประชุม <span className="sp-req">*</span></label>
-                  <input className="sp-field" value={form.subject}
-                    disabled={!isAdmin}
-                    onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, subject: e.target.value }))}
-                    placeholder="เช่น ประชุมสรุปผลการดำเนินงานประจำปี" />
-                </div>
-
-                {/* Row 2: Booker Name & Contact Phone */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>ชื่อผู้จัด/ผู้ประสานงาน <span className="sp-req">*</span></label>
-                    <input className="sp-field" value={form.bookerName}
-                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, bookerName: e.target.value }))}
-                      placeholder="ระบุชื่อผู้ติดต่อ" />
-                  </div>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>เบอร์โทรศัพท์ติดต่อ</label>
-                    <input className="sp-field" value={form.contactPhone}
-                      maxLength={10}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, '');
-                        setForm((f: ScheduleForm) => ({ ...f, contactPhone: val }));
-                      }}
-                      placeholder="0xx-xxxxxxx" />
-                  </div>
-                </div>
-
-                {/* Row 3: Department & Unit */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>หน่วยงานผู้จัด <span className="sp-req">*</span></label>
-                    <CustomSelect
-                      minWidth="100%"
-                      value={form.organizer}
-                      disabled={!isAdmin}
-                      placeholder="เลือกหน่วยงาน/แผนก"
-                      options={departments.map(d => ({ value: d, label: d }))}
-                      onChange={(val) => setForm((f: ScheduleForm) => ({ ...f, organizer: val }))}
-                    />
-                  </div>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>แผนกที่รับผิดชอบ <span className="sp-req">*</span></label>
-                    <CustomSelect
-                      minWidth="100%"
-                      value={form.unit}
-                      placeholder="เลือกกลุ่มงาน/แผนกย่อย"
-                      options={units.map(u => ({ value: u, label: u }))}
-                      onChange={(val) => setForm((f: ScheduleForm) => ({ ...f, unit: val }))}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 4: Day & Time Selection */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>วันที่ประชุม</label>
-                    <div style={{ padding: '12px 16px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '16px', fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>
-                      {selectedDate?.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </div>
-                  </div>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>เวลาเริ่ม <span className="sp-req">*</span></label>
-                    <input type="time" className="sp-field" value={form.startTime}
-                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, startTime: e.target.value }))} />
-                  </div>
-                  <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                    <label>เวลาสิ้นสุด <span className="sp-req">*</span></label>
-                    <input type="time" className="sp-field" value={form.endTime}
-                      onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, endTime: e.target.value }))} />
-                  </div>
-                </div>
-
-                {/* Row 5: Room Selection */}
-                <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                  <label>สถานที่/ห้องประชุม <span className="sp-req">*</span></label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
-                    {roomTypes.map((st: any) => (
-                      <div key={st.value}
-                        onClick={() => setForm((f: ScheduleForm) => ({ ...f, room: st.value }))}
-                        style={{
-                          border: form.room === st.value ? `2px solid ${st.color}` : '1px solid #e2e8f0',
-                          borderRadius: '16px',
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          background: form.room === st.value ? st.color + '10' : '#fff',
-                          transition: 'all 0.2s',
-                          boxShadow: form.room === st.value ? `0 0 0 3px ${st.color}20` : 'none'
-                        }}>
-                        {st.image ? (
-                          <div style={{ height: '60px', width: '100%', background: '#f1f5f9', position: 'relative' }}>
-                            <img src={st.image} alt={st.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          </div>
-                        ) : (
-                          <div style={{ height: '60px', width: '100%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e2e8f0' }}>
-                            <svg width="24" height="24" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                          </div>
-                        )}
-                        <div style={{ padding: '6px', textAlign: 'center', fontSize: '12px', fontWeight: form.room === st.value ? 700 : 500, color: form.room === st.value ? st.color : '#475569' }}>
-                          {st.label}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Row 6: Remark */}
-                <div className="sp-form-group" style={{ marginBottom: 0 }}>
-                  <label>หมายเหตุ</label>
-                  <input className="sp-field" value={form.note}
-                    onChange={(e) => setForm((f: ScheduleForm) => ({ ...f, note: e.target.value }))}
-                    placeholder="ระบุหมายเหตุ (ถ้ามี)" />
-                </div>
-              </div>
-
-              <div className="sp-modal-btns">
-                {!isEditing && (
-                  <button className="sp-btn-save" style={{ background: '#0ea5e9' }} onClick={() => handleSave(true)} disabled={loading || hasConflicts} title="บันทึกคนนี้แล้วเคลียร์ชื่อเพื่อกรอกคนถัดไป">
-                    บันทึก + เพิ่มต่อ
-                  </button>
-                )}
-                <button className="sp-btn-save" onClick={() => handleSave(false)} disabled={loading || hasConflicts}>
-                  {isEditing ? 'อัปเดต (ปิด)' : 'บันทึก (ปิด)'}
-                </button>
-                {isEditing && editingId && (
-                  <button className="sp-btn-delete" onClick={() => confirmDelete(editingId)}>
-                    ลบการประชุม
-                  </button>
-                )}
-                <button className="sp-btn-cancel" onClick={closeModal}>ยกเลิก</button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* REIMBURSEMENT MODAL */}
         {showReimModal && (
