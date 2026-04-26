@@ -15,8 +15,6 @@ export interface Employee {
   prefix: string
   first_name_th: string
   last_name_th: string
-  first_name_en?: string
-  last_name_en?: string
   nickname?: string
   birth_date: string
   gender: string
