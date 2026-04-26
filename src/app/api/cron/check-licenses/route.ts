@@ -38,18 +38,20 @@ export async function GET(req: NextRequest) {
       let message = '';
 
       // Notification Logic: Every day if within critical (30 days), or at specific thresholds
+      const formattedExpDate = new Date(lic.expire_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'long', year: 'numeric' });
+
       if (diffDays <= 0) {
         shouldNotify = true;
         subject = `[แจ้งเตือน] ใบประกอบวิชาชีพหมดอายุแล้ว (${Math.abs(diffDays)} วัน)`;
-        message = `ใบประกอบวิชาชีพ ${lic.license_name} ของคุณหมดอายุแล้วเมื่อวันที่ ${lic.expire_date}. กรุณาดำเนินการต่ออายุทันทีเพื่อรักษาคุณสมบัติในการทำงาน.`;
+        message = `ใบประกอบวิชาชีพ ${lic.license_name} ของคุณหมดอายุแล้วเมื่อวันที่ ${formattedExpDate}. กรุณาดำเนินการต่ออายุทันทีเพื่อรักษาคุณสมบัติในการทำงาน.`;
       } else if (diffDays === 30 || diffDays === 15 || diffDays === 7 || diffDays === 3 || diffDays === 1) {
         shouldNotify = true;
         subject = `[ด่วน] ใบประกอบวิชาชีพจะหมดอายุใน ${diffDays} วัน`;
-        message = `ใบประกอบวิชาชีพ ${lic.license_name} จะหมดอายุในอีก ${diffDays} วัน (${lic.expire_date}). กรุณาเตรียมเอกสารและดำเนินการต่ออายุ.`;
+        message = `ใบประกอบวิชาชีพ ${lic.license_name} จะหมดอายุในอีก ${diffDays} วัน (${formattedExpDate}). กรุณาเตรียมเอกสารและดำเนินการต่ออายุ.`;
       } else if (diffDays === warningThreshold) {
         shouldNotify = true;
         subject = `แจ้งเตือนต่ออายุใบประกอบวิชาชีพล่วงหน้า (${diffDays} วัน)`;
-        message = `ใบประกอบวิชาชีพ ${lic.license_name} ของคุณจะหมดอายุในอีก ${diffDays} วัน. นี่เป็นการแจ้งเตือนล่วงหน้าตามเกณฑ์มาตรฐานของตำแหน่งงานท่าน.`;
+        message = `ใบประกอบวิชาชีพ ${lic.license_name} ของคุณจะหมดอายุในอีก ${diffDays} วัน (${formattedExpDate}). นี่เป็นการแจ้งเตือนล่วงหน้าตามเกณฑ์มาตรฐานของตำแหน่งงานท่าน.`;
       }
 
       if (shouldNotify) {
@@ -67,7 +69,7 @@ export async function GET(req: NextRequest) {
                   <div style="background: #f1f5f9; padding: 24px; border-radius: 12px; margin: 24px 0;">
                     <p style="margin: 0; color: #475569; font-size: 14px;">รายการที่มีการแจ้งเตือน:</p>
                     <p style="margin: 8px 0 0 0; font-size: 18px; font-weight: 800; color: #0f172a;">${lic.license_name}</p>
-                    <p style="margin: 4px 0 0 0; font-size: 14px; color: #ef4444;">วันหมดอายุ: ${lic.expire_date}</p>
+                    <p style="margin: 4px 0 0 0; font-size: 14px; color: #ef4444;">วันหมดอายุ: ${new Date(lic.expire_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                   </div>
                   <p style="font-size: 15px; color: #334155;">${message}</p>
                   <div style="margin-top: 32px; text-align: center;">
