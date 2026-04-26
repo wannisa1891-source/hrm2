@@ -86,7 +86,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         `prefix = ?`, `first_name_th = ?`, `last_name_th = ?`, `nickname = ?`,
         `birth_date = ?`, `gender = ?`, `address = ?`, `citizen_id = ?`, `phone = ?`, `email = ?`, `role = ?`,
         `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `admission_date = ?`, `retirement_date = ?`, 
-        `status = ?`, `cneu_cme_points = ?`, `position_no = ?`,
+        `status = ?`, `position_no = ?`,
         `quota_personal = ?`, `quota_vacation = ?`, `quota_sick = ?`
       ];
 
@@ -111,7 +111,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         safeVal(d.admission_date, existing.admission_date),
         safeVal(d.retirement_date, existing.retirement_date),
         safeVal(d.status, existing.status),
-        d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : existing.cneu_cme_points,
         safeVal(d.position_no, existing.position_no),
         d.quota_personal ? parseInt(d.quota_personal) : existing.quota_personal,
         d.quota_vacation ? parseInt(d.quota_vacation) : existing.quota_vacation,

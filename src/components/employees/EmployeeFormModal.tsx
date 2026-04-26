@@ -35,7 +35,7 @@ export default function EmployeeFormModal({
     emp_id: '', dept_id: '', pos_id: '', emp_type: 'พนักงานราชการ', start_date: '',
     phone: '', address: '', status: 'ทำงานปกติ', retirement_date: '',
     addr_no: '', addr_moo: '', addr_village: '', addr_soi: '', addr_road: '', addr_province: '', addr_district: '', addr_subdistrict: '', addr_zipcode: '',
-    has_license: false, email: '', password: '', role: 'User', cneu_cme_points: 0, licenses: [], position_no: ''
+    has_license: false, email: '', password: '', role: 'User', licenses: [], position_no: ''
   };
 
   const isEditing = !!employee?.emp_id;
@@ -624,10 +624,7 @@ export default function EmployeeFormModal({
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', opacity: (formData.has_license === true || (formData.has_license as any) === 1) ? 1 : 0.5, pointerEvents: (formData.has_license === true || (formData.has_license as any) === 1) ? 'auto' : 'none', transition: 'all 0.3s' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', maxWidth: '300px' }}>
-                      <label style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>🌟 คะแนนหน่วยกิตสะสมรวม </label>
-                      <input type="number" step="0.5" min="0" value={formData.cneu_cme_points || ''} onChange={e => setField('cneu_cme_points', parseFloat(e.target.value))} style={addrInputStyle} />
-                    </div>
+
 
                     {(formData.licenses || []).map((lic, index) => (
                       <div key={index} style={{ padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc', marginBottom: '10px' }}>

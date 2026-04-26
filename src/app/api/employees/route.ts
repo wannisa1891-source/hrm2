@@ -126,9 +126,9 @@ export async function POST(req: NextRequest) {
         (emp_id, username, prefix, first_name_th, last_name_th, nickname,
          birth_date, gender, address, citizen_id, phone, email, password, role, 
          emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, status, 
-         image, cneu_cme_points, position_no,
+         image, position_no,
          quota_personal, quota_vacation, quota_sick) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?, ?, ?, ?, ?, ?)`;
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?, ?, ?, ?, ?)`;
 
       const tempCitizenId = `9${Date.now().toString().slice(-12)}`; // Generate a unique 13-digit number starting with 9
       const values = [
@@ -142,7 +142,6 @@ export async function POST(req: NextRequest) {
         d.start_date || new Date().toISOString().split('T')[0],
         d.admission_date || null, d.retirement_date || null,
         imageName, // Save only to image
-        d.cneu_cme_points ? parseFloat(d.cneu_cme_points) : 0,
         d.position_no || null,
         d.quota_personal ? parseInt(d.quota_personal) : 0,
         d.quota_vacation ? parseInt(d.quota_vacation) : 0,
