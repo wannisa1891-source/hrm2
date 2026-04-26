@@ -280,15 +280,7 @@ function EmployeesContent() {
   };
 
   const openView = (emp: Employee) => {
-    const isOwnProfile = user?.emp_id === emp.emp_id || user?.username === emp.emp_id || (user as any)?.name === emp.emp_id;
-    if (!isAdmin && !isOwnProfile) {
-      Swal.fire('ปฏิเสธการเข้าถึง', 'คุณไม่มีสิทธิ์เข้าดูรายละเอียดของพนักงานท่านอื่น', 'warning');
-      return;
-    }
-    setFormData({ ...emp, citizen_id: emp.citizen_id || '', licenses: emp.licenses || [] });
-    setIsEditing(false);
-    setViewMode(true);
-    setShowForm(true);
+    router.push(`/profile?emp_id=${emp.emp_id}`);
   };
 
   const handleSaveWrapper = async (fd: FormData, editing: boolean, empId?: string) => {
@@ -572,7 +564,7 @@ function EmployeesContent() {
                                 <button className="icon-btn hover-glow" onClick={() => handleResetPassword(emp)} title="ส่งอีเมลรีเซ็ตรหัสผ่าน" style={{ color: '#d97706', background: '#fefce8' }}>
                                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                                 </button>
-                                <button className="icon-btn hover-glow" onClick={() => openEdit(emp)} title="แก้ไขข้อมูล" style={{ color: '#3b82f6' }}>
+                                <button className="icon-btn hover-glow" onClick={() => router.push(`/profile?emp_id=${emp.emp_id}`)} title="แก้ไขข้อมูล" style={{ color: '#3b82f6' }}>
                                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                 </button>
                                 <button className="icon-btn hover-glow" onClick={() => handleDelete(emp.emp_id)} title="ลบข้อมูล" style={{ color: '#ef4444', background: '#fef2f2' }}>

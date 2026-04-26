@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
 import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
@@ -13,12 +13,10 @@ import { usePositions } from '@/hooks/usePositions';
 import { 
   User, Mail, Phone, MapPin, Calendar, Briefcase, 
   Award, ShieldCheck, Lock, CreditCard, FileText, 
-  ChevronRight, Camera, Edit3, Fingerprint, Globe, Bell
+  ChevronRight, Camera, Edit3, Fingerprint, Globe
 } from 'lucide-react';
-import { useAnnouncements } from '@/hooks/useAnnouncements';
-import Modal from '@/components/common/Modal';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { calculateWorkDuration, formatDurationThai, formatThaiDate } from '@/lib/dateUtils';
+import Modal from '@/components/common/Modal';
 import type { Employee } from '@/services/apiService';
 
 interface ProfileData {
@@ -36,9 +34,11 @@ interface ProfileData {
   trainings?: any[];
 }
 
-export default function MyProfilePage() {
+function ProfileContent() {
   const { user, isLoggedIn, login } = useAuth();
-  const isAdmin = ['Super Admin', 'Admin', 'admin', 'HR'].includes(user?.role || '');
+  const searchParams = useSearchParams();
+  const empIdParam = searchParams.get('emp_id');
+  const isAdmin = ['Super Admin', 'Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
 
   const formatZeroString = (val: string | null | undefined) => {
     if (!val) return '-';
@@ -56,10 +56,9 @@ export default function MyProfilePage() {
   const { departments, loadDepartments } = useDepartments();
   const { positions, loadPositions } = usePositions();
   
-  const { announcements } = useAnnouncements();
-  const [selectedNews, setSelectedNews] = useState<any>(null);
 
-  const fullProfile = employees.find((e: any) => e.emp_id === user?.emp_id) || null;
+  const targetId = empIdParam || user?.emp_id || user?.username;
+  const fullProfile = employees.find((e: any) => e.emp_id === targetId) || null;
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -142,9 +141,16 @@ export default function MyProfilePage() {
   const handleEditInfoClick = () => setShowEditModal(true);
 
   const fetchProfile = async () => {
-    const targetId = user?.emp_id || user?.username;
     if (!targetId) {
       setLoading(false);
+      return;
+    }
+
+    // Permission check
+    const isOwnProfile = targetId === user?.emp_id || targetId === user?.username;
+    if (!isAdmin && !isOwnProfile) {
+      Swal.fire('ปฏิเสธการเข้าถึง', 'คุณไม่มีสิทธิ์เข้าดูรายละเอียดของพนักงานท่านอื่น', 'warning');
+      router.push('/dashboard');
       return;
     }
 
@@ -200,14 +206,13 @@ export default function MyProfilePage() {
 
   return (
     <AppLayout>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 16px 16px', width: '100%' }}>
-        <DashboardHeader today={today} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 16px 16px', width: '100%', marginTop: '24px' }}>
         
         <style dangerouslySetInnerHTML={{
           __html: `
-        .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 0 8px 32px; width: 100%; min-height: calc(100vh - 100px); }
+        .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 0 8px 32px; width: 100%; min-height: calc(100vh - 100px); align-items: stretch; }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); transition: all 0.3s ease; }
-        .left-card { position: sticky; top: 24px; height: fit-content; text-align: center; }
+        .left-card { position: sticky; top: 24px; display: flex; flex-direction: column; text-align: center; height: 100%; }
         .profile-avatar-wrap { width: 160px; height: 160px; border-radius: 40px; margin: 0 auto 24px; padding: 6px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); position: relative; transform: rotate(-3deg); transition: transform 0.3s; }
         .profile-avatar-wrap:hover { transform: rotate(0deg); }
         .profile-avatar { width: 100%; height: 100%; border-radius: 36px; object-fit: cover; border: 4px solid white; background: #f1f5f9; }
@@ -234,21 +239,21 @@ export default function MyProfilePage() {
         .tab-btn:hover { color: #3b82f6; }
         .tab-btn.active { background: white; color: #2563eb; box-shadow: 0 4px 15px -5px rgba(0,0,0,0.1); }
         
-        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; align-items: stretch; }
         .info-span-2 { grid-column: span 2; }
         @media (max-width: 768px) {
           .info-grid { grid-template-columns: 1fr; }
           .info-span-2 { grid-column: span 1; }
         }
-        .info-section { background: white; border-radius: 24px; padding: 24px; border: 1px solid #f1f5f9; }
+        .info-section { background: white; border-radius: 24px; padding: 24px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; height: 100%; }
         .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid #f8fafc; padding-bottom: 16px; }
         .section-icon { width: 40px; height: 40px; border-radius: 12px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; }
         .section-title { font-size: 16px; font-weight: 800; color: #0f172a; }
         
-        .data-list { display: flex; flex-direction: column; gap: 16px; }
+        .data-list { display: flex; flex-direction: column; gap: 16px; flex: 1; }
         .data-item { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: flex-start; }
         .data-label { font-size: 13px; color: #94a3b8; font-weight: 600; }
-        .data-val { font-size: 14px; color: #334155; font-weight: 500; word-break: break-all; }
+        .data-val { font-size: 14px; color: #334155; font-weight: 500; overflow-wrap: break-word; }
         
         .card-title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
         .card-title-icon { color: #3b82f6; }
@@ -333,7 +338,7 @@ export default function MyProfilePage() {
           
           <button 
             className="btn-primary" 
-            style={{ width: '100%', marginTop: '24px', justifyContent: 'center' }}
+            style={{ width: '100%', marginTop: 'auto', justifyContent: 'center', minHeight: '48px' }}
             onClick={handleEditInfoClick}
           >
             <Edit3 size={18} /> แก้ไขข้อมูลส่วนตัว
@@ -341,34 +346,6 @@ export default function MyProfilePage() {
         </div>
 
         <div className="profile-main">
-          {/* News Banner for Users */}
-          {announcements.length > 0 && (
-            <div className="glass-card" style={{ padding: '20px 24px', background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Bell size={20} />
-                  </div>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#1e293b' }}>ข่าวสารและประกาศล่าสุด</h3>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
-                {announcements.slice(0, 2).map((news: any, i: number) => (
-                  <div key={i} onClick={() => setSelectedNews(news)} style={{ cursor: 'pointer', background: 'white', borderRadius: '16px', padding: '12px', border: '1px solid #e2e8f0', display: 'flex', gap: '16px', transition: 'all 0.2s' }} className="hover-lift">
-                    {news.image && (
-                      <div style={{ width: '80px', height: '60px', borderRadius: '10px', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
-                        <Image src={news.image} alt={news.title} fill style={{ objectFit: 'cover' }} unoptimized />
-                      </div>
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{news.title}</div>
-                      <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{news.date}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="profile-tabs">
             <button className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
@@ -416,6 +393,10 @@ export default function MyProfilePage() {
                     <span className="data-label">เพศ</span>
                     <span className="data-val">{profile.gender || '-'}</span>
                   </div>
+                  <div className="data-item" style={{ gridTemplateColumns: '1fr', gap: '4px', marginTop: 'auto', paddingTop: '16px', borderTop: '1px dashed #f1f5f9' }}>
+                    <span className="data-label">ที่อยู่ปัจจุบัน</span>
+                    <div className="data-val" style={{ lineHeight: '1.6', fontSize: '13.5px' }}>{fullProfile?.address || '—'}</div>
+                  </div>
                 </div>
               </div>
 
@@ -447,9 +428,8 @@ export default function MyProfilePage() {
                     <span className="data-label">วันที่เริ่มงาน</span>
                     <div className="data-val">
                       <div>{formatThaiDate(profile.start_date || profile.hire_date)}</div>
-                      <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 600, marginTop: '4px', lineHeight: '1.4' }}>
-                        <div>รวมระยะเวลา:</div>
-                        <div>{formatDurationThai(calculateWorkDuration(profile.start_date || profile.hire_date))}</div>
+                      <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 600, marginTop: '4px' }}>
+                        รวมระยะเวลา: {formatDurationThai(calculateWorkDuration(profile.start_date || profile.hire_date))}
                       </div>
                     </div>
                   </div>
@@ -484,7 +464,7 @@ export default function MyProfilePage() {
                   </div>
                 </div>
                 
-                <div className="leave-stats" style={{ gridTemplateColumns: profile.accumulated_vacation ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)' }}>
+                <div className="leave-stats" style={{ gridTemplateColumns: profile.accumulated_vacation ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', marginTop: 'auto', paddingTop: '16px' }}>
                   <div className="leave-stat">
                     <div className="leave-stat-val" style={{ color: '#059669' }}>{profile.quota_vacation || 0}</div>
                     <div className="leave-stat-label">พักร้อน</div>
@@ -506,18 +486,6 @@ export default function MyProfilePage() {
                 </div>
               </div>
 
-              <div className="info-section info-span-2">
-                <div className="section-header">
-                  <div className="section-icon"><MapPin size={20} /></div>
-                  <h3 className="section-title">ข้อมูลที่อยู่</h3>
-                </div>
-                <div className="data-list">
-                  <div className="data-item">
-                    <span className="data-label">ที่อยู่ปัจจุบัน</span>
-                    <div className="data-val">{fullProfile?.address || '—'}</div>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
@@ -781,33 +749,6 @@ export default function MyProfilePage() {
         positions={positions}
       />
 
-      <Modal
-        isOpen={!!selectedNews}
-        onClose={() => setSelectedNews(null)}
-        title="รายละเอียดข่าวประกาศ"
-      >
-        {selectedNews && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {selectedNews.image && (
-              <div style={{ width: '100%', height: 240, position: 'relative', borderRadius: 16, overflow: 'hidden', background: '#f1f5f9' }}>
-                <Image fill unoptimized src={selectedNews.image} alt={selectedNews.title} style={{ objectFit: 'cover' }} />
-              </div>
-            )}
-            <div>
-              <h3 style={{ margin: 0, fontSize: 20, color: '#0f172a', fontWeight: 800 }}>{selectedNews.title}</h3>
-              <div style={{ fontSize: 13, color: '#64748b', marginTop: 4, fontWeight: 600 }}>{selectedNews.date}</div>
-            </div>
-            <div style={{ padding: '20px', borderRadius: '16px', background: '#f8fafc', border: '1px solid #f1f5f9' }}>
-              <p style={{ margin: 0, fontSize: 15, color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{selectedNews.content}</p>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-              <button className="btn-primary" onClick={() => setSelectedNews(null)} style={{ padding: '10px 32px' }}>
-                ปิดหน้าต่าง
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
 
       <Modal
         isOpen={!!selectedTraining}
@@ -851,5 +792,13 @@ export default function MyProfilePage() {
       </Modal>
       </div>
     </AppLayout>
+  );
+}
+
+export default function MyProfilePage() {
+  return (
+    <Suspense fallback={<AppLayout><div style={{ textAlign: 'center', padding: '50px' }}>กำลังโหลด...</div></AppLayout>}>
+      <ProfileContent />
+    </Suspense>
   );
 }
