@@ -74,7 +74,7 @@ const OrderPdfTemplate = forwardRef<HTMLDivElement, OrderPdfTemplateProps>(({ tr
 
         <div style={{ marginBottom: '0.5cm' }}>
           <span style={{ paddingLeft: '2cm' }}></span>
-          เพื่อให้การบริหารงานบุคคลของโรงพยาบาลเป็นไปด้วยความเรียบร้อยและมีประสิทธิภาพ อาศัยอำนาจตามระเบียบของกระทรวงสาธารณสุข จึงมีคำสั่ง{transfer.transfer_type} <strong>{transfer.emp_name}</strong> (รหัสพนักงาน: {transfer.emp_id}) ดังรายละเอียดต่อไปนี้
+          เพื่อให้การบริหารงานบุคคลของโรงพยาบาลเป็นไปด้วยความเรียบร้อยและมีประสิทธิภาพ อาศัยอำนาจตามระเบียบของกระทรวงสาธารณสุข จึงมีคำสั่ง{transfer.transfer_type} <strong>{transfer.emp_name}</strong> (เลขประจำตำแหน่ง: {transfer.emp_id}) ดังรายละเอียดต่อไปนี้
         </div>
 
         <div style={{ marginBottom: '1cm', marginTop: '1cm' }}>

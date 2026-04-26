@@ -152,7 +152,7 @@ function EmployeesContent() {
       // Simple validation for the first row to ensure they used correct headers
       const firstRow = mappedData[0];
       if (!firstRow.emp_id && !firstRow.first_name_th) {
-        Swal.fire('ข้อผิดพลาด', 'ตรวจสอบพบว่าหัวคอลัมน์ในไฟล์ Excel ไม่ตรงกับรูปแบบที่ระบบต้องการครับ (ต้องมี รหัสพนักงาน, ชื่อ (TH), แผนก, ตำแหน่ง)', 'error');
+        Swal.fire('ข้อผิดพลาด', 'ตรวจสอบพบว่าหัวคอลัมน์ในไฟล์ Excel ไม่ตรงกับรูปแบบที่ระบบต้องการครับ (ต้องมี เลขประจำตำแหน่ง, ชื่อ (TH), แผนก, ตำแหน่ง)', 'error');
         setIsImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
@@ -482,7 +482,7 @@ function EmployeesContent() {
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
-                  <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
+                  <th style={{ textAlign: 'center' }}>เลขประจำตำแหน่ง</th>
                   <th style={{ textAlign: 'center' }}>เลขบัตรประชาชน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
                   <th>ชื่อเล่น</th>

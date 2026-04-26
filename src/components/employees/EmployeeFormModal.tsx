@@ -474,8 +474,8 @@ export default function EmployeeFormModal({
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสพนักงาน</label>
-                    <input type="text" value={formData.position_no || ''} onChange={e => setField('position_no', e.target.value)} style={inputStyle} placeholder="ระบุรหัสพนักงาน" />
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เลขประจำตำแหน่ง</label>
+                    <input type="text" value={formData.position_no || ''} onChange={e => setField('position_no', e.target.value)} style={inputStyle} placeholder="ระบุเลขประจำตำแหน่ง" />
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
