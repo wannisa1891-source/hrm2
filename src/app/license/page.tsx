@@ -426,8 +426,8 @@ export default function LicensePage() {
 
             <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: '#e2e8f0', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
                {[
-                  { id: 'list', label: 'ทะเบียนบุคลากร' },
-                  { id: 'settings', label: 'ใบประกอบวิชาชีพ' }
+                  { id: 'list', label: 'ใบประกอบวิชาชีพ' },
+                  { id: 'settings', label: 'การตั้งค่าเกณฑ์' }
                ].filter(t => isAdmin || t.id === 'list').map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} style={{ padding: '12px 28px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', background: activeTab === tab.id ? '#fff' : 'transparent', color: activeTab === tab.id ? '#0f172a' : '#64748b', boxShadow: activeTab === tab.id ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>{tab.label}</button>
                ))}
@@ -488,7 +488,7 @@ export default function LicensePage() {
             {activeTab === 'settings' && (
                <div style={cardStyle}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                     <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>ใบประกอบวิชาชีพ</h3>
+                     <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>การตั้งค่าเกณฑ์</h3>
                      <button onClick={() => handleOpenModal('config')} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>+ เพิ่มเกณฑ์</button>
                   </div>
                   <div style={{ overflowX: 'auto' }}>
