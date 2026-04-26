@@ -182,6 +182,7 @@ export interface DashboardData {
   empCount: number
   leaveTodayCount: number
   vacantCount: number
+  reimburseCount?: number
   professions: Array<{ name: string; value: number; color: string }>
   pendingTransfers: number
   pendingLeaves: number
