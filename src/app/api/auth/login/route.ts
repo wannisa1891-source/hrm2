@@ -19,6 +19,10 @@ export async function POST(req: NextRequest) {
     const cleanUsername = String(username || '').trim();
     const cleanPassword = String(password || '').trim();
 
+    console.log('--- LOGIN DEBUG START ---');
+    console.log('Username Input:', cleanUsername);
+    console.log('Password Length:', cleanPassword.length);
+
     if (!cleanUsername || !cleanPassword) {
       return NextResponse.json(
         { success: false, message: 'กรุณากรอกข้อมูลให้ครบถ้วน' },
@@ -51,10 +55,13 @@ export async function POST(req: NextRequest) {
     // fs.appendFileSync('login_debug.log', logMsg);
 
     if (rows.length === 0) {
+      console.log('DEBUG: User not found in database');
       return NextResponse.json({ success: false, message: 'ไม่พบชื่อผู้ใช้งานนี้ในระบบ' }, { status: 401 });
     }
 
     const user = rows[0];
+    console.log('DEBUG: User found:', user.username, 'emp_id:', user.emp_id);
+    console.log('DEBUG: Stored Password Hash:', user.password);
     const userStatus = String(user.status || '').trim();
 
     // 4. Check status (รองรับทั้งภาษาอังกฤษเดิมและภาษาไทยมาตรฐาน)
@@ -113,6 +120,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    console.log('DEBUG: Password Match Result:', isMatch);
+
     if (isMatch) {
       // Success: Reset login_attempts and update last_login
       const isFirstLogin = user.last_login === null;
@@ -154,6 +163,7 @@ export async function POST(req: NextRequest) {
         'UPDATE tbl_employees SET login_attempts = login_attempts + 1 WHERE emp_id = ?',
         [user.emp_id]
       );
+      console.log('DEBUG: Login failed - Incorrect password');
       return NextResponse.json({ success: false, message: 'Username หรือ Password ไม่ถูกต้อง' }, { status: 401 });
     }
 
