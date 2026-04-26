@@ -186,7 +186,7 @@ export default function MyProfilePage() {
 
   return (
     <AppLayout>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 16px 16px' }}>
         <DashboardHeader today={today} />
         
         <style dangerouslySetInnerHTML={{
@@ -283,10 +283,10 @@ export default function MyProfilePage() {
           <div className="quick-stats">
             <div className="stat-item">
               <span className="stat-label">รหัสพนักงาน</span>
-              <span className="stat-val">{profile.emp_id}</span>
+              <span className="stat-val">{profile.position_no || profile.emp_id}</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">อายุงาน</span>
+              <span className="stat-label">อายุงาน (วันเริ่ม-ปัจจุบัน)</span>
               <span className="stat-val">
                 {profile?.start_date ? formatDurationThai(calculateWorkDuration(profile.start_date)) : (profile?.hire_date ? formatDurationThai(calculateWorkDuration(profile.hire_date)) : '-')}
               </span>
@@ -439,7 +439,28 @@ export default function MyProfilePage() {
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันที่เกษียณ</span>
-                    <span className="data-val">{formatThaiDate(profile.retirement_date)}</span>
+                    <span className="data-val">
+                      {formatThaiDate(profile.retirement_date)}
+                      {(() => {
+                        if (!profile?.birth_date) return null;
+                        const bDate = new Date(profile.birth_date);
+                        if (isNaN(bDate.getTime())) return null;
+                        const birthYear = bDate.getFullYear();
+                        const currentYear = new Date().getFullYear();
+                        if (birthYear + 60 !== currentYear) return null;
+                        const month = bDate.getMonth();
+                        if (month >= 9) {
+                          return (
+                            <div style={{ marginTop: '6px' }}>
+                              <span style={{ color: '#f97316', fontSize: '11px', fontWeight: 700, background: '#fff7ed', border: '1px solid #fed7aa', padding: '3px 8px', borderRadius: '6px', display: 'inline-block' }}>
+                                * เกษียณปีถัดไปตามงบประมาณ
+                              </span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </span>
                   </div>
                 </div>
                 
@@ -513,7 +534,7 @@ export default function MyProfilePage() {
                     </thead>
                     <tbody>
                       {leaves.map((l: any, idx: number) => (
-                        <tr key={idx}>
+                        <tr key={idx} onClick={() => router.push(`/leave?id=${l.leave_id}`)} style={{ cursor: 'pointer' }} title="คลิกเพื่อดูรายละเอียด">
                           <td>{new Date(l.start_date).toLocaleDateString('th-TH')} - {new Date(l.end_date).toLocaleDateString('th-TH')}</td>
                           <td>{l.leave_type || l.leave_type_id}</td>
                           <td>{l.total_days} วัน</td>

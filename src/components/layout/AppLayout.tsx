@@ -14,6 +14,11 @@ export default function AppLayout({ children, hideScrollbar = false }: { childre
   const pathname = usePathname();
   const isDashboard = pathname === '/dashboard' || pathname === '/profile' || pathname === '/';
 
+  useEffect(() => {
+    const handleExpand = () => setCollapsed(false);
+    window.addEventListener('expand-sidebar', handleExpand);
+    return () => window.removeEventListener('expand-sidebar', handleExpand);
+  }, []);
 
   useEffect(() => {
     if (!isLoggedIn) {

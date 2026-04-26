@@ -110,11 +110,10 @@ export default function EmployeeFormModal({
       const bDate = new Date(formData.birth_date);
       if (!isNaN(bDate.getTime())) {
         let retirementYear = bDate.getFullYear() + 60;
-        // Rule: If born after 1 October (2 Oct onwards), retire next year
+        // Rule: Born between Jan 1 - Sep 30 retire that year, Oct 1 onwards retire next year
         // Month is 0-indexed, so Oct is 9.
         const month = bDate.getMonth();
-        const day = bDate.getDate();
-        if (month > 9 || (month === 9 && day >= 2)) {
+        if (month >= 9) {
           retirementYear += 1;
         }
         const rDate = `${retirementYear}-09-30`;
@@ -475,8 +474,8 @@ export default function EmployeeFormModal({
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>เลขประจำตำแหน่ง</label>
-                    <input type="text" value={formData.position_no || ''} onChange={e => setField('position_no', e.target.value)} style={inputStyle} placeholder="ถ้าไม่มีให้เว้นว่างไว้" />
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>รหัสพนักงาน</label>
+                    <input type="text" value={formData.position_no || ''} onChange={e => setField('position_no', e.target.value)} style={inputStyle} placeholder="ระบุรหัสพนักงาน" />
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -547,7 +546,7 @@ export default function EmployeeFormModal({
                     </>
                   )}
                   <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: '1 / -1' }}>
-                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>สังกัด และ ตำแหน่งงาน</label>
+                    <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>กลุ่มงาน และ ตำแหน่งงาน</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>กลุ่มงาน <span style={{ color: '#ef4444' }}>*</span></label>

@@ -90,7 +90,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         `quota_personal = ?`, `quota_vacation = ?`, `quota_sick = ?`
       ];
 
-      const safeVal = (v: any, fallback: any) => (v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') ? fallback : v;
+      const safeVal = (v: any, fallback: any) => (v === undefined || v === null || v === 'null' || v === 'undefined') ? fallback : v;
 
       const values: any[] = [
         safeVal(d.prefix, existing.prefix),

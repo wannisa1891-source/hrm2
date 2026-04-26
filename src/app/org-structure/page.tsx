@@ -458,11 +458,10 @@ export default function DepartmentAndEmployeePage() {
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                       <th style={{ ...styles.th, width: '80px' }}>รูปภาพ</th>
-                      <th style={{ ...styles.th, width: '100px' }}>เลขประจำตำแหน่ง</th>
-                      <th style={{ ...styles.th, width: '100px' }}>เลขบัตรประชาชน</th>
+                      <th style={{ ...styles.th, width: '100px' }}>รหัสพนักงาน</th>
                       <th style={styles.th}>ชื่อ-สกุล</th>
                       <th style={styles.th}>ชื่อเล่น</th>
-                      <th style={styles.th}>แผนก</th>
+                      <th style={styles.th}>กลุ่มงาน</th>
                       <th style={styles.th}>หน่วยงาน</th>
                       <th style={styles.th}>ตำแหน่ง</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
@@ -502,10 +501,10 @@ export default function DepartmentAndEmployeePage() {
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                       <th style={{ ...styles.th, width: '80px' }}>รูปภาพ</th>
-                      <th style={{ ...styles.th, width: '100px' }}>เลขประจำตำแหน่ง</th>
+                      <th style={{ ...styles.th, width: '100px' }}>รหัสพนักงาน</th>
                       <th style={styles.th}>ชื่อ-สกุล</th>
                       <th style={styles.th}>ชื่อเล่น</th>
-                      <th style={styles.th}>แผนก</th>
+                      <th style={styles.th}>กลุ่มงาน</th>
                       <th style={styles.th}>หน่วยงาน</th>
                       <th style={styles.th}>ตำแหน่ง</th>
                       <th style={{ ...styles.th, width: '120px', textAlign: 'center' }}>สถานะ</th>
@@ -1160,10 +1159,25 @@ function EmployeeRow({
         </div>
       </td>
       <td style={{ ...styles.td, fontWeight: 700, color: '#475569' }}>
-        {emp.emp_id}
+        {emp.position_no || emp.emp_id}
       </td>
       <td style={styles.td}>
-        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{emp.first_name_th} {emp.last_name_th}</div>
+        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {emp.first_name_th} {emp.last_name_th}
+          {(() => {
+            if (!emp.birth_date) return null;
+            const bDate = new Date(emp.birth_date);
+            if (isNaN(bDate.getTime())) return null;
+            const birthYear = bDate.getFullYear();
+            const currentYear = new Date().getFullYear();
+            if (birthYear + 60 !== currentYear) return null;
+            const month = bDate.getMonth();
+            if (month >= 9) {
+              return <span style={{ color: '#f97316', fontSize: '14px', fontWeight: 900, cursor: 'help' }} title="เกษียณปีถัดไปตามงบประมาณ">*</span>;
+            }
+            return null;
+          })()}
+        </div>
       </td>
       <td style={{ ...styles.td, color: '#334155' }}>
         {emp.nickname || '-'}

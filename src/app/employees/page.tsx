@@ -486,12 +486,12 @@ function EmployeesContent() {
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
-                  <th style={{ textAlign: 'center' }}>เลขประจำตำแหน่ง</th>
+                  <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
                   <th style={{ textAlign: 'center' }}>เลขบัตรประชาชน</th>
                   <th>ชื่อ-สกุลพนักงาน</th>
                   <th>ชื่อเล่น</th>
                   <th>ตำแหน่ง</th>
-                  <th>แผนก (กลุ่มงาน)</th>
+                  <th>กลุ่มงาน</th>
                   <th>หน่วยงาน</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
@@ -520,12 +520,30 @@ function EmployeesContent() {
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
-                            {emp.emp_id}
+                            {emp.position_no || emp.emp_id}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#64748b', fontFamily: 'monospace', fontWeight: 600 }}>
+                            {emp.citizen_id || '-'}
                           </div>
                         </td>
                         <td>
                           <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>
                             {emp.prefix}{emp.first_name_th} {emp.last_name_th}
+                            {(() => {
+                              if (!emp.birth_date) return null;
+                              const bDate = new Date(emp.birth_date);
+                              if (isNaN(bDate.getTime())) return null;
+                              const birthYear = bDate.getFullYear();
+                              const currentYear = new Date().getFullYear();
+                              if (birthYear + 60 !== currentYear) return null;
+                              const month = bDate.getMonth();
+                              if (month >= 9) {
+                                return <span style={{ color: '#f97316', fontSize: '14px', fontWeight: 900, cursor: 'help' }} title="เกษียณปีถัดไปตามงบประมาณ">*</span>;
+                              }
+                              return null;
+                            })()}
                             {emp.license_status === 'Expired' && <span className="badge badge-red" title="ใบประกอบวิชาชีพหมดอายุ">หมดอายุ</span>}
                           </div>
                         </td>
@@ -661,7 +679,7 @@ function EmployeesContent() {
                       <div style={{ position: 'relative', zIndex: 3, marginTop: '24px', padding: '0 32px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '50px 1fr', gap: '6px 8px', fontSize: '11px' }}>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>ID</div>
-                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.emp_id}</div>
+                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.position_no || empForCard.emp_id}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>DOB</div>
                           <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.birth_date ? new Date(empForCard.birth_date).toLocaleDateString('en-US') : '-'}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>Phone</div>

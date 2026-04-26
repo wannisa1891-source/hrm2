@@ -15,15 +15,17 @@ interface SearchResult {
 }
 
 export default function DashboardHeader({ today }: { today: string }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const userName = user?.name || "Hospital HRM";
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
 
   // Debounce search
   useEffect(() => {
@@ -60,6 +62,9 @@ export default function DashboardHeader({ today }: { today: string }) {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowDropdown(false)
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -106,7 +111,7 @@ export default function DashboardHeader({ today }: { today: string }) {
     }
   }
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 0 }}>
 
       <div>
         <span style={{
@@ -224,12 +229,11 @@ export default function DashboardHeader({ today }: { today: string }) {
         
         <div 
           style={{ position: 'relative', width: 45, height: 45, cursor: 'pointer', transition: 'transform 0.2s' }}
-          onClick={() => router.push('/profile')}
+          onClick={() => window.dispatchEvent(new CustomEvent('expand-sidebar'))}
           onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
           onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          title="โปรไฟล์ส่วนตัว"
+          title="เปิดเมนูบาร์"
         >
-
           <div style={{
             width: 45,
             height: 45,
@@ -260,7 +264,6 @@ export default function DashboardHeader({ today }: { today: string }) {
             border: '2px solid #f0f2f5',
             borderRadius: '50%'
           }} />
-
         </div>
 
       </div>
