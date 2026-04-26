@@ -1,5 +1,9 @@
 //กราฟวงกลม
+import { useState } from 'react';
+import Modal from '@/components/common/Modal';
+
 export default function DonutChart({ data = [] }: { data?: any[] }) {
+    const [selectedDivision, setSelectedDivision] = useState<any>(null);
     const total = data.reduce((acc, curr) => acc + curr.value, 0);
     let currentOffset = 0;
 
@@ -20,8 +24,8 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
             }}
         >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1e293b" }}>สถิติวิชาชีพบุคลากร</h3>
-                <span style={{ fontSize: 13, color: "#64748b", background: "#f1f5f9", padding: "4px 12px", borderRadius: 20, fontWeight: 600 }}>อัพเดทล่าสุด</span>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1e293b" }}>สถิติกลุ่มงานบุคลากร</h3>
+                <span style={{ fontSize: 13, color: "#64748b", background: "#f1f5f9", padding: "4px 12px", borderRadius: 20, fontWeight: 600 }}>คลิกเพื่อดูแผนกย่อย</span>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", gap: 20, flex: 1, flexWrap: 'wrap' }}>
@@ -56,6 +60,7 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
                                     strokeDasharray={strokeDasharray}
                                     strokeDashoffset={strokeDashoffset}
                                     strokeLinecap="round"
+                                    onClick={() => setSelectedDivision(item)}
                                     style={{
                                         transition: "stroke-dashoffset 1s ease-in-out, stroke-dasharray 1s ease-in-out",
                                         cursor: "pointer"
@@ -93,18 +98,54 @@ export default function DonutChart({ data = [] }: { data?: any[] }) {
                     {data.length > 0 ? data.map((item, index) => {
                         const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
                         return (
-                            <div key={index} className="chart-legend-item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, fontSize: 14, background: "#f8fafc", padding: "8px 16px", borderRadius: 12 }}>
+                            <div 
+                                key={index} 
+                                className="chart-legend-item" 
+                                onClick={() => setSelectedDivision(item)}
+                                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, fontSize: 14, background: "#f8fafc", padding: "8px 16px", borderRadius: 12, cursor: 'pointer' }}
+                            >
                                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                     <span style={{ width: 12, height: 12, borderRadius: '50%', background: item.color, display: 'inline-block', boxShadow: `0 2px 6px ${item.color}66` }}></span>
                                     <span style={{ color: "#334155", fontWeight: 500 }}>{item.name}</span>
                                 </div>
-                                <span style={{ fontWeight: 700, color: "#0f172a" }}>{percent}%</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <span style={{ color: "#64748b", fontWeight: 600, fontSize: 12 }}>{item.value} คน</span>
+                                    <span style={{ fontWeight: 700, color: "#0f172a" }}>{percent}%</span>
+                                </div>
                             </div>
                         )
                     }) : <span style={{ color: "#94a3b8", textAlign: 'center', width: '100%' }}>ไม่มีข้อมูล</span>}
                 </div>
 
             </div>
+
+            <Modal
+                isOpen={!!selectedDivision}
+                onClose={() => setSelectedDivision(null)}
+                title={`รายละเอียดแผนกย่อย: ${selectedDivision?.name}`}
+            >
+                {selectedDivision && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '12px 20px', borderRadius: 12 }}>
+                            <span style={{ fontSize: 16, fontWeight: 700, color: '#334155' }}>บุคลากรทั้งหมดในกลุ่มงาน</span>
+                            <span style={{ fontSize: 20, fontWeight: 800, color: selectedDivision.color }}>{selectedDivision.value} คน</span>
+                        </div>
+                        
+                        <div style={{ maxHeight: 300, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingRight: 4 }} className="custom-scrollbar">
+                            {selectedDivision.subDepts && selectedDivision.subDepts.length > 0 ? (
+                                selectedDivision.subDepts.map((sub: any, idx: number) => (
+                                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: '#f8fafc', borderLeft: `4px solid ${selectedDivision.color}`, borderRadius: '4px 12px 12px 4px' }}>
+                                        <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{sub.name}</span>
+                                        <span style={{ fontSize: 14, fontWeight: 700, color: '#64748b' }}>{sub.value} คน</span>
+                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px 0' }}>ไม่มีข้อมูลแผนกย่อย</div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     )
 }

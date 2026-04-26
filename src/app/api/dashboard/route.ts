@@ -67,11 +67,10 @@ export async function GET(req: NextRequest) {
       pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status IN ('Active', 'A', 'ทำงานปกติ')"),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE ? >= start_date AND ? <= end_date", [today, today]),
       pool.query(`
-        SELECT p.pos_name as name, COUNT(e.emp_id) as value
+        SELECT d.division as name, d.dept_name, COUNT(e.emp_id) as value
         FROM tbl_employees e
-        LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id
-        WHERE e.status IN ('Active', 'A', 'ทำงานปกติ')
-        GROUP BY p.pos_name
+        LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
+        GROUP BY d.division, d.dept_name
       `),
       pool.query("SELECT COUNT(*) as count FROM tbl_transfers").catch(() => [[{ count: 0 }]]),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE status = 'Pending'"),
@@ -89,11 +88,28 @@ export async function GET(req: NextRequest) {
     const vacantCount = Math.max(0, totalCapacity - empCount);
     const reimburseCount = (reimburseResult[0] as any[])[0].count || 0;
 
-    const colors = ['#4A5644', '#C5A073', '#8884d8', '#82ca9d', '#ffc658'];
-    const professions = (profResult[0] as any[]).map((row, index) => ({
-      name: row.name || 'ไม่ระบุ',
-      value: row.value,
-      color: colors[index % colors.length]
+    const colors = ['#4A5644', '#C5A073', '#8884d8', '#82ca9d', '#ffc658', '#4b5563', '#10b981', '#3b82f6'];
+    const divisionMap = new Map<string, { name: string; value: number; subDepts: any[] }>();
+    
+    (profResult[0] as any[]).forEach(row => {
+      const divName = row.name || 'ไม่ระบุ';
+      const deptName = row.dept_name || 'ไม่ระบุ';
+      const count = Number(row.value) || 0;
+
+      if (!divisionMap.has(divName)) {
+        divisionMap.set(divName, { name: divName, value: 0, subDepts: [] });
+      }
+
+      const div = divisionMap.get(divName)!;
+      div.value += count;
+      div.subDepts.push({ name: deptName, value: count });
+    });
+
+    const professions = Array.from(divisionMap.values()).map((div, index) => ({
+      name: div.name,
+      value: div.value,
+      color: colors[index % colors.length],
+      subDepts: div.subDepts.sort((a, b) => b.value - a.value)
     }));
 
     const pendingTransfers = (transferResult[0] as any[])[0].count;
