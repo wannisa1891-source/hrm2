@@ -9,10 +9,12 @@ import NotificationBell from '@/components/layout/NotificationBell';
 
 export default function AppLayout({ children, hideScrollbar = false }: { children: React.ReactNode, hideScrollbar?: boolean }) {
   const [collapsed, setCollapsed] = useState(true);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const isAdmin = ['Super Admin', 'Admin', 'admin', 'HR', 'หัวหน้า'].includes(user?.role || '');
   const isDashboard = pathname === '/dashboard' || pathname === '/';
+  const showBack = !isDashboard && (pathname !== '/profile' || isAdmin);
 
   useEffect(() => {
     const handleExpand = () => setCollapsed(false);
@@ -34,7 +36,7 @@ export default function AppLayout({ children, hideScrollbar = false }: { childre
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
       <main className={`main-content${collapsed ? ' expanded' : ''}${hideScrollbar ? ' no-scrollbar' : ''}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 8px', width: '100%' }}>
-          <div>{!isDashboard && <BackButton />}</div>
+          <div>{showBack && <BackButton />}</div>
           <div><NotificationBell /></div>
         </div>
 
