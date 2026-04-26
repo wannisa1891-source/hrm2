@@ -114,7 +114,7 @@ export default function UserDashboard({
             {(licenseStats.expired > 0 || licenseStats.expiring > 0) ? (
               <>
                 <div style={{ fontSize: 20, fontWeight: 800 }}>
-                  {licenseStats.expired > 0 ? 'พบใบอนุญาตหมดอายุ!' : 'ใบอนุญาตใกล้หมดอายุ'}
+                  {licenseStats.expired > 0 ? 'พบใบประกอบวิชาชีพหมดอายุ!' : 'ใบประกอบวิชาชีพใกล้หมดอายุ'}
                 </div>
                 <div style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>
                   {licenseStats.expired > 0 ? `จำนวน ${licenseStats.expired} รายการ` : `ต้องต่ออายุภายใน 90 วัน (${licenseStats.expiring} รายการ)`}
@@ -123,7 +123,7 @@ export default function UserDashboard({
             ) : (
               <>
                 <div style={{ fontSize: 18, fontWeight: 800, color: '#10b981' }}>ปกติ</div>
-                <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>ข้อมูลใบอนุญาตเป็นปัจจุบัน</div>
+                <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>ข้อมูลใบประกอบวิชาชีพเป็นปัจจุบัน</div>
               </>
             )}
           </div>
@@ -139,7 +139,7 @@ export default function UserDashboard({
             textDecoration: 'none',
             border: (licenseStats.expired > 0 || licenseStats.expiring > 0) ? 'none' : '1px solid #e2e8f0'
           }}>
-            จัดการใบอนุญาต
+            จัดการใบประกอบวิชาชีพ
           </Link>
         </div>
       </div>

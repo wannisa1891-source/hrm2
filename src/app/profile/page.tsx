@@ -367,7 +367,7 @@ function ProfileContent() {
               <Calendar size={16} /> ประวัติการลา
             </button>
             <button className={`tab-btn ${activeTab === 'certificates' ? 'active' : ''}`} onClick={() => setActiveTab('certificates')}>
-              <Award size={16} /> ใบอนุญาต
+              <Award size={16} /> ใบประกอบวิชาชีพ
             </button>
             <button className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')}>
               <FileText size={16} /> ประวัติอบรม
@@ -557,18 +557,18 @@ function ProfileContent() {
           {activeTab === 'certificates' && (
             <div className="glass-card" style={{ padding: '32px' }}>
               <h3 className="card-title">
-                <Award className="card-title-icon" size={24} /> รายการใบอนุญาตและวุฒิบัตร
+                <Award className="card-title-icon" size={24} /> รายการใบประกอบวิชาชีพและวุฒิบัตร
               </h3>
               {!fullProfile?.licenses || fullProfile.licenses.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
                   <Award size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-                  <p>ยังไม่มีข้อมูลใบอนุญาต</p>
+                  <p>ยังไม่มีข้อมูลใบประกอบวิชาชีพ</p>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                   {fullProfile.licenses.map((lic: any, idx: number) => (
                     <div key={idx} onClick={() => setSelectedLicense(lic)} style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer' }} className="hover-lift">
-                      <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{lic.license_name || lic.license_no || 'ใบอนุญาต'}</div>
+                      <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{lic.license_name || lic.license_no || 'ใบประกอบวิชาชีพ'}</div>
                       <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>ออกให้โดย: {lic.institution || '-'}</div>
                       {(lic.issue_date || lic.expire_date) && (
                         <div style={{ fontSize: '12px', color: '#3b82f6', background: '#eff6ff', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', fontWeight: 600 }}>
@@ -767,13 +767,13 @@ function ProfileContent() {
       <Modal
         isOpen={!!selectedLicense}
         onClose={() => setSelectedLicense(null)}
-        title="รายละเอียดใบอนุญาต / วุฒิบัตร"
+        title="รายละเอียดใบประกอบวิชาชีพ / วุฒิบัตร"
       >
         {selectedLicense && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ padding: '20px', borderRadius: '16px', background: '#f8fafc', border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ fontSize: '15px', color: '#334155' }}>
-                <strong>ชื่อใบอนุญาต:</strong> {selectedLicense.license_name || selectedLicense.license_no}
+                <strong>ชื่อใบประกอบวิชาชีพ:</strong> {selectedLicense.license_name || selectedLicense.license_no}
               </div>
               <div style={{ fontSize: '15px', color: '#334155' }}>
                 <strong>หน่วยงานที่ออกให้:</strong> {selectedLicense.institution || '-'}

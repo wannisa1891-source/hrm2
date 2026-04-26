@@ -641,7 +641,7 @@ export default function EmployeeFormModal({
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '12px', color: '#64748b' }}>ชื่อใบอนุญาต</label>
+                            <label style={{ fontSize: '12px', color: '#64748b' }}>ชื่อใบประกอบวิชาชีพ</label>
                             <input type="text" value={lic.license_name || ''} onChange={e => setLicenseField(index, 'license_name', e.target.value)} style={addrInputStyle} />
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -649,7 +649,7 @@ export default function EmployeeFormModal({
                             <input type="text" value={lic.license_type || ''} onChange={e => setLicenseField(index, 'license_type', e.target.value)} style={addrInputStyle} />
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '12px', color: '#64748b' }}>เลขที่ใบอนุญาต</label>
+                            <label style={{ fontSize: '12px', color: '#64748b' }}>เลขที่ใบประกอบวิชาชีพ</label>
                             <input type="text" value={lic.license_no || ''} onChange={e => setLicenseField(index, 'license_no', e.target.value)} style={addrInputStyle} />
                           </div>
                         </div>
@@ -746,7 +746,7 @@ export default function EmployeeFormModal({
                         </div>
                       </div>
                     ))}
-                    <button type="button" onClick={handleAddLicense} style={{ padding: '10px', background: '#eff6ff', color: '#3b82f6', border: '1px dashed #93c5fd', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s', marginTop: '10px' }}>+ เพิ่มใบอนุญาต</button>
+                    <button type="button" onClick={handleAddLicense} style={{ padding: '10px', background: '#eff6ff', color: '#3b82f6', border: '1px dashed #93c5fd', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s', marginTop: '10px' }}>+ เพิ่มใบประกอบวิชาชีพ</button>
                   </div>
                 </div>
 
@@ -779,7 +779,7 @@ export default function EmployeeFormModal({
                 <thead style={{ background: '#f8fafc' }}>
                   <tr>
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>ลำดับ</th>
-                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>เลขที่ใบอนุญาต</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>เลขที่ใบประกอบวิชาชีพ</th>
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>วันหมดอายุ</th>
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>สถานะ</th>
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>ปรับปรุงเมื่อ</th>

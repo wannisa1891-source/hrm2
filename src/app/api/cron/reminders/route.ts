@@ -88,7 +88,7 @@ export async function GET() {
             
             <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
               <p><strong>ประเภท:</strong> ${typeStr}</p>
-              <p><strong>เลขที่ใบอนุญาต:</strong> ${row.license_no || '-'}</p>
+              <p><strong>เลขที่ใบประกอบวิชาชีพ:</strong> ${row.license_no || '-'}</p>
               <p><strong>วันหมดอายุ:</strong> ${new Date(row.expire_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric'})}</p>
               <p><strong>เวลาที่เหลือ:</strong> <span style="color: #ef4444; font-weight: bold;">${daysLeft} วัน</span></p>
             </div>

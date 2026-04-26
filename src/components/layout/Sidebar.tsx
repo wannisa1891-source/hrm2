@@ -50,14 +50,13 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'leave',
-    label: 'การลา',
+    label: 'การลา / เบิกงบ',
     icon: icons.leave,
     children: [
-      { id: 'schedule', label: 'ตารางประชุม', href: '/schedule', icon: icons.schedule },
+      { id: 'schedule', label: 'ระบบเบิกงบ', href: '/schedule', icon: icons.schedule },
       { id: 'leave-sys', label: 'ระบบการลา', href: '/leave', icon: icons.leave },
     ],
   },
-
   {
     id: 'audit',
     label: 'ประวัติบันทึก',
@@ -94,15 +93,24 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     return menuItems.reduce<any[]>((acc, item) => {
       let newItem = { ...item };
 
-      // สำหรับบัญชี Admin (Super Admin) - ให้เหลือแค่ Dashboard และ Audit Logs
+      // สำหรับบัญชี Admin (Super Admin) - ให้เหลือแค่ Dashboard, Profile และ Audit Logs
       if (isSuperAdmin) {
-        if (newItem.id === 'dashboard' || newItem.id === 'audit') {
+        if (newItem.id === 'dashboard' || newItem.id === 'audit' || newItem.id === 'profile-main') {
           acc.push(newItem);
         }
         return acc;
       }
 
-      // สำหรับ HR และหัวหน้าแผนก (Other Management Roles)
+      // สำหรับบัญชี Head (หัวหน้าแผนก)
+      if (isHead) {
+        // หัวหน้าเห็นแค่ "การลา / เบิกงบ" และ "โปรไฟล์ของฉัน" เท่านั้น
+        if (newItem.id === 'leave' || newItem.id === 'profile-main') {
+          acc.push(newItem);
+        }
+        return acc;
+      }
+
+      // สำหรับ HR (Other Management Roles)
       if (newItem.id === 'audit') return acc; // Audit logs เฉพาะ Admin เท่านั้น
 
       acc.push(newItem);
