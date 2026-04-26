@@ -61,7 +61,8 @@ export async function GET(req: NextRequest) {
       userQuotaResult,
       userUsedResult,
       userRecentResult,
-      capacityResult
+      capacityResult,
+      reimburseResult
     ] = await Promise.all([
       pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status IN ('Active', 'A', 'ทำงานปกติ')"),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE ? >= start_date AND ? <= end_date", [today, today]),
@@ -78,13 +79,15 @@ export async function GET(req: NextRequest) {
       employeeQuotaQuery,
       employeeUsedLeavesQuery,
       employeeRecentLeavesQuery,
-      pool.query("SELECT SUM(capacity) as total_capacity FROM tbl_departments")
+      pool.query("SELECT SUM(capacity) as total_capacity FROM tbl_departments"),
+      pool.query("SELECT COUNT(*) as count FROM tbl_reimbursements").catch(() => [[{ count: 0 }]])
     ]);
 
     const empCount = (empResult[0] as any[])[0].count;
     const leaveTodayCount = (leaveResult[0] as any[])[0].count;
     const totalCapacity = (capacityResult[0] as any[])[0].total_capacity || 0;
     const vacantCount = Math.max(0, totalCapacity - empCount);
+    const reimburseCount = (reimburseResult[0] as any[])[0].count || 0;
 
     const colors = ['#4A5644', '#C5A073', '#8884d8', '#82ca9d', '#ffc658'];
     const professions = (profResult[0] as any[]).map((row, index) => ({
@@ -157,6 +160,7 @@ export async function GET(req: NextRequest) {
       empCount,
       leaveTodayCount,
       vacantCount,
+      reimburseCount,
       professions,
       pendingTransfers,
       pendingLeaves,
