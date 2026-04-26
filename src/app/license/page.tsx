@@ -4,10 +4,6 @@ import React, { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
-import {
-   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
-   BarChart, Bar, XAxis, YAxis, CartesianGrid
-} from 'recharts';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,15 +69,6 @@ interface License {
    warning_days_override?: number;
 }
 
-interface MonitorData {
-   totalEmployees: number;
-   compliant: number;
-   missing: number;
-   expiring: number;
-   pending: number;
-   departmentStats: Record<string, { total: number, compliant: number, missing: number, expiring: number, pending: number }>;
-   details: any[];
-}
 
 interface LicenseConfig {
    id: number;
@@ -246,11 +233,9 @@ function ModernSelect({
 export default function LicensePage() {
    const { user } = useAuth();
    const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'hr';
-   const isDeptHead = user?.role === 'หัวหน้า';
 
-   const [activeTab, setActiveTab] = useState<'list' | 'monitor' | 'settings'>('list');
+   const [activeTab, setActiveTab] = useState<'list' | 'settings'>('list');
    const [licenses, setLicenses] = useState<License[]>([]);
-   const [monitorData, setMonitorData] = useState<MonitorData | null>(null);
    const [configs, setConfigs] = useState<LicenseConfig[]>([]);
    const [allEmployees, setAllEmployees] = useState<any[]>([]);
    const [departments, setDepartments] = useState<any[]>([]);
@@ -280,8 +265,6 @@ export default function LicensePage() {
    const [submitting, setSubmitting] = useState(false);
    const [historyData, setHistoryData] = useState<License[]>([]);
    const [historyOpen, setHistoryOpen] = useState(false);
-   const [statusDetailModal, setStatusDetailModal] = useState({ isOpen: false, status: '', label: '', color: '' });
-   const [statusSearchTerm, setStatusSearchTerm] = useState('');
 
    useEffect(() => {
       fetchInitialData();
@@ -289,7 +272,6 @@ export default function LicensePage() {
 
    useEffect(() => {
       if (activeTab === 'list') fetchLicenses();
-      if (activeTab === 'monitor') fetchMonitorData();
       if (activeTab === 'settings') fetchConfigs();
    }, [activeTab, searchTerm, statusFilter]);
 
@@ -319,14 +301,6 @@ export default function LicensePage() {
       } catch (err) { console.error('Fetch Licenses Error:', err); } finally { setLoading(false); }
    };
 
-   const fetchMonitorData = async () => {
-      try {
-         setLoading(true);
-         const v = Date.now();
-         const res = await fetch(`/api/licenses/monitor?v=${v}`, { cache: 'no-store' });
-         setMonitorData(await res.json());
-      } catch (err) { console.error('Fetch Monitor Error:', err); } finally { setLoading(false); }
-   };
 
    const fetchConfigs = async () => {
       try {
@@ -453,9 +427,8 @@ export default function LicensePage() {
             <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: '#e2e8f0', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
                {[
                   { id: 'list', label: 'ทะเบียนบุคลากร' },
-                  { id: 'monitor', label: 'สรุปผลภาพรวม' },
                   { id: 'settings', label: 'การตั้งค่าเกณฑ์' }
-               ].filter(t => isAdmin || (isDeptHead && t.id === 'monitor') || t.id === 'list').map(tab => (
+               ].filter(t => isAdmin || t.id === 'list').map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} style={{ padding: '12px 28px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', background: activeTab === tab.id ? '#fff' : 'transparent', color: activeTab === tab.id ? '#0f172a' : '#64748b', boxShadow: activeTab === tab.id ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>{tab.label}</button>
                ))}
             </div>
@@ -512,58 +485,6 @@ export default function LicensePage() {
                </div>
             )}
 
-            {activeTab === 'monitor' && (
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                  {loading && !monitorData ? (
-                     <div style={cardStyle}>กำลังโหลดข้อมูลสรุปผล...</div>
-                  ) : monitorData ? (
-                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '24px' }}>
-                           {[
-                              { label: 'พนักงานทั้งหมด', val: monitorData.totalEmployees, color: '#0f172a', statusKey: 'all' },
-                              { label: 'ถูกต้องครบถ้วน', val: monitorData.compliant, color: '#16a34a', statusKey: 'Compliant' },
-                              { label: 'ใกล้หมดอายุ', val: monitorData.expiring, color: '#ca8a04', statusKey: 'Expiring' },
-                              { label: 'รอตรวจสอบ', val: monitorData.pending, color: '#7c3aed', statusKey: 'PendingAudit' },
-                              { label: 'หมดอายุ', val: monitorData.missing, color: '#dc2626', statusKey: 'RedAlert' }
-                           ].map((c, i) => (
-                              <div key={i} style={cardStyle} onClick={() => setStatusDetailModal({ isOpen: true, status: c.statusKey, label: c.label, color: c.color })}>
-                                 <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>{c.label}</p>
-                                 <h2 style={{ margin: '8px 0 0 0', fontSize: '36px', fontWeight: 900, color: c.color }}>{c.val}</h2>
-                              </div>
-                           ))}
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '32px', minHeight: '400px' }}>
-                           <div style={cardStyle}>
-                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สัดส่วนพนักงานตามสถานะ</h3>
-                              <div style={{ height: '320px' }}>
-                                 <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                       <Pie data={[{ name: 'ครบถ้วน', value: monitorData.compliant, color: '#16a34a' }, { name: 'ใกล้หมดอายุ', value: monitorData.expiring, color: '#ca8a04' }, { name: 'รอตรวจสอบ', value: monitorData.pending, color: '#7c3aed' }, { name: 'หมดอายุ', value: monitorData.missing, color: '#dc2626' }]} innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
-                                          {[ { color: '#16a34a' }, { color: '#ca8a04' }, { color: '#7c3aed' }, { color: '#dc2626' } ].map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                                       </Pie>
-                                       <Tooltip /><Legend />
-                                    </PieChart>
-                                 </ResponsiveContainer>
-                              </div>
-                           </div>
-                           <div style={{ ...cardStyle, overflow: 'hidden' }}>
-                              <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 800 }}>สถานะแยกตามภาคส่วน</h3>
-                              <div className="custom-scrollbar" style={{ height: '320px', overflowX: 'auto' }}>
-                                 <div style={{ minWidth: `${Math.max(800, Object.keys(monitorData.departmentStats).length * 80)}px`, height: '100%' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                       <BarChart data={Object.entries(monitorData.departmentStats).map(([dept, stats]) => ({ name: dept, ครบถ้วน: stats.compliant, ใกล้หมดอายุ: stats.expiring, รอตรวจสอบ: stats.pending, หมดอายุ: stats.missing }))}>
-                                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" /><XAxis dataKey="name" fontSize={10} angle={-35} textAnchor="end" height={80} /><YAxis fontSize={10} /><Tooltip />
-                                          <Bar dataKey="ครบถ้วน" stackId="a" fill="#16a34a" barSize={30} /><Bar dataKey="ใกล้หมดอายุ" stackId="a" fill="#ca8a04" barSize={30} /><Bar dataKey="รอตรวจสอบ" stackId="a" fill="#7c3aed" barSize={30} /><Bar dataKey="หมดอายุ" stackId="a" fill="#dc2626" radius={[4, 4, 0, 0]} barSize={30} />
-                                       </BarChart>
-                                    </ResponsiveContainer>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                     </>
-                  ) : <div style={cardStyle}>ไม่พบข้อมูล</div>}
-               </div>
-            )}
 
             {activeTab === 'settings' && (
                <div style={cardStyle}>
@@ -753,26 +674,6 @@ export default function LicensePage() {
                </div>
             )}
 
-            {statusDetailModal.isOpen && (
-               <div onClick={() => setStatusDetailModal({ ...statusDetailModal, isOpen: false })} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)' }}>
-                  <div onClick={e => e.stopPropagation()} style={{ background: '#f8fafc', width: '900px', maxHeight: '85vh', borderRadius: '40px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)' }}>
-                     <div style={{ padding: '32px 48px', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div><div style={{ color: statusDetailModal.color, fontSize: '12px', fontWeight: 900 }}>รายชื่อพนักงาน</div><h3 style={{ margin: 0, fontSize: '28px', fontWeight: 900 }}>{statusDetailModal.label}</h3></div>
-                        <input type="text" placeholder="ค้นหาชื่อ หรือ รหัส..." value={statusSearchTerm} onChange={e => setStatusSearchTerm(e.target.value)} style={{ padding: '12px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', outline: 'none' }} />
-                     </div>
-                     <div style={{ flex: 1, overflowY: 'auto', padding: '32px 48px' }}>
-                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
-                           <thead><tr style={{ textAlign: 'left', color: '#94a3b8', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase' }}><th>พนักงาน</th><th>ตำแหน่ง / แผนก</th><th>รายละเอียด</th></tr></thead>
-                           <tbody>
-                              {monitorData?.details.filter(emp => { if (statusDetailModal.status === 'RedAlert') { if (emp.status !== 'Missing' && emp.status !== 'Expired') return false; } else if (statusDetailModal.status !== 'all') { if (emp.status !== statusDetailModal.status) return false; } return !statusSearchTerm || emp.first_name_th?.includes(statusSearchTerm) || emp.emp_id?.includes(statusSearchTerm); }).map((emp, idx) => (
-                                 <tr key={idx} style={{ background: '#fff', borderRadius: '20px' }}><td style={{ padding: '16px' }}>{emp.first_name_th} {emp.last_name_th} (ID: {emp.emp_id})</td><td>{emp.pos_name} / {emp.dept_name}</td><td style={{ textAlign: 'right' }}><button onClick={() => { const lic = licenses.find(lx => lx.emp_id === emp.emp_id); handleOpenModal('view', lic ? { ...lic, emp_id: emp.emp_id } : { emp_id: emp.emp_id }); }} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '12px', color: '#2563eb', fontWeight: 800 }}>ดูโปรไฟล์</button></td></tr>
-                              ))}
-                           </tbody>
-                        </table>
-                     </div>
-                  </div>
-               </div>
-            )}
          </div>
       </AppLayout>
    );
