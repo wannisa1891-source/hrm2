@@ -157,6 +157,7 @@ export interface Department {
   dept_name: string
   division?: string
   sub_dept?: string
+  capacity?: number
   description?: string
   head_emp_id?: string
   phone?: string

@@ -16,8 +16,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { dept_id, division, dept_name, sub_dept, description, head_emp_id, phone, org_chart_url, sop_url, rules_url } = body;
+    const { dept_id, division, dept_name, sub_dept, capacity, description, head_emp_id, phone, org_chart_url, sop_url, rules_url } = body;
 
     if (!dept_id || !dept_name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -30,8 +29,8 @@ export async function POST(req: Request) {
     }
 
     await pool.query(
-      'INSERT INTO tbl_departments (dept_id, division, dept_name, sub_dept, description, head_emp_id, phone, org_chart_url, sop_url, rules_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [dept_id, division || null, dept_name, sub_dept || null, description || null, head_emp_id || null, phone || null, org_chart_url || null, sop_url || null, rules_url || null]
+      'INSERT INTO tbl_departments (dept_id, division, dept_name, sub_dept, capacity, description, head_emp_id, phone, org_chart_url, sop_url, rules_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [dept_id, division || null, dept_name, sub_dept || null, capacity || 0, description || null, head_emp_id || null, phone || null, org_chart_url || null, sop_url || null, rules_url || null]
     );
 
     return NextResponse.json({ message: 'Department created successfully' }, { status: 201 });

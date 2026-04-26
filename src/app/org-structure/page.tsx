@@ -76,6 +76,7 @@ export default function DepartmentAndEmployeePage() {
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>('view');
   const [deptForm, setDeptForm] = useState({
     id: '', name: '', division: '', isEdit: false,
+    sub_dept: '', capacity: 0,
     description: '', head_emp_id: '', phone: '', org_chart_url: '', sop_url: '', rules_url: ''
   });
   const [showDeptEmployees, setShowDeptEmployees] = useState(false);
@@ -171,6 +172,8 @@ export default function DepartmentAndEmployeePage() {
     }
     const deptData = {
       division: deptForm.division,
+      sub_dept: deptForm.sub_dept,
+      capacity: Number(deptForm.capacity || 0),
       description: deptForm.description,
       head_emp_id: deptForm.head_emp_id,
       phone: deptForm.phone,
@@ -219,6 +222,8 @@ export default function DepartmentAndEmployeePage() {
       setModalMode(mode);
       setDeptForm({
         id: dept.dept_id, name: dept.dept_name, division: dept.division || '', isEdit: true,
+        sub_dept: dept.sub_dept || '',
+        capacity: dept.capacity || 0,
         description: dept.description || '',
         head_emp_id: dept.head_emp_id || '',
         phone: dept.phone || '',
@@ -230,6 +235,7 @@ export default function DepartmentAndEmployeePage() {
       setModalMode('create');
       setDeptForm({
         id: '', name: '', division: '', isEdit: false,
+        sub_dept: '', capacity: 0,
         description: '', head_emp_id: '', phone: '', org_chart_url: '', sop_url: '', rules_url: ''
       });
     }
@@ -879,6 +885,29 @@ export default function DepartmentAndEmployeePage() {
                     style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
                     placeholder="เช่น ฝ่ายทรัพยากรบุคคล"
                   />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>แผนกย่อย / หน่วยงานย่อย</label>
+                    <input
+                      type="text"
+                      value={deptForm.sub_dept || ''}
+                      onChange={(e) => setDeptForm({ ...deptForm, sub_dept: e.target.value })}
+                      style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
+                      placeholder="เช่น OPD"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>อัตรากำลัง</label>
+                    <input
+                      type="number"
+                      value={deptForm.capacity || ''}
+                      onChange={(e) => setDeptForm({ ...deptForm, capacity: e.target.value })}
+                      style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
