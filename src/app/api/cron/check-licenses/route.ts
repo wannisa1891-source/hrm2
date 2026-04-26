@@ -30,8 +30,8 @@ export async function GET(req: NextRequest) {
       const diffMs = expDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-      // Use warning_days from config, default to 90 if not set
-      const warningThreshold = lic.warning_days || 90;
+      // Use warning_days from config, default to 180 if not set
+      const warningThreshold = lic.warning_days || 180;
       
       let shouldNotify = false;
       let subject = '';

@@ -258,7 +258,7 @@ export default function LicensePage() {
    });
 
    const [configFormData, setConfigFormData] = useState<Partial<LicenseConfig>>({
-      config_name: '', pos_id: null, dept_id: null, license_name: '', issuer: null, valid_years: 5, warning_days: 90
+      config_name: '', pos_id: null, dept_id: null, license_name: '', issuer: null, valid_years: 5, warning_days: 180
    });
 
    const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -379,7 +379,7 @@ export default function LicensePage() {
    const handleOpenModal = (type: any, data?: any) => {
       if (type === 'config') {
          setSelectedConfig(data || null);
-         setConfigFormData(data || { config_name: '', pos_id: null, dept_id: null, license_name: '', issuer: null, valid_years: 5, warning_days: 90 });
+         setConfigFormData(data || { config_name: '', pos_id: null, dept_id: null, license_name: '', issuer: null, valid_years: 5, warning_days: 180 });
       } else {
          setSelectedLicense(data || null);
          setSearchTermEmp('');
@@ -427,7 +427,7 @@ export default function LicensePage() {
             <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: '#e2e8f0', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
                {[
                   { id: 'list', label: 'ทะเบียนบุคลากร' },
-                  { id: 'settings', label: 'การตั้งค่าเกณฑ์' }
+                  { id: 'settings', label: 'ใบประกอบวิชาชีพ' }
                ].filter(t => isAdmin || t.id === 'list').map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} style={{ padding: '12px 28px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', background: activeTab === tab.id ? '#fff' : 'transparent', color: activeTab === tab.id ? '#0f172a' : '#64748b', boxShadow: activeTab === tab.id ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>{tab.label}</button>
                ))}
@@ -485,11 +485,10 @@ export default function LicensePage() {
                </div>
             )}
 
-
             {activeTab === 'settings' && (
                <div style={cardStyle}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                     <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>เกณฑ์มาตรฐานตามสายวิชาชีพ</h3>
+                     <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>ใบประกอบวิชาชีพ</h3>
                      <button onClick={() => handleOpenModal('config')} style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>+ เพิ่มเกณฑ์</button>
                   </div>
                   <div style={{ overflowX: 'auto' }}>
@@ -516,8 +515,8 @@ export default function LicensePage() {
                                        <div>{departments.find(d => d.dept_id === c.dept_id)?.dept_name || 'ทุกหน่วยงาน'}</div>
                                        <div style={{ color: '#64748b' }}>{positions.find(p => p.pos_id === c.pos_id)?.pos_name || 'ทุกสายงาน'}</div>
                                     </td>
-                                    <td style={{ fontWeight: 700 }}>{c.valid_years}</td>
-                                    <td style={{ color: '#ea580c', fontWeight: 700 }}>{c.warning_days}</td>
+                                    <td style={{ fontWeight: 700 }}>{c.valid_years === 0 ? 'ไม่มีวันหมดอายุ' : `${c.valid_years} ปี`}</td>
+                                    <td style={{ color: '#ea580c', fontWeight: 700 }}>{c.warning_days === 0 ? '-' : `${c.warning_days} วัน`}</td>
                                      <td style={{ whiteSpace: 'nowrap' }}>
                                         {link ? <a href={link} target="_blank" rel="noreferrer" style={{ background: '#3b82f6', color: '#fff', padding: '6px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center' }}>ตรวจสอบสภาฯ</a> : <span style={{ fontSize: '11px', color: '#cbd5e1' }}>ไม่พบลิงก์</span>}
                                      </td>
@@ -555,7 +554,21 @@ export default function LicensePage() {
                                     )}
                                     <div>
                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>ประเภทใบอนุญาต <span style={{ color: '#ef4444' }}>*</span></label>
-                                       <input required value={formData.license_name} onChange={e => setFormData({ ...formData, license_name: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', outline: 'none' }} />
+                                       <ModernSelect 
+                                          value={formData.license_name} 
+                                          onChange={val => {
+                                             const cfg = configs.find(c => c.license_name === val);
+                                             const updates: any = { license_name: val };
+                                             if (cfg && formData.issue_date && cfg.valid_years > 0) {
+                                                updates.expire_date = addYears(formData.issue_date, cfg.valid_years);
+                                             } else if (cfg && cfg.valid_years === 0) {
+                                                updates.expire_date = '';
+                                             }
+                                             setFormData({ ...formData, ...updates });
+                                          }} 
+                                          options={configs.map(c => ({ value: c.license_name, label: c.config_name }))} 
+                                          placeholder="ระบุประเภทวิชาชีพ..."
+                                       />
                                     </div>
                                     <div>
                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>เลขที่ใบอนุญาต <span style={{ color: '#ef4444' }}>*</span></label>
@@ -563,11 +576,19 @@ export default function LicensePage() {
                                     </div>
                                     <div>
                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>วันออกบัตร</label>
-                                       <input type="date" value={formData.issue_date} onChange={e => setFormData({ ...formData, issue_date: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', outline: 'none' }} />
+                                       <input type="date" value={formData.issue_date} onChange={e => {
+                                          const val = e.target.value;
+                                          const cfg = configs.find(c => c.license_name === formData.license_name);
+                                          const updates: any = { issue_date: val };
+                                          if (cfg && val && cfg.valid_years > 0) {
+                                             updates.expire_date = addYears(val, cfg.valid_years);
+                                          }
+                                          setFormData({ ...formData, ...updates });
+                                       }} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', outline: 'none' }} />
                                     </div>
                                     <div>
-                                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>วันหมดอายุ <span style={{ color: '#ef4444' }}>*</span></label>
-                                       <input type="date" required value={formData.expire_date} onChange={e => setFormData({ ...formData, expire_date: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', outline: 'none' }} />
+                                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '10px' }}>วันหมดอายุ {(!formData.license_name || !configs.find(c => c.license_name === formData.license_name && c.valid_years === 0)) && <span style={{ color: '#ef4444' }}>*</span>}</label>
+                                       <input type="date" required={!formData.license_name || !configs.find(c => c.license_name === formData.license_name && c.valid_years === 0)} value={formData.expire_date} onChange={e => setFormData({ ...formData, expire_date: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0', outline: 'none' }} />
                                     </div>
                                     <div style={{ gridColumn: 'span 2' }}>
                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -643,11 +664,11 @@ export default function LicensePage() {
             {activeModal === 'config' && (
                <div onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)' }}>
                   <div onClick={e => e.stopPropagation()} style={{ background: '#fff', padding: '48px', borderRadius: '40px', width: '600px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)' }}>
-                     <h2 style={{ margin: '0 0 32px 0', fontSize: '24px', fontWeight: 900 }}>ตั้งค่าเกณฑ์มาตรฐาน</h2>
+                     <h2 style={{ margin: '0 0 32px 0', fontSize: '24px', fontWeight: 900 }}>ตั้งค่าใบประกอบวิชาชีพ</h2>
                      <form onSubmit={handleConfigSubmit} onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault(); }}>
                         <div style={{ display: 'grid', gap: '24px', marginBottom: '32px' }}>
-                           <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ชื่อเกณฑ์</label><input required value={configFormData.config_name} onChange={e => setConfigFormData({ ...configFormData, config_name: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>
-                           <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ประเภทวิชาชีพ</label><input required value={configFormData.license_name} onChange={e => setConfigFormData({ ...configFormData, license_name: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>
+                           <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ชื่อวิชาชีพ/สายงาน</label><input required value={configFormData.config_name} onChange={e => setConfigFormData({ ...configFormData, config_name: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>
+                           <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ชื่อในใบอนุญาต</label><input required value={configFormData.license_name} onChange={e => setConfigFormData({ ...configFormData, license_name: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>
                            <div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                  <label style={{ fontSize: '14px', fontWeight: 800 }}>สภาวิชาชีพ</label>
@@ -661,9 +682,13 @@ export default function LicensePage() {
                               <ModernSelect value={configFormData.issuer || ''} onChange={val => setConfigFormData({ ...configFormData, issuer: val })} options={ISSUERS.map(i => ({ value: i, label: i }))} />
                            </div>
                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                              <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>แผนก (ทุกแผนกละเว้น)</label><ModernSelect value={configFormData.dept_id || ''} onChange={val => setConfigFormData({ ...configFormData, dept_id: val })} options={departments.map(d => ({ value: d.dept_id, label: d.dept_name }))} /></div>
-                              <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ตำแหน่ง (ทุกตำแหน่งละเว้น)</label><ModernSelect value={configFormData.pos_id || ''} onChange={val => setConfigFormData({ ...configFormData, pos_id: val })} options={positions.map(p => ({ value: p.pos_id, label: p.pos_name }))} /></div>
-                           </div>
+                               <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>อายุบัตร (ปี - 0 คือถาวร)</label><input type="number" value={configFormData.valid_years} onChange={e => setConfigFormData({ ...configFormData, valid_years: parseInt(e.target.value) || 0 })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>
+                               <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>เตือนล่วงหน้า (วัน)</label><input type="number" value={configFormData.warning_days} onChange={e => setConfigFormData({ ...configFormData, warning_days: parseInt(e.target.value) || 0 })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>
+                            </div>
+                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                               <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>แผนก (ทุกแผนกละเว้น)</label><ModernSelect value={configFormData.dept_id || ''} onChange={val => setConfigFormData({ ...configFormData, dept_id: val })} options={departments.map(d => ({ value: d.dept_id, label: d.dept_name }))} /></div>
+                               <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ตำแหน่ง (ทุกตำแหน่งละเว้น)</label><ModernSelect value={configFormData.pos_id || ''} onChange={val => setConfigFormData({ ...configFormData, pos_id: val })} options={positions.map(p => ({ value: p.pos_id, label: p.pos_name }))} /></div>
+                            </div>
                         </div>
                         <div style={{ display: 'flex', gap: '16px' }}>
                            <button type="button" onClick={() => setActiveModal('none')} style={{ flex: 1, padding: '16px', borderRadius: '40px', background: '#f1f5f9', border: 'none', fontWeight: 800 }}>ยกเลิก</button>
