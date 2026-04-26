@@ -185,7 +185,7 @@ export default function LoginPage() {
         
         {/* Help text for first-time general users */}
         <div style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.5)', background: 'rgba(0,0,0,0.1)', padding: '8px', borderRadius: '8px' }}>
-          💡 เข้าสู่ระบบครั้งแรก: ใช้รหัสพนักงาน/อีเมล และรหัสผ่านเป็นเลขบัตรประชาชน หรือ 123456
+          💡 เข้าสู่ระบบครั้งแรก: ใช้เลขประจำตำแหน่ง/อีเมล และรหัสผ่านเป็นเลขบัตรประชาชน หรือ 123456
         </div>
       </div>
     </div>

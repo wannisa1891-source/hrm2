@@ -345,7 +345,7 @@ export default function TransferCreatePage() {
                   <input
                     id="field-emp-search"
                     className={`cr-input cr-search-input ${errors.empId && touched.empId ? 'cr-input-err' : ''}`}
-                    placeholder="ค้นหาด้วยชื่อหรือรหัสพนักงาน..."
+                    placeholder="ค้นหาด้วยชื่อหรือเลขประจำตำแหน่ง..."
                     value={searchQ}
                     onChange={e => setSearchQ(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), searchEmployee())}

@@ -447,7 +447,7 @@ export default function LicensePage() {
                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                            <tr style={{ textAlign: 'left', color: '#64748b', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>
-                              <th style={{ padding: '16px' }}>รหัสพนักงาน</th>
+                              <th style={{ padding: '16px' }}>เลขประจำตำแหน่ง</th>
                               <th>ชื่อ-นามสกุล</th>
                               <th style={{ width: "220px", whiteSpace: "nowrap" }}>วิชาชีพ</th>
                               <th>เลขใบประกอบวิชาชีพ</th>

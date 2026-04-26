@@ -431,7 +431,7 @@ export default function DepartmentAndEmployeePage() {
               <div style={styles.searchWrapper}>
                 <Search size={18} color="#94a3b8" />
                 <input
-                  placeholder="ค้นหาชื่อ, รหัสพนักงาน..."
+                  placeholder="ค้นหาชื่อ, เลขประจำตำแหน่ง..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   style={styles.searchInput}
@@ -458,7 +458,7 @@ export default function DepartmentAndEmployeePage() {
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                       <th style={{ ...styles.th, width: '80px' }}>รูปภาพ</th>
-                      <th style={{ ...styles.th, width: '100px' }}>รหัสพนักงาน</th>
+                      <th style={{ ...styles.th, width: '100px' }}>เลขประจำตำแหน่ง</th>
                       <th style={styles.th}>ชื่อ-สกุล</th>
                       <th style={styles.th}>ชื่อเล่น</th>
                       <th style={styles.th}>กลุ่มงาน</th>
@@ -501,7 +501,7 @@ export default function DepartmentAndEmployeePage() {
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                       <th style={{ ...styles.th, width: '80px' }}>รูปภาพ</th>
-                      <th style={{ ...styles.th, width: '100px' }}>รหัสพนักงาน</th>
+                      <th style={{ ...styles.th, width: '100px' }}>เลขประจำตำแหน่ง</th>
                       <th style={styles.th}>ชื่อ-สกุล</th>
                       <th style={styles.th}>ชื่อเล่น</th>
                       <th style={styles.th}>กลุ่มงาน</th>
