@@ -65,30 +65,37 @@ export default function MyProfilePage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const [newTraining, setNewTraining] = useState({ course_name: '', institution: '', start_date: '', end_date: '' });
+  const [newTraining, setNewTraining] = useState({ course_name: '', institution: '', location: '', start_date: '', end_date: '' });
   const [trainingFile, setTrainingFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [selectedTraining, setSelectedTraining] = useState<any>(null);
 
   const handleAddTraining = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTraining.course_name) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุชื่อหลักสูตร', 'warning');
-    if (!data?.profile?.emp_id) return;
+    if (!data?.profile?.emp_id) {
+      return Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสพนักงาน (emp_id)', 'error');
+    }
 
     Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     const fd = new FormData();
     fd.append('emp_id', data.profile.emp_id);
     fd.append('course_name', newTraining.course_name);
     fd.append('institution', newTraining.institution);
+    fd.append('location', newTraining.location);
     fd.append('start_date', newTraining.start_date);
     fd.append('end_date', newTraining.end_date);
     if (trainingFile) fd.append('certificate_file', trainingFile);
+    if (imageFile) fd.append('image_file', imageFile);
 
     try {
       const res = await fetch('/api/profile/trainings', { method: 'POST', body: fd });
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.error || 'เกิดข้อผิดพลาด');
       Swal.fire('สำเร็จ', 'เพิ่มประวัติการอบรมแล้ว', 'success');
-      setNewTraining({ course_name: '', institution: '', start_date: '', end_date: '' });
+      setNewTraining({ course_name: '', institution: '', location: '', start_date: '', end_date: '' });
       setTrainingFile(null);
+      setImageFile(null);
       fetchProfile();
     } catch (err: any) {
       Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
@@ -645,6 +652,10 @@ export default function MyProfilePage() {
                     <label className="form-label">หน่วยงานที่จัดบรรยาย</label>
                     <input type="text" value={newTraining.institution} onChange={e => setNewTraining({ ...newTraining, institution: e.target.value })} className="form-input" placeholder="ระบุหน่วยงาน..." />
                   </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">สถานที่จัด</label>
+                    <input type="text" value={newTraining.location} onChange={e => setNewTraining({ ...newTraining, location: e.target.value })} className="form-input" placeholder="ระบุสถานที่..." />
+                  </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
@@ -658,6 +669,10 @@ export default function MyProfilePage() {
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">ไฟล์แนบเกียรติบัตร</label>
                     <input type="file" accept="image/*,.pdf" onChange={e => setTrainingFile(e.target.files?.[0] || null)} className="form-input" style={{ padding: '8px' }} />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">รูปภาพหน้าปก</label>
+                    <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="form-input" style={{ padding: '8px' }} />
                   </div>
                 </div>
                 <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start', padding: '10px 24px' }}>
@@ -673,25 +688,33 @@ export default function MyProfilePage() {
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
                   {trainings.map((tr: any, idx: number) => (
-                    <div key={idx} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '20px', overflow: 'hidden', transition: 'all 0.3s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                    <div key={idx} onClick={() => setSelectedTraining(tr)} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '20px', overflow: 'hidden', transition: 'all 0.3s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', cursor: 'pointer' }} className="hover-lift">
                       {tr.image_file && (
                         <div style={{ position: 'relative', width: '100%', height: '160px' }}>
                           <Image src={`/uploads/${tr.image_file}`} alt="Training" fill style={{ objectFit: 'cover' }} unoptimized />
                         </div>
                       )}
                       <div style={{ padding: '20px' }}>
-                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '15px', marginBottom: '8px' }}>{tr.course_name}</div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#64748b' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={12} /> {tr.location || '-'}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Briefcase size={12} /> {tr.institution || '-'}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Calendar size={12} /> 
-                            {tr.start_date ? new Date(tr.start_date).toLocaleDateString('th-TH') : ''} 
-                            {tr.end_date && tr.end_date !== tr.start_date ? ` - ${new Date(tr.end_date).toLocaleDateString('th-TH')}` : ''}
+                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '16px', marginBottom: '12px' }}>{tr.course_name}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: '#64748b' }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                            <MapPin size={16} style={{ marginTop: '2px', color: '#3b82f6' }} /> 
+                            <span><strong>สถานที่จัด:</strong> {tr.location || '-'}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                            <Briefcase size={16} style={{ marginTop: '2px', color: '#3b82f6' }} /> 
+                            <span><strong>หน่วยงานที่จัด:</strong> {tr.institution || '-'}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                            <Calendar size={16} style={{ marginTop: '2px', color: '#3b82f6' }} /> 
+                            <span>
+                              <strong>วันที่อบรม:</strong> {tr.start_date ? new Date(tr.start_date).toLocaleDateString('th-TH') : '-'} 
+                              {tr.end_date && tr.end_date !== tr.start_date ? ` ถึง ${new Date(tr.end_date).toLocaleDateString('th-TH')}` : ''}
+                            </span>
                           </div>
                         </div>
                         {tr.certificate_file && (
-                          <a href={`/uploads/${tr.certificate_file}`} target="_blank" rel="noreferrer" style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#2563eb', fontWeight: 700, textDecoration: 'none', background: '#eff6ff', padding: '8px 12px', borderRadius: '10px' }}>
+                          <a href={`/uploads/${tr.certificate_file}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#2563eb', fontWeight: 700, textDecoration: 'none', background: '#eff6ff', padding: '8px 12px', borderRadius: '10px', width: 'fit-content' }}>
                             <Award size={14} /> ดูเกียรติบัตร
                           </a>
                         )}
@@ -779,6 +802,47 @@ export default function MyProfilePage() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
               <button className="btn-primary" onClick={() => setSelectedNews(null)} style={{ padding: '10px 32px' }}>
+                ปิดหน้าต่าง
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={!!selectedTraining}
+        onClose={() => setSelectedTraining(null)}
+        title="รายละเอียดประวัติการฝึกอบรม"
+      >
+        {selectedTraining && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {selectedTraining.image_file && (
+              <div style={{ width: '100%', height: 240, position: 'relative', borderRadius: 16, overflow: 'hidden', background: '#f1f5f9' }}>
+                <Image fill unoptimized src={`/uploads/${selectedTraining.image_file}`} alt={selectedTraining.course_name} style={{ objectFit: 'cover' }} />
+              </div>
+            )}
+            <div>
+              <h3 style={{ margin: 0, fontSize: 20, color: '#0f172a', fontWeight: 800 }}>{selectedTraining.course_name}</h3>
+            </div>
+            <div style={{ padding: '20px', borderRadius: '16px', background: '#f8fafc', border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ fontSize: '15px', color: '#334155' }}>
+                <strong>หน่วยงานที่จัดบรรยาย:</strong> {selectedTraining.institution || '-'}
+              </div>
+              <div style={{ fontSize: '15px', color: '#334155' }}>
+                <strong>สถานที่จัด:</strong> {selectedTraining.location || '-'}
+              </div>
+              <div style={{ fontSize: '15px', color: '#334155' }}>
+                <strong>วันที่จัดกิจกรรม:</strong> {selectedTraining.start_date ? new Date(selectedTraining.start_date).toLocaleDateString('th-TH') : '-'}
+                {selectedTraining.end_date && selectedTraining.end_date !== selectedTraining.start_date ? ` ถึง ${new Date(selectedTraining.end_date).toLocaleDateString('th-TH')}` : ''}
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+              {selectedTraining.certificate_file ? (
+                <a href={`/uploads/${selectedTraining.certificate_file}`} target="_blank" rel="noreferrer" className="btn-primary" style={{ padding: '10px 24px', textDecoration: 'none', background: '#059669' }}>
+                  <Award size={18} /> ดูเกียรติบัตร
+                </a>
+              ) : <div />}
+              <button className="btn-primary" onClick={() => setSelectedTraining(null)} style={{ padding: '10px 32px' }}>
                 ปิดหน้าต่าง
               </button>
             </div>
