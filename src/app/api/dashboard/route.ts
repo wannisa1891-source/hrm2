@@ -26,7 +26,6 @@ export async function GET(req: NextRequest) {
     let employeeQuotaQuery: Promise<any> = Promise.resolve([[]]);
     let employeeUsedLeavesQuery: Promise<any> = Promise.resolve([[]]);
     let employeeRecentLeavesQuery: Promise<any> = Promise.resolve([[]]);
-    let employeePayrollQuery: Promise<any> = Promise.resolve([[]]);
 
     if (empId) {
       const now = new Date();
@@ -49,13 +48,6 @@ export async function GET(req: NextRequest) {
         ORDER BY start_date DESC 
         LIMIT 5
       `, [empId]);
-      employeePayrollQuery = pool.query(`
-        SELECT net_salary as currentNetSalary, pay_month, pay_year, status, payroll_id
-        FROM tbl_payroll
-        WHERE emp_id = ?
-        ORDER BY pay_year DESC, pay_month DESC
-        LIMIT 5
-      `, [empId]).catch(() => [[]]);
     }
 
     // Execute all queries in parallel
@@ -69,7 +61,6 @@ export async function GET(req: NextRequest) {
       userQuotaResult,
       userUsedResult,
       userRecentResult,
-      userPayrollResult,
       capacityResult
     ] = await Promise.all([
       pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status IN ('Active', 'A', 'ทำงานปกติ')"),
@@ -87,7 +78,6 @@ export async function GET(req: NextRequest) {
       employeeQuotaQuery,
       employeeUsedLeavesQuery,
       employeeRecentLeavesQuery,
-      employeePayrollQuery,
       pool.query("SELECT SUM(capacity) as total_capacity FROM tbl_departments")
     ]);
 
@@ -161,27 +151,7 @@ export async function GET(req: NextRequest) {
       "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
     ];
 
-    let payrollSummary = null;
-    if (empId) {
-      const payrollRows = userPayrollResult[0] as any[];
-      if (payrollRows.length > 0) {
-        payrollSummary = {
-          currentNetSalary: Number(payrollRows[0].currentNetSalary || 0),
-          paymentDate: payrollRows[0].status === 'Paid' ? 'โอนเข้าบัญชีสำเร็จ' : 'รอสั่งจ่าย',
-          history: payrollRows.slice(0, 3).map((r: any) => ({
-            month: `${MONTHS_TH[r.pay_month - 1]} ${r.pay_year}`,
-            amount: Number(r.currentNetSalary || 0),
-            date: r.status === 'Paid' ? 'โอนเงินแล้ว' : 'ยังไม่ระบุ'
-          }))
-        };
-      } else {
-        payrollSummary = {
-          currentNetSalary: 0,
-          paymentDate: '-',
-          history: []
-        };
-      }
-    }
+
 
     return NextResponse.json({
       empCount,
@@ -193,8 +163,7 @@ export async function GET(req: NextRequest) {
       expiringLicenses,
       expiredLicenses,
       leaveStats,
-      recentLeaves,
-      payrollData: payrollSummary
+      recentLeaves
     });
 
   } catch (err: unknown) {

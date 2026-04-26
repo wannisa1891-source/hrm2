@@ -27,7 +27,6 @@ export interface Employee {
   dept_id: string
   pos_id: string
   start_date: string
-  base_salary: number
   status: string
   image: string
   position_no?: string
@@ -169,23 +168,9 @@ export interface Position {
   pos_id: string
   pos_name: string
   description?: string
-  base_salary?: number
 }
 
-export interface PayrollRecord {
-  payroll_id: string
-  emp_id: string
-  prefix: string
-  first_name_th: string
-  last_name_th: string
-  pos_name: string
-  dept_name: string
-  base_salary: number
-  total_allowance: number
-  total_deduction: number
-  net_salary: number
-  status: string
-}
+
 
 export interface Announcement {
   id: number
@@ -210,11 +195,6 @@ export interface DashboardData {
     sick: { remain: number; used: number; raw: number }
   }
   recentLeaves: any[]
-  payrollData?: {
-    currentNetSalary: number
-    paymentDate: string
-    history: Array<{ month: string; amount: number; date: string }>
-  } | null
 }
 
 const apiFetch = async <T>(url: string, options?: RequestInit): Promise<T> => {
@@ -277,14 +257,7 @@ export const updateScheduleRecord = (id: string, body: any) => apiFetch<{ succes
 })
 export const deleteScheduleRecord = (id: string) => apiFetch<{ success: boolean }>(`/api/schedules/${id}`, { method: 'DELETE' })
 
-export const fetchPayrollDashboard = (empId?: string) => {
-  const url = empId ? `/api/payroll/dashboard?emp_id=${empId}` : '/api/payroll/dashboard'
-  return apiFetch<{
-    employees: PayrollRecord[],
-    targetMonth: number,
-    targetYear: number
-  }>(url)
-}
+
 
 export const fetchAnnouncements = () => apiFetch<{ success: boolean; data: Announcement[] }>('/api/announcements')
 

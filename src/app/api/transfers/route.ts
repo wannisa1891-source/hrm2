@@ -60,7 +60,6 @@ async function updateEmployeeOnApproval(connection: any, data: any) {
   const values: unknown[] = [];
   if (data.newDeptId)                          { fields.push('dept_id = ?');      values.push(data.newDeptId); }
   if (data.newPos)                             { fields.push('pos_id = ?');       values.push(data.newPos); }
-  if (data.newSalary && Number(data.newSalary) > 0) { fields.push('base_salary = ?'); values.push(data.newSalary); }
   if (fields.length === 0) return;
   values.push(data.empId);
   await connection.query(

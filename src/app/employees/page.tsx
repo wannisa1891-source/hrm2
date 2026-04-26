@@ -144,7 +144,6 @@ function EmployeesContent() {
           address: row['ที่อยู่'] || row['address'] || '',
           emp_type: row['ประเภทพนักงาน'] || row['ประเภทการจ้างงาน'] || row['emp_type'] || 'พนักงานราชการ',
           start_date: row['วันที่เริ่มงาน'] || row['start_date'] || null,
-          base_salary: row['เงินเดือน'] || row['ฐานเงินเดือน'] || row['base_salary'] || 0,
           dept_id: dept ? dept.dept_id : null,
           pos_id: pos ? pos.pos_id : null,
         };
@@ -344,7 +343,7 @@ function EmployeesContent() {
     const headers = [
       'เลขประจำตำแหน่ง', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'ชื่อเล่น',
       'เพศ', 'วัน/เดือน/ปีเกิด', 'บัตรประชาชน', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่',
-      'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน', 'เงินเดือน',
+      'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน',
       'สถานะการทำงาน', 'คะแนน ', 'ข้อมูลใบอนุญาต'
     ];
 
@@ -358,11 +357,9 @@ function EmployeesContent() {
         e.prefix || '',
         e.first_name_th || '',
         e.last_name_th || '',
+        e.nickname || '',
         e.gender || '',
-
-        // ✅ แก้ไขจุดที่ 1: บังคับให้เป็น Text โดยใส่ =" " ครอบฟังก์ชัน formatDate
         `="${formatDate(e.birth_date)}"`,
-
         e.citizen_id || '',
         e.phone || '',
         e.email || '',
@@ -370,10 +367,7 @@ function EmployeesContent() {
         getDeptName(e.dept_id) || '',
         getPosName(e.pos_id) || '',
         e.emp_type || '',
-
-        // ✅ แก้ไขจุดที่ 2: บังคับให้เป็น Text โดยใส่ =" " ครอบฟังก์ชัน formatDate
         `="${formatDate(e.start_date)}"`,
-
         e.status || '',
         e.cneu_cme_points || 0,
         licText.replace(/"/g, '""')

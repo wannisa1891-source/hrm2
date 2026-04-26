@@ -21,8 +21,6 @@ interface TransferDetail {
   new_pos_name: string;
   old_level?: string;
   new_level?: string;
-  old_salary: number;
-  new_salary: number;
   remark?: string;
   status: string;
   file_url: string | null;
@@ -273,11 +271,7 @@ export default function TransferDetailPage() {
                   oldVal={transfer.old_level}
                   newVal={transfer.new_level}
                 />
-                <CompareRow
-                  label="เงินเดือน"
-                  oldVal={formatMoney(transfer.old_salary)}
-                  newVal={formatMoney(transfer.new_salary)}
-                />
+
               </div>
             </div>
 

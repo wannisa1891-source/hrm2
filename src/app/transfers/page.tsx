@@ -19,8 +19,6 @@ interface TransferRecord {
   new_dept_name: string;
   old_pos_name?: string;
   new_pos_name?: string;
-  old_salary: number;
-  new_salary: number;
   order_file: string | null;
   status: string;
   // New fields

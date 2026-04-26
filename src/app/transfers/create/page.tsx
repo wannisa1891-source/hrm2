@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 interface Department { dept_id: string; dept_name: string; }
 interface SearchResult {
   id: string; name: string; pos: string; pos_id?: string;
-  dept: string; dept_id?: string; salary: number; level: string; pos_no: string;
+  dept: string; dept_id?: string; level: string; pos_no: string;
 }
 
 const TRANSFER_TYPES = [
@@ -30,7 +30,6 @@ interface FormErrors {
   title?: string;
   transferType?: string;
   newDeptId?: string;
-  newSalary?: string;
   pdfFile?: string;
 }
 
@@ -50,9 +49,6 @@ function validateForm(
     errors.pdfFile = 'ไฟล์ต้องเป็น .pdf เท่านั้น';
   } else if (pdfFile.size > 5 * 1024 * 1024) {
     errors.pdfFile = 'ขนาดไฟล์ต้องไม่เกิน 5 MB';
-  }
-  if (form.newSalary && isNaN(Number(form.newSalary))) {
-    errors.newSalary = 'เงินเดือนต้องเป็นตัวเลข';
   }
   return errors;
 }
@@ -112,8 +108,6 @@ export default function TransferCreatePage() {
     newPos:       '',
     oldLevel:     '',
     newLevel:     '',
-    oldSalary:    0,
-    newSalary:    '',
     remark:       '',
   });
 
@@ -160,7 +154,6 @@ export default function TransferCreatePage() {
       oldPosName: emp.pos,
       oldDeptId: emp.dept_id || '',
       oldDept:   emp.dept,
-      oldSalary: emp.salary,
       oldLevel:  emp.level || '',
     }));
     setTouched(t => ({ ...t, empId: true }));
@@ -198,7 +191,6 @@ export default function TransferCreatePage() {
       const fd = new FormData();
       fd.append('data', JSON.stringify({
         ...form,
-        newSalary: form.newSalary !== '' ? Number(form.newSalary) : 0,
       }));
       fd.append('order_file', pdfFile!);
 
@@ -450,26 +442,7 @@ export default function TransferCreatePage() {
                   />
                 </div>
 
-                {/* Salary */}
-                <div className="cr-compare-row">
-                  <span className="cr-compare-label">เงินเดือน (บาท)</span>
-                  <span className="cr-compare-old">
-                    {selectedEmp ? form.oldSalary.toLocaleString() : '—'}
-                  </span>
-                  <div className="cr-fg cr-no-mb">
-                    <input
-                      id="field-newSalary"
-                      type="number"
-                      className={`cr-input ${errors.newSalary && touched.newSalary ? 'cr-input-err' : ''}`}
-                      placeholder="เงินเดือนใหม่"
-                      value={form.newSalary}
-                      onChange={e => setF('newSalary', e.target.value)}
-                      onBlur={() => touch('newSalary')}
-                      min={0}
-                    />
-                    <FieldError msg={touched.newSalary ? errors.newSalary : ''} />
-                  </div>
-                </div>
+
               </div>
 
             </div>

@@ -107,11 +107,7 @@ const OrderPdfTemplate = forwardRef<HTMLDivElement, OrderPdfTemplateProps>(({ tr
                 <td style={{ border: '1px solid #000', padding: '8px' }}>{transfer.old_pos_no || '-'}</td>
                 <td style={{ border: '1px solid #000', padding: '8px', fontWeight: 'bold' }}>{transfer.new_pos_no || '-'}</td>
               </tr>
-              <tr>
-                <td style={{ border: '1px solid #000', padding: '8px' }}>อัตราเงินเดือน</td>
-                <td style={{ border: '1px solid #000', padding: '8px' }}>{transfer.old_salary ? transfer.old_salary.toLocaleString() : '-'} บาท</td>
-                <td style={{ border: '1px solid #000', padding: '8px', fontWeight: 'bold' }}>{transfer.new_salary ? transfer.new_salary.toLocaleString() : '-'} บาท</td>
-              </tr>
+
             </tbody>
           </table>
         </div>
