@@ -118,7 +118,7 @@ export default function LoginPage() {
             value={username}
             onChange={e => setUsername(e.target.value)}
             type="text"
-            placeholder="Username"
+            placeholder="Username / เลขบัตรประชาชน"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             autoComplete="username"
             suppressHydrationWarning
@@ -133,7 +133,7 @@ export default function LoginPage() {
             value={password}
             onChange={e => setPassword(e.target.value)}
             type="password"
-            placeholder="Password"
+            placeholder="รหัสผ่าน (รหัสที่ทำงาน)"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             autoComplete="current-password"
             suppressHydrationWarning
