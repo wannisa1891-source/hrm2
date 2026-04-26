@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
         emp_id: user.emp_id,
         dept_id: user.dept_id || '',
         username: user.username || user.emp_id,
-        name: `${user.first_name_th} ${user.last_name_th}`,
+        name: [user.first_name_th, user.last_name_th].filter(part => part && String(part).toLowerCase() !== 'null').join(' ').trim() || user.username || user.emp_id,
         email: user.email || '',
         role: user.role || 'User',
         image: user.image || null

@@ -16,7 +16,8 @@ interface SearchResult {
 
 export default function DashboardHeader({ today }: { today: string }) {
   const { user, logout } = useAuth();
-  const userName = user?.name || "Hospital HRM";
+  const rawName = user?.name || "Hospital HRM";
+  const userName = rawName.split(' ').filter(part => part && part.toLowerCase() !== 'null').join(' ').trim() || "Hospital HRM";
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
