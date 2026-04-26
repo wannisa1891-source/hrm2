@@ -105,7 +105,12 @@ function ProfileContent() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!oldPassword || !newPassword || !confirmPassword) {
+    const isBypassingOldPassword = isAdmin && empIdParam;
+
+    if (!isBypassingOldPassword && !oldPassword) {
+      return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกรหัสผ่านเดิม', 'warning');
+    }
+    if (!newPassword || !confirmPassword) {
       return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
     }
     if (newPassword !== confirmPassword) {
@@ -126,14 +131,18 @@ function ProfileContent() {
   };
 
   const handleResetPasswordViaEmail = async () => {
-    if (!data?.profile?.emp_id) return;
+    const idToSend = data?.profile?.emp_id || targetId;
+    if (!idToSend) {
+      return Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสพนักงานสำหรับการรีเซ็ต', 'error');
+    }
+
     const result = await Swal.fire({ title: 'ยืนยันการรีเซ็ตรหัสผ่าน', text: `คุณต้องการรีเซ็ตรหัสผ่านใหม่ ใช่หรือไม่?`, icon: 'warning', showCancelButton: true });
     if (!result.isConfirmed) return;
 
     Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-      const res = await fetch(`/api/employees/${data.profile.emp_id}/reset-password`, { method: 'POST' });
+      const res = await fetch(`/api/employees/${idToSend}/reset-password`, { method: 'POST' });
       const resData = await res.json();
       if (res.ok) Swal.fire('สำเร็จ', resData.message, 'success');
       else Swal.fire('เกิดข้อผิดพลาด', resData.error || 'ไม่สามารถรีเซ็ตรหัสผ่านได้', 'error');
@@ -209,20 +218,7 @@ function ProfileContent() {
   return (
     <AppLayout>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 16px 16px', width: '100%', marginTop: '24px' }}>
-        {!empIdParam ? (
-          <DashboardHeader today={today} />
-        ) : (
-          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <button 
-              onClick={() => router.back()} 
-              className="btn-outline hover-glow" 
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '12px', background: 'white', cursor: 'pointer' }}
-            >
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-              ย้อนกลับ
-            </button>
-          </div>
-        )}
+        {!empIdParam && <DashboardHeader today={today} />}
         
         <style dangerouslySetInnerHTML={{
           __html: `
@@ -719,10 +715,12 @@ function ProfileContent() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
                 <form onSubmit={handleChangePassword} onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault(); }} style={{ background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 20px 0', fontWeight: 600 }}>เปลี่ยนรหัสผ่านด้วยตนเอง</h4>
-                  <div className="form-group">
-                    <label className="form-label">รหัสผ่านเดิม</label>
-                    <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านเดิม..." />
-                  </div>
+                  {!(isAdmin && empIdParam) && (
+                    <div className="form-group">
+                      <label className="form-label">รหัสผ่านเดิม</label>
+                      <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="form-input" placeholder="ป้อนรหัสผ่านเดิม..." />
+                    </div>
+                  )}
                   <div className="form-group">
                     <label className="form-label">รหัสผ่านใหม่</label>
                     <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-input" placeholder="อย่างน้อย 6 ตัวอักษร" />

@@ -31,16 +31,27 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     if (hasEmail) {
       try {
+      const smtpUser = (process.env.SMTP_USER || '').replace(/^"|"$/g, '');
+      const smtpPass = (process.env.SMTP_PASS || '').replace(/^"|"$/g, '');
+      const smtpHost = (process.env.SMTP_HOST || 'smtp.gmail.com').replace(/^"|"$/g, '');
+      const smtpPort = Number((process.env.SMTP_PORT || '587').replace(/^"|"$/g, ''));
+      const smtpFrom = (process.env.SMTP_FROM_NAME || 'Hospital HRM System').replace(/^"|"$/g, '');
+
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpPort === 465,
         auth: {
-          user: process.env.EMAIL_SENDER || 'yourcompany.hr@gmail.com',
-          pass: process.env.EMAIL_PASSWORD || 'your-app-password-here'
+          user: smtpUser,
+          pass: smtpPass
+        },
+        tls: {
+          rejectUnauthorized: false
         }
       });
 
       const mailOptions = {
-        from: `"HRM System" <${process.env.EMAIL_SENDER || 'yourcompany.hr@gmail.com'}>`,
+        from: `"${smtpFrom}" <${smtpUser}>`,
         to: emp.email,
         subject: `🔑 แจ้งรีเซ็ตรหัสผ่านบัญชี HRM ของคุณ`,
         html: `
@@ -50,7 +61,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             <p>ระบบได้ทำการรีเซ็ตรหัสผ่านสำหรับการเข้าใช้งานระบบ HRM ของคุณเรียบร้อยแล้ว</p>
             
             <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>รหัสพนักงาน:</strong> ${emp.emp_id}</p>
               <p><strong>รหัสผ่านใหม่ของคุณคือ:</strong> <span style="color: #ef4444; font-weight: bold; font-size: 18px;">${newPassword}</span></p>
             </div>
             

@@ -6,44 +6,70 @@ import { logAudit } from '@/lib/audit';
 export async function POST(req: NextRequest) {
   try {
     const { emp_id, oldPassword, newPassword } = await req.json();
+    const { cookies } = require('next/headers');
+    const { verifyJWT } = require('@/lib/jwt');
 
-    if (!emp_id || !oldPassword || !newPassword) {
-      return NextResponse.json({ error: 'ข้อมูลไม่ครบถ้วน' }, { status: 400 });
+    const tokenCookie = cookies().get('token')?.value;
+    let callerRole = '';
+    let callerEmpId = '';
+
+    if (tokenCookie) {
+      const verified = await verifyJWT(tokenCookie);
+      if (verified) {
+        callerRole = verified.role;
+        callerEmpId = verified.emp_id;
+      }
     }
 
-    // Hash the old password to check
-    const hashedOldPassword = crypto.createHash('sha256').update(oldPassword).digest('hex');
+    const adminRoles = ['Super Admin', 'Admin', 'admin', 'HR', 'หัวหน้า'];
+    const isCallerAdmin = adminRoles.includes(callerRole);
+    const isUpdatingSelf = callerEmpId === emp_id;
 
-    const [rows]: any = await pool.query(
-      `SELECT password, citizen_id FROM tbl_employees WHERE emp_id = ? LIMIT 1`,
-      [emp_id]
-    );
-
-    if (!rows || rows.length === 0) {
-      return NextResponse.json({ error: 'ไม่พบผู้ใช้งานในระบบ' }, { status: 404 });
-    }
-
-    const { password: currentPassword, citizen_id: citizenId } = rows[0];
-
-    let isPasswordCorrect = false;
-
-    if (!currentPassword) {
-      // Handle the case where password is null/empty by checking against fallbacks
-      const defaultPass1 = citizenId ? String(citizenId) : '123456';
-      const defaultPass2 = '123456';
-
-      if (oldPassword === defaultPass1 || oldPassword === defaultPass2) {
-        isPasswordCorrect = true;
+    if (isCallerAdmin && !isUpdatingSelf) {
+      // Bypass old password requirement for Admin updating another user
+      if (!emp_id || !newPassword) {
+        return NextResponse.json({ error: 'ข้อมูลไม่ครบถ้วน' }, { status: 400 });
       }
     } else {
-      // Check against hashed password or plain-text password if it was stored that way
-      if (currentPassword === hashedOldPassword || currentPassword === oldPassword) {
-        isPasswordCorrect = true;
+      // Requires old password
+      if (!emp_id || !oldPassword || !newPassword) {
+        return NextResponse.json({ error: 'ข้อมูลไม่ครบถ้วน' }, { status: 400 });
       }
-    }
 
-    if (!isPasswordCorrect) {
-      return NextResponse.json({ error: 'รหัสผ่านเดิมไม่ถูกต้อง' }, { status: 401 });
+      // Hash the old password to check
+      const hashedOldPassword = crypto.createHash('sha256').update(oldPassword).digest('hex');
+
+      const [rows]: any = await pool.query(
+        `SELECT password, citizen_id FROM tbl_employees WHERE emp_id = ? LIMIT 1`,
+        [emp_id]
+      );
+
+      if (!rows || rows.length === 0) {
+        return NextResponse.json({ error: 'ไม่พบผู้ใช้งานในระบบ' }, { status: 404 });
+      }
+
+      const { password: currentPassword, citizen_id: citizenId } = rows[0];
+
+      let isPasswordCorrect = false;
+
+      if (!currentPassword) {
+        // Handle the case where password is null/empty by checking against fallbacks
+        const defaultPass1 = citizenId ? String(citizenId) : '123456';
+        const defaultPass2 = '123456';
+
+        if (oldPassword === defaultPass1 || oldPassword === defaultPass2) {
+          isPasswordCorrect = true;
+        }
+      } else {
+        // Check against hashed password or plain-text password if it was stored that way
+        if (currentPassword === hashedOldPassword || currentPassword === oldPassword) {
+          isPasswordCorrect = true;
+        }
+      }
+
+      if (!isPasswordCorrect) {
+        return NextResponse.json({ error: 'รหัสผ่านเดิมไม่ถูกต้อง' }, { status: 401 });
+      }
     }
 
     // Hash the new password and update
