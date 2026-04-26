@@ -198,13 +198,23 @@ export interface DashboardData {
 }
 
 const apiFetch = async <T>(url: string, options?: RequestInit): Promise<T> => {
-  const res = await fetch(url, options)
+  const isGet = !options?.method || options.method.toUpperCase() === 'GET';
+  const finalUrl = isGet 
+    ? (url.includes('?') ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`)
+    : url;
+
+  const finalOptions: RequestInit = {
+    ...options,
+    cache: 'no-store' as RequestCache
+  };
+
+  const res = await fetch(finalUrl, finalOptions);
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err?.error || `HTTP ${res.status}`)
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error || `HTTP ${res.status}`);
   }
-  return res.json()
-}
+  return res.json();
+};
 
 export const fetchEmployees = () => apiFetch<Employee[]>('/api/employees')
 export const fetchEmployeeById = (id: string) => apiFetch<Employee>(`/api/employees/${id}`)

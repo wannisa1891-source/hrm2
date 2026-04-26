@@ -149,7 +149,7 @@ export default function MyProfilePage() {
     }
 
     try {
-      const res = await fetch(`/api/profile?emp_id=${targetId}`);
+      const res = await fetch(`/api/profile?emp_id=${targetId}&t=${Date.now()}`, { cache: 'no-store' });
       const result = await res.json();
       if (result.success) {
         setData(result.data);
