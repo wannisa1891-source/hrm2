@@ -520,12 +520,20 @@ function EmployeesContent() {
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
-                            {emp.position_no || emp.emp_id}
+                            {(() => {
+                              const idVal = emp.position_no || emp.emp_id;
+                              if (!idVal || idVal.trim() === '' || idVal.replace(/0/g, '') === '') return '-';
+                              return idVal;
+                            })()}
                           </div>
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ color: '#64748b', fontFamily: 'monospace', fontWeight: 600 }}>
-                            {emp.citizen_id || '-'}
+                            {(() => {
+                              const cidVal = emp.citizen_id;
+                              if (emp.role === 'Admin' || !cidVal || cidVal.trim() === '' || cidVal.replace(/0/g, '') === '') return '-';
+                              return cidVal;
+                            })()}
                           </div>
                         </td>
                         <td>
@@ -547,8 +555,8 @@ function EmployeesContent() {
                             {emp.license_status === 'Expired' && <span className="badge badge-red" title="ใบประกอบวิชาชีพหมดอายุ">หมดอายุ</span>}
                           </div>
                         </td>
-                        <td style={{ color: '#334155' }}>{emp.nickname || '-'}</td>
-                        <td style={{ color: '#334155', fontWeight: 500 }}>{getPosName(emp.pos_id)}</td>
+                        <td style={{ color: '#334155' }}>{emp.role === 'Admin' ? '-' : (emp.nickname || '-')}</td>
+                        <td style={{ color: '#334155', fontWeight: 500 }}>{emp.role === 'Admin' ? '-' : (getPosName(emp.pos_id) || '-')}</td>
                         <td>{dept?.division || '-'}</td>
                         <td>{dept?.dept_name || '-'}</td>
                         <td style={{ textAlign: 'center' }}>
