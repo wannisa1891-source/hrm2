@@ -94,16 +94,21 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     return menuItems.reduce<any[]>((acc, item) => {
       let newItem = { ...item };
 
-      // 1. Profile: ซ่อนสำหรับบัญชีแอดมินตามที่เคยขอไว้
-      if (newItem.id === 'profile-main' && isSuperAdmin) return acc;
+      // สำหรับบัญชี Admin (Super Admin) - ให้เหลือแค่ Dashboard และ Audit Logs
+      if (isSuperAdmin) {
+        if (newItem.id === 'dashboard' || newItem.id === 'audit') {
+          acc.push(newItem);
+        }
+        return acc;
+      }
 
-      // 2. Audit Logs: แสดงเฉพาะ Super Admin
-      if (newItem.id === 'audit' && !isSuperAdmin) return acc;
+      // สำหรับ HR และหัวหน้าแผนก (Other Management Roles)
+      if (newItem.id === 'audit') return acc; // Audit logs เฉพาะ Admin เท่านั้น
 
       acc.push(newItem);
       return acc;
     }, []);
-  }, [isSuperAdmin, isManagement, user]);
+  }, [isSuperAdmin, isManagement]);
 
   const toggleMenu = (id: string) => {
     if (collapsed) {
@@ -207,8 +212,14 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <div className="s-avatar" style={{ width: 40, height: 40, fontSize: 16 }}>{((user as any)?.name || user?.username || 'U').charAt(0).toUpperCase()}</div>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="s-username" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(user as any)?.name || user?.username || 'User'}</div>
-                <div className="s-role">{user?.role || 'User'}</div>
+                <div className="s-username" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {(() => {
+                    const name = (user as any)?.name || '';
+                    const cleanName = name.replace(/\s*null\s*/gi, '').trim();
+                    return cleanName || user?.username || 'Admin';
+                  })()}
+                </div>
+                <div className="s-role">{user?.role || 'Admin'}</div>
               </div>
             </div>
             <button className="btn-logout" onClick={logout} suppressHydrationWarning>
