@@ -39,6 +39,13 @@ interface ProfileData {
 export default function MyProfilePage() {
   const { user, isLoggedIn, login } = useAuth();
   const isAdmin = ['Super Admin', 'Admin', 'admin', 'HR'].includes(user?.role || '');
+
+  const formatZeroString = (val: string | null | undefined) => {
+    if (!val) return '-';
+    const trimmed = val.trim();
+    if (trimmed === '' || /^0+$/.test(trimmed)) return '-';
+    return trimmed;
+  };
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'info' | 'leave' | 'payroll' | 'password' | 'certificates' | 'training'>('info');
@@ -186,12 +193,12 @@ export default function MyProfilePage() {
 
   return (
     <AppLayout>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 16px 16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 16px 16px', width: '100%' }}>
         <DashboardHeader today={today} />
         
         <style dangerouslySetInnerHTML={{
           __html: `
-        .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 0 8px 32px; max-width: 1500px; margin: 0 auto; min-height: calc(100vh - 100px); }
+        .profile-container { display: grid; grid-template-columns: 340px 1fr; gap: 24px; padding: 0 8px 32px; width: 100%; min-height: calc(100vh - 100px); }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); transition: all 0.3s ease; }
         .left-card { position: sticky; top: 24px; height: fit-content; text-align: center; }
         .profile-avatar-wrap { width: 160px; height: 160px; border-radius: 40px; margin: 0 auto 24px; padding: 6px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); position: relative; transform: rotate(-3deg); transition: transform 0.3s; }
@@ -214,12 +221,18 @@ export default function MyProfilePage() {
         .meta-val { color: #334155; font-weight: 600; }
         
         .profile-main { display: flex; flex-direction: column; gap: 24px; }
-        .profile-tabs { display: flex; gap: 8px; background: #f1f5f9; padding: 8px; border-radius: 20px; align-self: flex-start; margin-bottom: 8px; }
+        .profile-tabs { display: flex; gap: 8px; background: #f1f5f9; padding: 8px; border-radius: 20px; width: 100%; margin-bottom: 8px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .profile-tabs::-webkit-scrollbar { display: none; }
         .tab-btn { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border: none; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; color: #64748b; background: transparent; }
         .tab-btn:hover { color: #3b82f6; }
         .tab-btn.active { background: white; color: #2563eb; box-shadow: 0 4px 15px -5px rgba(0,0,0,0.1); }
         
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .info-span-2 { grid-column: span 2; }
+        @media (max-width: 768px) {
+          .info-grid { grid-template-columns: 1fr; }
+          .info-span-2 { grid-column: span 1; }
+        }
         .info-section { background: white; border-radius: 24px; padding: 24px; border: 1px solid #f1f5f9; }
         .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid #f8fafc; padding-bottom: 16px; }
         .section-icon { width: 40px; height: 40px; border-radius: 12px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; }
@@ -283,7 +296,7 @@ export default function MyProfilePage() {
           <div className="quick-stats">
             <div className="stat-item">
               <span className="stat-label">รหัสพนักงาน</span>
-              <span className="stat-val">{profile.position_no || profile.emp_id}</span>
+              <span className="stat-val">{formatZeroString(profile.position_no || profile.emp_id)}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">อายุงาน (วันเริ่ม-ปัจจุบัน)</span>
@@ -332,7 +345,7 @@ export default function MyProfilePage() {
                   <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#1e293b' }}>ข่าวสารและประกาศล่าสุด</h3>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
                 {announcements.slice(0, 2).map((news: any, i: number) => (
                   <div key={i} onClick={() => setSelectedNews(news)} style={{ cursor: 'pointer', background: 'white', borderRadius: '16px', padding: '12px', border: '1px solid #e2e8f0', display: 'flex', gap: '16px', transition: 'all 0.2s' }} className="hover-lift">
                     {news.image && (
@@ -386,7 +399,7 @@ export default function MyProfilePage() {
                   </div>
                   <div className="data-item">
                     <span className="data-label">เลขบัตรประชาชน</span>
-                    <span className="data-val">{profile.citizen_id || '-'}</span>
+                    <span className="data-val">{formatZeroString(profile.citizen_id)}</span>
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันเกิด</span>
@@ -486,7 +499,7 @@ export default function MyProfilePage() {
                 </div>
               </div>
 
-              <div className="info-section" style={{ gridColumn: 'span 2' }}>
+              <div className="info-section info-span-2">
                 <div className="section-header">
                   <div className="section-icon"><MapPin size={20} /></div>
                   <h3 className="section-title">ข้อมูลที่อยู่</h3>

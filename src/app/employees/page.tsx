@@ -769,8 +769,13 @@ function EmployeesContent() {
 
 function StatusPicker({ emp, isAdmin, editEmployee }: any) {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(emp.status);
   const containerRef = useRef<HTMLDivElement>(null);
   const [openUp, setOpenUp] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setSelectedStatus(emp.status);
+  }, [isOpen, emp.status]);
 
   useEffect(() => {
     if (isOpen && containerRef.current) {
@@ -865,14 +870,14 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
           {statusOptions.map(opt => (
             <div
               key={opt.value}
-              onClick={() => handleUpdate(opt.value)}
+              onClick={() => setSelectedStatus(opt.value)}
               style={{
                 padding: '10px 12px',
                 borderRadius: '8px',
                 fontSize: '13px',
                 fontWeight: 600,
-                color: opt.value === emp.status ? opt.color : '#475569',
-                background: opt.value === emp.status ? opt.bg : 'transparent',
+                color: opt.value === selectedStatus ? opt.color : '#475569',
+                background: opt.value === selectedStatus ? opt.bg : 'transparent',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -880,16 +885,35 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
                 transition: 'all 0.2s'
               }}
               onMouseEnter={(e) => {
-                if (opt.value !== emp.status) e.currentTarget.style.background = '#f8fafc';
+                if (opt.value !== selectedStatus) e.currentTarget.style.background = '#f8fafc';
               }}
               onMouseLeave={(e) => {
-                if (opt.value !== emp.status) e.currentTarget.style.background = 'transparent';
+                if (opt.value !== selectedStatus) e.currentTarget.style.background = 'transparent';
               }}
             >
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: opt.color }} />
               {opt.label}
             </div>
           ))}
+          <button
+            type="button"
+            onClick={() => handleUpdate(selectedStatus)}
+            style={{
+              width: '100%',
+              marginTop: '8px',
+              padding: '8px',
+              background: '#3b82f6',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: '12px',
+              boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.4)'
+            }}
+          >
+            บันทึกสถานะ
+          </button>
         </div>
       )}
     </div>

@@ -1233,8 +1233,13 @@ function Pagination({ page, setPage, totalItems, perPage }: any) {
 }
 
 function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
+  const [selectedStatus, setSelectedStatus] = useState(emp.status);
   const containerRef = useRef<HTMLDivElement>(null);
   const [openUp, setOpenUp] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setSelectedStatus(emp.status);
+  }, [isOpen, emp.status]);
 
   useEffect(() => {
     if (isOpen && containerRef.current) {
@@ -1334,20 +1339,39 @@ function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
             {statusOptions.map(opt => (
               <div
                 key={opt.value}
-                onClick={(e) => { e.stopPropagation(); handleUpdate(opt.value); }}
+                onClick={(e) => { e.stopPropagation(); setSelectedStatus(opt.value); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px',
                   cursor: 'pointer', transition: 'all 0.15s',
-                  background: emp.status === opt.value ? '#f1f5f9' : 'transparent',
-                  color: emp.status === opt.value ? '#0f172a' : '#64748b'
+                  background: selectedStatus === opt.value ? '#f1f5f9' : 'transparent',
+                  color: selectedStatus === opt.value ? '#0f172a' : '#64748b'
                 }}
                 onMouseOver={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0f172a'; }}
-                onMouseOut={e => { if (emp.status !== opt.value) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } else { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#0f172a'; } }}
+                onMouseOut={e => { if (selectedStatus !== opt.value) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } else { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#0f172a'; } }}
               >
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: opt.color }} />
-                <span style={{ fontSize: '14px', fontWeight: emp.status === opt.value ? 700 : 500 }}>{opt.label}</span>
+                <span style={{ fontSize: '14px', fontWeight: selectedStatus === opt.value ? 700 : 500 }}>{opt.label}</span>
               </div>
             ))}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleUpdate(selectedStatus); }}
+              style={{
+                width: '100%',
+                marginTop: '8px',
+                padding: '8px',
+                background: '#3b82f6',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '13px',
+                boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.4)'
+              }}
+            >
+              บันทึกสถานะ
+            </button>
           </div>
         </>
       )}
