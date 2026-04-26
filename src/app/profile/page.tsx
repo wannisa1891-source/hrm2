@@ -209,7 +209,20 @@ function ProfileContent() {
   return (
     <AppLayout>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 16px 16px', width: '100%', marginTop: '24px' }}>
-        {!empIdParam && <DashboardHeader today={today} />}
+        {!empIdParam ? (
+          <DashboardHeader today={today} />
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <button 
+              onClick={() => router.back()} 
+              className="btn-outline hover-glow" 
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '12px', background: 'white', cursor: 'pointer' }}
+            >
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              ย้อนกลับ
+            </button>
+          </div>
+        )}
         
         <style dangerouslySetInnerHTML={{
           __html: `
