@@ -111,7 +111,7 @@ export default function DashboardHeader({ today }: { today: string }) {
     }
   }
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 0 }}>
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
 
       <div>
         <span style={{
