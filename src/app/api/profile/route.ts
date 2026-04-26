@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       trainingResult
     ] = await Promise.all([
       pool.query(
-        `SELECT e.*, d.dept_name, p.pos_name 
+        `SELECT e.*, d.division, d.dept_name, d.sub_dept, p.pos_name 
          FROM tbl_employees e
          LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
          LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id

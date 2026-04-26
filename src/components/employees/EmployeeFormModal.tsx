@@ -48,6 +48,7 @@ export default function EmployeeFormModal({
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [historyLicenseName, setHistoryLicenseName] = useState('');
+  const [selectedDivision, setSelectedDivision] = useState<string>('');
 
   const fetchLicenseHistory = async (licenseNo: string, licenseName: string) => {
     if (!licenseNo) return;
@@ -93,8 +94,15 @@ export default function EmployeeFormModal({
       setFormData(data);
       setPreviewUrl(employee?.image ? `/uploads/${employee.image}` : null);
       setImageFile(null);
+
+      if (data.dept_id && departments && departments.length > 0) {
+        const div = departments.find(d => d.dept_id === data.dept_id)?.division || '';
+        setSelectedDivision(div);
+      } else {
+        setSelectedDivision('');
+      }
     }
-  }, [employee, isOpen]);
+  }, [employee, isOpen, departments]);
 
   // Auto-calculate Retirement Date (Age 60)
   useEffect(() => {
@@ -261,7 +269,7 @@ export default function EmployeeFormModal({
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '32px' }} className="no-scrollbar">
-          <form onSubmit={handleSaveSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <form onSubmit={handleSaveSubmit} onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault(); }} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <fieldset disabled={viewMode} style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
               {/* === Section 1: ข้อมูลส่วนตัว === */}
@@ -544,13 +552,10 @@ export default function EmployeeFormModal({
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>กลุ่มงาน <span style={{ color: '#ef4444' }}>*</span></label>
                         <CustomSelect
-                          value={departments.find(d => d.dept_id === formData.dept_id)?.division || ''}
+                          value={selectedDivision}
                           onChange={div => {
-                            if (!div) setField('dept_id', '');
-                            else {
-                              const firstDept = departments.find(d => d.division === div);
-                              setField('dept_id', firstDept?.dept_id || '');
-                            }
+                            setSelectedDivision(div);
+                            setField('dept_id', '');
                           }}
                           options={[
                             { value: '', label: 'เลือกกลุ่มงาน' },
@@ -567,8 +572,7 @@ export default function EmployeeFormModal({
                           options={[
                             { value: '', label: 'เลือกแผนก' },
                             ...(() => {
-                              const currentDiv = departments.find(dept => dept.dept_id === formData.dept_id)?.division;
-                              const filtered = departments.filter(d => d.division?.trim() === currentDiv?.trim());
+                              const filtered = departments.filter(d => d.division?.trim() === selectedDivision?.trim());
                               // Filter by unique name to avoid duplicates in the UI
                               const uniqueDepts = filtered.filter((d, idx, self) => 
                                 idx === self.findIndex((t) => t.dept_name?.trim() === d.dept_name?.trim())

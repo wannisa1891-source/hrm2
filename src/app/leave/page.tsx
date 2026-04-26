@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
-import { Leave, fetchLeaveCategories, fetchLeaveTypes } from '@/services/apiService';
+import { Leave } from '@/services/apiService';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { useSearchParams } from 'next/navigation';
@@ -40,8 +40,7 @@ function LeavePageContent() {
   const isManagement = isSuperAdmin || isHR || isHead;
 
   const { leaves, loading, loadLeaves, addLeave, changeLeaveStatus } = useLeaves();
-  const [dbCategories, setDbCategories] = useState<any[]>([]);
-  const [dbLeaveTypes, setDbLeaveTypes] = useState<any[]>([]);
+
   const { employees, loadEmployees } = useEmployees();
   const { departments, loadDepartments } = useDepartments();
   
@@ -72,8 +71,6 @@ function LeavePageContent() {
     loadLeaves(); 
     loadEmployees(); 
     loadDepartments();
-    fetchLeaveCategories().then(setDbCategories).catch(console.error);
-    fetchLeaveTypes().then(setDbLeaveTypes).catch(console.error);
   }, [loadLeaves, loadEmployees, loadDepartments]);
 
   useEffect(() => { setPage(1); }, [filterStatus, searchQuery]);
@@ -231,7 +228,7 @@ function LeavePageContent() {
           {cards.map((c, i) => {
             const active = filterStatus === c.key;
             return (
-              <button key={i} className={`lv-stat ${active ? 'active' : ''}`} onClick={() => setFilterStatus(c.key)}>
+              <button type="button" key={i} className={`lv-stat ${active ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setFilterStatus(c.key); document.getElementById('leave-table')?.scrollIntoView({ behavior: 'smooth' }); }}>
                 <div className="lv-stat-icon" style={{ background: c.bg, color: c.ic }}>
                   <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={c.icon} /></svg>
                 </div>
@@ -355,7 +352,7 @@ function LeavePageContent() {
         })()}
 
         {/* Main List Table */}
-        <div className="glass-card" style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 24, overflow: 'hidden' }}>
+        <div id="leave-table" className="glass-card" style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 24, overflow: 'hidden', scrollMarginTop: '24px' }}>
           <div className="lv-filter-bar">
             <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
               รายการลาบุคลากร {filterStatus ? `(${filterStatus})` : ''}
@@ -510,10 +507,7 @@ function LeavePageContent() {
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>ประเภทการลา</label>
                 <select value={form.leave_category} onChange={e => setForm({ ...form, leave_category: e.target.value })} style={{ width: '100%', padding: '11px 14px', borderRadius: 12, border: '1px solid #e2e8f0', outline: 'none' }}>
-                  {dbCategories.length > 0 
-                    ? dbCategories.map(c => <option key={c.category_id} value={c.category_id}>{c.category_name}</option>)
-                    : CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)
-                  }
+                  {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
 

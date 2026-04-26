@@ -624,7 +624,7 @@ export default function LicensePage() {
                                  <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#0f172a' }}>บันทึกข้อมูลใบอนุญาต</h2>
                                  <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '15px' }}>กรุณากรอกข้อมูลและอัปโหลดหลักฐานเพื่อดำเนินการตรวจสอบ</p>
                               </div>
-                              <form onSubmit={handleLicenseSubmit}>
+                              <form onSubmit={handleLicenseSubmit} onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault(); }}>
                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px', marginBottom: '32px' }}>
                                     {activeModal === 'add' && (
                                        <div style={{ gridColumn: 'span 2' }}>
@@ -723,7 +723,7 @@ export default function LicensePage() {
                <div onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)' }}>
                   <div onClick={e => e.stopPropagation()} style={{ background: '#fff', padding: '48px', borderRadius: '40px', width: '600px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.2)' }}>
                      <h2 style={{ margin: '0 0 32px 0', fontSize: '24px', fontWeight: 900 }}>ตั้งค่าเกณฑ์มาตรฐาน</h2>
-                     <form onSubmit={handleConfigSubmit}>
+                     <form onSubmit={handleConfigSubmit} onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault(); }}>
                         <div style={{ display: 'grid', gap: '24px', marginBottom: '32px' }}>
                            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ชื่อเกณฑ์</label><input required value={configFormData.config_name} onChange={e => setConfigFormData({ ...configFormData, config_name: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>
                            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 800, marginBottom: '8px' }}>ประเภทวิชาชีพ</label><input required value={configFormData.license_name} onChange={e => setConfigFormData({ ...configFormData, license_name: e.target.value })} style={{ width: '100%', padding: '14px 24px', borderRadius: '40px', border: '1px solid #e2e8f0' }} /></div>

@@ -230,11 +230,16 @@ export const fetchPositions = () => apiFetch<Position[]>('/api/positions')
 export const fetchLeaveTypes = () => apiFetch<any[]>('/api/leave-types')
 export const fetchLeaveCategories = () => apiFetch<any[]>('/api/leave-categories')
 export const fetchLeaves = () => apiFetch<Leave[]>('/api/leaves')
-export const createLeave = (body: any) => apiFetch<{ success: boolean }>('/api/leaves', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(body),
-})
+export const createLeave = (body: any) => {
+  const options: RequestInit = { method: 'POST' };
+  if (body instanceof FormData) {
+    options.body = body;
+  } else {
+    options.headers = { 'Content-Type': 'application/json' };
+    options.body = JSON.stringify(body);
+  }
+  return apiFetch<{ success: boolean }>('/api/leaves', options);
+};
 export const updateLeaveStatus = (id: string | number, status: string, stage?: string) => apiFetch<{ success: boolean }>(`/api/leaves/${id}`, {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },

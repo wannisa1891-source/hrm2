@@ -23,8 +23,10 @@ import type { Employee } from '@/services/apiService';
 
 interface ProfileData {
   profile: Employee & {
-    pos_name: string;
-    dept_name: string;
+    pos_name?: string;
+    dept_name?: string;
+    division?: string;
+    sub_dept?: string;
     mobile_no?: string;
     hire_date?: string;
     photo?: string;
@@ -44,8 +46,8 @@ export default function MyProfilePage() {
 
   const [showEditModal, setShowEditModal] = useState(false);
   const { employees, editEmployee, loadEmployees } = useEmployees();
-  const { departments } = useDepartments();
-  const { positions } = usePositions();
+  const { departments, loadDepartments } = useDepartments();
+  const { positions, loadPositions } = usePositions();
   
   const { announcements } = useAnnouncements();
   const [selectedNews, setSelectedNews] = useState<any>(null);
@@ -162,8 +164,13 @@ export default function MyProfilePage() {
 
   useEffect(() => {
     if (!isLoggedIn) router.push('/login');
-    else { loadEmployees(); if (user) fetchProfile(); }
-  }, [isLoggedIn, router, user]);
+    else { 
+      loadEmployees(); 
+      loadDepartments(); 
+      loadPositions(); 
+      if (user) fetchProfile(); 
+    }
+  }, [isLoggedIn, router, user, loadEmployees, loadDepartments, loadPositions]);
 
   if (loading) return <AppLayout><div style={{ textAlign: 'center', padding: '50px' }}>กำลังโหลดข้อมูล...</div></AppLayout>;
   if (!data) return <AppLayout><div style={{ textAlign: 'center', padding: '50px' }}>ไม่พบข้อมูลโปรไฟล์</div></AppLayout>;
@@ -271,7 +278,7 @@ export default function MyProfilePage() {
           </div>
           
           <h2 className="profile-name">{fullName}</h2>
-          <span className="profile-title">{profile.pos_name}</span>
+          <span className="profile-title">{profile.pos_name || profile.pos_id}</span>
           
           <div className="quick-stats">
             <div className="stat-item">
@@ -301,13 +308,7 @@ export default function MyProfilePage() {
                 <span className="meta-val">{profile.mobile_no || '-'}</span>
               </div>
             </div>
-            <div className="meta-item">
-              <div className="meta-icon"><MapPin size={18} /></div>
-              <div>
-                <span className="meta-label">แผนก</span>
-                <span className="meta-val">{profile.dept_name}</span>
-              </div>
-            </div>
+
           </div>
           
           <button 
@@ -376,12 +377,12 @@ export default function MyProfilePage() {
                 </div>
                 <div className="data-list">
                   <div className="data-item">
-                    <span className="data-label">ชื่อ-นามสกุล (TH)</span>
+                    <span className="data-label">ชื่อ-นามสกุล</span>
                     <span className="data-val">{profile.prefix} {profile.first_name_th} {profile.last_name_th}</span>
                   </div>
                   <div className="data-item">
-                    <span className="data-label">ชื่อ-นามสกุล (EN)</span>
-                    <span className="data-val">{profile.first_name_en} {profile.last_name_en}</span>
+                    <span className="data-label">ชื่อเล่น</span>
+                    <span className="data-val">{profile.nickname || '-'}</span>
                   </div>
                   <div className="data-item">
                     <span className="data-label">เลขบัตรประชาชน</span>
@@ -405,19 +406,30 @@ export default function MyProfilePage() {
                 </div>
                 <div className="data-list">
                   <div className="data-item">
-                    <span className="data-label">กลุ่มงาน/ฝ่าย</span>
-                    <span className="data-val">{profile.dept_name}</span>
+                    <span className="data-label">กลุ่มงาน</span>
+                    <span className="data-val">{profile.division || '-'}</span>
                   </div>
                   <div className="data-item">
+                    <span className="data-label">แผนก/ฝ่าย</span>
+                    <span className="data-val">{profile.dept_name || '-'}</span>
+                  </div>
+                  {profile.sub_dept && (
+                    <div className="data-item">
+                      <span className="data-label">งาน/หน่วยงานย่อย</span>
+                      <span className="data-val">{profile.sub_dept}</span>
+                    </div>
+                  )}
+                  <div className="data-item">
                     <span className="data-label">ตำแหน่ง</span>
-                    <span className="data-val">{profile.pos_name}</span>
+                    <span className="data-val">{profile.pos_name || profile.pos_id || '-'}</span>
                   </div>
                   <div className="data-item">
                     <span className="data-label">วันที่เริ่มงาน</span>
                     <div className="data-val">
                       <div>{formatThaiDate(profile.start_date || profile.hire_date)}</div>
-                      <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 600, marginTop: '2px' }}>
-                        (รวมระยะเวลา: {formatDurationThai(calculateWorkDuration(profile.start_date || profile.hire_date))})
+                      <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 600, marginTop: '4px', lineHeight: '1.4' }}>
+                        <div>รวมระยะเวลา:</div>
+                        <div>{formatDurationThai(calculateWorkDuration(profile.start_date || profile.hire_date))}</div>
                       </div>
                     </div>
                   </div>
@@ -434,7 +446,7 @@ export default function MyProfilePage() {
                 <div className="leave-stats" style={{ gridTemplateColumns: profile.accumulated_vacation ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)' }}>
                   <div className="leave-stat">
                     <div className="leave-stat-val" style={{ color: '#059669' }}>{profile.quota_vacation || 0}</div>
-                    <div className="leave-stat-label">พักร้อน (ปีนี้)</div>
+                    <div className="leave-stat-label">พักร้อน</div>
                   </div>
                   {profile.accumulated_vacation !== undefined && profile.accumulated_vacation > 0 && (
                     <div className="leave-stat">
@@ -470,9 +482,18 @@ export default function MyProfilePage() {
 
           {activeTab === 'leave' && (
             <div className="glass-card" style={{ padding: '32px' }}>
-              <h3 className="card-title">
-                <Calendar className="card-title-icon" size={24} /> ประวัติการลางานล่าสุด
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h3 className="card-title" style={{ marginBottom: 0 }}>
+                  <Calendar className="card-title-icon" size={24} /> ประวัติการลางานล่าสุด
+                </h3>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => router.push('/leave')} 
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '14px', borderRadius: '12px' }}
+                >
+                  <Calendar size={18} /> ยื่นใบลาใหม่
+                </button>
+              </div>
               {leaves?.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
                   <Calendar size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
@@ -534,10 +555,36 @@ export default function MyProfilePage() {
                         </div>
                       )}
                       {lic.status && (
-                        <div style={{ marginTop: '8px' }}>
+                        <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span className={`badge ${(lic.status === 'Active' || lic.status === 'ปกติ' || lic.status === 'ทำงานปกติ') ? 'badge-success' : 'badge-danger'}`}>
                             {lic.status}
                           </span>
+                          {(() => {
+                            let files: string[] = [];
+                            if (lic.file_path) {
+                              if (typeof lic.file_path === 'string' && lic.file_path.startsWith('[')) {
+                                try { files = JSON.parse(lic.file_path); } catch { files = [lic.file_path]; }
+                              } else if (Array.isArray(lic.file_path)) {
+                                files = lic.file_path;
+                              } else {
+                                files = [lic.file_path];
+                              }
+                            }
+                            return files.length > 0 && (
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                {files.map((f, i) => {
+                                  const filename = f.replace(/^.*[\\\/]/, '');
+                                  const match = filename.match(/^\d+-(.*)$/);
+                                  const displayName = match ? match[1] : filename;
+                                  return (
+                                    <a key={i} href={f.startsWith('/uploads') || f.startsWith('http') || f.startsWith('blob:') ? f : `/uploads/${f}`} target="_blank" rel="noreferrer" style={{ fontSize: '11px', background: '#eff6ff', color: '#2563eb', padding: '4px 12px', borderRadius: '8px', fontWeight: 700, textDecoration: 'none', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block' }} title={displayName}>
+                                      {displayName}
+                                    </a>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
@@ -553,7 +600,7 @@ export default function MyProfilePage() {
                 <FileText className="card-title-icon" size={24} /> ประวัติการฝึกอบรม
               </h3>
               
-              <form onSubmit={handleAddTraining} style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <form onSubmit={handleAddTraining} onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault(); }} style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#334155' }}>เพิ่มประวัติการอบรม</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
@@ -629,7 +676,7 @@ export default function MyProfilePage() {
               </h3>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
-                <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <form onSubmit={handleChangePassword} onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault(); }} style={{ background: '#f8fafc', padding: '24px 28px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 20px 0', fontWeight: 600 }}>เปลี่ยนรหัสผ่านด้วยตนเอง</h4>
                   <div className="form-group">
                     <label className="form-label">รหัสผ่านเดิม</label>
