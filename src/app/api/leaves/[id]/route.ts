@@ -26,7 +26,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         updateFields.push('dept_head_status = ?', 'current_stage = ?');
         values.push('Approved', 'Administration');
       } else if (stage === 'Administration') {
-        updateFields.push('admin_status = ?', 'status = ?', 'current_stage = ?');
+        updateFields.push('admin_status = ?', 'current_stage = ?');
+        values.push('Approved', 'Housekeeper');
+      } else if (stage === 'Housekeeper') {
+        updateFields.push('housekeeper_status = ?', 'current_stage = ?');
+        values.push('Approved', 'Director');
+      } else if (stage === 'Director') {
+        updateFields.push('director_status = ?', 'status = ?', 'current_stage = ?');
         values.push('Approved', 'Approved', 'Completed');
       }
     }

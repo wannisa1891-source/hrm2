@@ -583,22 +583,73 @@ function LeavePageContent() {
               </div>
             </div>
 
-            {isManagement && selectedLeave.status === 'Pending' && (
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={() => { changeLeaveStatus(String(selectedLeave.leave_id), 'Rejected', selectedLeave.current_stage || ''); setShowReviewModal(false); }}
-                  style={{ flex: 1, padding: '14px', borderRadius: 16, border: '1px solid #fecaca', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 800, fontSize: 14 }}>
-                  ไม่อนุมัติ
-                </button>
-                <button onClick={() => { changeLeaveStatus(String(selectedLeave.leave_id), 'Approved', selectedLeave.current_stage || ''); setShowReviewModal(false); }}
-                  style={{ flex: 1, padding: '14px', borderRadius: 16, border: 'none', background: '#0f172a', color: 'white', cursor: 'pointer', fontWeight: 800, fontSize: 14 }}>
-                  อนุมัติรายการ
-                </button>
+            {/* Workflow Progress */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 12, textTransform: 'uppercase' }}>ขั้นตอนการอนุมัติ</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { id: 'Head of Dept', label: 'หัวหน้าแผนก', status: selectedLeave.dept_head_status },
+                  { id: 'Administration', label: 'ฝ่ายบริหาร/HR', status: selectedLeave.admin_status },
+                  { id: 'Housekeeper', label: 'พ่อบ้าน', status: selectedLeave.housekeeper_status },
+                  { id: 'Director', label: 'ผู้อำนวยการ', status: selectedLeave.director_status },
+                ].map((step, idx) => {
+                  const isCurrent = selectedLeave.current_stage === step.id;
+                  const isDone = step.status === 'Approved';
+                  const isRejected = step.status === 'Rejected' || (selectedLeave.status === 'Rejected' && isCurrent);
+                  
+                  return (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ 
+                        width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800,
+                        background: isDone ? '#10b981' : isRejected ? '#ef4444' : isCurrent ? '#3b82f6' : '#e2e8f0',
+                        color: isDone || isRejected || isCurrent ? 'white' : '#94a3b8'
+                      }}>
+                        {isDone ? '✓' : isRejected ? '!' : idx + 1}
+                      </div>
+                      <div style={{ flex: 1, fontSize: 14, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? '#0f172a' : '#64748b' }}>
+                        {step.label}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: isDone ? '#10b981' : isRejected ? '#ef4444' : isCurrent ? '#3b82f6' : '#94a3b8' }}>
+                        {isDone ? 'อนุมัติแล้ว' : isRejected ? 'ไม่อนุมัติ' : isCurrent ? 'กำลังพิจารณา' : 'รอตามลำดับ'}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-            
-            <div style={{ textAlign: 'center', marginTop: 16 }}>
-              {badge(selectedLeave.status)}
             </div>
+
+            {/* Approval Actions */}
+            {(() => {
+              const canApprove = 
+                (selectedLeave.current_stage === 'Head of Dept' && (isHead || isAdmin)) ||
+                (selectedLeave.current_stage === 'Administration' && isAdmin) ||
+                (selectedLeave.current_stage === 'Housekeeper' && (role === 'Housekeeper' || role === 'พ่อบ้าน' || isAdmin)) ||
+                (selectedLeave.current_stage === 'Director' && (role === 'Director' || role === 'ผอ.' || isAdmin));
+
+              if (canApprove && selectedLeave.status === 'Pending') {
+                return (
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button onClick={() => { changeLeaveStatus(String(selectedLeave.leave_id), 'Rejected', selectedLeave.current_stage || ''); setShowReviewModal(false); }}
+                      style={{ flex: 1, padding: '14px', borderRadius: 16, border: '1px solid #fecaca', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 800, fontSize: 14 }}>
+                      ไม่อนุมัติ
+                    </button>
+                    <button onClick={() => { changeLeaveStatus(String(selectedLeave.leave_id), 'Approved', selectedLeave.current_stage || ''); setShowReviewModal(false); }}
+                      style={{ flex: 1, padding: '14px', borderRadius: 16, border: 'none', background: '#0f172a', color: 'white', cursor: 'pointer', fontWeight: 800, fontSize: 14 }}>
+                      อนุมัติรายการ ({
+                        selectedLeave.current_stage === 'Head of Dept' ? 'หัวหน้า' :
+                        selectedLeave.current_stage === 'Administration' ? 'HR' :
+                        selectedLeave.current_stage === 'Housekeeper' ? 'พ่อบ้าน' : 'ผอ.'
+                      })
+                    </button>
+                  </div>
+                );
+              }
+              return (
+                <div style={{ textAlign: 'center', marginTop: 16 }}>
+                  {badge(selectedLeave.status)}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
