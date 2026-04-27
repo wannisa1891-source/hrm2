@@ -556,9 +556,20 @@ function ProfileContent() {
 
           {activeTab === 'certificates' && (
             <div className="glass-card" style={{ padding: '32px' }}>
-              <h3 className="card-title">
-                <Award className="card-title-icon" size={24} /> รายการใบประกอบวิชาชีพและวุฒิบัตร
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h3 className="card-title" style={{ marginBottom: 0 }}>
+                  <Award className="card-title-icon" size={24} /> รายการใบประกอบวิชาชีพและวุฒิบัตร
+                </h3>
+                {isAdmin && (
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => router.push('/license')} 
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '14px', borderRadius: '12px' }}
+                  >
+                    <Award size={18} /> ทะเบียนใบประกอบวิชาชีพ
+                  </button>
+                )}
+              </div>
               {!fullProfile?.licenses || fullProfile.licenses.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
                   <Award size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />

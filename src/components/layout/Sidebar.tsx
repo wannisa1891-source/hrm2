@@ -45,7 +45,6 @@ const menuItems: MenuItem[] = [
       { id: 'employees', label: 'รายชื่อพนักงาน', href: '/employees' },
       { id: 'org-structure', label: 'จัดข้อมูลแผนก', href: '/org-structure' },
       { id: 'transfer', label: 'การโยกย้าย', href: '/transfers' },
-      { id: 'license', label: 'ใบประกอบวิชาชีพ', href: '/license' },
     ],
   },
   {
