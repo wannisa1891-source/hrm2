@@ -30,7 +30,9 @@ export default function RetirementPage() {
   }
 
   const [fiscalYear, setFiscalYear] = useState<number>(currentFY);
-  const [selectedDept, setSelectedDept] = useState<string>('all');
+  const [filterDiv, setFilterDiv] = useState<string>('all');
+  const [filterGrp, setFilterGrp] = useState<string>('all');
+  const [filterPos, setFilterPos] = useState<string>('all');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -42,6 +44,25 @@ export default function RetirementPage() {
     }
     return options;
   }, [currentFY]);
+
+  const positions = useMemo(() => {
+    if (!data?.employees) return [];
+    const unique = new Map();
+    data.employees.forEach((emp: any) => {
+      if (emp.pos_id && emp.pos_name) {
+        if (!unique.has(emp.pos_id)) {
+          unique.set(emp.pos_id, { pos_id: emp.pos_id, pos_name: emp.pos_name, count: 0 });
+        }
+        unique.get(emp.pos_id).count += 1;
+      } else if (emp.pos_name) {
+        if (!unique.has(emp.pos_name)) {
+          unique.set(emp.pos_name, { pos_id: emp.pos_name, pos_name: emp.pos_name, count: 0 });
+        }
+        unique.get(emp.pos_name).count += 1;
+      }
+    });
+    return Array.from(unique.values()) as any[];
+  }, [data]);
 
   useEffect(() => {
     loadDepartments();
@@ -66,9 +87,14 @@ export default function RetirementPage() {
 
   const filteredEmployees = useMemo(() => {
     if (!data?.employees) return [];
-    if (selectedDept === 'all') return data.employees;
-    return data.employees.filter((emp: any) => emp.dept_id === selectedDept);
-  }, [data, selectedDept]);
+    return data.employees.filter((emp: any) => {
+      const dept = departments.find(d => d.dept_id === emp.dept_id);
+      const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
+                        (filterGrp === 'all' || dept?.dept_name === filterGrp);
+      const matchPos = filterPos === 'all' || emp.pos_id === filterPos || emp.pos_name === filterPos;
+      return matchDept && matchPos;
+    });
+  }, [data, filterDiv, filterGrp, filterPos, departments]);
 
   const exportToExcel = () => {
     if (!filteredEmployees.length) return;
@@ -171,17 +197,51 @@ export default function RetirementPage() {
         <div className="glass-card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>รายชื่อผู้เกษียณอายุ</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontWeight: 600, color: '#334155' }}>กรองตามแผนก:</span>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <select 
                 className="form-select" 
-                style={{ width: 'auto', minWidth: '200px' }} 
-                value={selectedDept} 
-                onChange={(e) => setSelectedDept(e.target.value)}
+                style={{ width: 'auto', minWidth: '140px' }} 
+                value={filterDiv} 
+                onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); }}
+              >
+                <option value="all">ทุกกลุ่มงาน</option>
+                {Array.from(new Set(departments.map(d => String(d.division || '').trim())))
+                  .filter(Boolean)
+                  .sort((a, b) => {
+                    const numA = parseInt(a.match(/^\d+/)?.[0] || '999');
+                    const numB = parseInt(b.match(/^\d+/)?.[0] || '999');
+                    return numA - numB || a.localeCompare(b, 'th');
+                  })
+                  .map(div => (
+                    <option key={div as string} value={div as string}>{div as string}</option>
+                  ))}
+              </select>
+
+              <select 
+                className="form-select" 
+                style={{ width: 'auto', minWidth: '140px' }} 
+                value={filterGrp} 
+                onChange={e => setFilterGrp(e.target.value)} 
+                disabled={filterDiv === 'all'}
               >
                 <option value="all">ทุกแผนก</option>
-                {data?.summary_by_dept?.map((dept: any) => (
-                  <option key={dept.dept_id} value={dept.dept_id}>{dept.dept_name} ({dept.count} คน)</option>
+                {Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim())))
+                  .filter(Boolean)
+                  .sort((a, b) => a.localeCompare(b, 'th'))
+                  .map(grp => (
+                    <option key={grp as string} value={grp as string}>{grp as string}</option>
+                  ))}
+              </select>
+
+              <select 
+                className="form-select" 
+                style={{ width: 'auto', minWidth: '150px' }} 
+                value={filterPos} 
+                onChange={e => setFilterPos(e.target.value)}
+              >
+                <option value="all">ทุกตำแหน่ง</option>
+                {positions.map((p: any) => (
+                  <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>
                 ))}
               </select>
             </div>
