@@ -172,6 +172,36 @@ export async function GET(req: NextRequest) {
 
 
 
+    // Calculate retirement count for current FY
+    const nowRetire = new Date();
+    let currentFY = nowRetire.getFullYear() + 543;
+    if (nowRetire.getMonth() >= 9) {
+      currentFY += 1;
+    }
+
+    const [birthDates]: any = await pool.query(`
+      SELECT birth_date 
+      FROM tbl_employees 
+      WHERE birth_date IS NOT NULL AND birth_date != '1900-01-01' AND status IN ('Active', 'A', 'ทำงานปกติ')
+    `);
+
+    let retirementCount = 0;
+    birthDates.forEach((emp: any) => {
+      const birthDate = new Date(emp.birth_date);
+      const birthYearBE = birthDate.getFullYear() + 543;
+      const birthMonth = birthDate.getMonth() + 1;
+      const birthDay = birthDate.getDate();
+
+      let retirementYearBE = birthYearBE + 60;
+      if (birthMonth > 10 || (birthMonth === 10 && birthDay >= 2)) {
+        retirementYearBE += 1;
+      }
+
+      if (retirementYearBE === currentFY) {
+        retirementCount += 1;
+      }
+    });
+
     return NextResponse.json({
       empCount,
       leaveTodayCount,
@@ -183,7 +213,8 @@ export async function GET(req: NextRequest) {
       expiringLicenses,
       expiredLicenses,
       leaveStats,
-      recentLeaves
+      recentLeaves,
+      retirementCount
     });
 
   } catch (err: unknown) {

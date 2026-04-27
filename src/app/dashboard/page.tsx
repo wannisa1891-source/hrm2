@@ -176,7 +176,7 @@ export default function DashboardPage() {
             <>
               <div className="dashboard-grid">
                 <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 24 }}>
                     <StatCard
                       label="บุคลากรทั้งหมด"
                       value={dashboardData?.empCount || 0}
@@ -220,6 +220,17 @@ export default function DashboardPage() {
                       iconColor="#ea580c"
                       trend="รอดำเนินการ"
                       href="/transfers"
+                    />
+
+                    <StatCard
+                      label="เกษียณอายุปีงบนี้"
+                      value={(dashboardData as any)?.retirementCount || 0}
+                      unit="คน"
+                      icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      iconBg="#e0f2fe"
+                      iconColor="#0284c7"
+                      trend="ปีงบประมาณ"
+                      href="/employees/retirement"
                     />
                   </div>
 
