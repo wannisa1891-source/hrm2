@@ -671,6 +671,52 @@ body {
   min-height: 0;
 }
 
+.dashboard-left {
+  grid-column: span 8;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dashboard-right {
+  grid-column: span 4;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.top-dashboard-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1400px) {
+  .top-dashboard-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .top-dashboard-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .top-dashboard-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.stat-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+
+
 /* Hide scrollbar utility */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

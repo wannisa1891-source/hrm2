@@ -174,77 +174,77 @@ export default function DashboardPage() {
         {!loading && (
           isAdmin ? (
             <>
+              <div className="top-dashboard-row" style={{ marginBottom: 24 }}>
+                <StatCard
+                  label="บุคลากรทั้งหมด"
+                  value={dashboardData?.empCount || 0}
+                  unit="คน"
+                  icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  iconBg="#dcfce7"
+                  iconColor="#16a34a"
+                  trend="↑ 2%"
+                  trendUp={true}
+                  href="/employees"
+                />
+
+                <StatCard
+                  label="ลางาน/พักร้อน"
+                  value={dashboardData?.leaveTodayCount || 0}
+                  unit="คน"
+                  icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  iconBg="#fee2e2"
+                  iconColor="#ef4444"
+                  trend="วันนี้"
+                  href="/leave"
+                />
+
+                <StatCard
+                  label="เบิกงบประชุม/อบรม"
+                  value={dashboardData?.reimburseCount || 0}
+                  unit="รายการ"
+                  icon="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  iconBg="#ccfbf1"
+                  iconColor="#0d9488"
+                  trend="เบิกงบ"
+                  href="/schedule"
+                />
+
+                <StatCard
+                  label="คำขอโยกย้ายงาน"
+                  value={dashboardData?.pendingTransfers || 0}
+                  unit="รายการ"
+                  icon="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                  iconBg="#ffedd5"
+                  iconColor="#ea580c"
+                  trend="รอดำเนินการ"
+                  href="/transfers"
+                />
+
+                <StatCard
+                  label="เกษียณอายุปีงบนี้"
+                  value={(dashboardData as any)?.retirementCount || 0}
+                  unit="คน"
+                  icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                  iconBg="#e0f2fe"
+                  iconColor="#0284c7"
+                  trend="ปีงบประมาณ"
+                  href="/employees/retirement"
+                />
+
+                <PendingList
+                  transfersCount={dashboardData?.pendingTransfers || 0}
+                  leavesCount={dashboardData?.pendingLeaves || 0}
+                />
+              </div>
+
               <div className="dashboard-grid">
-                <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 24 }}>
-                    <StatCard
-                      label="บุคลากรทั้งหมด"
-                      value={dashboardData?.empCount || 0}
-                      unit="คน"
-                      icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      iconBg="#dcfce7"
-                      iconColor="#16a34a"
-                      trend="↑ 2%"
-                      trendUp={true}
-                      href="/employees"
-                    />
-
-                    <StatCard
-                      label="ลางาน/พักร้อน"
-                      value={dashboardData?.leaveTodayCount || 0}
-                      unit="คน"
-                      icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      iconBg="#fee2e2"
-                      iconColor="#ef4444"
-                      trend="วันนี้"
-                      href="/leave"
-                    />
-
-                    <StatCard
-                      label="เบิกงบประชุม/อบรม"
-                      value={dashboardData?.reimburseCount || 0}
-                      unit="รายการ"
-                      icon="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      iconBg="#ccfbf1"
-                      iconColor="#0d9488"
-                      trend="เบิกงบ"
-                      href="/schedule"
-                    />
-
-                    <StatCard
-                      label="คำขอโยกย้ายงาน"
-                      value={dashboardData?.pendingTransfers || 0}
-                      unit="รายการ"
-                      icon="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                      iconBg="#ffedd5"
-                      iconColor="#ea580c"
-                      trend="รอดำเนินการ"
-                      href="/transfers"
-                    />
-
-                    <StatCard
-                      label="เกษียณอายุปีงบนี้"
-                      value={(dashboardData as any)?.retirementCount || 0}
-                      unit="คน"
-                      icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      iconBg="#e0f2fe"
-                      iconColor="#0284c7"
-                      trend="ปีงบประมาณ"
-                      href="/employees/retirement"
-                    />
-                  </div>
-
+                <div className="dashboard-left">
                   <div style={{ flex: 1, minHeight: 340, display: 'flex', flexDirection: 'column' }}>
                     <DonutChart data={dashboardData?.professions || []} />
                   </div>
                 </div>
 
-                <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <PendingList
-                    transfersCount={dashboardData?.pendingTransfers || 0}
-                    leavesCount={dashboardData?.pendingLeaves || 0}
-                  />
-
+                <div className="dashboard-right">
                   {newsContent}
 
                   <SystemAlert
