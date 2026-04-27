@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDepartments } from '@/hooks/useDepartments';
+import { usePositions } from '@/hooks/usePositions';
 import Image from 'next/image';
 import { Calendar, Users, Briefcase, Award, ArrowLeft, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -21,6 +22,11 @@ export default function RetirementPage() {
   }, [user, isAdmin, router]);
 
   const { departments, loadDepartments } = useDepartments();
+  const { positions, loadPositions } = usePositions();
+
+  useEffect(() => {
+    loadPositions();
+  }, [loadPositions]);
 
   // Calculate current fiscal year
   const today = new Date();
@@ -48,24 +54,7 @@ export default function RetirementPage() {
     return options;
   }, [currentFY]);
 
-  const positions = useMemo(() => {
-    if (!data?.employees) return [];
-    const unique = new Map();
-    data.employees.forEach((emp: any) => {
-      if (emp.pos_id && emp.pos_name) {
-        if (!unique.has(emp.pos_id)) {
-          unique.set(emp.pos_id, { pos_id: emp.pos_id, pos_name: emp.pos_name, count: 0 });
-        }
-        unique.get(emp.pos_id).count += 1;
-      } else if (emp.pos_name) {
-        if (!unique.has(emp.pos_name)) {
-          unique.set(emp.pos_name, { pos_id: emp.pos_name, pos_name: emp.pos_name, count: 0 });
-        }
-        unique.get(emp.pos_name).count += 1;
-      }
-    });
-    return Array.from(unique.values()) as any[];
-  }, [data]);
+
 
   useEffect(() => {
     loadDepartments();
@@ -323,53 +312,57 @@ export default function RetirementPage() {
                   ))}
               </select>
 
-              {/* Searchable Position Dropdown */}
-              <div style={{ position: 'relative', width: 'auto', minWidth: '180px' }}>
-                <div 
+              {/* Custom Searchable Typeable Dropdown */}
+              <div style={{ position: 'relative', width: 'auto', minWidth: '220px' }}>
+                <input 
+                  type="text" 
                   className="form-select" 
-                  onClick={() => setIsPosOpen(!isPosOpen)}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: 'white', gap: '8px', padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '12px' }}
-                >
-                  <span style={{ fontSize: '14px', color: '#1e293b' }}>
-                    {filterPos === 'all' ? 'ทุกตำแหน่ง' : (positions.find(p => p.pos_id === filterPos)?.pos_name || filterPos)}
-                  </span>
-                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#475569" style={{ transform: isPosOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'all 0.2s' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-                
+                  style={{ width: '100%', padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '14px', outline: 'none', background: 'white' }} 
+                  placeholder="พิมพ์ค้นหาตำแหน่ง..."
+                  value={posSearch || (filterPos === 'all' ? '' : (positions.find(p => p.pos_id === filterPos)?.pos_name || filterPos))}
+                  onFocus={() => setIsPosOpen(true)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPosSearch(val);
+                    setIsPosOpen(true);
+                    
+                    const found = positions.find(p => p.pos_name === val);
+                    if (found) {
+                      setFilterPos(found.pos_id);
+                    } else if (val === '') {
+                      setFilterPos('all');
+                    }
+                  }} 
+                />
                 {isPosOpen && (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)', zIndex: 100, padding: '10px' }}>
-                    <input 
-                      type="text" 
-                      placeholder="พิมพ์ชื่อตำแหน่ง..." 
-                      value={posSearch} 
-                      onChange={e => setPosSearch(e.target.value)} 
-                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '13px', outline: 'none', marginBottom: '8px', background: '#f8fafc' }}
-                    />
-                    <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }} className="custom-scrollbar">
+                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)', zIndex: 100, padding: '6px' }}>
+                    <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }} className="custom-scrollbar">
                       <div 
-                        onClick={() => { setFilterPos('all'); setIsPosOpen(false); setPosSearch(''); }}
-                        style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === 'all' ? '#eff6ff' : 'transparent', color: filterPos === 'all' ? '#1d4ed8' : '#334155', fontWeight: filterPos === 'all' ? 700 : 500, fontSize: '13px', transition: 'all 0.1s' }}
+                        onClick={() => { setFilterPos('all'); setPosSearch(''); setIsPosOpen(false); }}
+                        style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === 'all' ? '#eff6ff' : 'transparent', color: filterPos === 'all' ? '#1d4ed8' : '#334155', fontWeight: filterPos === 'all' ? 700 : 500, fontSize: '13px' }}
                         onMouseEnter={e => { if(filterPos !== 'all') e.currentTarget.style.background = '#f1f5f9'; }}
                         onMouseLeave={e => { if(filterPos !== 'all') e.currentTarget.style.background = 'transparent'; }}
                       >
                         ทุกตำแหน่ง
                       </div>
-                      {positions.filter(p => !posSearch || p.pos_name.toLowerCase().includes(posSearch.toLowerCase())).map((p: any) => (
-                        <div 
-                          key={p.pos_id}
-                          onClick={() => { setFilterPos(p.pos_id); setIsPosOpen(false); setPosSearch(''); }}
-                          style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === p.pos_id ? '#eff6ff' : 'transparent', color: filterPos === p.pos_id ? '#1d4ed8' : '#334155', fontWeight: filterPos === p.pos_id ? 700 : 500, fontSize: '13px', transition: 'all 0.1s' }}
-                          onMouseEnter={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = '#f1f5f9'; }}
-                          onMouseLeave={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = 'transparent'; }}
-                        >
-                          {p.pos_name}
-                        </div>
-                      ))}
+                      {positions
+                        .filter((p: any) => !posSearch || p.pos_name.toLowerCase().includes(posSearch.toLowerCase()))
+                        .map((p: any) => (
+                          <div 
+                            key={p.pos_id}
+                            onClick={() => { setFilterPos(p.pos_id); setPosSearch(p.pos_name); setIsPosOpen(false); }}
+                            style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === p.pos_id ? '#eff6ff' : 'transparent', color: filterPos === p.pos_id ? '#1d4ed8' : '#334155', fontWeight: filterPos === p.pos_id ? 700 : 500, fontSize: '13px' }}
+                            onMouseEnter={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = '#f1f5f9'; }}
+                            onMouseLeave={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = 'transparent'; }}
+                          >
+                            {p.pos_name}
+                          </div>
+                        ))}
                     </div>
                   </div>
                 )}
+                {/* Clicking outside closes popup */}
+                {isPosOpen && <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 90 }} onClick={() => setIsPosOpen(false)} />}
               </div>
             </div>
           </div>

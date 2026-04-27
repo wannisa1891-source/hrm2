@@ -47,6 +47,8 @@ function EmployeesContent() {
   const [filterPos, setFilterPos] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterLicense, setFilterLicense] = useState('all');
+  const [posSearch, setPosSearch] = useState<string>('');
+  const [isPosOpen, setIsPosOpen] = useState<boolean>(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
@@ -665,10 +667,58 @@ function EmployeesContent() {
               </select>
 
             </div>
-            <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterPos} onChange={e => setFilterPos(e.target.value)}>
-              <option value="all">ทุกตำแหน่ง</option>
-              {positions.map(p => <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>)}
-            </select>
+            {/* Custom Searchable Typeable Dropdown */}
+            <div style={{ position: 'relative', width: 'auto', minWidth: '220px' }}>
+              <input 
+                type="text" 
+                className="form-select" 
+                style={{ width: '100%', padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '14px', outline: 'none', background: 'white' }} 
+                placeholder="พิมพ์ค้นหาตำแหน่ง..."
+                value={posSearch || (filterPos === 'all' ? '' : (positions.find(p => p.pos_id === filterPos)?.pos_name || filterPos))}
+                onFocus={() => setIsPosOpen(true)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPosSearch(val);
+                  setIsPosOpen(true);
+                  
+                  const found = positions.find(p => p.pos_name === val);
+                  if (found) {
+                    setFilterPos(found.pos_id);
+                  } else if (val === '') {
+                    setFilterPos('all');
+                  }
+                }} 
+              />
+              {isPosOpen && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)', zIndex: 100, padding: '6px' }}>
+                  <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }} className="custom-scrollbar">
+                    <div 
+                      onClick={() => { setFilterPos('all'); setPosSearch(''); setIsPosOpen(false); }}
+                      style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === 'all' ? '#eff6ff' : 'transparent', color: filterPos === 'all' ? '#1d4ed8' : '#334155', fontWeight: filterPos === 'all' ? 700 : 500, fontSize: '13px' }}
+                      onMouseEnter={e => { if(filterPos !== 'all') e.currentTarget.style.background = '#f1f5f9'; }}
+                      onMouseLeave={e => { if(filterPos !== 'all') e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      ทุกตำแหน่ง
+                    </div>
+                    {positions
+                      .filter(p => !posSearch || p.pos_name.toLowerCase().includes(posSearch.toLowerCase()))
+                      .map((p: any) => (
+                        <div 
+                          key={p.pos_id}
+                          onClick={() => { setFilterPos(p.pos_id); setPosSearch(p.pos_name); setIsPosOpen(false); }}
+                          style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === p.pos_id ? '#eff6ff' : 'transparent', color: filterPos === p.pos_id ? '#1d4ed8' : '#334155', fontWeight: filterPos === p.pos_id ? 700 : 500, fontSize: '13px' }}
+                          onMouseEnter={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = '#f1f5f9'; }}
+                          onMouseLeave={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          {p.pos_name}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+              {/* Clicking outside closes popup */}
+              {isPosOpen && <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 90 }} onClick={() => setIsPosOpen(false)} />}
+            </div>
             <select className="form-select" style={{ width: 'auto', minWidth: '150px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
               <option value="all">สถานะการทำงาน: ทั้งหมด</option>
               <option value="ทำงานปกติ">ทำงานปกติ (Active)</option>
