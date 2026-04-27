@@ -569,7 +569,9 @@ function EmployeesContent() {
               <option value="all">สถานะการทำงาน: ทั้งหมด</option>
               <option value="ทำงานปกติ">ทำงานปกติ (Active)</option>
               <option value="ทดลองงาน">ทดลองงาน</option>
+              <option value="ลาศึกษา">ลาศึกษา</option>
               <option value="หยุดปฏิบัติงาน">หยุดปฏิบัติงาน</option>
+              <option value="เกษียณอายุ 60 ปีขึ้นไป">เกษียณอายุ 60 ปีขึ้นไป</option>
               <option value="ลาออก/พ้นสภาพ">ลาออก/พ้นสภาพ</option>
               <option value="ให้ออก">ให้ออก</option>
             </select>
@@ -897,7 +899,9 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
   const statusOptions = [
     { value: 'ทำงานปกติ', label: 'ทำงานปกติ', color: '#16a34a', bg: '#dcfce7' },
     { value: 'ทดลองงาน', label: 'ทดลองงาน', color: '#a16207', bg: '#fef9c3' },
+    { value: 'ลาศึกษา', label: 'ลาศึกษา', color: '#2563eb', bg: '#dbeafe' },
     { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
+    { value: 'เกษียณอายุ 60 ปีขึ้นไป', label: 'เกษียณอายุ 60 ปีขึ้นไป', color: '#7c3aed', bg: '#ede9fe' },
     { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ', color: '#ef4444', bg: '#fee2e2' },
     { value: 'ให้ออก', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
   ];
@@ -905,7 +909,9 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
   const statusMapping: { [key: string]: string } = {
     'Active': 'ทำงานปกติ',
     'Probation': 'ทดลองงาน',
+    'Study Leave': 'ลาศึกษา',
     'Inactive': 'หยุดปฏิบัติงาน',
+    'Retired': 'เกษียณอายุ 60 ปีขึ้นไป',
     'Resigned': 'ลาออก/พ้นสภาพ',
     'Terminated': 'ให้ออก'
   };
