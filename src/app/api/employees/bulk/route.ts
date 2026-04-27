@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
             hashedPassword,
             emp.role || 'User',
             emp.emp_type || 'พนักงานราชการ',
-            emp.dept_id || '',
-            emp.pos_id || '',
+            emp.dept_id || null,
+            emp.pos_id || null,
             emp.start_date || new Date().toISOString().split('T')[0],
             emp.status || 'ทำงานปกติ',
             null, // image

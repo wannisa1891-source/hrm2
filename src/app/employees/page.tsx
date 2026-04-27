@@ -182,7 +182,7 @@ function EmployeesContent() {
         const fullAddress = addrParts.join(' ') || row['ที่อยู่'] || '';
 
         return {
-          emp_id: row['รหัสพนักงาน'] || row['เลขประจำ'] || row['เลขประจำตำแหน่ง'] || row['emp_id'] || '',
+          emp_id: row['รหัสพนักงาน'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
           citizen_id: row['รหัสบัตรประชาชน'] || row['บัตรประชาชน'] || row['citizen_id'] || '',
           first_name_th: row['ชื่อ'] || row['first_name_th'] || '',
@@ -384,6 +384,67 @@ function EmployeesContent() {
 
 
 
+  const downloadBlankTemplate = () => {
+    const headers = [
+      'รหัสพนักงาน', 'คำนำหน้า', 'รหัสบัตรประชาชน', 'ชื่อ', 'นามสกุล', 'ชื่อเล่น',
+      'เบอร์โทรศัพท์', 'อีเมล', 'วัน/เดือน/ปีเกิด', 'เพศ',
+      'ที่อยู่-เลขที่', 'ที่อยู่-หมู่ที่', 'ที่อยู่-หมู่บ้าน/อาคาร', 'ที่อยู่-ซอย', 'ที่อยู่-ถนน',
+      'ที่อยู่-จังหวัด', 'ที่อยู่-อำเภอ/เขต', 'ที่อยู่-ตำบล/แขวง', 'ที่อยู่-รหัสไปรษณีย์',
+      'เลขประจำตำแหน่ง', 'วันที่เริ่มงาน', 'วันที่บรรจุ', 'วันที่เกษียณ',
+      'ประเภทการจ้างงาน', 'สถานะพนักงาน', 'สิทธิ์ผู้ใช้งาน', 'กลุ่มงาน', 'แผนก', 'ตำแหน่ง', 'คะแนน',
+      'ชื่อใบประกอบวิชาชีพ', 'ประเภทวิชาชีพ', 'เลขที่ใบประกอบวิชาชีพ', 'วันที่ออกบัตร', 'วันหมดอายุ'
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers]);
+
+    for (const cell in worksheet) {
+      if (cell[0] === '!') continue;
+      worksheet[cell].t = 's';
+    }
+
+    const max_widths = headers.map((h) => {
+      return { wch: Math.min(Math.max(h.length + 4, 12), 40) };
+    });
+    worksheet['!cols'] = max_widths;
+
+    const divisions = Array.from(new Set(departments.map(d => String(d.division || '').trim()).filter(Boolean)));
+    const maxRows = Math.max(divisions.length, departments.length, positions.length, 10, 10);
+
+    const optionsMatrix = [
+      ['กลุ่มงาน', 'แผนก', 'ตำแหน่ง', 'ประเภทการจ้างงาน', 'สถานะพนักงาน']
+    ];
+
+    const types = [
+      'ข้าราชการ', 'ลูกจ้างประจำ', 'พนักงานราชการ', 
+      'พนักงานกระทรวงสาธารณสุข', 'ลูกจ้างรายเดือน', 'ลูกจ้างรายวัน', 
+      'ลูกจ้างเหมาบริการ', 'ลูกจ้างแบ่งเปอร์เซนต์', 
+      'ลูกจ้างชั่วคราวที่อายุ 60 ปี', 'นักศึกษาฝึกงาน'
+    ];
+
+    const statuses = [
+      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา', 'หยุดปฏิบัติงาน', 
+      'เกษียณอายุ 60 ปีขึ้นไป', 'ลาออก/พ้นสภาพ', 'ให้ออก'
+    ];
+
+    for (let i = 0; i < maxRows; i++) {
+      optionsMatrix.push([
+        divisions[i] || '',
+        departments[i]?.dept_name || '',
+        positions[i]?.pos_name || '',
+        types[i] || '',
+        statuses[i] || ''
+      ]);
+    }
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+
+    const optionsSheet = XLSX.utils.aoa_to_sheet(optionsMatrix);
+    XLSX.utils.book_append_sheet(workbook, optionsSheet, "ตัวเลือก");
+
+    XLSX.writeFile(workbook, 'import_template.xlsx');
+  };
+
   const exportToCSV = () => {
     // 1. สร้างฟังก์ชัน formatDate เพื่อบังคับรูปแบบเป็น dd/mm/yyyy
     const formatDate = (dateStr: any) => {
@@ -479,8 +540,47 @@ function EmployeesContent() {
     });
     worksheet['!cols'] = max_widths;
 
+    const divisions = Array.from(new Set(departments.map(d => String(d.division || '').trim()).filter(Boolean)));
+
+    const maxRows = Math.max(
+      divisions.length,
+      departments.length,
+      positions.length,
+      10, // types
+      10  // statuses
+    );
+
+    const optionsMatrix = [
+      ['กลุ่มงาน', 'แผนก', 'ตำแหน่ง', 'ประเภทการจ้างงาน', 'สถานะพนักงาน']
+    ];
+
+    const types = [
+      'ข้าราชการ', 'ลูกจ้างประจำ', 'พนักงานราชการ', 
+      'พนักงานกระทรวงสาธารณสุข', 'ลูกจ้างรายเดือน', 'ลูกจ้างรายวัน', 
+      'ลูกจ้างเหมาบริการ', 'ลูกจ้างแบ่งเปอร์เซนต์', 
+      'ลูกจ้างชั่วคราวที่อายุ 60 ปี', 'นักศึกษาฝึกงาน'
+    ];
+
+    const statuses = [
+      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา', 'หยุดปฏิบัติงาน', 
+      'เกษียณอายุ 60 ปีขึ้นไป', 'ลาออก/พ้นสภาพ', 'ให้ออก'
+    ];
+
+    for (let i = 0; i < maxRows; i++) {
+      optionsMatrix.push([
+        divisions[i] || '',
+        departments[i]?.dept_name || '',
+        positions[i]?.pos_name || '',
+        types[i] || '',
+        statuses[i] || ''
+      ]);
+    }
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+
+    const optionsSheet = XLSX.utils.aoa_to_sheet(optionsMatrix);
+    XLSX.utils.book_append_sheet(workbook, optionsSheet, "ตัวเลือก");
 
     XLSX.writeFile(workbook, 'employees_list.xlsx');
   };
@@ -503,6 +603,10 @@ function EmployeesContent() {
                 <button className="btn-outline hover-glow" onClick={() => router.push('/org-structure')} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc' }}>
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5" /></svg>
                   ข้อมูลแผนก
+                </button>
+                <button className="btn-outline hover-glow" onClick={downloadBlankTemplate} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc' }}>
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  ฟอร์มเปล่าสำหรับอัปโหลด
                 </button>
                 <button className="btn-outline hover-glow" onClick={exportToCSV} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
