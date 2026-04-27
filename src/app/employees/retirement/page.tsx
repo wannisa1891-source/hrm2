@@ -36,14 +36,13 @@ export default function RetirementPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Generate fiscal year options (e.g. current - 2 to current + 10)
   const fyOptions = useMemo(() => {
     const options = [];
-    for (let i = currentFY - 5; i <= currentFY + 30; i++) {
+    for (let i = 2560; i <= 2600; i++) {
       options.push(i);
     }
     return options;
-  }, [currentFY]);
+  }, []);
 
   const positions = useMemo(() => {
     if (!data?.employees) return [];
@@ -97,23 +96,29 @@ export default function RetirementPage() {
   }, [data, filterDiv, filterGrp, filterPos, departments]);
 
   const breakdownData = useMemo(() => {
-    if (!data?.employees) return { divisions: [], departments: [] };
-    const divCounts: { [key: string]: number } = {};
-    const deptCounts: { [key: string]: number } = {};
-    
+    if (!data?.employees) return [];
+    const hierarchy: { [key: string]: { count: number, departments: { [key: string]: number } } } = {};
+
     data.employees.forEach((emp: any) => {
       const dept = departments.find(d => d.dept_id === emp.dept_id);
       const divName = dept?.division || 'ไม่ระบุกลุ่มงาน';
       const deptName = dept?.dept_name || 'ไม่ระบุแผนก';
-      
-      divCounts[divName] = (divCounts[divName] || 0) + 1;
-      deptCounts[deptName] = (deptCounts[deptName] || 0) + 1;
+
+      if (!hierarchy[divName]) {
+        hierarchy[divName] = { count: 0, departments: {} };
+      }
+      hierarchy[divName].count += 1;
+      hierarchy[divName].departments[deptName] = (hierarchy[divName].departments[deptName] || 0) + 1;
     });
-    
-    const divisions = Object.entries(divCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
-    const depts = Object.entries(deptCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
-    
-    return { divisions, departments: depts };
+
+    return Object.entries(hierarchy).map(([divName, details]) => ({
+      name: divName,
+      count: details.count,
+      departments: Object.entries(details.departments).map(([deptName, count]) => ({
+        name: deptName,
+        count
+      })).sort((a, b) => b.count - a.count)
+    })).sort((a, b) => b.count - a.count);
   }, [data, departments]);
 
   const exportToExcel = () => {
@@ -225,46 +230,37 @@ export default function RetirementPage() {
           </div>
         </div>
 
-        {/* Breakdown Statistics */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '32px' }}>
-          <div className="glass-card" style={{ padding: '24px' }}>
-            <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '4px', height: '16px', background: '#3b82f6', borderRadius: '4px' }} />
-              สถิติผู้เกษียณ แยกตามกลุ่มงาน
-            </h4>
-            {breakdownData.divisions.length === 0 ? (
-              <div style={{ color: '#94a3b8', fontSize: '14px', textAlign: 'center', padding: '20px' }}>ไม่มีข้อมูล</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {breakdownData.divisions.map((div, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                    <span style={{ fontWeight: 600, color: '#334155' }}>{div.name}</span>
-                    <span style={{ fontWeight: 800, color: '#2563eb', fontSize: '16px' }}>{div.count} <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>คน</span></span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="glass-card" style={{ padding: '24px' }}>
-            <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Split Container: Breakdown on Left, Table on Right */}
+        <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '24px', alignItems: 'start', marginBottom: '32px' }}>
+          {/* Left Column: Group/Dept breakdown */}
+          <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '4px', height: '16px', background: '#10b981', borderRadius: '4px' }} />
-              สถิติผู้เกษียณ แยกตามแผนก
+              สัดส่วนผู้เกษียณ แยกตามกลุ่มงานและแผนก (ปีงบประมาณ {fiscalYear})
             </h4>
-            {breakdownData.departments.length === 0 ? (
+            {breakdownData.length === 0 ? (
               <div style={{ color: '#94a3b8', fontSize: '14px', textAlign: 'center', padding: '20px' }}>ไม่มีข้อมูล</div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }} className="custom-scrollbar">
-                {breakdownData.departments.map((dept, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                    <span style={{ fontWeight: 600, color: '#334155' }}>{dept.name}</span>
-                    <span style={{ fontWeight: 800, color: '#059669', fontSize: '16px' }}>{dept.count} <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>คน</span></span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '550px', overflowY: 'auto' }} className="custom-scrollbar">
+                {breakdownData.map((div: any, idx: number) => (
+                  <div key={idx} style={{ background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px dashed #cbd5e1', paddingBottom: '8px' }}>
+                      <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{div.name}</span>
+                      <span style={{ fontWeight: 800, color: '#16a34a', fontSize: '16px' }}>รวม {div.count} คน</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {div.departments.map((dept: any, didx: number) => (
+                        <div key={didx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', background: 'white', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>• {dept.name}</span>
+                          <span style={{ fontSize: '14px', fontWeight: 700, color: '#10b981' }}>{dept.count} คน</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-        </div>
 
         {/* Filters and Table */}
         <div className="glass-card" style={{ padding: '24px' }}>
@@ -382,6 +378,7 @@ export default function RetirementPage() {
               </table>
             </div>
           )}
+        </div>
         </div>
       </div>
     </AppLayout>

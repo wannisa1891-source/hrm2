@@ -24,18 +24,16 @@ export async function GET(req: NextRequest) {
       WHERE e.birth_date IS NOT NULL AND e.birth_date != '1900-01-01' AND e.status = 'ทำงานปกติ'
     `);
 
-    const retiringEmployees = employees.map((emp: any) => {
+    const allProcessed = employees.map((emp: any) => {
       const birthDate = new Date(emp.birth_date);
       const birthYearBE = birthDate.getFullYear() + 543;
-      const birthMonth = birthDate.getMonth() + 1; // 1-12
+      const birthMonth = birthDate.getMonth() + 1;
       const birthDay = birthDate.getDate();
 
       let retirementYearBE = birthYearBE + 60;
-      
       if (birthMonth > 10 || (birthMonth === 10 && birthDay >= 2)) {
         retirementYearBE += 1;
       }
-
       const retirementDate = `${retirementYearBE - 543}-10-01`;
 
       return {
@@ -43,12 +41,22 @@ export async function GET(req: NextRequest) {
         retirement_year_be: retirementYearBE,
         retirement_date: retirementDate
       };
-    }).filter((emp: any) => emp.retirement_year_be === targetFY);
+    });
+
+    const yearlySummary: { [key: number]: number } = {};
+    allProcessed.forEach((emp: any) => {
+      yearlySummary[emp.retirement_year_be] = (yearlySummary[emp.retirement_year_be] || 0) + 1;
+    });
+
+    const yearlySummaryList = Object.entries(yearlySummary)
+      .map(([yr, count]) => ({ fiscal_year: parseInt(yr), count }))
+      .sort((a, b) => a.fiscal_year - b.fiscal_year);
+
+    const retiringEmployees = allProcessed.filter((emp: any) => emp.retirement_year_be === targetFY);
 
     // Sort by age youngest first (birth_date DESC)
     retiringEmployees.sort((a: any, b: any) => new Date(b.birth_date).getTime() - new Date(a.birth_date).getTime());
 
-    // Group by department
     const summaryByDept: { [key: string]: { dept_id: string, dept_name: string, count: number, employees: any[] } } = {};
     
     retiringEmployees.forEach((emp: any) => {
@@ -72,7 +80,8 @@ export async function GET(req: NextRequest) {
       fiscal_year: targetFY,
       total_retiring: retiringEmployees.length,
       summary_by_dept: Object.values(summaryByDept),
-      employees: retiringEmployees
+      employees: retiringEmployees,
+      yearly_summary: yearlySummaryList
     });
   } catch (err: any) {
     console.error('Error in retirement API:', err);
