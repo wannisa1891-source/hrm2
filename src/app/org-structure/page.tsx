@@ -903,7 +903,7 @@ export default function DepartmentAndEmployeePage() {
                     <input
                       type="number"
                       value={deptForm.capacity || ''}
-                      onChange={(e) => setDeptForm({ ...deptForm, capacity: e.target.value })}
+                      onChange={(e) => setDeptForm({ ...deptForm, capacity: e.target.value ? parseInt(e.target.value, 10) : 0 })}
                       style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', color: '#0f172a' }}
                       placeholder="0"
                     />

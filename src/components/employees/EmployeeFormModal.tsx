@@ -49,6 +49,7 @@ export default function EmployeeFormModal({
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [historyLicenseName, setHistoryLicenseName] = useState('');
   const [selectedDivision, setSelectedDivision] = useState<string>('');
+  const [customPosName, setCustomPosName] = useState('');
 
   const fetchLicenseHistory = async (licenseNo: string, licenseName: string) => {
     if (!licenseNo) return;
@@ -185,10 +186,37 @@ export default function EmployeeFormModal({
       return;
     }
 
+    let finalPosId = formData.pos_id;
+    const isOtherSelected = positions.find(p => p.pos_id === formData.pos_id)?.pos_name === 'อื่นๆ';
+    if (isOtherSelected) {
+      if (!customPosName.trim()) {
+        const Swal = (await import('sweetalert2')).default;
+        Swal.fire('ข้อผิดพลาด', 'กรุณาระบุตำแหน่งงานเพิ่มเติม', 'error');
+        return;
+      }
+      try {
+        const posRes = await fetch('/api/positions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pos_name: customPosName.trim() })
+        });
+        const posData = await posRes.json();
+        if (posData.pos_id) {
+          finalPosId = posData.pos_id;
+        } else {
+          throw new Error(posData.error || 'Failed to create custom position');
+        }
+      } catch (error: any) {
+        const Swal = (await import('sweetalert2')).default;
+        Swal.fire('ข้อผิดพลาด', `เกิดข้อผิดพลาดในการบันทึกตำแหน่งงานใหม่: ${error.message}`, 'error');
+        return;
+      }
+    }
+
     const fd = new FormData();
     if (imageFile) fd.append('image', imageFile);
 
-    const finalFormData: any = { ...formData };
+    const finalFormData: any = { ...formData, pos_id: finalPosId };
 
     // Group address fields into full string
     const addrParts = [];
@@ -586,7 +614,27 @@ export default function EmployeeFormModal({
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                           ตำแหน่งงาน <span style={{ color: '#ef4444' }}>*</span>
                         </label>
-                        <input type="text" value={formData.pos_id || ''} onChange={e => setField('pos_id', e.target.value)} style={inputStyle} placeholder="พิมพ์ตำแหน่งงาน" />
+                        <CustomSelect
+                          value={formData.pos_id || ''}
+                          onChange={val => setField('pos_id', val)}
+                          options={positions.map(p => ({ value: p.pos_id, label: p.pos_name }))}
+                          placeholder="เลือกตำแหน่งงาน"
+                          minWidth="100%"
+                        />
+                        {positions.find(p => p.pos_id === formData.pos_id)?.pos_name === 'อื่นๆ' && (
+                          <div style={{ marginTop: '10px' }}>
+                            <label style={{ fontSize: '11px', fontWeight: 700, color: '#4f46e5', display: 'block', marginBottom: '4px' }}>
+                              ระบุตำแหน่งงานเพิ่มเติม <span style={{ color: '#ef4444' }}>*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={customPosName}
+                              onChange={e => setCustomPosName(e.target.value)}
+                              style={inputStyle}
+                              placeholder="เช่น พนักงานขับรถ"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
