@@ -50,6 +50,8 @@ export default function EmployeeFormModal({
   const [historyLicenseName, setHistoryLicenseName] = useState('');
   const [selectedDivision, setSelectedDivision] = useState<string>('');
   const [customPosName, setCustomPosName] = useState('');
+  const [posSearch, setPosSearch] = useState('');
+  const [isPosOpen, setIsPosOpen] = useState(false);
 
   const fetchLicenseHistory = async (licenseNo: string, licenseName: string) => {
     if (!licenseNo) return;
@@ -102,6 +104,8 @@ export default function EmployeeFormModal({
       } else {
         setSelectedDivision('');
       }
+      setPosSearch('');
+      setIsPosOpen(false);
     }
   }, [employee, isOpen, departments]);
 
@@ -616,13 +620,47 @@ export default function EmployeeFormModal({
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                           ตำแหน่งงาน <span style={{ color: '#ef4444' }}>*</span>
                         </label>
-                        <CustomSelect
-                          value={formData.pos_id || ''}
-                          onChange={val => setField('pos_id', val)}
-                          options={positions.map(p => ({ value: p.pos_id, label: p.pos_name }))}
-                          placeholder="เลือกตำแหน่งงาน"
-                          minWidth="100%"
-                        />
+                        <div style={{ position: 'relative', width: '100%' }}>
+                          <input 
+                            type="text" 
+                            style={{ ...inputStyle }} 
+                            placeholder="พิมพ์ค้นหาตำแหน่ง..."
+                            value={posSearch || (positions.find(p => p.pos_id === formData.pos_id)?.pos_name || '')}
+                            onFocus={() => setIsPosOpen(true)}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setPosSearch(val);
+                              setIsPosOpen(true);
+                              
+                              const found = positions.find(p => p.pos_name === val);
+                              if (found) {
+                                setField('pos_id', found.pos_id);
+                              } else if (val === '') {
+                                setField('pos_id', '');
+                              }
+                            }} 
+                          />
+                          {isPosOpen && (
+                            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)', zIndex: 100, padding: '6px' }}>
+                              <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }} className="custom-scrollbar">
+                                {positions
+                                  .filter(p => !posSearch || p.pos_name.toLowerCase().includes(posSearch.toLowerCase()))
+                                  .map((p: any) => (
+                                    <div 
+                                      key={p.pos_id}
+                                      onClick={() => { setField('pos_id', p.pos_id); setPosSearch(p.pos_name); setIsPosOpen(false); }}
+                                      style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: formData.pos_id === p.pos_id ? '#eff6ff' : 'transparent', color: formData.pos_id === p.pos_id ? '#1d4ed8' : '#334155', fontWeight: formData.pos_id === p.pos_id ? 700 : 500, fontSize: '13px' }}
+                                      onMouseEnter={e => { if(formData.pos_id !== p.pos_id) e.currentTarget.style.background = '#f1f5f9'; }}
+                                      onMouseLeave={e => { if(formData.pos_id !== p.pos_id) e.currentTarget.style.background = 'transparent'; }}
+                                    >
+                                      {p.pos_name}
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+                          {isPosOpen && <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 90 }} onClick={() => setIsPosOpen(false)} />}
+                        </div>
                         {positions.find(p => p.pos_id === formData.pos_id)?.pos_name === 'อื่นๆ' && (
                           <div style={{ marginTop: '10px' }}>
                             <label style={{ fontSize: '11px', fontWeight: 700, color: '#4f46e5', display: 'block', marginBottom: '4px' }}>
