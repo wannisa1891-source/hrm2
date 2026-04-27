@@ -43,6 +43,17 @@ export default function RegisterPage() {
   });
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [positions, setPositions] = useState<{ pos_id: string; pos_name: string }[]>([]);
+  const [customPosName, setCustomPosName] = useState('');
+
+  useEffect(() => {
+    fetch('/api/positions')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setPositions(data);
+      })
+      .catch(console.error);
+  }, []);
 
   // Fake API for username duplicate check
   const takenUsernames = ['admin', 'hr', 'test', 'user', 'director'];
@@ -193,6 +204,26 @@ export default function RegisterPage() {
 
     try {
       const { confirmPassword, ...payload } = form; // Don't send confirmPassword
+
+      const isOtherSelected = positions.find(p => p.pos_id === form.position)?.pos_name === 'อื่นๆ';
+      if (isOtherSelected) {
+        if (!customPosName.trim()) {
+          setApiError('กรุณาระบุตำแหน่งงานเพิ่มเติม');
+          setIsSubmitting(false);
+          return;
+        }
+        const posRes = await fetch('/api/positions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pos_name: customPosName.trim() })
+        });
+        const posData = await posRes.json();
+        if (posData.pos_id) {
+          payload.position = posData.pos_id;
+        } else {
+          throw new Error(posData.error || 'Failed to create custom position');
+        }
+      }
 
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -524,16 +555,26 @@ export default function RegisterPage() {
                     onBlur={() => handleBlur(validateStep3)}
                   >
                     <option value="" disabled>เลือกตำแหน่ง</option>
-                    <option value="แพทย์">แพทย์</option>
-                    <option value="พยาบาล">พยาบาล</option>
-                    <option value="เภสัชกร">เภสัชกร</option>
-                    <option value="เจ้าหน้าที่การเงิน">เจ้าหน้าที่การเงิน</option>
-                    <option value="ธุรการ">เจ้าหน้าที่ธุรการ</option>
-                    <option value="พนักงานบัญชี">พนักงานบัญชี</option>
-                    <option value="ไอที">เจ้าหน้าที่ไอที</option>
+                    {positions.map(p => (
+                      <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>
+                    ))}
                   </select>
                 </div>
                 {fieldErrors.position && <span className="field-error-msg">{fieldErrors.position}</span>}
+                {positions.find(p => p.pos_id === form.position)?.pos_name === 'อื่นๆ' && (
+                  <div style={{ marginTop: '16px' }}>
+                    <label>ระบุตำแหน่งงานเพิ่มเติม <span className="required">*</span></label>
+                    <div className="input-field" style={{ marginTop: '8px' }}>
+                      <span className="field-icon">✏️</span>
+                      <input
+                        type="text"
+                        value={customPosName}
+                        onChange={e => setCustomPosName(e.target.value)}
+                        placeholder="เช่น พนักงานขับรถ"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="input-group">

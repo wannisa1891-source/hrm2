@@ -16,6 +16,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const body = await req.json();
     const { dept_id, division, dept_name, sub_dept, capacity, description, head_emp_id, phone, org_chart_url, sop_url, rules_url } = body;
 
     if (!dept_id || !dept_name) {

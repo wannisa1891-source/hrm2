@@ -21,21 +21,25 @@ export async function POST(req: NextRequest) {
       for (const emp of data) {
         try {
           const sql = `INSERT INTO tbl_employees 
-            (emp_id, prefix, first_name_th, last_name_th, 
+            (emp_id, prefix, first_name_th, last_name_th, nickname, 
              birth_date, gender, address, citizen_id, phone, email, password, role, 
-             emp_type, dept_id, pos_id, start_date, status, image) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?)`;
+             emp_type, dept_id, pos_id, start_date, status, image, 
+             position_no, admission_date, retirement_date) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
           // Default password for excel import is the citizen_id or '123456'
           const plainPass = emp.citizen_id ? String(emp.citizen_id) : '123456';
           const hashedPassword = crypto.createHash('sha256').update(plainPass).digest('hex');
 
+          const finalEmpId = emp.emp_id || `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
           // Map values
           const values = [
-            emp.emp_id || `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            finalEmpId,
             emp.prefix || '-',
             emp.first_name_th || '',
             emp.last_name_th || '',
+            emp.nickname || null,
             emp.birth_date && emp.birth_date !== '' ? emp.birth_date : '1900-01-01',
             emp.gender || 'ชาย',
             emp.address || '',
@@ -44,14 +48,40 @@ export async function POST(req: NextRequest) {
             emp.email || null,
             hashedPassword,
             emp.role || 'User',
-            emp.emp_type || 'พนักงานประจำ',
+            emp.emp_type || 'พนักงานราชการ',
             emp.dept_id || '',
             emp.pos_id || '',
             emp.start_date || new Date().toISOString().split('T')[0],
-            null // image
+            emp.status || 'ทำงานปกติ',
+            null, // image
+            emp.position_no || null,
+            emp.admission_date || null,
+            emp.retirement_date || null
           ];
 
           await connection.query(sql, values);
+
+          // Insert multiple licenses if provided
+          if (emp.licenses && Array.isArray(emp.licenses) && emp.licenses.length > 0) {
+            for (const lic of emp.licenses) {
+              const licSql = `INSERT INTO tbl_employee_licenses 
+                (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, file_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+              const licValues = [
+                finalEmpId, 
+                lic.license_name || null, 
+                lic.license_type || null, 
+                lic.license_no || null,
+                lic.institution || null, 
+                lic.issue_date || null, 
+                lic.expire_date || null,
+                lic.status || 'ปกติ', 
+                null // file_path
+              ];
+              await connection.query(licSql, licValues);
+            }
+          }
+
           successCount++;
         } catch (rowErr: any) {
           errorCount++;

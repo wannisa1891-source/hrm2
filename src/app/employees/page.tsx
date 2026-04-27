@@ -125,34 +125,98 @@ function EmployeesContent() {
       // Map Thai headers from our normal export template
       const mappedData = jsonData.map((row, index) => {
         // Fix matching when names have extra spaces
-        const deptName = row['แผนก']?.toString().trim() || row['แผนก/สังกัด']?.toString().trim() || '';
-        const dept = departments.find(d => d.dept_name.trim() === deptName || d.dept_id === deptName);
+        const division = row['กลุ่มงาน']?.toString().trim() || '';
+        const deptName = row['แผนก']?.toString().trim() || '';
+        const dept = departments.find(d => 
+          (division && d.division?.trim() === division && d.dept_name.trim() === deptName) ||
+          (!division && d.dept_name.trim() === deptName) ||
+          d.dept_id === deptName
+        );
 
         const posName = row['ตำแหน่ง']?.toString().trim() || '';
         const pos = positions.find(p => p.pos_name.trim() === posName || p.pos_id === posName);
 
+        const parseDate = (dStr: any) => {
+          if (!dStr) return null;
+          const str = String(dStr).replace(/^="/, '').replace(/"$/, '').trim();
+          if (!str) return null;
+          // Excel often outputs dates as serial numbers or strings
+          if (/^\d{5}(\.\d+)?$/.test(str)) {
+            // Excel serial date format
+            const serial = parseFloat(str);
+            const date = new Date(Math.round((serial - 25569) * 86400 * 1000));
+            return date.toISOString().split('T')[0];
+          }
+          const parts = str.split('/');
+          if (parts.length === 3) {
+            // Assume format DD/MM/YYYY or MM/DD/YYYY - let's do a basic parse
+            const p0 = parts[0].padStart(2, '0');
+            const p1 = parts[1].padStart(2, '0');
+            const p2 = parts[2];
+            // Format to YYYY-MM-DD (AD)
+            return `${p2}-${p1}-${p0}`;
+          }
+          return str;
+        };
+
+        const addrNo = row['ที่อยู่-เลขที่'] || '';
+        const addrMoo = row['ที่อยู่-หมู่ที่'] || '';
+        const addrVillage = row['ที่อยู่-หมู่บ้าน/อาคาร'] || '';
+        const addrSoi = row['ที่อยู่-ซอย'] || '';
+        const addrRoad = row['ที่อยู่-ถนน'] || '';
+        const addrProvince = row['ที่อยู่-จังหวัด'] || '';
+        const addrDistrict = row['ที่อยู่-อำเภอ/เขต'] || '';
+        const addrSubdistrict = row['ที่อยู่-ตำบล/แขวง'] || '';
+        const addrZipcode = row['ที่อยู่-รหัสไปรษณีย์'] || '';
+
+        const addrParts = [];
+        if (addrNo) addrParts.push(`เลขที่ ${addrNo}`);
+        if (addrMoo) addrParts.push(`หมู่ ${addrMoo}`);
+        if (addrVillage) addrParts.push(`${addrVillage}`);
+        if (addrSoi) addrParts.push(`ซอย ${addrSoi}`);
+        if (addrRoad) addrParts.push(`ถนน ${addrRoad}`);
+        if (addrSubdistrict) addrParts.push(`ตำบล/แขวง ${addrSubdistrict}`);
+        if (addrDistrict) addrParts.push(`อำเภอ/เขต ${addrDistrict}`);
+        if (addrProvince) addrParts.push(`จังหวัด ${addrProvince}`);
+        if (addrZipcode) addrParts.push(`${addrZipcode}`);
+        const fullAddress = addrParts.join(' ') || row['ที่อยู่'] || '';
+
         return {
-          emp_id: row['เลขประจำตำแหน่ง'] || row['emp_id'] || '',
+          emp_id: row['รหัสพนักงาน'] || row['เลขประจำ'] || row['เลขประจำตำแหน่ง'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
-          first_name_th: row['ชื่อ'] || row['ชื่อ'] || row['ชื่อ'] || row['first_name_th'] || '',
-          last_name_th: row['นามสกุล'] || row['นามสกุล'] || row['นามสกุล'] || row['last_name_th'] || '',
+          citizen_id: row['รหัสบัตรประชาชน'] || row['บัตรประชาชน'] || row['citizen_id'] || '',
+          first_name_th: row['ชื่อ'] || row['first_name_th'] || '',
+          last_name_th: row['นามสกุล'] || row['last_name_th'] || '',
+          nickname: row['ชื่อเล่น'] || row['nickname'] || '',
+          phone: row['เบอร์โทรศัพท์'] || row['phone'] || '',
+          email: row['อีเมล'] || row['email'] || '',
+          birth_date: parseDate(row['วัน/เดือน/ปีเกิด'] || row['birth_date']),
           gender: row['เพศ'] || row['gender'] || '',
-          birth_date: row['เดือน/วัน/ปีเกิด'] || row['วันเกิด'] || row['birth_date'] || null,
-          citizen_id: row['บัตรประชาชน'] || row['เลขบัตรประชาชน'] || row['citizen_id'] || '',
-          phone: row['เบอร์โทร'] || row['เบอร์โทรศัพท์'] || row['phone'] || '',
-          email: row['อีเมล'] || row['อีเมลล์'] || row['email'] || '',
-          address: row['ที่อยู่'] || row['address'] || '',
-          emp_type: row['ประเภทพนักงาน'] || row['ประเภทการจ้างงาน'] || row['emp_type'] || 'พนักงานราชการ',
-          start_date: row['วันที่เริ่มงาน'] || row['start_date'] || null,
+          address: fullAddress,
+          position_no: row['เลขประจำตำแหน่ง'] || row['position_no'] || '',
+          start_date: parseDate(row['วันที่เริ่มงาน'] || row['start_date']),
+          admission_date: parseDate(row['วันที่บรรจุ'] || row['admission_date']),
+          retirement_date: parseDate(row['วันที่เกษียณ'] || row['retirement_date']),
+          emp_type: row['ประเภทการจ้างงาน'] || row['ประเภทพนักงาน'] || 'พนักงานราชการ',
+          status: row['สถานะพนักงาน'] || row['สถานะการทำงาน'] || 'ทำงานปกติ',
+          role: row['สิทธิ์ผู้ใช้งาน'] || 'User',
           dept_id: dept ? dept.dept_id : null,
           pos_id: pos ? pos.pos_id : null,
+          licenses: (row['ชื่อใบประกอบวิชาชีพ'] || row['เลขที่ใบประกอบวิชาชีพ']) ? [{
+            license_name: row['ชื่อใบประกอบวิชาชีพ'] || '',
+            license_type: row['ประเภทวิชาชีพ'] || '',
+            license_no: row['เลขที่ใบประกอบวิชาชีพ'] || '',
+            issue_date: parseDate(row['วันที่ออกบัตร']),
+            expire_date: parseDate(row['วันหมดอายุ']),
+            status: 'ปกติ'
+          }] : []
         };
       }).filter(r => r.emp_id || r.first_name_th); // Filter out empty rows often generated by excel
 
       // Simple validation for the first row to ensure they used correct headers
       const firstRow = mappedData[0];
       if (!firstRow.emp_id && !firstRow.first_name_th) {
-        Swal.fire('ข้อผิดพลาด', 'ตรวจสอบพบว่าหัวคอลัมน์ในไฟล์ Excel ไม่ตรงกับรูปแบบที่ระบบต้องการครับ (ต้องมี เลขประจำตำแหน่ง, ชื่อ (TH), แผนก, ตำแหน่ง)', 'error');
+        Swal.fire('ข้อผิดพลาด', 'ตรวจสอบพบว่าหัวคอลัมน์ในไฟล์ Excel ไม่ตรงกับรูปแบบที่ระบบต้องการครับ (ต้องมี เลขประจำ, ชื่อ, แผนก, ตำแหน่ง)', 'error');
         setIsImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
@@ -333,51 +397,92 @@ function EmployeesContent() {
     };
 
     const headers = [
-      'เลขประจำตำแหน่ง', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'ชื่อเล่น',
-      'เพศ', 'วัน/เดือน/ปีเกิด', 'บัตรประชาชน', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่',
-      'แผนก', 'ตำแหน่ง', 'ประเภทพนักงาน', 'วันที่เริ่มงาน',
-      'สถานะการทำงาน', 'คะแนน ', 'ข้อมูลใบประกอบวิชาชีพ'
+      'รหัสพนักงาน', 'คำนำหน้า', 'รหัสบัตรประชาชน', 'ชื่อ', 'นามสกุล', 'ชื่อเล่น',
+      'เบอร์โทรศัพท์', 'อีเมล', 'วัน/เดือน/ปีเกิด', 'เพศ',
+      'ที่อยู่-เลขที่', 'ที่อยู่-หมู่ที่', 'ที่อยู่-หมู่บ้าน/อาคาร', 'ที่อยู่-ซอย', 'ที่อยู่-ถนน',
+      'ที่อยู่-จังหวัด', 'ที่อยู่-อำเภอ/เขต', 'ที่อยู่-ตำบล/แขวง', 'ที่อยู่-รหัสไปรษณีย์',
+      'เลขประจำตำแหน่ง', 'วันที่เริ่มงาน', 'วันที่บรรจุ', 'วันที่เกษียณ',
+      'ประเภทการจ้างงาน', 'สถานะพนักงาน', 'สิทธิ์ผู้ใช้งาน', 'กลุ่มงาน', 'แผนก', 'ตำแหน่ง', 'คะแนน',
+      'ชื่อใบประกอบวิชาชีพ', 'ประเภทวิชาชีพ', 'เลขที่ใบประกอบวิชาชีพ', 'วันที่ออกบัตร', 'วันหมดอายุ'
     ];
 
     const rows = filteredData.map(e => {
-      const licText = e.licenses && e.licenses.length > 0
-        ? e.licenses.map(l => `${l.license_name || ''} เลขที่:${l.license_no || '-'} (${l.status || ''})`).join(' | ')
-        : 'ไม่มี';
+      const primaryLicense = e.licenses && e.licenses.length > 0 ? e.licenses[0] : {};
 
       const rowData = [
         e.emp_id || '',
         e.prefix || '',
+        e.citizen_id || '',
         e.first_name_th || '',
         e.last_name_th || '',
         e.nickname || '',
-        e.gender || '',
-        `="${formatDate(e.birth_date)}"`,
-        e.citizen_id || '',
         e.phone || '',
         e.email || '',
-        (e.address || '').replace(/"/g, '""'),
-        getDeptName(e.dept_id) || '',
-        getPosName(e.pos_id) || '',
+        formatDate(e.birth_date),
+        e.gender || '',
+        e.addr_no || '',
+        e.addr_moo || '',
+        e.addr_village || '',
+        e.addr_soi || '',
+        e.addr_road || '',
+        e.addr_province || '',
+        e.addr_district || '',
+        e.addr_subdistrict || '',
+        e.addr_zipcode || '',
+        e.position_no || '',
+        formatDate(e.start_date),
+        formatDate(e.admission_date),
+        formatDate(e.retirement_date),
         e.emp_type || '',
-        `="${formatDate(e.start_date)}"`,
         e.status || '',
+        e.role || 'User',
+        (() => {
+          const dept = departments.find(d => String(d.dept_id) === String(e.dept_id));
+          return dept ? dept.division : '-';
+        })(),
+        (() => {
+          const dept = departments.find(d => String(d.dept_id) === String(e.dept_id));
+          return dept ? dept.dept_name : '-';
+        })(),
+        getPosName(e.pos_id) || '',
         e.cneu_cme_points || 0,
-        licText.replace(/"/g, '""')
+        primaryLicense.license_name || '',
+        primaryLicense.license_type || '',
+        primaryLicense.license_no || '',
+        formatDate(primaryLicense.issue_date),
+        formatDate(primaryLicense.expire_date)
       ];
-      return rowData.map(value => `"${value}"`);
+      return rowData;
     });
 
-    const csvContent = "\uFEFF" + [headers.map(h => `"${h}"`).join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    const dataMatrix = [
+      headers,
+      ...rows
+    ];
 
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'employees_list_full.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const worksheet = XLSX.utils.aoa_to_sheet(dataMatrix);
+
+    // Force all cells to String type to prevent scientific notation formatting on phone/id cards
+    for (const cell in worksheet) {
+      if (cell[0] === '!') continue;
+      worksheet[cell].t = 's';
+    }
+
+    // Auto-fit columns beautifully
+    const max_widths = headers.map((h, i) => {
+      let max_len = h.length;
+      rows.forEach(r => {
+        const val = String(r[i] || '');
+        if (val.length > max_len) max_len = val.length;
+      });
+      return { wch: Math.min(Math.max(max_len + 4, 12), 40) };
+    });
+    worksheet['!cols'] = max_widths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+
+    XLSX.writeFile(workbook, 'employees_list.xlsx');
   };
 
   if (user && !isAdmin) {
@@ -464,7 +569,9 @@ function EmployeesContent() {
               <option value="all">สถานะการทำงาน: ทั้งหมด</option>
               <option value="ทำงานปกติ">ทำงานปกติ (Active)</option>
               <option value="ทดลองงาน">ทดลองงาน</option>
+              <option value="ลาศึกษา">ลาศึกษา</option>
               <option value="หยุดปฏิบัติงาน">หยุดปฏิบัติงาน</option>
+              <option value="เกษียณอายุ 60 ปีขึ้นไป">เกษียณอายุ 60 ปีขึ้นไป</option>
               <option value="ลาออก/พ้นสภาพ">ลาออก/พ้นสภาพ</option>
               <option value="ให้ออก">ให้ออก</option>
             </select>
@@ -792,7 +899,9 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
   const statusOptions = [
     { value: 'ทำงานปกติ', label: 'ทำงานปกติ', color: '#16a34a', bg: '#dcfce7' },
     { value: 'ทดลองงาน', label: 'ทดลองงาน', color: '#a16207', bg: '#fef9c3' },
+    { value: 'ลาศึกษา', label: 'ลาศึกษา', color: '#2563eb', bg: '#dbeafe' },
     { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
+    { value: 'เกษียณอายุ 60 ปีขึ้นไป', label: 'เกษียณอายุ 60 ปีขึ้นไป', color: '#7c3aed', bg: '#ede9fe' },
     { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ', color: '#ef4444', bg: '#fee2e2' },
     { value: 'ให้ออก', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
   ];
@@ -800,7 +909,9 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
   const statusMapping: { [key: string]: string } = {
     'Active': 'ทำงานปกติ',
     'Probation': 'ทดลองงาน',
+    'Study Leave': 'ลาศึกษา',
     'Inactive': 'หยุดปฏิบัติงาน',
+    'Retired': 'เกษียณอายุ 60 ปีขึ้นไป',
     'Resigned': 'ลาออก/พ้นสภาพ',
     'Terminated': 'ให้ออก'
   };
