@@ -96,6 +96,26 @@ export default function RetirementPage() {
     });
   }, [data, filterDiv, filterGrp, filterPos, departments]);
 
+  const breakdownData = useMemo(() => {
+    if (!data?.employees) return { divisions: [], departments: [] };
+    const divCounts: { [key: string]: number } = {};
+    const deptCounts: { [key: string]: number } = {};
+    
+    data.employees.forEach((emp: any) => {
+      const dept = departments.find(d => d.dept_id === emp.dept_id);
+      const divName = dept?.division || 'ไม่ระบุกลุ่มงาน';
+      const deptName = dept?.dept_name || 'ไม่ระบุแผนก';
+      
+      divCounts[divName] = (divCounts[divName] || 0) + 1;
+      deptCounts[deptName] = (deptCounts[deptName] || 0) + 1;
+    });
+    
+    const divisions = Object.entries(divCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+    const depts = Object.entries(deptCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+    
+    return { divisions, departments: depts };
+  }, [data, departments]);
+
   const exportToExcel = () => {
     if (!filteredEmployees.length) return;
 
@@ -202,6 +222,47 @@ export default function RetirementPage() {
               <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>หน่วยงานที่มีผู้เกษียณ</div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a' }}>{data?.summary_by_dept?.length || 0} <span style={{ fontSize: '16px', fontWeight: 600, color: '#64748b' }}>แผนก</span></div>
             </div>
+          </div>
+        </div>
+
+        {/* Breakdown Statistics */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '32px' }}>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '4px', height: '16px', background: '#3b82f6', borderRadius: '4px' }} />
+              สถิติผู้เกษียณ แยกตามกลุ่มงาน
+            </h4>
+            {breakdownData.divisions.length === 0 ? (
+              <div style={{ color: '#94a3b8', fontSize: '14px', textAlign: 'center', padding: '20px' }}>ไม่มีข้อมูล</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {breakdownData.divisions.map((div, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ fontWeight: 600, color: '#334155' }}>{div.name}</span>
+                    <span style={{ fontWeight: 800, color: '#2563eb', fontSize: '16px' }}>{div.count} <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>คน</span></span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '4px', height: '16px', background: '#10b981', borderRadius: '4px' }} />
+              สถิติผู้เกษียณ แยกตามแผนก
+            </h4>
+            {breakdownData.departments.length === 0 ? (
+              <div style={{ color: '#94a3b8', fontSize: '14px', textAlign: 'center', padding: '20px' }}>ไม่มีข้อมูล</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }} className="custom-scrollbar">
+                {breakdownData.departments.map((dept, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ fontWeight: 600, color: '#334155' }}>{dept.name}</span>
+                    <span style={{ fontWeight: 800, color: '#059669', fontSize: '16px' }}>{dept.count} <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>คน</span></span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
