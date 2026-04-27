@@ -39,7 +39,7 @@ export default function RetirementPage() {
   // Generate fiscal year options (e.g. current - 2 to current + 10)
   const fyOptions = useMemo(() => {
     const options = [];
-    for (let i = currentFY - 2; i <= currentFY + 10; i++) {
+    for (let i = currentFY - 5; i <= currentFY + 30; i++) {
       options.push(i);
     }
     return options;
@@ -162,7 +162,11 @@ export default function RetirementPage() {
 
         {/* Summary Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
-          <div className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div 
+            className="glass-card hover-glow" 
+            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }} 
+            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+          >
             <div style={{ padding: '16px', background: '#e0f2fe', color: '#0284c7', borderRadius: '16px' }}>
               <Users size={32} />
             </div>
@@ -172,7 +176,11 @@ export default function RetirementPage() {
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div 
+            className="glass-card hover-glow" 
+            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }} 
+            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+          >
             <div style={{ padding: '16px', background: '#dcfce7', color: '#16a34a', borderRadius: '16px' }}>
               <Calendar size={32} />
             </div>
@@ -182,7 +190,11 @@ export default function RetirementPage() {
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div 
+            className="glass-card hover-glow" 
+            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }} 
+            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+          >
             <div style={{ padding: '16px', background: '#fef9c3', color: '#ca8a04', borderRadius: '16px' }}>
               <Briefcase size={32} />
             </div>
@@ -267,7 +279,13 @@ export default function RetirementPage() {
                 </thead>
                 <tbody>
                   {filteredEmployees.map((emp: any) => (
-                    <tr key={emp.emp_id} style={{ transition: 'all 0.2s' }}>
+                    <tr 
+                      key={emp.emp_id} 
+                      onClick={() => router.push(`/profile?emp_id=${emp.emp_id}`)}
+                      style={{ transition: 'all 0.2s', cursor: 'pointer' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ width: '40px', height: '40px', position: 'relative', borderRadius: '10px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                           {emp.image ? (
