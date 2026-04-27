@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDepartments } from '@/hooks/useDepartments';
+import { usePositions } from '@/hooks/usePositions';
 import Image from 'next/image';
 import { Calendar, Users, Briefcase, Award, ArrowLeft, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -21,6 +22,11 @@ export default function RetirementPage() {
   }, [user, isAdmin, router]);
 
   const { departments, loadDepartments } = useDepartments();
+  const { positions, loadPositions } = usePositions();
+
+  useEffect(() => {
+    loadPositions();
+  }, [loadPositions]);
 
   // Calculate current fiscal year
   const today = new Date();
@@ -33,6 +39,9 @@ export default function RetirementPage() {
   const [filterDiv, setFilterDiv] = useState<string>('all');
   const [filterGrp, setFilterGrp] = useState<string>('all');
   const [filterPos, setFilterPos] = useState<string>('all');
+  const [search, setSearch] = useState<string>('');
+  const [posSearch, setPosSearch] = useState<string>('');
+  const [isPosOpen, setIsPosOpen] = useState<boolean>(false);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -44,24 +53,7 @@ export default function RetirementPage() {
     return options;
   }, []);
 
-  const positions = useMemo(() => {
-    if (!data?.employees) return [];
-    const unique = new Map();
-    data.employees.forEach((emp: any) => {
-      if (emp.pos_id && emp.pos_name) {
-        if (!unique.has(emp.pos_id)) {
-          unique.set(emp.pos_id, { pos_id: emp.pos_id, pos_name: emp.pos_name, count: 0 });
-        }
-        unique.get(emp.pos_id).count += 1;
-      } else if (emp.pos_name) {
-        if (!unique.has(emp.pos_name)) {
-          unique.set(emp.pos_name, { pos_id: emp.pos_name, pos_name: emp.pos_name, count: 0 });
-        }
-        unique.get(emp.pos_name).count += 1;
-      }
-    });
-    return Array.from(unique.values()) as any[];
-  }, [data]);
+
 
   useEffect(() => {
     loadDepartments();
@@ -91,9 +83,13 @@ export default function RetirementPage() {
       const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
                         (filterGrp === 'all' || dept?.dept_name === filterGrp);
       const matchPos = filterPos === 'all' || emp.pos_id === filterPos || emp.pos_name === filterPos;
-      return matchDept && matchPos;
+      
+      const searchStr = `${emp.first_name_th} ${emp.last_name_th} ${emp.pos_name || ''}`.toLowerCase();
+      const matchSearch = !search || searchStr.includes(search.toLowerCase());
+
+      return matchDept && matchPos && matchSearch;
     });
-  }, [data, filterDiv, filterGrp, filterPos, departments]);
+  }, [data, filterDiv, filterGrp, filterPos, search, departments]);
 
   const breakdownData = useMemo(() => {
     if (!data?.employees) return [];
@@ -266,7 +262,17 @@ export default function RetirementPage() {
         <div className="glass-card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>รายชื่อผู้เกษียณอายุ</h3>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div className="search-input-wrap" style={{ flex: '1 1 200px', minWidth: '220px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', alignItems: 'center', padding: '0 12px', background: 'white', height: '42px' }}>
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#64748b" style={{ marginRight: '8px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <input 
+                  type="text" 
+                  placeholder="ค้นหาชื่อ หรือตำแหน่ง..." 
+                  value={search} 
+                  onChange={e => setSearch(e.target.value)} 
+                  style={{ border: 'none', outline: 'none', width: '100%', padding: '10px 0', fontSize: '14px', background: 'transparent' }}
+                />
+              </div>
               <select 
                 className="form-select" 
                 style={{ width: 'auto', minWidth: '140px' }} 
@@ -302,17 +308,58 @@ export default function RetirementPage() {
                   ))}
               </select>
 
-              <select 
-                className="form-select" 
-                style={{ width: 'auto', minWidth: '150px' }} 
-                value={filterPos} 
-                onChange={e => setFilterPos(e.target.value)}
-              >
-                <option value="all">ทุกตำแหน่ง</option>
-                {positions.map((p: any) => (
-                  <option key={p.pos_id} value={p.pos_id}>{p.pos_name}</option>
-                ))}
-              </select>
+              {/* Custom Searchable Typeable Dropdown */}
+              <div style={{ position: 'relative', width: 'auto', minWidth: '220px' }}>
+                <input 
+                  type="text" 
+                  className="form-select" 
+                  style={{ width: '100%', padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '14px', outline: 'none', background: 'white' }} 
+                  placeholder="พิมพ์ค้นหาตำแหน่ง..."
+                  value={posSearch || (filterPos === 'all' ? '' : (positions.find(p => p.pos_id === filterPos)?.pos_name || filterPos))}
+                  onFocus={() => setIsPosOpen(true)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPosSearch(val);
+                    setIsPosOpen(true);
+                    
+                    const found = positions.find(p => p.pos_name === val);
+                    if (found) {
+                      setFilterPos(found.pos_id);
+                    } else if (val === '') {
+                      setFilterPos('all');
+                    }
+                  }} 
+                />
+                {isPosOpen && (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)', zIndex: 100, padding: '6px' }}>
+                    <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }} className="custom-scrollbar">
+                      <div 
+                        onClick={() => { setFilterPos('all'); setPosSearch(''); setIsPosOpen(false); }}
+                        style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === 'all' ? '#eff6ff' : 'transparent', color: filterPos === 'all' ? '#1d4ed8' : '#334155', fontWeight: filterPos === 'all' ? 700 : 500, fontSize: '13px' }}
+                        onMouseEnter={e => { if(filterPos !== 'all') e.currentTarget.style.background = '#f1f5f9'; }}
+                        onMouseLeave={e => { if(filterPos !== 'all') e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        ทุกตำแหน่ง
+                      </div>
+                      {positions
+                        .filter((p: any) => !posSearch || p.pos_name.toLowerCase().includes(posSearch.toLowerCase()))
+                        .map((p: any) => (
+                          <div 
+                            key={p.pos_id}
+                            onClick={() => { setFilterPos(p.pos_id); setPosSearch(p.pos_name); setIsPosOpen(false); }}
+                            style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === p.pos_id ? '#eff6ff' : 'transparent', color: filterPos === p.pos_id ? '#1d4ed8' : '#334155', fontWeight: filterPos === p.pos_id ? 700 : 500, fontSize: '13px' }}
+                            onMouseEnter={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = '#f1f5f9'; }}
+                            onMouseLeave={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = 'transparent'; }}
+                          >
+                            {p.pos_name}
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+                {/* Clicking outside closes popup */}
+                {isPosOpen && <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 90 }} onClick={() => setIsPosOpen(false)} />}
+              </div>
             </div>
           </div>
 
