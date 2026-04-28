@@ -21,10 +21,17 @@ export async function GET(req: NextRequest) {
       FROM tbl_employees e
       LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
       LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id
-      WHERE e.birth_date IS NOT NULL AND e.birth_date != '1900-01-01' AND e.status = 'ทำงานปกติ'
+      WHERE e.status = 'ทำงานปกติ'
     `);
 
     const allProcessed = employees.map((emp: any) => {
+      if (!emp.birth_date || String(emp.birth_date).startsWith('1900-01-01') || String(emp.birth_date) === '0000-00-00') {
+        return {
+          ...emp,
+          retirement_year_be: null,
+          retirement_date: null
+        };
+      }
       const birthDate = new Date(emp.birth_date);
       const birthYearBE = birthDate.getFullYear() + 543;
       const birthMonth = birthDate.getMonth() + 1;
@@ -45,17 +52,27 @@ export async function GET(req: NextRequest) {
 
     const yearlySummary: { [key: number]: number } = {};
     allProcessed.forEach((emp: any) => {
-      yearlySummary[emp.retirement_year_be] = (yearlySummary[emp.retirement_year_be] || 0) + 1;
+      if (emp.retirement_year_be) {
+        yearlySummary[emp.retirement_year_be] = (yearlySummary[emp.retirement_year_be] || 0) + 1;
+      }
     });
 
     const yearlySummaryList = Object.entries(yearlySummary)
       .map(([yr, count]) => ({ fiscal_year: parseInt(yr), count }))
       .sort((a, b) => a.fiscal_year - b.fiscal_year);
 
-    const retiringEmployees = allProcessed.filter((emp: any) => emp.retirement_year_be === targetFY);
+    const retiringEmployees = fiscalYearStr === 'all' 
+      ? allProcessed 
+      : allProcessed.filter((emp: any) => emp.retirement_year_be === targetFY);
 
-    // Sort by age youngest first (birth_date DESC)
-    retiringEmployees.sort((a: any, b: any) => new Date(b.birth_date).getTime() - new Date(a.birth_date).getTime());
+    // Sort: those with no birth date first or last?
+    // Let's sort by retirement_year_be ASC, and nulls at the top (to alert HR).
+    retiringEmployees.sort((a: any, b: any) => {
+      if (!a.retirement_year_be && !b.retirement_year_be) return 0;
+      if (!a.retirement_year_be) return -1;
+      if (!b.retirement_year_be) return 1;
+      return a.retirement_year_be - b.retirement_year_be;
+    });
 
     const summaryByDept: { [key: string]: { dept_id: string, dept_name: string, count: number, employees: any[] } } = {};
     
