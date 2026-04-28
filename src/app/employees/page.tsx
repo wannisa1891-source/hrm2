@@ -296,7 +296,11 @@ function EmployeesContent() {
 
   const filteredData = useMemo(() => {
     return employees.filter(e => {
-      const matchSearch = `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = search.length === 1
+        ? (e.first_name_th?.toLowerCase().startsWith(search.toLowerCase()) || 
+           e.last_name_th?.toLowerCase().startsWith(search.toLowerCase()) ||
+           e.emp_id?.toLowerCase().startsWith(search.toLowerCase()))
+        : `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
       const dept = departments.find(d => d.dept_id === e.dept_id);
       const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
         (filterGrp === 'all' || dept?.dept_name === filterGrp);
