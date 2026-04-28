@@ -183,22 +183,99 @@ function EmployeesContent() {
           if (!dStr) return null;
           const str = String(dStr).replace(/^="/, '').replace(/"$/, '').trim();
           if (!str) return null;
-          // Excel often outputs dates as serial numbers or strings
+
+          // 1. Excel serial date
           if (/^\d{5}(\.\d+)?$/.test(str)) {
-            // Excel serial date format
             const serial = parseFloat(str);
             const date = new Date(Math.round((serial - 25569) * 86400 * 1000));
             return date.toISOString().split('T')[0];
           }
-          const parts = str.split('/');
-          if (parts.length === 3) {
-            // Assume format DD/MM/YYYY or MM/DD/YYYY - let's do a basic parse
-            const p0 = parts[0].padStart(2, '0');
-            const p1 = parts[1].padStart(2, '0');
-            const p2 = parts[2];
-            // Format to YYYY-MM-DD (AD)
+
+          // 2. Standard YYYY-MM-DD
+          if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+            return str;
+          }
+
+          // 3. Formats with /
+          const partsSlash = str.split('/');
+          if (partsSlash.length === 3) {
+            const p0 = partsSlash[0].padStart(2, '0');
+            const p1 = partsSlash[1].padStart(2, '0');
+            let p2 = parseInt(partsSlash[2]);
+            if (p2 < 2400) {
+              if (p2 < 100) p2 += (p2 > 50 ? 1900 : 2000);
+            } else {
+              p2 -= 543;
+            }
             return `${p2}-${p1}-${p0}`;
           }
+
+          // 4. Robust parsing for string dates
+          const cleanStr = str.replace(/[\s\-]+/g, ' ').trim();
+          const match = cleanStr.match(/^(\d{1,2})\s+([a-zA-Zก-ฮ\.]+)\s*(\d{2,4})$/);
+          
+          if (match) {
+            const day = match[1].padStart(2, '0');
+            const month = match[2];
+            const year = match[3];
+
+            const monthMap: { [key: string]: string } = {
+              'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
+              'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12',
+              'ม.ค': '01', 'ก.พ': '02', 'มี.ค': '03', 'เม.ย': '04', 'พ.ค': '05', 'มิ.ย': '06',
+              'ก.ค': '07', 'ส.ค': '08', 'ก.ย': '09', 'ต.ค': '10', 'พ.ย': '11', 'ธ.ค': '12',
+              'มกราคม': '01', 'กุมภาพันธ์': '02', 'มีนาคม': '03', 'เมษายน': '04', 'พฤษภาคม': '05', 'มิถุนายน': '06',
+              'กรกฎาคม': '07', 'สิงหาคม': '08', 'กันยายน': '09', 'ตุลาคม': '10', 'พฤศจิกายน': '11', 'ธันวาคม': '12'
+            };
+
+            let monthNum = '01';
+            for (const [key, val] of Object.entries(monthMap)) {
+              if (month.toLowerCase().startsWith(key.toLowerCase())) {
+                monthNum = val;
+                break;
+              }
+            }
+
+            let yearNum = parseInt(year);
+            if (yearNum < 100) {
+              yearNum += 2500 - 543;
+            } else if (yearNum < 2400) {
+              // 4 digit AD
+            } else {
+              yearNum -= 543;
+            }
+
+            return `${yearNum}-${monthNum}-${day}`;
+          }
+
+          const simpleParts = cleanStr.split(/[^\d\wก-ฮ\.]+/).filter(Boolean);
+          if (simpleParts.length === 3) {
+            const day = simpleParts[0].padStart(2, '0');
+            const month = simpleParts[1];
+            const year = simpleParts[2];
+            
+            const monthMap: { [key: string]: string } = {
+              'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
+              'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12',
+              'ม.ค': '01', 'ก.พ': '02', 'มี.ค': '03', 'เม.ย': '04', 'พ.ค': '05', 'มิ.ย': '06',
+              'ก.ค': '07', 'ส.ค': '08', 'ก.ย': '09', 'ต.ค': '10', 'พ.ย': '11', 'ธ.ค': '12',
+            };
+            let monthNum = '01';
+            for (const [key, val] of Object.entries(monthMap)) {
+              if (month.toLowerCase().startsWith(key.toLowerCase())) {
+                monthNum = val;
+                break;
+              }
+            }
+
+            let yearNum = parseInt(year);
+            if (yearNum < 100) yearNum += 2500 - 543;
+            else if (yearNum < 2400) {}
+            else yearNum -= 543;
+
+            return `${yearNum}-${monthNum}-${day}`;
+          }
+
           return str;
         };
 
@@ -228,7 +305,7 @@ function EmployeesContent() {
           emp_id: row['รหัสพนักงาน'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
           citizen_id: row['รหัสบัตรประชาชน'] || row['บัตรประชาชน'] || row['citizen_id'] || '',
-          first_name_th: row['ชื่อ'] || row['first_name_th'] || row['ชื่อ-สกุล'] || row['ชื่อสกุล'] || '',
+          first_name_th: row['ชื่อ'] || row['first_name_th'] || row['ชื่อ-สกุล'] || row['ชื่อสกุล'] || row['ชื่อ สกุล'] || '',
           last_name_th: row['นามสกุล'] || row['last_name_th'] || '',
           nickname: row['ชื่อเล่น'] || row['nickname'] || '',
           phone: row['เบอร์โทรศัพท์'] || row['phone'] || '',
