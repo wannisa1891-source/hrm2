@@ -87,7 +87,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         `birth_date = ?`, `gender = ?`, `address = ?`, `citizen_id = ?`, `phone = ?`, `email = ?`, `role = ?`,
         `emp_type = ?`, `dept_id = ?`, `pos_id = ?`, `start_date = ?`, `admission_date = ?`, `retirement_date = ?`, 
         `status = ?`, `position_no = ?`,
-        `quota_personal = ?`, `quota_vacation = ?`, `quota_sick = ?`
+        `quota_personal = ?`, `quota_vacation = ?`, `quota_sick = ?`, `working_at = ?`
       ];
 
       const safeVal = (v: any, fallback: any) => (v === undefined || v === null || v === 'null' || v === 'undefined') ? fallback : v;
@@ -114,7 +114,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         safeVal(d.position_no, existing.position_no),
         d.quota_personal ? parseInt(d.quota_personal) : existing.quota_personal,
         d.quota_vacation ? parseInt(d.quota_vacation) : existing.quota_vacation,
-        d.quota_sick ? parseInt(d.quota_sick) : existing.quota_sick
+        d.quota_sick ? parseInt(d.quota_sick) : existing.quota_sick,
+        safeVal(d.working_at, existing.working_at)
       ];
 
       if (imageName) {

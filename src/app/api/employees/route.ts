@@ -127,8 +127,8 @@ export async function POST(req: NextRequest) {
          birth_date, gender, address, citizen_id, phone, email, password, role, 
          emp_type, dept_id, pos_id, start_date, admission_date, retirement_date, status, 
          image, position_no,
-         quota_personal, quota_vacation, quota_sick) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?, ?, ?, ?, ?)`;
+         quota_personal, quota_vacation, quota_sick, working_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?, ?, ?, ?, ?, ?)`;
 
       const tempCitizenId = `9${Date.now().toString().slice(-12)}`; // Generate a unique 13-digit number starting with 9
       const values = [
@@ -145,7 +145,8 @@ export async function POST(req: NextRequest) {
         d.position_no || null,
         d.quota_personal ? parseInt(d.quota_personal) : 0,
         d.quota_vacation ? parseInt(d.quota_vacation) : 0,
-        d.quota_sick ? parseInt(d.quota_sick) : 0
+        d.quota_sick ? parseInt(d.quota_sick) : 0,
+        d.working_at || null
       ];
 
       await connection.query(sql, values);

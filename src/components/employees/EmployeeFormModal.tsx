@@ -679,6 +679,10 @@ export default function EmployeeFormModal({
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>ปฏิบัติงานที่</label>
+                    <input type="text" value={formData.working_at || ''} onChange={e => setField('working_at', e.target.value)} style={inputStyle} placeholder="ระบุสถานที่ปฏิบัติงาน" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <ThaiDateInput
                       label="วันที่บรรจุ (Admission Date)"
                       value={String(formData.admission_date || '')}

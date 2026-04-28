@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
             (emp_id, prefix, first_name_th, last_name_th, nickname, 
              birth_date, gender, address, citizen_id, phone, email, password, role, 
              emp_type, dept_id, pos_id, start_date, status, image, 
-             position_no, admission_date, retirement_date) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+             position_no, admission_date, retirement_date, working_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
           // Default password for excel import is the citizen_id or '123456'
           const plainPass = emp.citizen_id ? String(emp.citizen_id) : '123456';
@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
             null, // image
             emp.position_no || null,
             emp.admission_date || null,
-            emp.retirement_date || null
+            emp.retirement_date || null,
+            emp.working_at || null
           ];
 
           await connection.query(sql, values);

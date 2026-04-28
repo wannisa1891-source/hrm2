@@ -446,6 +446,10 @@ function ProfileContent() {
                     </div>
                   </div>
                   <div className="data-item">
+                    <span className="data-label">ปฏิบัติงานที่</span>
+                    <span className="data-val">{profile.working_at || '-'}</span>
+                  </div>
+                  <div className="data-item">
                     <span className="data-label">วันที่บรรจุ</span>
                     <span className="data-val">{formatThaiDate(profile.admission_date)}</span>
                   </div>

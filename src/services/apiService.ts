@@ -28,6 +28,7 @@ export interface Employee {
   status: string
   image: string
   position_no?: string
+  working_at?: string
 
 
   addr_no?: string
