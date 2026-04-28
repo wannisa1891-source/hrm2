@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
 
     // 3. Query จาก tbl_employees โดยเช็ค emp_id, username หรือ email
     const [rows]: any = await pool.query(
-      'SELECT emp_id, username, first_name_th, last_name_th, email, role, status, password, citizen_id, birth_date, image, login_attempts, dept_id, last_login FROM tbl_employees WHERE emp_id = ? OR username = ? OR email = ? OR citizen_id = ?',
-      [cleanUsername, cleanUsername, cleanUsername, cleanUsername]
+      'SELECT emp_id, username, first_name_th, last_name_th, email, role, status, password, citizen_id, birth_date, image, login_attempts, dept_id, last_login FROM tbl_employees WHERE emp_id = ? OR username = ? OR email = ? OR citizen_id = ? OR CONCAT(first_name_th, " ", last_name_th) = ? OR REPLACE(CONCAT(first_name_th, last_name_th), " ", "") = REPLACE(?, " ", "")',
+      [cleanUsername, cleanUsername, cleanUsername, cleanUsername, cleanUsername, cleanUsername]
     );
 
     // Log for debugging
