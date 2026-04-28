@@ -118,7 +118,7 @@ export default function LoginPage() {
             value={username}
             onChange={e => setUsername(e.target.value)}
             type="text"
-            placeholder="Username / เลขบัตรประชาชน"
+            placeholder="Username / ชื่อนามสกุล"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             autoComplete="username"
             suppressHydrationWarning

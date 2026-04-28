@@ -22,7 +22,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <ReactQueryProvider>
           <AuthProvider>
-            <FirstLoginModal />
+            {/* <FirstLoginModal /> */}
             {children}
           </AuthProvider>
         </ReactQueryProvider>
