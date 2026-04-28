@@ -130,19 +130,24 @@ export async function POST(req: NextRequest) {
          quota_personal, quota_vacation, quota_sick, working_at) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ทำงานปกติ', ?, ?, ?, ?, ?, ?)`;
 
-      const tempCitizenId = `9${Date.now().toString().slice(-12)}`; // Generate a unique 13-digit number starting with 9
+      const finalCitizenId = d.id_card || d.citizen_id ? (d.id_card || d.citizen_id).trim() : null;
+      if (finalCitizenId === '') {
+        // if empty string after trim
+        // save as null
+      }
+
       const values = [
-        empId, username, d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
+        empId, username || empId, d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
         d.nickname || '',
         (d.birth_date && d.birth_date !== '') ? d.birth_date : (d.date_of_birth && d.date_of_birth !== '') ? d.date_of_birth : '1900-01-01',
         d.gender || 'ชาย', d.address || '',
-        d.id_card || d.citizen_id || tempCitizenId, d.phone || '',
+        finalCitizenId && finalCitizenId.trim() !== '' ? finalCitizenId.trim() : null, d.phone || '',
         d.email || null, hashedPassword, d.role || 'User',
         d.emp_type || 'พนักงานราชการ', d.dept_id || '', d.pos_id || '', 
         d.start_date || new Date().toISOString().split('T')[0],
         d.admission_date || null, d.retirement_date || null,
         imageName, // Save only to image
-        d.position_no || null,
+        d.position_no && d.position_no.trim() !== '' ? d.position_no.trim() : '-',
         d.quota_personal ? parseInt(d.quota_personal) : 0,
         d.quota_vacation ? parseInt(d.quota_vacation) : 0,
         d.quota_sick ? parseInt(d.quota_sick) : 0,

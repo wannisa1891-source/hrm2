@@ -100,7 +100,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         (d.birth_date && d.birth_date !== '' && d.birth_date !== 'null') ? d.birth_date : (existing.birth_date || '1900-01-01'),
         safeVal(d.gender, existing.gender),
         safeVal(d.address, existing.address),
-        safeVal(d.id_card || d.citizen_id, existing.citizen_id),
+        (() => {
+          const cid = d.id_card || d.citizen_id;
+          if (cid === undefined || cid === 'undefined') return existing.citizen_id;
+          if (cid === null || cid === 'null' || cid.trim() === '') return null;
+          return cid.trim();
+        })(),
         safeVal(d.phone, existing.phone),
         safeVal(d.email, existing.email),
         safeVal(d.role, existing.role),
@@ -111,7 +116,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         safeVal(d.admission_date, existing.admission_date),
         safeVal(d.retirement_date, existing.retirement_date),
         safeVal(d.status, existing.status),
-        safeVal(d.position_no, existing.position_no),
+        (() => {
+          const pno = d.position_no;
+          if (pno === undefined || pno === 'undefined') return existing.position_no;
+          if (pno === null || pno === 'null' || pno.trim() === '') return '-';
+          return pno.trim();
+        })(),
         d.quota_personal ? parseInt(d.quota_personal) : existing.quota_personal,
         d.quota_vacation ? parseInt(d.quota_vacation) : existing.quota_vacation,
         d.quota_sick ? parseInt(d.quota_sick) : existing.quota_sick,

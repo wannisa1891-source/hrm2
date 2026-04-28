@@ -14,6 +14,26 @@ export async function POST(req: NextRequest) {
     try {
       await connection.beginTransaction();
 
+      // Ensure optional columns allow NULL
+      await connection.query('ALTER TABLE tbl_employees MODIFY COLUMN start_date DATE NULL').catch(() => {});
+
+
+      // Fetch departments and positions for fallback mapping
+      const [deptRows]: any = await connection.query('SELECT dept_id, dept_name FROM tbl_departments');
+      const deptMap = new Map<string, string>();
+      deptRows.forEach((row: any) => {
+        if (row.dept_name) deptMap.set(row.dept_name.trim(), row.dept_id);
+        if (row.dept_id) deptMap.set(row.dept_id.trim(), row.dept_id);
+      });
+
+      const [posRows]: any = await connection.query('SELECT pos_id, pos_name FROM tbl_positions');
+      const posMap = new Map<string, string>();
+      posRows.forEach((row: any) => {
+        if (row.pos_name) posMap.set(row.pos_name.trim(), row.pos_id);
+        if (row.pos_id) posMap.set(row.pos_id.trim(), row.pos_id);
+      });
+
+
       let successCount = 0;
       let errorCount = 0;
       let errors = [];
@@ -33,6 +53,90 @@ export async function POST(req: NextRequest) {
 
           const finalEmpId = emp.emp_id || `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+          // Resolve dept_id
+          let finalDeptId = null;
+          if (emp.dept_id) {
+            const trimmedDept = String(emp.dept_id).trim();
+            if (trimmedDept !== '') {
+              if (deptMap.has(trimmedDept)) {
+                finalDeptId = deptMap.get(trimmedDept);
+              } else {
+                // Auto-create department
+                const newDeptId = `D-${Math.floor(1000 + Math.random() * 9000)}`;
+                await connection.query(
+                  'INSERT INTO tbl_departments (dept_id, dept_name) VALUES (?, ?)',
+                  [newDeptId, trimmedDept]
+                );
+                deptMap.set(trimmedDept, newDeptId);
+                finalDeptId = newDeptId;
+              }
+            }
+          }
+
+          // Resolve division if dept_id is still null
+          if (!finalDeptId && emp.division) {
+            const trimmedDiv = String(emp.division).trim();
+            if (trimmedDiv !== '') {
+              // Check if a dummy department for this division already exists
+              const [existingDept]: any = await connection.query(
+                "SELECT dept_id FROM tbl_departments WHERE division = ? AND (dept_name = '-' OR dept_name = '' OR dept_name IS NULL) LIMIT 1",
+                [trimmedDiv]
+              );
+              
+              if (existingDept.length > 0) {
+                finalDeptId = existingDept[0].dept_id;
+              } else {
+                // Create a dummy department for this division
+                const newDeptId = `DIV-${Math.floor(1000 + Math.random() * 9000)}`;
+                await connection.query(
+                  "INSERT INTO tbl_departments (dept_id, division, dept_name) VALUES (?, ?, '-')",
+                  [newDeptId, trimmedDiv]
+                );
+                finalDeptId = newDeptId;
+              }
+            }
+          }
+
+          // Resolve pos_id
+          let finalPosId = null;
+          if (emp.pos_id) {
+            const trimmedPos = String(emp.pos_id).trim();
+            if (trimmedPos !== '') {
+              if (posMap.has(trimmedPos)) {
+                finalPosId = posMap.get(trimmedPos);
+              } else {
+                // Auto-create position
+                const newPosId = `P-${Math.floor(1000 + Math.random() * 9000)}`;
+                await connection.query(
+                  'INSERT INTO tbl_positions (pos_id, pos_name) VALUES (?, ?)',
+                  [newPosId, trimmedPos]
+                );
+                posMap.set(trimmedPos, newPosId);
+                finalPosId = newPosId;
+              }
+            }
+          }
+
+          // Resolve Gender
+          let finalGender = emp.gender;
+          if (!finalGender || finalGender.trim() === '') {
+            const prefix = String(emp.prefix || '').trim();
+            if (['นาง', 'นางสาว', 'น.ส.', 'ด.ญ.'].includes(prefix)) {
+              finalGender = 'หญิง';
+            } else {
+              finalGender = 'ชาย';
+            }
+          }
+
+          // Resolve Position Number
+          const finalPositionNo = emp.position_no && String(emp.position_no).trim() !== '' ? String(emp.position_no).trim() : '-';
+
+          // Resolve Start Date
+          const finalStartDate = emp.start_date && String(emp.start_date).trim() !== '' ? emp.start_date : null;
+
+          // Resolve Citizen ID
+          const finalCitizenId = emp.citizen_id && String(emp.citizen_id).trim() !== '' ? String(emp.citizen_id).trim() : null;
+
           // Map values
           const values = [
             finalEmpId,
@@ -41,20 +145,20 @@ export async function POST(req: NextRequest) {
             emp.last_name_th || '',
             emp.nickname || null,
             emp.birth_date && emp.birth_date !== '' ? emp.birth_date : '1900-01-01',
-            emp.gender || 'ชาย',
+            finalGender,
             emp.address || '',
-            emp.citizen_id || null,
+            finalCitizenId,
             emp.phone || null,
             emp.email || null,
             hashedPassword,
             emp.role || 'User',
             emp.emp_type || 'พนักงานราชการ',
-            emp.dept_id || null,
-            emp.pos_id || null,
-            emp.start_date || new Date().toISOString().split('T')[0],
+            finalDeptId,
+            finalPosId,
+            finalStartDate,
             emp.status || 'ทำงานปกติ',
             null, // image
-            emp.position_no || null,
+            finalPositionNo,
             emp.admission_date || null,
             emp.retirement_date || null,
             emp.working_at || null
