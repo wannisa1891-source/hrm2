@@ -45,13 +45,36 @@ export default function RetirementPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const [hideEmptyYears, setHideEmptyYears] = useState<boolean>(true);
+
   const fyOptions = useMemo(() => {
-    const options = [];
-    for (let i = 2560; i <= 2600; i++) {
-      options.push(i);
+    const allYears: number[] = [];
+    for (let i = 2560; i <= 2670; i++) {
+      allYears.push(i);
     }
-    return options;
-  }, []);
+
+    if (!hideEmptyYears) {
+      return allYears.map(fy => {
+        const found = data?.yearly_summary?.find((item: any) => item.fiscal_year === fy);
+        return {
+          year: fy,
+          count: found ? found.count : 0
+        };
+      });
+    }
+
+    const withData = data?.yearly_summary?.map((item: any) => ({
+      year: item.fiscal_year,
+      count: item.count
+    })) || [];
+
+    if (!withData.some((item: any) => item.year === fiscalYear)) {
+      withData.push({ year: fiscalYear, count: 0 });
+    }
+
+    return withData.sort((a: any, b: any) => a.year - b.year);
+  }, [data, hideEmptyYears, fiscalYear]);
+
 
 
 
@@ -134,9 +157,11 @@ export default function RetirementPage() {
       'ตำแหน่ง': emp.pos_name || '-',
       'หน่วยงาน': emp.dept_name || '-',
       'วันเกิด': emp.birth_date ? new Date(emp.birth_date).toLocaleDateString('th-TH') : '-',
-      'ปีงบประมาณที่เกษียณ': emp.retirement_year_be,
+      'วันบรรจุ': emp.admission_date ? new Date(emp.admission_date).toLocaleDateString('th-TH') : '-',
+      'เริ่มงาน': emp.start_date ? new Date(emp.start_date).toLocaleDateString('th-TH') : '-',
       'วันเกษียณอายุ': emp.retirement_date ? new Date(emp.retirement_date).toLocaleDateString('th-TH') : '-'
     }));
+
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
@@ -153,29 +178,38 @@ export default function RetirementPage() {
       <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
         <div className="page-header" style={{ marginBottom: '32px' }}>
           <div>
-            <button 
-              onClick={() => router.push('/dashboard')} 
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#64748b', fontWeight: 600, cursor: 'pointer', marginBottom: '12px' }}
-            >
-              <ArrowLeft size={18} /> ย้อนกลับไปหน้าแดชบอร์ด
-            </button>
+
             <h1 className="page-title">รายงานการเกษียณอายุ</h1>
             <div className="page-subtitle">ตรวจสอบข้อมูลบุคลากรที่จะเกษียณอายุตามปีงบประมาณ</div>
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontWeight: 600, color: '#334155' }}>ปีงบประมาณ (พ.ศ.):</span>
-              <select 
-                className="form-select" 
-                style={{ width: 'auto', minWidth: '120px' }} 
-                value={fiscalYear} 
-                onChange={(e) => setFiscalYear(Number(e.target.value))}
-              >
-                {fyOptions.map(fy => (
-                  <option key={fy} value={fy}>{fy}</option>
-                ))}
-              </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#475569', cursor: 'pointer', fontWeight: 600 }}>
+                <input 
+                  type="checkbox" 
+                  checked={hideEmptyYears} 
+                  onChange={(e) => setHideEmptyYears(e.target.checked)} 
+                  style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#10b981' }}
+                />
+                ซ่อนปีที่ไม่มีข้อมูล
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontWeight: 600, color: '#334155' }}>ปีงบประมาณ (พ.ศ.):</span>
+                <select 
+                  className="form-select" 
+                  style={{ width: 'auto', minWidth: '150px' }} 
+                  value={fiscalYear} 
+                  onChange={(e) => setFiscalYear(Number(e.target.value))}
+                >
+                  {fyOptions.map((opt: any) => (
+                    <option key={opt.year} value={opt.year}>
+                      {opt.year} {opt.count > 0 ? `(${opt.count} คน)` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+
             <button 
               className="btn-outline hover-glow" 
               onClick={exportToExcel} 
@@ -188,7 +222,7 @@ export default function RetirementPage() {
         </div>
 
         {/* Summary Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '32px' }}>
           <div 
             className="glass-card hover-glow" 
             onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }} 
@@ -203,19 +237,6 @@ export default function RetirementPage() {
             </div>
           </div>
 
-          <div 
-            className="glass-card hover-glow" 
-            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }} 
-            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
-          >
-            <div style={{ padding: '16px', background: '#dcfce7', color: '#16a34a', borderRadius: '16px' }}>
-              <Calendar size={32} />
-            </div>
-            <div>
-              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>ปีงบประมาณที่เลือก</div>
-              <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>พ.ศ. {fiscalYear}</div>
-            </div>
-          </div>
 
           <div 
             className="glass-card hover-glow" 

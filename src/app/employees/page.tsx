@@ -428,7 +428,34 @@ function EmployeesContent() {
       const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
         (filterGrp === 'all' || dept?.dept_name === filterGrp);
       const matchPos = filterPos === 'all' || e.pos_id === filterPos;
-      const matchStatus = filterStatus === 'all' || e.status === filterStatus;
+      let matchStatus = filterStatus === 'all' || e.status === filterStatus;
+      if (filterStatus === 'เกษียณอายุ 60 ปีขึ้นไป') {
+        const isExplicit = e.status === 'เกษียณอายุ 60 ปีขึ้นไป';
+        let isCalculated = false;
+        
+        if (e.birth_date && (e.status === 'ทำงานปกติ' || e.status === 'Active' || !e.status)) {
+          const birthDate = new Date(e.birth_date);
+          if (!isNaN(birthDate.getTime())) {
+            const birthYearBE = birthDate.getFullYear() + 543;
+            const birthMonth = birthDate.getMonth() + 1;
+            
+            let retirementYearBE = birthYearBE + 60;
+            if (birthMonth >= 10) {
+              retirementYearBE += 1;
+            }
+            
+            const today = new Date();
+            let currentFY = today.getFullYear() + 543;
+            if (today.getMonth() >= 9) {
+              currentFY += 1;
+            }
+            
+            isCalculated = retirementYearBE <= currentFY;
+          }
+        }
+        matchStatus = isExplicit || isCalculated;
+      }
+
 
       const primaryStatus = e.license_status;
       const matchLicense = filterLicense === 'all' || primaryStatus === filterLicense || (!primaryStatus && filterLicense === 'None');

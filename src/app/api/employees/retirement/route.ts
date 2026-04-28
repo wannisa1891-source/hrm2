@@ -17,11 +17,12 @@ export async function GET(req: NextRequest) {
     const targetFY = fiscalYearStr ? parseInt(fiscalYearStr) : currentFY;
 
     const [employees]: any = await pool.query(`
-      SELECT e.emp_id, e.prefix, e.first_name_th, e.last_name_th, e.birth_date, e.dept_id, d.dept_name, p.pos_name
+      SELECT e.emp_id, e.prefix, e.first_name_th, e.last_name_th, e.birth_date, e.start_date, e.admission_date, e.dept_id, d.dept_name, p.pos_name
       FROM tbl_employees e
       LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
       LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id
-      WHERE e.birth_date IS NOT NULL AND e.birth_date != '1900-01-01' AND e.status = 'ทำงานปกติ'
+      WHERE e.birth_date IS NOT NULL AND e.birth_date != '1900-01-01' AND e.status = 'ทำงานปกติ' AND e.emp_id != '1111111111111'
+
     `);
 
     const allProcessed = employees.map((emp: any) => {
@@ -31,9 +32,10 @@ export async function GET(req: NextRequest) {
       const birthDay = birthDate.getDate();
 
       let retirementYearBE = birthYearBE + 60;
-      if (birthMonth > 10 || (birthMonth === 10 && birthDay >= 2)) {
+      if (birthMonth >= 10) {
         retirementYearBE += 1;
       }
+
       const retirementDate = `${retirementYearBE - 543}-10-01`;
 
       return {
@@ -53,6 +55,8 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => a.fiscal_year - b.fiscal_year);
 
     const retiringEmployees = allProcessed.filter((emp: any) => emp.retirement_year_be === targetFY);
+
+
 
     // Sort by age youngest first (birth_date DESC)
     retiringEmployees.sort((a: any, b: any) => new Date(b.birth_date).getTime() - new Date(a.birth_date).getTime());
