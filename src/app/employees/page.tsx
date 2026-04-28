@@ -783,9 +783,13 @@ function EmployeesContent() {
                   ))}
               </select>
 
-              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterGrp} onChange={e => setFilterGrp(e.target.value)} disabled={filterDiv === 'all'}>
+              <select className="form-select" style={{ width: 'auto', minWidth: '140px' }} value={filterGrp} onChange={e => setFilterGrp(e.target.value)}>
                 <option value="all">ทุกแผนก</option>
-                {Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim())))
+                {Array.from(new Set(
+                  departments
+                    .filter(d => filterDiv === 'all' || String(d.division || '').trim() === filterDiv)
+                    .map(d => String(d.dept_name || '').trim())
+                ))
                   .filter(Boolean)
                   .sort((a, b) => a.localeCompare(b, 'th'))
                   .map(grp => (
@@ -869,6 +873,7 @@ function EmployeesContent() {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th style={{ textAlign: 'center', width: '60px' }}>ลำดับ</th>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
                   <th style={{ textAlign: 'center' }}>เลขประจำตำแหน่ง</th>
                   <th style={{ textAlign: 'center' }}>เลขบัตรประชาชน</th>
@@ -883,11 +888,11 @@ function EmployeesContent() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
+                  <tr><td colSpan={11} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>กำลังโหลดข้อมูลพนักงาน...</td></tr>
                 ) : currentData.length === 0 ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
+                  <tr><td colSpan={11} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลพนักงานที่ตรงกับการค้นหา</td></tr>
                 ) : (
-                  currentData.map((emp) => {
+                  currentData.map((emp, idx) => {
                     const dept = departments.find(d => String(d.dept_id) === String(emp.dept_id));
                     return (
                       <tr
@@ -897,6 +902,9 @@ function EmployeesContent() {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = emp.license_status === 'Expired' ? '#fff5f5' : 'transparent'}
                       >
+                        <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 600 }}>
+                          {((currentPage - 1) * itemsPerPage) + idx + 1}
+                        </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
                             {emp.image ? <Image fill src={`/uploads/${emp.image}`} alt="" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <span style={{ color: '#94a3b8', fontSize: '20px' }}>👤</span>}
@@ -977,7 +985,7 @@ function EmployeesContent() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '10px 0' }}>
-              <span style={{ fontSize: '14px', color: '#64748b' }}>แสดงรายการจากทั้งหมด {filteredData.length} รายการ</span>
+              <span style={{ fontSize: '14px', color: '#64748b' }}>แสดงรายการจากทั้งหมด {filteredData.length} รายการ (คน)</span>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
                   disabled={currentPage === 1}
@@ -986,8 +994,21 @@ function EmployeesContent() {
                 >
                   หน้าก่อน
                 </button>
-                <div style={{ background: '#afceecff', padding: '6px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500 }}>
-                  {currentPage} / {totalPages}
+                <div style={{ background: '#afceecff', padding: '6px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    max={totalPages} 
+                    value={currentPage} 
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                        setCurrentPage(val);
+                      }
+                    }}
+                    style={{ width: '45px', textAlign: 'center', border: 'none', background: 'transparent', fontWeight: 'bold' }}
+                  />
+                  <span>/ {totalPages}</span>
                 </div>
                 <button
                   disabled={currentPage === totalPages}

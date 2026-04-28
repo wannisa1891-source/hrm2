@@ -100,7 +100,25 @@ export async function POST(req: NextRequest) {
           const trimmedFirst = rawFirst;
           const trimmedLast = rawLast;
           const trimmedCitizen = String(emp.citizen_id || '').trim();
-          
+
+          // --- SKIP HEADER/GARBAGE ROWS ---
+          const combinedNameForCheck = (trimmedFirst + ' ' + trimmedLast).trim();
+          if (!combinedNameForCheck || combinedNameForCheck === '-' || combinedNameForCheck === '.') {
+            continue; // Skip empty or placeholder rows
+          }
+
+          // Heuristic: If it looks like a header (starts with number, contains 'กลุ่มงาน', or is just a short department name)
+          // AND it doesn't have a citizen_id or phone number, it's likely a header.
+          const isHeaderRow = 
+            /^\d+[\.\s]/.test(combinedNameForCheck) || 
+            combinedNameForCheck.includes('กลุ่มงาน') || 
+            (trimmedLast === '' && combinedNameForCheck.length < 20);
+
+          if (isHeaderRow && !trimmedCitizen && !emp.phone && !emp.position_no) {
+            continue; // Skip headers silently
+          }
+          // ---------------------------------
+
           if (trimmedFirst && trimmedLast) {
             const nameKey = `${trimmedFirst}|${trimmedLast}`;
             
@@ -109,7 +127,9 @@ export async function POST(req: NextRequest) {
               throw new Error(`ข้อมูลซ้ำซ้อน: มีรายชื่อ "${trimmedFirst} ${trimmedLast}" ซ้ำกันในไฟล์ Excel`);
             }
             processedNames.add(nameKey);
-
+          } else {
+            // If it's missing names, and passed the header check, we still probably shouldn't import it as an employee
+            continue; 
           }
 
           // 3. Check citizen_id duplicates within the Excel file itself
@@ -133,19 +153,33 @@ export async function POST(req: NextRequest) {
 
           const finalEmpId = emp.emp_id || `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-          // Resolve dept_id
+          // --- RESOLVE DEPT_ID (Division + Department) ---
           let finalDeptId = null;
-          if (emp.dept_id) {
-            const trimmedDept = String(emp.dept_id).trim();
-            if (trimmedDept !== '') {
+          const trimmedDept = String(emp.dept_id || '').trim();
+          const trimmedDiv = String(emp.division || '').trim();
+
+          if (trimmedDept !== '') {
+            // 1. Try to find department in the specific division first
+            if (trimmedDiv !== '') {
+              const [matchedInDiv]: any = await connection.query(
+                "SELECT dept_id FROM tbl_departments WHERE division = ? AND (dept_name = ? OR dept_id = ?) LIMIT 1",
+                [trimmedDiv, trimmedDept, trimmedDept]
+              );
+              if (matchedInDiv.length > 0) {
+                finalDeptId = matchedInDiv[0].dept_id;
+              }
+            }
+
+            // 2. If not found in division, try global search
+            if (!finalDeptId) {
               if (deptMap.has(trimmedDept)) {
                 finalDeptId = deptMap.get(trimmedDept);
               } else {
-                // Auto-create department
+                // 3. Auto-create department (Assign division if available)
                 const newDeptId = `D-${Math.floor(1000 + Math.random() * 9000)}`;
                 await connection.query(
-                  'INSERT INTO tbl_departments (dept_id, dept_name) VALUES (?, ?)',
-                  [newDeptId, trimmedDept]
+                  'INSERT INTO tbl_departments (dept_id, dept_name, division) VALUES (?, ?, ?)',
+                  [newDeptId, trimmedDept, trimmedDiv || null]
                 );
                 deptMap.set(trimmedDept, newDeptId);
                 finalDeptId = newDeptId;
@@ -153,29 +187,71 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          // Resolve division if dept_id is still null
-          if (!finalDeptId && emp.division) {
-            const trimmedDiv = String(emp.division).trim();
-            if (trimmedDiv !== '') {
-              // Check if a dummy department for this division already exists
+          // 4. Resolve by division + working_at if dept_id is still null
+          if (!finalDeptId && trimmedDiv !== '') {
+            // Master Alias Mapping for common "working_at" names that should go to specific departments
+            const deptAliasMap: { [key: string]: string } = {
+              'ER': 'งานการพยาบาลผู้ป่วยอุบัติเหตุฉุกเฉินและนิติเวช',
+              'อุบัติเหตุ': 'งานการพยาบาลผู้ป่วยอุบัติเหตุฉุกเฉินและนิติเวช',
+              'นิติเวช': 'งานการพยาบาลผู้ป่วยอุบัติเหตุฉุกเฉินและนิติเวช',
+              'จ่ายกลาง': 'ซัพพลาย',
+              'ซักฟอก': 'ซัพพลาย',
+              'คลัง': 'ซัพพลาย',
+              'ตึกหญิง': 'หญิง',
+              'ตึกชาย': 'ชาย',
+              'ตึกพิเศษ': 'พิเศษ',
+              'หัตถการ': 'OPD',
+              'สูตินรีเวช': 'OPD',
+              'หัวหน้ากลุ่มการพยาบาล': 'หัวหน้ากลุ่มงานการพยาบาล',
+              'พขร': 'ADM-DRV',
+              'ขับรถ': 'ADM-DRV',
+              'โสต': 'ADM-AV'
+            };
+
+            if (emp.working_at) {
+              const trimmedWorkAt = String(emp.working_at).trim();
+              if (trimmedWorkAt !== '') {
+                // Check alias map first
+                let searchName = trimmedWorkAt;
+                for (const [alias, official] of Object.entries(deptAliasMap)) {
+                  if (trimmedWorkAt.includes(alias)) {
+                    searchName = official;
+                    break;
+                  }
+                }
+
+                const [matchedByWorkAt]: any = await connection.query(
+                  "SELECT dept_id FROM tbl_departments WHERE division = ? AND (dept_name = ? OR dept_name LIKE ? OR dept_id = ?) LIMIT 1",
+                  [trimmedDiv, searchName, `%${searchName}%`, searchName]
+                );
+                if (matchedByWorkAt.length > 0) {
+                  finalDeptId = matchedByWorkAt[0].dept_id;
+                }
+              }
+            }
+
+            // 5. If still not resolved, pick the first department in this division as default
+            if (!finalDeptId) {
               const [existingDept]: any = await connection.query(
-                "SELECT dept_id FROM tbl_departments WHERE division = ? AND (dept_name = '-' OR dept_name = '' OR dept_name IS NULL) LIMIT 1",
+                "SELECT dept_id FROM tbl_departments WHERE division = ? LIMIT 1",
                 [trimmedDiv]
               );
               
               if (existingDept.length > 0) {
                 finalDeptId = existingDept[0].dept_id;
               } else {
-                // Create a dummy department for this division
+                // Create a default department named after the division
                 const newDeptId = `DIV-${Math.floor(1000 + Math.random() * 9000)}`;
                 await connection.query(
-                  "INSERT INTO tbl_departments (dept_id, division, dept_name) VALUES (?, ?, '-')",
-                  [newDeptId, trimmedDiv]
+                  "INSERT INTO tbl_departments (dept_id, division, dept_name) VALUES (?, ?, ?)",
+                  [newDeptId, trimmedDiv, trimmedDiv]
                 );
                 finalDeptId = newDeptId;
               }
             }
           }
+          // ---------------------------------------------
+
 
           // Resolve pos_id
           let finalPosId = null;
