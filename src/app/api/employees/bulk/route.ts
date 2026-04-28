@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
               combinedName = (rawFirst + ' ' + rawLast).trim();
             }
             if (combinedName !== '') {
-              const prefixes = ['นาย', 'นางสาว', 'นาง', 'น.ส.', 'ด.ญ.', 'ด.ช.', 'เด็กชาย', 'เด็กหญิง', 'ว่าที่ ร.ต.', 'ดร.', 'นพ.', 'พญ.', 'พล.ต.', 'พ.ต.ท.', 'พ.ต.ต.', 'พ.ต.อ.', 'ร.ต.อ.', 'ร.ต.ท.', 'ร.ต.ต.'];
+              const prefixes = ['นาย', 'นางสาว', 'นาง', 'น.ส.', 'นส.', 'นส', 'ด.ญ.', 'ด.ช.', 'เด็กชาย', 'เด็กหญิง', 'ว่าที่ ร.ต.', 'ดร.', 'นพ.', 'พญ.', 'พล.ต.', 'พ.ต.ท.', 'พ.ต.ต.', 'พ.ต.อ.', 'ร.ต.อ.', 'ร.ต.ท.', 'ร.ต.ต.'];
               
               let matchedPrefix = false;
               for (const p of prefixes) {
@@ -82,6 +82,20 @@ export async function POST(req: NextRequest) {
               }
             }
           }
+
+          // Abbreviation Mapping for Prefixes
+          const prefixAbbr: { [key: string]: string } = {
+            'น.ส.': 'นางสาว',
+            'นส.': 'นางสาว',
+            'นส': 'นางสาว',
+            'ด.ญ.': 'เด็กหญิง',
+            'ด.ช.': 'เด็กชาย',
+          };
+
+          if (prefixAbbr[rawPrefix]) {
+            rawPrefix = prefixAbbr[rawPrefix];
+          }
+
 
           const trimmedFirst = rawFirst;
           const trimmedLast = rawLast;
@@ -203,14 +217,26 @@ export async function POST(req: NextRequest) {
           }
 
           // Resolve Gender
-          let finalGender = emp.gender;
-          if (!finalGender || finalGender.trim() === '') {
-            const prefix = String(emp.prefix || '').trim();
-            if (['นาง', 'นางสาว', 'น.ส.', 'ด.ญ.'].includes(prefix)) {
+          let finalGender = String(emp.gender || '').trim();
+          if (['ชาย', 'Male', 'M'].includes(finalGender)) {
+            finalGender = 'ชาย';
+          } else if (['หญิง', 'Female', 'F'].includes(finalGender)) {
+            finalGender = 'หญิง';
+          } else {
+            // Check if gender field contains clues, or fallback to prefix
+            if (finalGender.includes('หญิง') || finalGender.includes('นาง') || finalGender.includes('น.ส.') || finalGender.includes('นส.') || finalGender.includes('นส')) {
               finalGender = 'หญิง';
-            } else {
+            } else if (finalGender.includes('ชาย') || finalGender.includes('นาย')) {
               finalGender = 'ชาย';
+            } else {
+              const prefix = rawPrefix;
+              if (['นาง', 'นางสาว', 'น.ส.', 'นส.', 'นส', 'ด.ญ.', 'เด็กหญิง', 'พญ.'].includes(prefix)) {
+                finalGender = 'หญิง';
+              } else {
+                finalGender = 'ชาย';
+              }
             }
+
           }
 
           // Resolve Position Number
