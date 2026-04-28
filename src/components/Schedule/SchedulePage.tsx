@@ -13,6 +13,7 @@ export default function SchedulePage() {
   const isAdmin = isSuperAdmin || isHR;
   const [reimbursementsList, setReimbursementsList] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedReim, setSelectedReim] = useState<any | null>(null);
 
   const loadHistory = async () => {
     setLoadingHistory(true);
@@ -37,6 +38,7 @@ export default function SchedulePage() {
   const [showReimModal, setShowReimModal] = useState(false);
   const [submittingReim, setSubmittingReim] = useState(false);
   const [reimForm, setReimForm] = useState({
+    fullName: '',
     title: '',
     date: '',
     organizerAmount: '',
@@ -53,6 +55,7 @@ export default function SchedulePage() {
     setSubmittingReim(true);
     try {
       const formData = new FormData();
+      formData.append('full_name', reimForm.fullName);
       formData.append('title', reimForm.title);
       formData.append('date', reimForm.date);
       formData.append('organizer_amount', reimForm.organizerAmount);
@@ -78,7 +81,7 @@ export default function SchedulePage() {
       });
 
       setShowReimModal(false);
-      setReimForm({ title: '', date: '', organizerAmount: '', parentAmount: '', file: null });
+      setReimForm({ fullName: '', title: '', date: '', organizerAmount: '', parentAmount: '', file: null });
       loadHistory();
     } catch (err: any) {
       Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
@@ -198,6 +201,28 @@ export default function SchedulePage() {
         .sp-modal-top h3 svg { width: 20px; height: 20px; }
         .sp-modal-top .sp-modal-x svg { width: 20px; height: 20px; }
         .sp-btn-icon svg { width: 16px; height: 16px; }
+        /* Detail View Button */
+        .sp-btn-detail { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 10px; border: 1.5px solid #bfdbfe; background: #eff6ff; color: #1d4ed8; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .sp-btn-detail:hover { background: #dbeafe; border-color: #93c5fd; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(37,99,235,0.15); }
+        .sp-btn-detail svg { width: 14px; height: 14px; max-width: 14px; }
+        /* Detail Modal */
+        .sp-detail-modal { background: #ffffff; border-radius: 28px; padding: 36px 40px; width: 560px; max-width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 25px 60px -10px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3); animation: spModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .sp-detail-hero { background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 20px; padding: 24px 28px; margin-bottom: 28px; color: white; position: relative; overflow: hidden; }
+        .sp-detail-hero::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.08); }
+        .sp-detail-hero::after { content: ''; position: absolute; bottom: -20px; left: -20px; width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.06); }
+        .sp-detail-hero-title { font-size: 20px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.3px; position: relative; z-index: 1; }
+        .sp-detail-hero-date { font-size: 13px; opacity: 0.85; font-weight: 600; position: relative; z-index: 1; display: flex; align-items: center; gap: 6px; }
+        .sp-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .sp-detail-field { background: #f8fafc; border-radius: 16px; padding: 18px 20px; border: 1px solid #e2e8f0; }
+        .sp-detail-field-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+        .sp-detail-field-value { font-size: 20px; font-weight: 800; color: #0f172a; }
+        .sp-detail-field-unit { font-size: 12px; font-weight: 600; color: #64748b; margin-top: 2px; }
+        .sp-detail-file-box { background: #f8fafc; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .sp-detail-file-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .sp-detail-file-label svg { width: 15px; height: 15px; max-width: 15px; }
+        .sp-detail-file-link { display: inline-flex; align-items: center; gap: 10px; background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 12px 18px; color: #1d4ed8; font-weight: 700; font-size: 14px; text-decoration: none; transition: all 0.2s; }
+        .sp-detail-file-link:hover { background: #dbeafe; border-color: #93c5fd; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(37,99,235,0.15); }
+        .sp-detail-file-link svg { width: 18px; height: 18px; max-width: 18px; }
         `}} />
 
       <div className="schedule-page" style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
@@ -254,6 +279,7 @@ export default function SchedulePage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569' }}>ชื่อ-นามสกุล</th>
                     <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569' }}>หัวข้อการประชุม/อบรม</th>
                     <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569' }}>วันที่</th>
                     <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', textAlign: 'right' }}>เบิกจากผู้จัด</th>
@@ -263,7 +289,14 @@ export default function SchedulePage() {
                 </thead>
                 <tbody>
                   {reimbursementsList.map((r: any) => (
-                    <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }} className="hover:bg-slate-50">
+                    <tr
+                      key={r.id}
+                      onClick={() => setSelectedReim(r)}
+                      style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s', cursor: 'pointer' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f9f5')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+                    >
+                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{r.full_name || <span style={{ color: '#94a3b8' }}>-</span>}</td>
                       <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{r.title}</td>
                       <td style={{ padding: '16px', fontSize: '14px', color: '#64748b' }}>{new Date(r.reimbursement_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                       <td style={{ padding: '16px', fontSize: '14px', color: '#0f172a', fontWeight: 600, textAlign: 'right' }}>
@@ -272,7 +305,7 @@ export default function SchedulePage() {
                       <td style={{ padding: '16px', fontSize: '14px', color: '#0f172a', fontWeight: 600, textAlign: 'right' }}>
                         {r.parent_amount ? parseFloat(r.parent_amount).toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '0.00'} บาท
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <td style={{ padding: '16px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                         {r.memo_file ? (
                           <a href={`/uploads/${r.memo_file}`} target="_blank" rel="noreferrer" style={{ fontSize: '12px', background: '#eff6ff', color: '#1d4ed8', padding: '4px 10px', borderRadius: '8px', fontWeight: 700, textDecoration: 'none', border: '1px solid #bfdbfe' }} className="hover-glow">
                             เปิดดูไฟล์
@@ -292,6 +325,93 @@ export default function SchedulePage() {
 
 
 
+        {/* DETAIL VIEW MODAL */}
+        {selectedReim && (
+          <div className="sp-modal-bg" onClick={() => setSelectedReim(null)}>
+            <div className="sp-detail-modal" onClick={(e) => e.stopPropagation()}>
+              {/* Header */}
+              <div className="sp-modal-top" style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '2px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <svg width="22" height="22" fill="none" stroke="#059669" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  รายละเอียดการเบิกงบประมาณ
+                </h3>
+                <button className="sp-modal-x" onClick={() => setSelectedReim(null)}>
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              {/* Hero Banner */}
+              <div className="sp-detail-hero">
+                {selectedReim.full_name && (
+                  <p style={{ fontSize: '13px', opacity: 0.8, fontWeight: 600, margin: '0 0 4px', position: 'relative', zIndex: 1 }}>
+                    👤 {selectedReim.full_name}
+                  </p>
+                )}
+                <p className="sp-detail-hero-title">{selectedReim.title}</p>
+                <p className="sp-detail-hero-date">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 14, height: 14, maxWidth: 14 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  {new Date(selectedReim.reimbursement_date).toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+
+              {/* Amount Grid */}
+              <div className="sp-detail-grid">
+                <div className="sp-detail-field">
+                  <div className="sp-detail-field-label">เบิกจากผู้จัด</div>
+                  <div className="sp-detail-field-value">
+                    {selectedReim.organizer_amount ? parseFloat(selectedReim.organizer_amount).toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '0.00'}
+                  </div>
+                  <div className="sp-detail-field-unit">บาท</div>
+                </div>
+                <div className="sp-detail-field">
+                  <div className="sp-detail-field-label">เบิกจากต้นสังกัด</div>
+                  <div className="sp-detail-field-value">
+                    {selectedReim.parent_amount ? parseFloat(selectedReim.parent_amount).toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '0.00'}
+                  </div>
+                  <div className="sp-detail-field-unit">บาท</div>
+                </div>
+              </div>
+
+              {/* Total */}
+              <div style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', borderRadius: '16px', padding: '18px 22px', marginBottom: '20px', border: '1.5px solid #86efac', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#166534' }}>รวมทั้งหมด</span>
+                <span style={{ fontSize: '22px', fontWeight: 800, color: '#15803d' }}>
+                  {((parseFloat(selectedReim.organizer_amount || '0') + parseFloat(selectedReim.parent_amount || '0'))).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                </span>
+              </div>
+
+              {/* File Attachment */}
+              <div className="sp-detail-file-box">
+                <div className="sp-detail-file-label">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                  เอกสารแนบ
+                </div>
+                {selectedReim.memo_file ? (
+                  <a href={`/uploads/${selectedReim.memo_file}`} target="_blank" rel="noreferrer" className="sp-detail-file-link">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                    เปิดดูเอกสารแนบ
+                  </a>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#94a3b8', fontSize: '14px', fontWeight: 600 }}>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 20, height: 20, maxWidth: 20 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    ไม่มีเอกสารแนบ
+                  </div>
+                )}
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedReim(null)}
+                style={{ width: '100%', padding: '14px', borderRadius: '16px', border: '1.5px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontSize: '14px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#0f172a'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#475569'; }}
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* REIMBURSEMENT MODAL */}
         {showReimModal && (
           <div className="sp-modal-bg" onClick={() => setShowReimModal(false)}>
@@ -306,6 +426,14 @@ export default function SchedulePage() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                  <label>ชื่อ-นามสกุล</label>
+                  <input className="sp-field"
+                    value={reimForm.fullName}
+                    onChange={(e) => setReimForm({ ...reimForm, fullName: e.target.value })}
+                    placeholder="ระบุชื่อ-นามสกุลผู้เบิก" />
+                </div>
+
                 <div className="sp-form-group" style={{ marginBottom: 0 }}>
                   <label>การประชุม/อบรม <span className="sp-req">*</span></label>
                   <input className="sp-field" 

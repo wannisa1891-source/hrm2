@@ -1188,7 +1188,11 @@ function EmployeeRow({
         </div>
       </td>
       <td style={{ ...styles.td, fontWeight: 700, color: '#475569' }}>
-        {emp.position_no || emp.emp_id}
+        {(() => {
+          const idVal = emp.position_no;
+          if (!idVal || idVal.trim() === '' || idVal.replace(/0/g, '') === '') return '-';
+          return idVal;
+        })()}
       </td>
       <td style={styles.td}>
         <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>

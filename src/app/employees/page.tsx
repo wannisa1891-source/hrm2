@@ -106,7 +106,48 @@ function EmployeesContent() {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rawJsonData = XLSX.utils.sheet_to_json(firstSheet) as any[];
+
+      let headerRowIndex = 0;
+      const ref = firstSheet['!ref'];
+      if (ref) {
+        const range = XLSX.utils.decode_range(ref);
+        for (let R = range.s.r; R <= Math.min(range.e.r, 5); ++R) {
+          let foundHeader = false;
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ c: C, r: R });
+            const cell = firstSheet[cellAddress];
+            if (cell && cell.v && (
+              String(cell.v).includes('ชื่อ-สกุล') || 
+              String(cell.v).includes('ชื่อ') || 
+              String(cell.v).includes('ลำดับ') || 
+              String(cell.v).includes('ตำแหน่ง')
+            )) {
+              headerRowIndex = R;
+              foundHeader = true;
+              break;
+            }
+          }
+          if (foundHeader) break;
+        }
+      }
+
+      let defaultDivision = '';
+      if (headerRowIndex > 0 && ref) {
+        const range = XLSX.utils.decode_range(ref);
+        for (let R = range.s.r; R < headerRowIndex; ++R) {
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ c: C, r: R });
+            const cell = firstSheet[cellAddress];
+            if (cell && cell.v && String(cell.v).includes('กลุ่มงาน')) {
+              defaultDivision = String(cell.v).replace(/^\d+[\.\s\-]+/, '').trim();
+              break;
+            }
+          }
+          if (defaultDivision) break;
+        }
+      }
+
+      const rawJsonData = XLSX.utils.sheet_to_json(firstSheet, { range: headerRowIndex }) as any[];
 
       if (rawJsonData.length === 0) {
         Swal.fire('แจ้งเตือน', 'ไม่พบข้อมูลในไฟล์ Excel หรือไฟล์ว่างเปล่า', 'warning');
@@ -187,24 +228,25 @@ function EmployeesContent() {
           emp_id: row['รหัสพนักงาน'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
           citizen_id: row['รหัสบัตรประชาชน'] || row['บัตรประชาชน'] || row['citizen_id'] || '',
-          first_name_th: row['ชื่อ'] || row['first_name_th'] || '',
+          first_name_th: row['ชื่อ'] || row['first_name_th'] || row['ชื่อ-สกุล'] || row['ชื่อสกุล'] || '',
           last_name_th: row['นามสกุล'] || row['last_name_th'] || '',
           nickname: row['ชื่อเล่น'] || row['nickname'] || '',
           phone: row['เบอร์โทรศัพท์'] || row['phone'] || '',
           email: row['อีเมล'] || row['email'] || '',
-          birth_date: parseDate(row['วัน/เดือน/ปีเกิด'] || row['birth_date']),
+          birth_date: parseDate(row['วัน/เดือน/ปีเกิด'] || row['วันเดือนปีเกิด'] || row['birth_date']),
           gender: row['เพศ'] || row['gender'] || '',
           address: fullAddress,
           position_no: row['เลขประจำตำแหน่ง'] || row['position_no'] || '',
           start_date: parseDate(row['วันที่เริ่มงาน'] || row['start_date']),
           admission_date: parseDate(row['วันที่บรรจุ'] || row['admission_date']),
           retirement_date: parseDate(row['วันที่เกษียณ'] || row['retirement_date']),
-          emp_type: row['ประเภทการจ้างงาน'] || row['ประเภทพนักงาน'] || 'พนักงานราชการ',
+          emp_type: row['ประเภทการจ้างงาน'] || row['ประเภทพนักงาน'] || row['สถานะ'] || 'พนักงานราชการ',
           status: row['สถานะพนักงาน'] || row['สถานะการทำงาน'] || 'ทำงานปกติ',
           role: row['สิทธิ์ผู้ใช้งาน'] || 'User',
           working_at: row['ปฏิบัติงานที่'] || row['working_at'] || '',
-          dept_id: dept ? dept.dept_id : null,
-          pos_id: pos ? pos.pos_id : null,
+          dept_id: dept ? dept.dept_id : (row['แผนก']?.toString().trim() || null),
+          pos_id: pos ? pos.pos_id : (row['ตำแหน่ง']?.toString().trim() || row['ตำแหน่ง / ระดับ']?.toString().trim() || null),
+          division: row['กลุ่มงาน']?.toString().trim() || defaultDivision,
           licenses: (row['ชื่อใบประกอบวิชาชีพ'] || row['เลขที่ใบประกอบวิชาชีพ']) ? [{
             license_name: row['ชื่อใบประกอบวิชาชีพ'] || '',
             license_type: row['ประเภทวิชาชีพ'] || '',
@@ -248,7 +290,8 @@ function EmployeesContent() {
           Swal.fire({
             title: 'นำเข้าสำเร็จบางส่วน',
             html: `
-              <div style="margin-bottom: 12px;">สำเร็จ: <b>${resData.successCount}</b> รายการ</div>
+              <div style="margin-bottom: 8px;">เพิ่มพนักงานใหม่: <b>${resData.insertCount || 0}</b> รายการ</div>
+              <div style="margin-bottom: 8px;">อัปเดตข้อมูลเดิม: <b>${resData.updateCount || 0}</b> รายการ</div>
               <div style="margin-bottom: 16px;">ผิดพลาด: <b>${resData.errorCount}</b> รายการ</div>
               <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 16px; margin: 0 24px; color: #d97706; font-size: 13px; text-align: center; align-items: center; max-height: 200px; overflow-y: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;">
                 ${resData.errors?.map((err: string) => `<div>• ${err}</div>`).join('') || ''}
@@ -260,7 +303,10 @@ function EmployeesContent() {
         } else {
           Swal.fire({
             title: 'นำเข้าสำเร็จสมบูรณ์!',
-            html: `นำเข้าข้อมูลพนักงาน <b>${resData.successCount}</b> รายการเรียบร้อยแล้ว`,
+            html: `
+              <div style="margin-bottom: 8px;">เพิ่มพนักงานใหม่: <b>${resData.insertCount || 0}</b> คน</div>
+              <div>อัปเดตข้อมูลพนักงานเดิม: <b>${resData.updateCount || 0}</b> คน</div>
+            `,
             icon: 'success'
           });
           loadEmployees();
@@ -782,7 +828,7 @@ function EmployeesContent() {
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
                             {(() => {
-                              const idVal = emp.position_no || emp.emp_id;
+                              const idVal = emp.position_no;
                               if (!idVal || idVal.trim() === '' || idVal.replace(/0/g, '') === '') return '-';
                               return idVal;
                             })()}
@@ -833,7 +879,7 @@ function EmployeesContent() {
                                 <button className="icon-btn hover-glow" onClick={() => handleResetPassword(emp)} title="ส่งอีเมลรีเซ็ตรหัสผ่าน" style={{ color: '#d97706', background: '#fefce8' }}>
                                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                                 </button>
-                                <button className="icon-btn hover-glow" onClick={() => router.push(`/profile?emp_id=${emp.emp_id}`)} title="แก้ไขข้อมูล" style={{ color: '#3b82f6' }}>
+                                <button className="icon-btn hover-glow" onClick={() => openEdit(emp)} title="แก้ไขข้อมูล" style={{ color: '#3b82f6' }}>
                                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                 </button>
                                 <button className="icon-btn hover-glow" onClick={() => handleDelete(emp.emp_id)} title="ลบข้อมูล" style={{ color: '#ef4444', background: '#fef2f2' }}>
@@ -948,7 +994,11 @@ function EmployeesContent() {
                       <div style={{ position: 'relative', zIndex: 3, marginTop: '24px', padding: '0 32px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '50px 1fr', gap: '6px 8px', fontSize: '11px' }}>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>ID</div>
-                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.position_no || empForCard.emp_id}</div>
+                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {(() => {
+                            const idVal = empForCard.position_no;
+                            if (!idVal || idVal.trim() === '' || idVal.replace(/0/g, '') === '') return '-';
+                            return idVal;
+                          })()}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>DOB</div>
                           <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.birth_date ? new Date(empForCard.birth_date).toLocaleDateString('en-US') : '-'}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>Phone</div>

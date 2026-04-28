@@ -320,7 +320,7 @@ function ProfileContent() {
           <div className="quick-stats">
             <div className="stat-item">
               <span className="stat-label">เลขประจำตำแหน่ง</span>
-              <span className="stat-val">{formatZeroString(profile.position_no || profile.emp_id)}</span>
+              <span className="stat-val">{formatZeroString(profile.position_no)}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">อายุงาน (วันเริ่ม-ปัจจุบัน)</span>
@@ -342,7 +342,7 @@ function ProfileContent() {
               <div className="meta-icon"><Phone size={18} /></div>
               <div>
                 <span className="meta-label">เบอร์โทรศัพท์</span>
-                <span className="meta-val">{profile.mobile_no || '-'}</span>
+                <span className="meta-val">{profile.phone || '-'}</span>
               </div>
             </div>
 
