@@ -379,7 +379,6 @@ export default function RetirementPage() {
                 <thead>
                   <tr>
                     <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
-                    <th style={{ textAlign: 'center' }}>รหัสพนักงาน</th>
                     <th>ชื่อ-สกุล</th>
                     <th>ตำแหน่ง</th>
                     <th>หน่วยงาน</th>
@@ -403,11 +402,6 @@ export default function RetirementPage() {
                           ) : (
                             <span style={{ color: '#94a3b8', fontSize: '16px' }}>👤</span>
                           )}
-                        </div>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
-                          {emp.emp_id}
                         </div>
                       </td>
                       <td>
