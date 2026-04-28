@@ -36,10 +36,38 @@ export async function POST(req: NextRequest) {
 
       let successCount = 0;
       let errorCount = 0;
+      let updateCount = 0;
+      let insertCount = 0;
       let errors = [];
+
+      const processedNames = new Set<string>();
+      const processedCitizenIds = new Set<string>();
 
       for (const emp of data) {
         try {
+          const trimmedFirst = String(emp.first_name_th || '').trim();
+          const trimmedLast = String(emp.last_name_th || '').trim();
+          const trimmedCitizen = String(emp.citizen_id || '').trim();
+          
+          if (trimmedFirst && trimmedLast) {
+            const nameKey = `${trimmedFirst}|${trimmedLast}`;
+            
+            // 1. Check name duplicates within the Excel file itself
+            if (processedNames.has(nameKey)) {
+              throw new Error(`ข้อมูลซ้ำซ้อน: มีรายชื่อ "${trimmedFirst} ${trimmedLast}" ซ้ำกันในไฟล์ Excel`);
+            }
+            processedNames.add(nameKey);
+
+          }
+
+          // 3. Check citizen_id duplicates within the Excel file itself
+          if (trimmedCitizen && trimmedCitizen !== '' && trimmedCitizen !== '-') {
+            if (processedCitizenIds.has(trimmedCitizen)) {
+              throw new Error(`ข้อมูลซ้ำซ้อน: มีเลขบัตรประชาชน "${trimmedCitizen}" ซ้ำกันในไฟล์ Excel`);
+            }
+            processedCitizenIds.add(trimmedCitizen);
+          }
+
           const sql = `INSERT INTO tbl_employees 
             (emp_id, prefix, first_name_th, last_name_th, nickname, 
              birth_date, gender, address, citizen_id, phone, email, password, role, 
@@ -137,6 +165,73 @@ export async function POST(req: NextRequest) {
           // Resolve Citizen ID
           const finalCitizenId = emp.citizen_id && String(emp.citizen_id).trim() !== '' ? String(emp.citizen_id).trim() : null;
 
+          // Check if employee with same First/Last name already exists in DB
+          if (trimmedFirst && trimmedLast) {
+            const [existingEmp]: any = await connection.query(
+              'SELECT emp_id FROM tbl_employees WHERE TRIM(first_name_th) = ? AND TRIM(last_name_th) = ? LIMIT 1',
+              [trimmedFirst, trimmedLast]
+            );
+            
+            if (existingEmp.length > 0) {
+              const existingId = existingEmp[0].emp_id;
+              
+              const updateSql = `UPDATE tbl_employees SET 
+                prefix = ?, nickname = ?, birth_date = ?, gender = ?, address = ?, citizen_id = ?, 
+                phone = ?, email = ?, emp_type = ?, dept_id = ?, pos_id = ?, start_date = ?, 
+                status = ?, position_no = ?, admission_date = ?, retirement_date = ?, working_at = ?
+                WHERE emp_id = ?`;
+                
+              const updateValues = [
+                emp.prefix || '-',
+                emp.nickname || null,
+                emp.birth_date && emp.birth_date !== '' ? emp.birth_date : '1900-01-01',
+                finalGender,
+                emp.address || '',
+                finalCitizenId,
+                emp.phone || null,
+                emp.email || null,
+                emp.emp_type || 'พนักงานราชการ',
+                finalDeptId,
+                finalPosId,
+                finalStartDate,
+                emp.status || 'ทำงานปกติ',
+                finalPositionNo,
+                emp.admission_date || null,
+                emp.retirement_date || null,
+                emp.working_at || null,
+                existingId
+              ];
+              
+              await connection.query(updateSql, updateValues);
+              
+              // Process licenses if provided
+              if (emp.licenses && Array.isArray(emp.licenses) && emp.licenses.length > 0) {
+                await connection.query('DELETE FROM tbl_employee_licenses WHERE emp_id = ?', [existingId]);
+                for (const lic of emp.licenses) {
+                  const licSql = `INSERT INTO tbl_employee_licenses 
+                    (emp_id, license_name, license_type, license_no, institution, issue_date, expire_date, status, file_path)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                  const licValues = [
+                    existingId, 
+                    lic.license_name || null, 
+                    lic.license_type || null, 
+                    lic.license_no || null,
+                    lic.institution || null, 
+                    lic.issue_date || null, 
+                    lic.expire_date || null,
+                    lic.status || 'ปกติ', 
+                    null
+                  ];
+                  await connection.query(licSql, licValues);
+                }
+              }
+              
+              updateCount++;
+              successCount++;
+              continue; // Skip Insert
+            }
+          }
+
           // Map values
           const values = [
             finalEmpId,
@@ -187,6 +282,7 @@ export async function POST(req: NextRequest) {
             }
           }
 
+          insertCount++;
           successCount++;
         } catch (rowErr: any) {
           errorCount++;
@@ -243,6 +339,8 @@ export async function POST(req: NextRequest) {
         message: 'Import processed', 
         successCount, 
         errorCount, 
+        updateCount,
+        insertCount,
         errors 
       });
     } catch (err: any) {

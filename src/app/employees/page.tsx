@@ -249,7 +249,8 @@ function EmployeesContent() {
           Swal.fire({
             title: 'นำเข้าสำเร็จบางส่วน',
             html: `
-              <div style="margin-bottom: 12px;">สำเร็จ: <b>${resData.successCount}</b> รายการ</div>
+              <div style="margin-bottom: 8px;">เพิ่มพนักงานใหม่: <b>${resData.insertCount || 0}</b> รายการ</div>
+              <div style="margin-bottom: 8px;">อัปเดตข้อมูลเดิม: <b>${resData.updateCount || 0}</b> รายการ</div>
               <div style="margin-bottom: 16px;">ผิดพลาด: <b>${resData.errorCount}</b> รายการ</div>
               <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 16px; margin: 0 24px; color: #d97706; font-size: 13px; text-align: center; align-items: center; max-height: 200px; overflow-y: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;">
                 ${resData.errors?.map((err: string) => `<div>• ${err}</div>`).join('') || ''}
@@ -261,7 +262,10 @@ function EmployeesContent() {
         } else {
           Swal.fire({
             title: 'นำเข้าสำเร็จสมบูรณ์!',
-            html: `นำเข้าข้อมูลพนักงาน <b>${resData.successCount}</b> รายการเรียบร้อยแล้ว`,
+            html: `
+              <div style="margin-bottom: 8px;">เพิ่มพนักงานใหม่: <b>${resData.insertCount || 0}</b> คน</div>
+              <div>อัปเดตข้อมูลพนักงานเดิม: <b>${resData.updateCount || 0}</b> คน</div>
+            `,
             icon: 'success'
           });
           loadEmployees();
