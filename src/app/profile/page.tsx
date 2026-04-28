@@ -59,7 +59,6 @@ function ProfileContent() {
   
 
   const targetId = empIdParam || user?.emp_id || user?.username;
-  const fullProfile = employees.find((e: any) => e.emp_id === targetId) || null;
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -183,8 +182,8 @@ function ProfileContent() {
   };
 
   const handleSaveProfile = async (fd: FormData, isEditing: boolean): Promise<{ success: boolean; message?: string }> => {
-    if (!fullProfile?.emp_id) return { success: false, message: 'ไม่พบข้อมูลบัญชี' };
-    const res = await editEmployee(fullProfile.emp_id, fd);
+    if (!profile?.emp_id) return { success: false, message: 'ไม่พบข้อมูลบัญชี' };
+    const res = await editEmployee(profile.emp_id, fd);
     if (res.success) {
       if (user) login({ ...user, image: res.image || user.image });
       setShowEditModal(false); await fetchProfile(); await loadEmployees();
@@ -407,7 +406,7 @@ function ProfileContent() {
                   </div>
                   <div className="data-item" style={{ gridTemplateColumns: '1fr', gap: '4px', marginTop: 'auto', paddingTop: '16px', borderTop: '1px dashed #f1f5f9' }}>
                     <span className="data-label">ที่อยู่ปัจจุบัน</span>
-                    <div className="data-val" style={{ lineHeight: '1.6', fontSize: '13.5px' }}>{fullProfile?.address || '—'}</div>
+                    <div className="data-val" style={{ lineHeight: '1.6', fontSize: '13.5px' }}>{profile?.address || '—'}</div>
                   </div>
                 </div>
               </div>
@@ -574,14 +573,14 @@ function ProfileContent() {
                   </button>
                 )}
               </div>
-              {!fullProfile?.licenses || fullProfile.licenses.length === 0 ? (
+              {!profile?.licenses || profile.licenses.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
                   <Award size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
                   <p>ยังไม่มีข้อมูลใบประกอบวิชาชีพ</p>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                  {fullProfile.licenses.map((lic: any, idx: number) => (
+                  {profile.licenses.map((lic: any, idx: number) => (
                     <div key={idx} onClick={() => setSelectedLicense(lic)} style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer' }} className="hover-lift">
                       <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{lic.license_name || lic.license_no || 'ใบประกอบวิชาชีพ'}</div>
                       <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>ออกให้โดย: {lic.institution || '-'}</div>
@@ -771,7 +770,7 @@ function ProfileContent() {
       <EmployeeFormModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        employee={fullProfile || data.profile}
+        employee={profile}
         onSave={handleSaveProfile}
         isProfileMode={true}
         departments={departments}
