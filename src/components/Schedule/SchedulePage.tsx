@@ -38,6 +38,7 @@ export default function SchedulePage() {
   const [showReimModal, setShowReimModal] = useState(false);
   const [submittingReim, setSubmittingReim] = useState(false);
   const [reimForm, setReimForm] = useState({
+    fullName: '',
     title: '',
     date: '',
     organizerAmount: '',
@@ -46,14 +47,15 @@ export default function SchedulePage() {
   });
 
   const handleReimSubmit = async () => {
-    if (!reimForm.title || !reimForm.date) {
-      Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลหัวข้อและวันที่ให้ครบถ้วน', 'warning');
+    if (!reimForm.fullName || !reimForm.title || !reimForm.date) {
+      Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลชื่อ-นามสกุล หัวข้อ และวันที่ให้ครบถ้วน', 'warning');
       return;
     }
 
     setSubmittingReim(true);
     try {
       const formData = new FormData();
+      formData.append('full_name', reimForm.fullName);
       formData.append('title', reimForm.title);
       formData.append('date', reimForm.date);
       formData.append('organizer_amount', reimForm.organizerAmount);
@@ -79,7 +81,7 @@ export default function SchedulePage() {
       });
 
       setShowReimModal(false);
-      setReimForm({ title: '', date: '', organizerAmount: '', parentAmount: '', file: null });
+      setReimForm({ fullName: '', title: '', date: '', organizerAmount: '', parentAmount: '', file: null });
       loadHistory();
     } catch (err: any) {
       Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
@@ -277,6 +279,7 @@ export default function SchedulePage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569' }}>ชื่อ-นามสกุล</th>
                     <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569' }}>หัวข้อการประชุม/อบรม</th>
                     <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569' }}>วันที่</th>
                     <th style={{ padding: '12px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', textAlign: 'right' }}>เบิกจากผู้จัด</th>
@@ -293,6 +296,7 @@ export default function SchedulePage() {
                       onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f9f5')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                     >
+                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{r.full_name || '-'}</td>
                       <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{r.title}</td>
                       <td style={{ padding: '16px', fontSize: '14px', color: '#64748b' }}>{new Date(r.reimbursement_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                       <td style={{ padding: '16px', fontSize: '14px', color: '#0f172a', fontWeight: 600, textAlign: 'right' }}>
@@ -339,6 +343,12 @@ export default function SchedulePage() {
               {/* Hero Banner */}
               <div className="sp-detail-hero">
                 <p className="sp-detail-hero-title">{selectedReim.title}</p>
+                {selectedReim.full_name && (
+                  <p className="sp-detail-hero-date" style={{ marginTop: '6px' }}>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 14, height: 14, maxWidth: 14 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    {selectedReim.full_name}
+                  </p>
+                )}
                 <p className="sp-detail-hero-date">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 14, height: 14, maxWidth: 14 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   {new Date(selectedReim.reimbursement_date).toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -417,6 +427,14 @@ export default function SchedulePage() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="sp-form-group" style={{ marginBottom: 0 }}>
+                  <label>ชื่อ-นามสกุล <span className="sp-req">*</span></label>
+                  <input className="sp-field"
+                    value={reimForm.fullName}
+                    onChange={(e) => setReimForm({ ...reimForm, fullName: e.target.value })}
+                    placeholder="ระบุชื่อและนามสกุลผู้เบิก" />
+                </div>
+
                 <div className="sp-form-group" style={{ marginBottom: 0 }}>
                   <label>การประชุม/อบรม <span className="sp-req">*</span></label>
                   <input className="sp-field" 
