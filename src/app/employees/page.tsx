@@ -753,7 +753,7 @@ function EmployeesContent() {
                   <th>ชื่อเล่น</th>
                   <th>ตำแหน่ง</th>
                   <th>กลุ่มงาน</th>
-                  <th>หน่วยงาน</th>
+                  <th>แผนก</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>สถานะ</th>
                   <th style={{ textAlign: 'center', width: '120px' }}>จัดการ</th>
                 </tr>
