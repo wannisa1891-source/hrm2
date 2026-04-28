@@ -89,7 +89,8 @@ export default function RetirementPage() {
         : search.length === 1
         ? (emp.first_name_th?.toLowerCase().startsWith(search.toLowerCase()) || 
            emp.last_name_th?.toLowerCase().startsWith(search.toLowerCase()) ||
-           emp.emp_id?.toLowerCase().startsWith(search.toLowerCase()))
+           emp.emp_id?.toLowerCase().startsWith(search.toLowerCase()) ||
+           emp.pos_name?.toLowerCase().startsWith(search.toLowerCase()))
         : `${emp.first_name_th} ${emp.last_name_th} ${emp.pos_name || ''}`.toLowerCase().includes(search.toLowerCase());
 
       return matchDept && matchPos && matchSearch;
