@@ -100,9 +100,13 @@ function LeavePageContent() {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       r = r.filter(l => 
-        l.first_name_th?.toLowerCase().includes(q) || 
-        l.last_name_th?.toLowerCase().includes(q) ||
-        l.dept_name?.toLowerCase().includes(q)
+        searchQuery.length === 1
+          ? (l.first_name_th?.toLowerCase().startsWith(q) || 
+             l.last_name_th?.toLowerCase().startsWith(q) ||
+             l.dept_name?.toLowerCase().startsWith(q))
+          : (l.first_name_th?.toLowerCase().includes(q) || 
+             l.last_name_th?.toLowerCase().includes(q) ||
+             l.dept_name?.toLowerCase().includes(q))
       );
     }
     return r;
