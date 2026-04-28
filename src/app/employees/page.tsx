@@ -203,8 +203,9 @@ function EmployeesContent() {
           status: row['สถานะพนักงาน'] || row['สถานะการทำงาน'] || 'ทำงานปกติ',
           role: row['สิทธิ์ผู้ใช้งาน'] || 'User',
           working_at: row['ปฏิบัติงานที่'] || row['working_at'] || '',
-          dept_id: dept ? dept.dept_id : null,
-          pos_id: pos ? pos.pos_id : null,
+          dept_id: dept ? dept.dept_id : (row['แผนก']?.toString().trim() || null),
+          pos_id: pos ? pos.pos_id : (row['ตำแหน่ง']?.toString().trim() || null),
+          division: row['กลุ่มงาน']?.toString().trim() || '',
           licenses: (row['ชื่อใบประกอบวิชาชีพ'] || row['เลขที่ใบประกอบวิชาชีพ']) ? [{
             license_name: row['ชื่อใบประกอบวิชาชีพ'] || '',
             license_type: row['ประเภทวิชาชีพ'] || '',
@@ -778,7 +779,7 @@ function EmployeesContent() {
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
                             {(() => {
-                              const idVal = emp.position_no || emp.emp_id;
+                              const idVal = emp.position_no;
                               if (!idVal || idVal.trim() === '' || idVal.replace(/0/g, '') === '') return '-';
                               return idVal;
                             })()}
@@ -829,7 +830,7 @@ function EmployeesContent() {
                                 <button className="icon-btn hover-glow" onClick={() => handleResetPassword(emp)} title="ส่งอีเมลรีเซ็ตรหัสผ่าน" style={{ color: '#d97706', background: '#fefce8' }}>
                                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                                 </button>
-                                <button className="icon-btn hover-glow" onClick={() => router.push(`/profile?emp_id=${emp.emp_id}`)} title="แก้ไขข้อมูล" style={{ color: '#3b82f6' }}>
+                                <button className="icon-btn hover-glow" onClick={() => openEdit(emp)} title="แก้ไขข้อมูล" style={{ color: '#3b82f6' }}>
                                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                 </button>
                                 <button className="icon-btn hover-glow" onClick={() => handleDelete(emp.emp_id)} title="ลบข้อมูล" style={{ color: '#ef4444', background: '#fef2f2' }}>
@@ -944,7 +945,11 @@ function EmployeesContent() {
                       <div style={{ position: 'relative', zIndex: 3, marginTop: '24px', padding: '0 32px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '50px 1fr', gap: '6px 8px', fontSize: '11px' }}>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>ID</div>
-                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.position_no || empForCard.emp_id}</div>
+                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {(() => {
+                            const idVal = empForCard.position_no;
+                            if (!idVal || idVal.trim() === '' || idVal.replace(/0/g, '') === '') return '-';
+                            return idVal;
+                          })()}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>DOB</div>
                           <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.birth_date ? new Date(empForCard.birth_date).toLocaleDateString('en-US') : '-'}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>Phone</div>

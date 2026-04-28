@@ -320,7 +320,7 @@ function ProfileContent() {
           <div className="quick-stats">
             <div className="stat-item">
               <span className="stat-label">เลขประจำตำแหน่ง</span>
-              <span className="stat-val">{formatZeroString(profile.position_no || profile.emp_id)}</span>
+              <span className="stat-val">{formatZeroString(profile.position_no)}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">อายุงาน (วันเริ่ม-ปัจจุบัน)</span>
