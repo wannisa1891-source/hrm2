@@ -106,7 +106,48 @@ function EmployeesContent() {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rawJsonData = XLSX.utils.sheet_to_json(firstSheet) as any[];
+
+      let headerRowIndex = 0;
+      const ref = firstSheet['!ref'];
+      if (ref) {
+        const range = XLSX.utils.decode_range(ref);
+        for (let R = range.s.r; R <= Math.min(range.e.r, 5); ++R) {
+          let foundHeader = false;
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ c: C, r: R });
+            const cell = firstSheet[cellAddress];
+            if (cell && cell.v && (
+              String(cell.v).includes('ชื่อ-สกุล') || 
+              String(cell.v).includes('ชื่อ') || 
+              String(cell.v).includes('ลำดับ') || 
+              String(cell.v).includes('ตำแหน่ง')
+            )) {
+              headerRowIndex = R;
+              foundHeader = true;
+              break;
+            }
+          }
+          if (foundHeader) break;
+        }
+      }
+
+      let defaultDivision = '';
+      if (headerRowIndex > 0 && ref) {
+        const range = XLSX.utils.decode_range(ref);
+        for (let R = range.s.r; R < headerRowIndex; ++R) {
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ c: C, r: R });
+            const cell = firstSheet[cellAddress];
+            if (cell && cell.v && String(cell.v).includes('กลุ่มงาน')) {
+              defaultDivision = String(cell.v).replace(/^\d+[\.\s\-]+/, '').trim();
+              break;
+            }
+          }
+          if (defaultDivision) break;
+        }
+      }
+
+      const rawJsonData = XLSX.utils.sheet_to_json(firstSheet, { range: headerRowIndex }) as any[];
 
       if (rawJsonData.length === 0) {
         Swal.fire('แจ้งเตือน', 'ไม่พบข้อมูลในไฟล์ Excel หรือไฟล์ว่างเปล่า', 'warning');
@@ -187,25 +228,25 @@ function EmployeesContent() {
           emp_id: row['รหัสพนักงาน'] || row['emp_id'] || '',
           prefix: row['คำนำหน้า'] || row['prefix'] || '',
           citizen_id: row['รหัสบัตรประชาชน'] || row['บัตรประชาชน'] || row['citizen_id'] || '',
-          first_name_th: row['ชื่อ'] || row['first_name_th'] || '',
+          first_name_th: row['ชื่อ'] || row['first_name_th'] || row['ชื่อ-สกุล'] || row['ชื่อสกุล'] || '',
           last_name_th: row['นามสกุล'] || row['last_name_th'] || '',
           nickname: row['ชื่อเล่น'] || row['nickname'] || '',
           phone: row['เบอร์โทรศัพท์'] || row['phone'] || '',
           email: row['อีเมล'] || row['email'] || '',
-          birth_date: parseDate(row['วัน/เดือน/ปีเกิด'] || row['birth_date']),
+          birth_date: parseDate(row['วัน/เดือน/ปีเกิด'] || row['วันเดือนปีเกิด'] || row['birth_date']),
           gender: row['เพศ'] || row['gender'] || '',
           address: fullAddress,
           position_no: row['เลขประจำตำแหน่ง'] || row['position_no'] || '',
           start_date: parseDate(row['วันที่เริ่มงาน'] || row['start_date']),
           admission_date: parseDate(row['วันที่บรรจุ'] || row['admission_date']),
           retirement_date: parseDate(row['วันที่เกษียณ'] || row['retirement_date']),
-          emp_type: row['ประเภทการจ้างงาน'] || row['ประเภทพนักงาน'] || 'พนักงานราชการ',
+          emp_type: row['ประเภทการจ้างงาน'] || row['ประเภทพนักงาน'] || row['สถานะ'] || 'พนักงานราชการ',
           status: row['สถานะพนักงาน'] || row['สถานะการทำงาน'] || 'ทำงานปกติ',
           role: row['สิทธิ์ผู้ใช้งาน'] || 'User',
           working_at: row['ปฏิบัติงานที่'] || row['working_at'] || '',
           dept_id: dept ? dept.dept_id : (row['แผนก']?.toString().trim() || null),
-          pos_id: pos ? pos.pos_id : (row['ตำแหน่ง']?.toString().trim() || null),
-          division: row['กลุ่มงาน']?.toString().trim() || '',
+          pos_id: pos ? pos.pos_id : (row['ตำแหน่ง']?.toString().trim() || row['ตำแหน่ง / ระดับ']?.toString().trim() || null),
+          division: row['กลุ่มงาน']?.toString().trim() || defaultDivision,
           licenses: (row['ชื่อใบประกอบวิชาชีพ'] || row['เลขที่ใบประกอบวิชาชีพ']) ? [{
             license_name: row['ชื่อใบประกอบวิชาชีพ'] || '',
             license_type: row['ประเภทวิชาชีพ'] || '',

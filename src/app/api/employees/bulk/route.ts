@@ -45,8 +45,46 @@ export async function POST(req: NextRequest) {
 
       for (const emp of data) {
         try {
-          const trimmedFirst = String(emp.first_name_th || '').trim();
-          const trimmedLast = String(emp.last_name_th || '').trim();
+          let rawPrefix = String(emp.prefix || '').trim();
+          let rawFirst = String(emp.first_name_th || '').trim();
+          let rawLast = String(emp.last_name_th || '').trim();
+
+          // Support combined 'ชื่อ-สกุล' single column or client-side aggregated string
+          if (rawLast === '' || rawPrefix === '' || rawPrefix === '-') {
+            let combinedName = String(emp['ชื่อ-สกุล'] || emp['ชื่อสกุล'] || emp['ชื่อ นามสกุล'] || emp['name'] || '').trim();
+            if (combinedName === '') {
+              combinedName = (rawFirst + ' ' + rawLast).trim();
+            }
+            if (combinedName !== '') {
+              const prefixes = ['นาย', 'นางสาว', 'นาง', 'น.ส.', 'ด.ญ.', 'ด.ช.', 'เด็กชาย', 'เด็กหญิง', 'ว่าที่ ร.ต.', 'ดร.', 'นพ.', 'พญ.', 'พล.ต.', 'พ.ต.ท.', 'พ.ต.ต.', 'พ.ต.อ.', 'ร.ต.อ.', 'ร.ต.ท.', 'ร.ต.ต.'];
+              
+              let matchedPrefix = false;
+              for (const p of prefixes) {
+                if (combinedName.startsWith(p)) {
+                  rawPrefix = p;
+                  const nameNoPrefix = combinedName.slice(p.length).trim();
+                  const parts = nameNoPrefix.split(/\s+/);
+                  if (parts.length > 0) {
+                    rawFirst = parts[0];
+                    rawLast = parts.slice(1).join(' ').trim();
+                  }
+                  matchedPrefix = true;
+                  break;
+                }
+              }
+
+              if (!matchedPrefix) {
+                const parts = combinedName.split(/\s+/);
+                if (parts.length > 0) {
+                  rawFirst = parts[0];
+                  rawLast = parts.slice(1).join(' ').trim();
+                }
+              }
+            }
+          }
+
+          const trimmedFirst = rawFirst;
+          const trimmedLast = rawLast;
           const trimmedCitizen = String(emp.citizen_id || '').trim();
           
           if (trimmedFirst && trimmedLast) {
@@ -128,8 +166,27 @@ export async function POST(req: NextRequest) {
           // Resolve pos_id
           let finalPosId = null;
           if (emp.pos_id) {
-            const trimmedPos = String(emp.pos_id).trim();
+            let trimmedPos = String(emp.pos_id).trim();
             if (trimmedPos !== '') {
+              // Abbreviation Mapping
+              const posAbbr: { [key: string]: string } = {
+                'นวก.': 'นักวิชาการ',
+                'จพ.': 'เจ้าพนักงาน',
+                'พ.ช่วยเหลือคนไข้ ส 1': 'พนักงานช่วยเหลือคนไข้สนับสนุน 1',
+                'พขร.': 'พนักงานขับรถ',
+                'พขร': 'พนักงานขับรถ',
+                'พกส.': 'พนักงานกระทรวงสาธารณสุข',
+                'พกส': 'พนักงานกระทรวงสาธารณสุข',
+                'พ.': 'พนักงาน'
+              };
+
+              for (const [abbr, full] of Object.entries(posAbbr)) {
+                if (trimmedPos.startsWith(abbr)) {
+                  trimmedPos = trimmedPos.replace(abbr, full);
+                  break;
+                }
+              }
+
               if (posMap.has(trimmedPos)) {
                 finalPosId = posMap.get(trimmedPos);
               } else {
@@ -182,7 +239,7 @@ export async function POST(req: NextRequest) {
                 WHERE emp_id = ?`;
                 
               const updateValues = [
-                emp.prefix || '-',
+                rawPrefix || '',
                 emp.nickname || null,
                 emp.birth_date && emp.birth_date !== '' ? emp.birth_date : '1900-01-01',
                 finalGender,
@@ -235,9 +292,9 @@ export async function POST(req: NextRequest) {
           // Map values
           const values = [
             finalEmpId,
-            emp.prefix || '-',
-            emp.first_name_th || '',
-            emp.last_name_th || '',
+            rawPrefix || '',
+            trimmedFirst || '',
+            trimmedLast || '',
             emp.nickname || null,
             emp.birth_date && emp.birth_date !== '' ? emp.birth_date : '1900-01-01',
             finalGender,
