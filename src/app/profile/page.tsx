@@ -170,12 +170,14 @@ function ProfileContent() {
       if (result.success) {
         setData(result.data);
         
+        /* 
         // Auto-show edit modal if profile is incomplete
         const p = result.data.profile;
         const isIncomplete = !p.mobile_no && !p.phone && !p.address && !p.birth_date;
         if (isIncomplete && !isAdmin) {
           setShowEditModal(true);
         }
+        */
       }
       else Swal.fire('เกิดข้อผิดพลาด', result.error, 'error');
     } catch (err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้', 'error'); } finally { setLoading(false); }
