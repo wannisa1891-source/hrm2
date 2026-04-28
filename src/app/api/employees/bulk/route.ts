@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
           // Support combined 'ชื่อ-สกุล' single column or client-side aggregated string
           if (rawLast === '' || rawPrefix === '' || rawPrefix === '-') {
-            let combinedName = String(emp['ชื่อ-สกุล'] || emp['ชื่อสกุล'] || emp['ชื่อ นามสกุล'] || emp['name'] || '').trim();
+            let combinedName = String(emp['ชื่อ-สกุล'] || emp['ชื่อสกุล'] || emp['ชื่อ นามสกุล'] || emp['name'] || emp['ชื่อ สกุล'] || '').trim();
             if (combinedName === '') {
               combinedName = (rawFirst + ' ' + rawLast).trim();
             }
