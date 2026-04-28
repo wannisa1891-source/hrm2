@@ -342,7 +342,7 @@ function ProfileContent() {
               <div className="meta-icon"><Phone size={18} /></div>
               <div>
                 <span className="meta-label">เบอร์โทรศัพท์</span>
-                <span className="meta-val">{profile.mobile_no || '-'}</span>
+                <span className="meta-val">{profile.phone || '-'}</span>
               </div>
             </div>
 
