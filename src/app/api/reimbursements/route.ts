@@ -33,11 +33,8 @@ async function ensureTableExists() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `;
   await pool.query(sql);
-
   // Add full_name column if it doesn't exist (for existing tables)
-  try {
-    await pool.query(`ALTER TABLE tbl_reimbursements ADD COLUMN IF NOT EXISTS full_name VARCHAR(255) DEFAULT NULL AFTER id`);
-  } catch (_) { /* ignore if column already exists */ }
+  await pool.query(`ALTER TABLE tbl_reimbursements ADD COLUMN IF NOT EXISTS full_name VARCHAR(255) DEFAULT NULL AFTER id`);
 }
 
 export async function POST(req: NextRequest) {
@@ -52,8 +49,8 @@ export async function POST(req: NextRequest) {
     const parentAmount = formData.get('parent_amount') as string;
     const file = formData.get('file') as File | null;
 
-    if (!fullName || !title || !date) {
-      return NextResponse.json({ error: 'กรุณากรอกชื่อ-นามสกุล หัวข้อ และวันที่' }, { status: 400 });
+    if (!title || !date) {
+      return NextResponse.json({ error: 'กรุณากรอกหัวข้อและวันที่' }, { status: 400 });
     }
 
     let filePath = null;
@@ -74,7 +71,7 @@ export async function POST(req: NextRequest) {
     const [result]: any = await pool.query(
       'INSERT INTO tbl_reimbursements (full_name, title, reimbursement_date, organizer_amount, parent_amount, memo_file) VALUES (?, ?, ?, ?, ?, ?)',
       [
-        fullName,
+        fullName || null,
         title,
         date,
         parseFloat(organizerAmount) || 0,
