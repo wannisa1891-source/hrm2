@@ -187,8 +187,8 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          // 4. Resolve by division + working_at if dept_id is still null
-          if (!finalDeptId && trimmedDiv !== '') {
+          // 4. Resolve by division + working_at or just working_at
+          if (!finalDeptId) {
             // Master Alias Mapping for common "working_at" names that should go to specific departments
             const deptAliasMap: { [key: string]: string } = {
               'ER': 'งานการพยาบาลผู้ป่วยอุบัติเหตุฉุกเฉินและนิติเวช',
@@ -220,18 +220,28 @@ export async function POST(req: NextRequest) {
                   }
                 }
 
-                const [matchedByWorkAt]: any = await connection.query(
-                  "SELECT dept_id FROM tbl_departments WHERE division = ? AND (dept_name = ? OR dept_name LIKE ? OR dept_id = ?) LIMIT 1",
-                  [trimmedDiv, searchName, `%${searchName}%`, searchName]
-                );
-                if (matchedByWorkAt.length > 0) {
-                  finalDeptId = matchedByWorkAt[0].dept_id;
+                if (trimmedDiv !== '') {
+                  const [matchedByWorkAt]: any = await connection.query(
+                    "SELECT dept_id FROM tbl_departments WHERE division = ? AND (dept_name = ? OR dept_name LIKE ? OR dept_id = ?) LIMIT 1",
+                    [trimmedDiv, searchName, `%${searchName}%`, searchName]
+                  );
+                  if (matchedByWorkAt.length > 0) {
+                    finalDeptId = matchedByWorkAt[0].dept_id;
+                  }
+                } else {
+                  const [matchedByWorkAt]: any = await connection.query(
+                    "SELECT dept_id FROM tbl_departments WHERE (dept_name = ? OR dept_name LIKE ? OR dept_id = ?) LIMIT 1",
+                    [searchName, `%${searchName}%`, searchName]
+                  );
+                  if (matchedByWorkAt.length > 0) {
+                    finalDeptId = matchedByWorkAt[0].dept_id;
+                  }
                 }
               }
             }
 
-            // 5. If still not resolved, pick the first department in this division as default
-            if (!finalDeptId) {
+            // 5. If still not resolved, pick the first department in this division as default (only if division is provided)
+            if (!finalDeptId && trimmedDiv !== '') {
               const [existingDept]: any = await connection.query(
                 "SELECT dept_id FROM tbl_departments WHERE division = ? LIMIT 1",
                 [trimmedDiv]

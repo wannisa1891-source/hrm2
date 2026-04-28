@@ -67,10 +67,11 @@ export async function GET(req: NextRequest) {
       pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status IN ('Active', 'A', 'ทำงานปกติ')"),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE ? >= start_date AND ? <= end_date", [today, today]),
       pool.query(`
-        SELECT d.division as name, d.dept_name, COUNT(e.emp_id) as value
+        SELECT d.division as name, COALESCE(d.dept_name, e.working_at) as dept_name, COUNT(e.emp_id) as value
         FROM tbl_employees e
         LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
-        GROUP BY d.division, d.dept_name
+        GROUP BY d.division, COALESCE(d.dept_name, e.working_at)
+
       `),
       pool.query("SELECT COUNT(*) as count FROM tbl_transfers").catch(() => [[{ count: 0 }]]),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE status = 'Pending'"),
@@ -88,12 +89,33 @@ export async function GET(req: NextRequest) {
     const vacantCount = Math.max(0, totalCapacity - empCount);
     const reimburseCount = (reimburseResult[0] as any[])[0].count || 0;
 
+    const [allDivisionsResult]: any = await pool.query("SELECT DISTINCT division FROM tbl_departments WHERE division IS NOT NULL AND division != ''");
+
     const colors = ['#4A5644', '#C5A073', '#8884d8', '#82ca9d', '#ffc658', '#4b5563', '#10b981', '#3b82f6'];
     const divisionMap = new Map<string, { name: string; value: number; subDepts: any[] }>();
     
+    // Initialize "แอดมิน"
+    divisionMap.set('แอดมิน', { name: 'แอดมิน', value: 0, subDepts: [] });
+    
+    // Initialize all divisions from DB
+    (allDivisionsResult as any[]).forEach(row => {
+      const divName = row.division;
+      if (!divisionMap.has(divName)) {
+        divisionMap.set(divName, { name: divName, value: 0, subDepts: [] });
+      }
+    });
+
+    
     (profResult[0] as any[]).forEach(row => {
-      const divName = row.name || 'ไม่ระบุ';
+      let divName = row.name;
+      if (!divName) {
+        divName = 'กลุ่มงานบริหารทั่วไป';
+      } else if (divName === 'กลุ่มงานบริหารทั่วไป') {
+        divName = 'แอดมิน';
+      }
       const deptName = row.dept_name || 'ไม่ระบุ';
+
+
       const count = Number(row.value) || 0;
 
       if (!divisionMap.has(divName)) {
@@ -105,12 +127,22 @@ export async function GET(req: NextRequest) {
       div.subDepts.push({ name: deptName, value: count });
     });
 
-    const professions = Array.from(divisionMap.values()).map((div, index) => ({
-      name: div.name,
-      value: div.value,
-      color: colors[index % colors.length],
-      subDepts: div.subDepts.sort((a, b) => b.value - a.value)
-    }));
+    const professions = Array.from(divisionMap.values())
+      .map((div) => ({
+        name: div.name,
+        value: div.value,
+        subDepts: div.subDepts.sort((a, b) => b.value - a.value)
+      }))
+      .sort((a, b) => {
+        if (a.name === 'แอดมิน') return -1;
+        if (b.name === 'แอดมิน') return 1;
+        return 0;
+      })
+      .map((prof, index) => ({
+        ...prof,
+        color: colors[index % colors.length]
+      }));
+
 
     const pendingTransfers = (transferResult[0] as any[])[0].count;
     const pendingLeaves = (pendingLeavesResult[0] as any[])[0].count;
@@ -203,6 +235,8 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({
+
+
       empCount,
       leaveTodayCount,
       vacantCount,
