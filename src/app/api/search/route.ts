@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, results: [] });
     }
 
-    const keyword = `%${q.trim()}%`;
+    const keyword = q.trim().length === 1 ? `${q.trim()}%` : `%${q.trim()}%`;
     // 1. Search Employees
     // Search fields: first_name_th, last_name_th, emp_id, citizen_id, phone
     const employeesP = db.query(`

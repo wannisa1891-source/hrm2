@@ -84,8 +84,14 @@ export default function RetirementPage() {
                         (filterGrp === 'all' || dept?.dept_name === filterGrp);
       const matchPos = filterPos === 'all' || emp.pos_id === filterPos || emp.pos_name === filterPos;
       
-      const searchStr = `${emp.first_name_th} ${emp.last_name_th} ${emp.pos_name || ''}`.toLowerCase();
-      const matchSearch = !search || searchStr.includes(search.toLowerCase());
+      const matchSearch = !search
+        ? true
+        : search.length === 1
+        ? (emp.first_name_th?.toLowerCase().startsWith(search.toLowerCase()) || 
+           emp.last_name_th?.toLowerCase().startsWith(search.toLowerCase()) ||
+           emp.emp_id?.toLowerCase().startsWith(search.toLowerCase()) ||
+           emp.pos_name?.toLowerCase().startsWith(search.toLowerCase()))
+        : `${emp.first_name_th} ${emp.last_name_th} ${emp.pos_name || ''}`.toLowerCase().includes(search.toLowerCase());
 
       return matchDept && matchPos && matchSearch;
     });
