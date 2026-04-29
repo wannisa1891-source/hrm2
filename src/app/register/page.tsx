@@ -142,8 +142,8 @@ export default function RegisterPage() {
 
   const validateStep3 = () => {
     const errs: FieldErrors = {};
-    if (!form.position) errs.position = 'กรุณาเลือกตำแหน่ง';
-    if (!form.department) errs.department = 'กรุณาเลือกแผนก';
+    // if (!form.position) errs.position = 'กรุณาเลือกตำแหน่ง';
+    // if (!form.department) errs.department = 'กรุณาเลือกแผนก';
 
     if (!form.start_date) errs.start_date = 'กรุณากรอกวันที่เริ่มงาน';
     else {
@@ -206,12 +206,7 @@ export default function RegisterPage() {
       const { confirmPassword, ...payload } = form; // Don't send confirmPassword
 
       const isOtherSelected = positions.find(p => p.pos_id === form.position)?.pos_name === 'อื่นๆ';
-      if (isOtherSelected) {
-        if (!customPosName.trim()) {
-          setApiError('กรุณาระบุตำแหน่งงานเพิ่มเติม');
-          setIsSubmitting(false);
-          return;
-        }
+      if (isOtherSelected && customPosName.trim()) {
         const posRes = await fetch('/api/positions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -546,7 +541,7 @@ export default function RegisterPage() {
 
             <div className="input-row two-cols">
               <div className="input-group">
-                <label>ตำแหน่ง (Position) <span className="required">*</span></label>
+                <label>ตำแหน่ง (Position)</label>
                 <div className={`input-field ${fieldErrors.position ? 'error' : ''}`}>
                   <span className="field-icon">🎯</span>
                   <select
@@ -563,7 +558,7 @@ export default function RegisterPage() {
                 {fieldErrors.position && <span className="field-error-msg">{fieldErrors.position}</span>}
                 {positions.find(p => p.pos_id === form.position)?.pos_name === 'อื่นๆ' && (
                   <div style={{ marginTop: '16px' }}>
-                    <label>ระบุตำแหน่งงานเพิ่มเติม <span className="required">*</span></label>
+                    <label>ระบุตำแหน่งงานเพิ่มเติม</label>
                     <div className="input-field" style={{ marginTop: '8px' }}>
                       <span className="field-icon">✏️</span>
                       <input
@@ -578,7 +573,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="input-group">
-                <label>แผนก (Department) <span className="required">*</span></label>
+                <label>แผนก (Department)</label>
                 <div className={`input-field ${fieldErrors.department ? 'error' : ''}`}>
                   <span className="field-icon">🏢</span>
                   <select

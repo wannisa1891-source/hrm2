@@ -179,16 +179,8 @@ export default function EmployeeFormModal({
       Swal.fire('ข้อผิดพลาด', 'กรุณาระบุชื่อและนามสกุลพนักงาน', 'error');
       return;
     }
-    if (!formData.dept_id) {
-      const Swal = (await import('sweetalert2')).default;
-      Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกกลุ่มงาน/แผนก', 'error');
-      return;
-    }
-    if (!formData.pos_id) {
-      const Swal = (await import('sweetalert2')).default;
-      Swal.fire('ข้อผิดพลาด', 'กรุณาระบุตำแหน่งงาน', 'error');
-      return;
-    }
+    // กลุ่มงาน/แผนกไม่บังคับกรอก
+    // ตำแหน่งงานไม่บังคับกรอก
 
     let finalPosId = formData.pos_id;
     const isOtherSelected = positions.find(p => p.pos_id === formData.pos_id)?.pos_name === 'อื่นๆ';
@@ -582,7 +574,7 @@ export default function EmployeeFormModal({
                     <label style={{ fontWeight: 800, color: '#475569', fontSize: '13px', marginBottom: '-8px' }}>กลุ่มงาน และ ตำแหน่งงาน</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                       <div>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>กลุ่มงาน <span style={{ color: '#ef4444' }}>*</span></label>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>กลุ่มงาน</label>
                         <CustomSelect
                           value={selectedDivision}
                           onChange={div => {
@@ -597,7 +589,7 @@ export default function EmployeeFormModal({
                         />
                       </div>
                       <div>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>แผนก <span style={{ color: '#ef4444' }}>*</span></label>
+                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>แผนก</label>
                         <CustomSelect
                           value={formData.dept_id || ''}
                           onChange={val => setField('dept_id', val)}
@@ -617,7 +609,7 @@ export default function EmployeeFormModal({
                       </div>
                       <div>
                         <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
-                          ตำแหน่งงาน <span style={{ color: '#ef4444' }}>*</span>
+                          ตำแหน่งงาน
                         </label>
                         <div style={{ position: 'relative', width: '100%' }}>
                           <input 
@@ -663,7 +655,7 @@ export default function EmployeeFormModal({
                         {positions.find(p => p.pos_id === formData.pos_id)?.pos_name === 'อื่นๆ' && (
                           <div style={{ marginTop: '10px' }}>
                             <label style={{ fontSize: '11px', fontWeight: 700, color: '#4f46e5', display: 'block', marginBottom: '4px' }}>
-                              ระบุตำแหน่งงานเพิ่มเติม <span style={{ color: '#ef4444' }}>*</span>
+                              ระบุตำแหน่งงานเพิ่มเติม
                             </label>
                             <input
                               type="text"
