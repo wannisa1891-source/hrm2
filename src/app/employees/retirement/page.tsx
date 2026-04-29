@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
 import Image from 'next/image';
-import { Calendar, Users, Briefcase, Award, ArrowLeft, Download } from 'lucide-react';
+import { Calendar, Users, User, Briefcase, Award, ArrowLeft, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function RetirementPage() {
@@ -407,7 +407,7 @@ export default function RetirementPage() {
                             {emp.image ? (
                               <Image fill src={`/uploads/${emp.image}`} alt="" style={{ objectFit: 'cover' }} unoptimized />
                             ) : (
-                              <span style={{ color: '#94a3b8', fontSize: '16px' }}>👤</span>
+                              <User size={24} color="#94a3b8" />
                             )}
                           </div>
                         </td>
