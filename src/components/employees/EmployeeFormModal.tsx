@@ -181,6 +181,13 @@ export default function EmployeeFormModal({
     }
     // กลุ่มงาน/แผนกไม่บังคับกรอก
     // ตำแหน่งงานไม่บังคับกรอก
+    
+    if (selectedDivision && !formData.dept_id) {
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire('ข้อผิดพลาด', 'หากเลือกกลุ่มงานแล้ว กรุณาเลือกแผนกด้วยค่ะ', 'error');
+      return;
+    }
+    let finalDeptId = formData.dept_id;
 
     let finalPosId = formData.pos_id;
     const isOtherSelected = positions.find(p => p.pos_id === formData.pos_id)?.pos_name === 'อื่นๆ';
@@ -212,7 +219,7 @@ export default function EmployeeFormModal({
     const fd = new FormData();
     if (imageFile) fd.append('image', imageFile);
 
-    const finalFormData: any = { ...formData, pos_id: finalPosId };
+    const finalFormData: any = { ...formData, pos_id: finalPosId, dept_id: finalDeptId };
 
     // Group address fields into full string
     const addrParts = [];
@@ -252,8 +259,14 @@ export default function EmployeeFormModal({
     });
 
     setSaving(true);
-    await onSave(fd, isEditing);
-    setSaving(false);
+    try {
+      await onSave(fd, isEditing);
+    } catch (err: any) {
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire('ข้อผิดพลาด', err.message || 'เกิดข้อผิดพลาดที่ไม่คาดคิด', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Hierarchical Helpers
@@ -599,14 +612,21 @@ export default function EmployeeFormModal({
                               const filtered = departments.filter(d => {
                                 if (d.division?.trim() !== selectedDivision?.trim()) return false;
                                 const name = d.dept_name?.trim();
-                                if (!name || name === '-' || name === selectedDivision?.trim()) return false;
+                                if (!name || name === '-') return false;
                                 return true;
                               });
-                              // Filter by unique name to avoid duplicates in the UI
-                              const uniqueDepts = filtered.filter((d, idx, self) => 
-                                idx === self.findIndex((t) => t.dept_name?.trim() === d.dept_name?.trim())
+                              const mapped = filtered.map(s => {
+                                let label = s.dept_name || '';
+                                if (label === selectedDivision?.trim()) {
+                                  label = label.replace('กลุ่มงาน', '').trim();
+                                }
+                                return { value: s.dept_id, label };
+                              });
+                              // Filter by unique label to avoid duplicates in the UI
+                              const uniqueDepts = mapped.filter((d, idx, self) => 
+                                idx === self.findIndex((t) => t.label?.trim() === d.label?.trim())
                               );
-                              return uniqueDepts.map(s => ({ value: s.dept_id, label: s.dept_name }));
+                              return uniqueDepts;
                             })()
                           ]}
                           minWidth="100%"
