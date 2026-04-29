@@ -1505,7 +1505,7 @@ function EmployeesContent() {
                                 margin: 0 !important;
                               }
                               /* Hide sidebar and UI */
-                              [style*="width: 320px"], .btn-primary, .btn-outline, h3, h4 { display: none !important; }
+                              [style*="width: 320px"], .btn-primary, .btn-outline, h3, h4, .active-card-border { display: none !important; }
                             }
                           `}
                       </style>
@@ -1561,7 +1561,7 @@ function EmployeesContent() {
                                   }}
                                 >
                                   {isActive && isBulkPrinting && (
-                                    <div style={{ position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px', border: '3px solid #3b82f6', borderRadius: '20px', pointerEvents: 'none', zIndex: 10 }}></div>
+                                    <div className="active-card-border" style={{ position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px', border: '3px solid #3b82f6', borderRadius: '20px', pointerEvents: 'none', zIndex: 10 }}></div>
                                   )}
 
                                   {/* --- Front Card --- */}
@@ -1627,9 +1627,9 @@ function EmployeesContent() {
                                       {showSignature && (
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: isBulkPrinting ? '2px' : '5px' }}>
                                           {directorSignature ? (
-                                            <img src={directorSignature} style={{ width: isBulkPrinting ? '50px' : '60px', height: isBulkPrinting ? '25px' : '30px', objectFit: 'contain' }} alt="Director Signature" />
+                                            <img src={directorSignature} style={{ width: isBulkPrinting ? '50px' : '60px', height: isBulkPrinting ? '25px' : '30px', objectFit: 'contain', display: 'block', margin: '0 auto' }} alt="Director Signature" />
                                           ) : (
-                                            <svg width={isBulkPrinting ? "50" : "60"} height={isBulkPrinting ? "25" : "30"} viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width={isBulkPrinting ? "50" : "60"} height={isBulkPrinting ? "25" : "30"} viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', margin: '0 auto' }}>
                                               <path d="M 20 40 Q 30 10 50 30 T 80 20" stroke={cardPrimaryColor} strokeWidth="2" strokeLinecap="round" fill="none" />
                                             </svg>
                                           )}
