@@ -364,9 +364,7 @@ function ProfileContent() {
             <button className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
               <User size={16} /> ข้อมูลทั่วไป
             </button>
-            <button className={`tab-btn ${activeTab === 'leave' ? 'active' : ''}`} onClick={() => setActiveTab('leave')}>
-              <Calendar size={16} /> ประวัติการลา
-            </button>
+
             <button className={`tab-btn ${activeTab === 'certificates' ? 'active' : ''}`} onClick={() => setActiveTab('certificates')}>
               <Award size={16} /> ใบประกอบวิชาชีพ
             </button>
@@ -480,83 +478,13 @@ function ProfileContent() {
                     </span>
                   </div>
                 </div>
-                
-                <div className="leave-stats" style={{ gridTemplateColumns: profile.accumulated_vacation ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', marginTop: 'auto', paddingTop: '16px' }}>
-                  <div className="leave-stat">
-                    <div className="leave-stat-val" style={{ color: '#059669' }}>{profile.quota_vacation || 0}</div>
-                    <div className="leave-stat-label">พักร้อน</div>
-                  </div>
-                  {profile.accumulated_vacation !== undefined && profile.accumulated_vacation > 0 && (
-                    <div className="leave-stat">
-                      <div className="leave-stat-val" style={{ color: '#10b981' }}>{profile.accumulated_vacation}</div>
-                      <div className="leave-stat-label">พักร้อนสะสม</div>
-                    </div>
-                  )}
-                  <div className="leave-stat">
-                    <div className="leave-stat-val" style={{ color: '#ef4444' }}>{profile.quota_sick || 0}</div>
-                    <div className="leave-stat-label">ลาป่วย</div>
-                  </div>
-                  <div className="leave-stat">
-                    <div className="leave-stat-val" style={{ color: '#f59e0b' }}>{profile.quota_personal || 0}</div>
-                    <div className="leave-stat-label">ลากิจ</div>
-                  </div>
-                </div>
+
               </div>
 
             </div>
           )}
 
-          {activeTab === 'leave' && (
-            <div className="glass-card" style={{ padding: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h3 className="card-title" style={{ marginBottom: 0 }}>
-                  <Calendar className="card-title-icon" size={24} /> ประวัติการลางานล่าสุด
-                </h3>
-                <button 
-                  className="btn-primary" 
-                  onClick={() => router.push('/leave')} 
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '14px', borderRadius: '12px' }}
-                >
-                  <Calendar size={18} /> ยื่นใบลาใหม่
-                </button>
-              </div>
-              {leaves?.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
-                  <Calendar size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-                  <p>ยังไม่มีประวัติการลางาน</p>
-                </div>
-              ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>วันที่ลา</th>
-                        <th>ประเภทการลา</th>
-                        <th>จำนวนวัน</th>
-                        <th>เหตุผล</th>
-                        <th>สถานะ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leaves.map((l: any, idx: number) => (
-                        <tr key={idx} onClick={() => router.push(`/leave?id=${l.leave_id}`)} style={{ cursor: 'pointer' }} title="คลิกเพื่อดูรายละเอียด">
-                          <td>{new Date(l.start_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })} - {new Date(l.end_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                          <td>{l.leave_type || l.leave_type_id}</td>
-                          <td>{l.total_days} วัน</td>
-                          <td>{l.reason || '—'}</td>
-                          <td>
-                            <span className={`badge ${l.status === 'Approved' ? 'badge-success' : l.status === 'Pending' ? 'badge-warning' : 'badge-danger'}`}>
-                              {l.status === 'Approved' ? 'อนุมัติแล้ว' : l.status === 'Pending' ? 'รออนุมัติ' : 'ไม่อนุมัติ'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+
 
 
           {activeTab === 'certificates' && (

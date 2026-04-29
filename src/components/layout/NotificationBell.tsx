@@ -63,11 +63,7 @@ export default function NotificationBell() {
     const meta = n.metadata ? (typeof n.metadata === 'string' ? JSON.parse(n.metadata) : n.metadata) : null;
     
     // Logic for redirection based on keyword or metadata
-    if (meta?.type === 'leave' && meta?.id) {
-      router.push(`/leave?id=${meta.id}`);
-    } else if (n.title.includes('ลา') || n.message.includes('ลา')) {
-      router.push('/leave');
-    }
+    // Leave routing removed
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;

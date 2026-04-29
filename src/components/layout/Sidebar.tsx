@@ -49,12 +49,9 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'leave',
-    label: 'การลา / เบิกงบ',
-    icon: icons.leave,
-    children: [
-      { id: 'schedule', label: 'ระบบเบิกงบ', href: '/schedule', icon: icons.schedule },
-      { id: 'leave-sys', label: 'ระบบการลา', href: '/leave', icon: icons.leave },
-    ],
+    label: 'ระบบเบิกงบ',
+    icon: icons.schedule,
+    href: '/schedule',
   },
   {
     id: 'audit',
@@ -102,7 +99,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       // สำหรับบัญชี Head (หัวหน้าแผนก)
       if (isHead) {
-        // หัวหน้าเห็นแค่ "การลา / เบิกงบ" และ "โปรไฟล์ของฉัน" เท่านั้น
+        // หัวหน้าเห็นแค่ "ระบบเบิกงบ" และ "โปรไฟล์ของฉัน" เท่านั้น
         if (newItem.id === 'leave' || newItem.id === 'profile-main') {
           acc.push(newItem);
         }

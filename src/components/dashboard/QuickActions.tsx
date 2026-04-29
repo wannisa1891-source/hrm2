@@ -12,17 +12,6 @@ export default function QuickActions() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <Link href="/leaves" className="quick-btn hover-glow" style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 12, textDecoration: 'none', color: '#374151', fontSize: 14, fontWeight: 500
-                }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ffedd5', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    อนุมัติใบลา
-                </Link>
-
                 <Link href="/employees/add" className="quick-btn hover-glow" style={{
                     display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 12, textDecoration: 'none', color: '#374151', fontSize: 14, fontWeight: 500
                 }}>

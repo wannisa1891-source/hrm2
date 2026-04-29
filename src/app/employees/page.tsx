@@ -437,6 +437,8 @@ function EmployeesContent() {
       const primaryStatus = e.license_status;
       const matchLicense = filterLicense === 'all' || primaryStatus === filterLicense || (!primaryStatus && filterLicense === 'None');
 
+      if (e.status === 'ลาออก/พ้นสภาพ' || e.status === 'Resigned') return false;
+
       return matchSearch && matchDept && matchPos && matchStatus && matchLicense;
     });
   }, [employees, search, filterDiv, filterGrp, filterPos, filterStatus, filterLicense, departments]);
@@ -557,7 +559,7 @@ function EmployeesContent() {
 
     const statuses = [
       'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา', 'หยุดปฏิบัติงาน', 
-      'เกษียณอายุ 60 ปีขึ้นไป', 'ลาออก/พ้นสภาพ', 'ให้ออก'
+      'เกษียณอายุ 60 ปีขึ้นไป', 'ให้ออก'
     ];
 
     for (let i = 0; i < maxRows; i++) {
@@ -696,7 +698,7 @@ function EmployeesContent() {
 
     const statuses = [
       'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา', 'หยุดปฏิบัติงาน', 
-      'เกษียณอายุ 60 ปีขึ้นไป', 'ลาออก/พ้นสภาพ', 'ให้ออก'
+      'เกษียณอายุ 60 ปีขึ้นไป', 'ให้ออก'
     ];
 
     for (let i = 0; i < maxRows; i++) {
@@ -861,7 +863,6 @@ function EmployeesContent() {
               <option value="ลาศึกษา">ลาศึกษา</option>
               <option value="หยุดปฏิบัติงาน">หยุดปฏิบัติงาน</option>
               <option value="เกษียณอายุ 60 ปีขึ้นไป">เกษียณอายุ 60 ปีขึ้นไป</option>
-              <option value="ลาออก/พ้นสภาพ">ลาออก/พ้นสภาพ</option>
               <option value="ให้ออก">ให้ออก</option>
             </select>
             <select className="form-select" style={{ width: 'auto', minWidth: '160px' }} value={filterLicense} onChange={e => setFilterLicense(e.target.value)}>
@@ -1212,7 +1213,6 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
     { value: 'ลาศึกษา', label: 'ลาศึกษา', color: '#2563eb', bg: '#dbeafe' },
     { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
     { value: 'เกษียณอายุ 60 ปีขึ้นไป', label: 'เกษียณอายุ 60 ปีขึ้นไป', color: '#7c3aed', bg: '#ede9fe' },
-    { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ', color: '#ef4444', bg: '#fee2e2' },
     { value: 'ให้ออก', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
   ];
 

@@ -94,7 +94,7 @@ export default function DepartmentAndEmployeePage() {
   }, [loadEmployees, loadDepartments, loadPositions]);
 
   const { regularStaff, internStaff } = useMemo(() => {
-    let base = employees;
+    let base = employees.filter(e => e.status !== 'ลาออก/พ้นสภาพ' && e.status !== 'Resigned');
     if (selectedDeptId === 'interns') {
       return { regularStaff: [], internStaff: base.filter(emp => emp.emp_type === 'นักศึกษาฝึกงาน') };
     } else if (selectedDeptId || selectedGrp || selectedDiv) {
@@ -606,7 +606,7 @@ export default function DepartmentAndEmployeePage() {
 
             {modalMode === 'view' ? (() => {
               const deptHeadEmp = employees.find(e => e.emp_id === deptForm.head_emp_id);
-              const deptEmployeesList = employees.filter(e => e.dept_id === deptForm.id);
+              const deptEmployeesList = employees.filter(e => e.dept_id === deptForm.id && e.status !== 'ลาออก/พ้นสภาพ' && e.status !== 'Resigned');
               return (
                 <div>
                   {/* Header */}
@@ -1288,7 +1288,6 @@ function StatusPicker({ emp, isAdmin, editEmployee, isOpen, setIsOpen }: any) {
     { value: 'ลาศึกษา', label: 'ลาศึกษา', color: '#2563eb', bg: '#dbeafe' },
     { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
     { value: 'เกษียณอายุ 60 ปีขึ้นไป', label: 'เกษียณอายุ 60 ปีขึ้นไป', color: '#7c3aed', bg: '#ede9fe' },
-    { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ', color: '#ef4444', bg: '#fee2e2' },
     { value: 'ให้ออก', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
   ];
 

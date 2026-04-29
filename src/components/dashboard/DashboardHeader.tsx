@@ -85,9 +85,7 @@ export default function DashboardHeader({ today }: { today: string }) {
       case 'employee':
         router.push(`/employees?q=${encodeURIComponent(result.id)}`)
         break;
-      case 'leave':
-        router.push('/leave')
-        break;
+
       case 'transfer':
         router.push('/transfer')
         break;
@@ -104,7 +102,7 @@ export default function DashboardHeader({ today }: { today: string }) {
   const getIconForType = (type: string) => {
     switch (type) {
       case 'employee': return '🧑‍⚕️';
-      case 'leave': return '🏖️';
+
       case 'transfer': return '🔄';
       case 'schedule': return '📅';
       case 'announcement': return '📣';

@@ -68,29 +68,8 @@ export default function UserDashboard({
         </div>
       )}
 
-      {/* Leave & License Stats Row */}
+      {/* License Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-
-        {/* Leave Summary (Condensed) */}
-        <div style={{ background: '#ffffff', borderRadius: 24, padding: 28, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#64748b', marginBottom: 16 }}>สิทธิ์วันลาคงเหลือ</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', textAlign: 'center' }}>
-            <div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>{leaveStats.vacation.remain}</div>
-              <div style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>พักร้อน</div>
-            </div>
-            <div style={{ borderLeft: '1px solid #f1f5f9' }}></div>
-            <div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: '#f59e0b' }}>{leaveStats.personal.remain}</div>
-              <div style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>ลากิจ</div>
-            </div>
-            <div style={{ borderLeft: '1px solid #f1f5f9' }}></div>
-            <div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: '#ef4444' }}>{leaveStats.sick.remain}</div>
-              <div style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>ลาป่วย</div>
-            </div>
-          </div>
-        </div>
 
         {/* License Alert Card */}
         <div style={{
@@ -144,38 +123,7 @@ export default function UserDashboard({
         </div>
       </div>
 
-      {/* Main Content Grid - Adjusted for Leaves only */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }}>
 
-        {/* Recent Activity (Leaves) */}
-        <div style={{ background: '#ffffff', borderRadius: 24, padding: 32, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>รายการลาล่าสุด</h3>
-            <Link href="/leave" style={{ color: '#3b82f6', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>ทั้งหมด</Link>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {recentLeaves.length > 0 ? recentLeaves.slice(0, 5).map((l, i) => {
-              const statusColor = l.status === 'Approved' ? '#10b981' : l.status === 'Rejected' ? '#ef4444' : '#f59e0b';
-              const statusBg = l.status === 'Approved' ? '#ecfdf5' : l.status === 'Rejected' ? '#fef2f2' : '#fffbeb';
-              return (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '16px', borderRadius: '16px', background: '#f8fafc', border: '1px solid #f1f5f9' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>{l.reason || 'ลา'}</div>
-                    <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{new Date(l.start_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })} - {new Date(l.end_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
-                  </div>
-                  <div style={{ padding: '4px 10px', borderRadius: '8px', background: statusBg, color: statusColor, fontSize: 12, fontWeight: 800 }}>
-                    {l.status === 'Approved' ? 'อนุมัติ' : l.status === 'Rejected' ? 'ปฏิเสธ' : 'รออนุมัติ'}
-                  </div>
-                </div>
-              );
-            }) : (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>ไม่มีรายการลาล่าลุด</div>
-            )}
-          </div>
-        </div>
-
-      </div>
 
     </div>
   );

@@ -556,7 +556,6 @@ export default function EmployeeFormModal({
                         { value: 'ลาศึกษา', label: 'ลาศึกษา' },
                         { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน' },
                         { value: 'เกษียณอายุ 60 ปีขึ้นไป', label: 'เกษียณอายุ 60 ปีขึ้นไป' },
-                        { value: 'ลาออก/พ้นสภาพ', label: 'ลาออก/พ้นสภาพ' },
                         { value: 'ให้ออก', label: 'ให้ออก' }
                       ]}
                       minWidth="100%"
