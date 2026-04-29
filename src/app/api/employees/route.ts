@@ -144,7 +144,9 @@ export async function POST(req: NextRequest) {
         d.gender || 'ชาย', d.address || '',
         finalCitizenId && finalCitizenId.trim() !== '' && finalCitizenId.trim() !== '-' ? finalCitizenId.trim() : null, d.phone || '',
         d.email || null, hashedPassword, d.role || 'User',
-        d.emp_type || 'พนักงานราชการ', d.dept_id || '', d.pos_id || '',
+        d.emp_type || 'พนักงานราชการ', 
+        (d.dept_id && d.dept_id.trim() !== '') ? d.dept_id : null, 
+        (d.pos_id && d.pos_id.trim() !== '') ? d.pos_id : null,
         d.start_date || new Date().toISOString().split('T')[0],
         d.admission_date || null, d.retirement_date || null,
         imageName, // Save only to image
