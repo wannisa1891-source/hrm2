@@ -1553,8 +1553,8 @@ function EmployeesContent() {
                           justifyContent: 'center', 
                           pageBreakInside: 'avoid', 
                           margin: isBulkPrinting ? '0' : '0 auto', 
-                          width: isBulkPrinting ? '195px' : '100%', 
-                          height: isBulkPrinting ? '312px' : 'auto',
+                          width: isBulkPrinting ? '70mm' : '100%', 
+                          height: isBulkPrinting ? '99mm' : 'auto',
                           cursor: 'pointer',
                           position: 'relative'
                         }}
@@ -1564,10 +1564,10 @@ function EmployeesContent() {
                         )}
                         
                         {/* --- Front Card --- */}
-                        <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: '300px', height: '480px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0, transformOrigin: 'top left' }}>
+                        <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: isBulkPrinting ? '70mm' : '300px', height: isBulkPrinting ? '99mm' : '480px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0, transformOrigin: 'top left' }}>
                         {/* Background SVG Waves & Dots */}
                         {showWaveDecoration && !cardBgImage && (
-                          <svg width="300" height="480" viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
+                          <svg width={isBulkPrinting ? "264" : "300"} height={isBulkPrinting ? "374" : "480"} viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
                             <defs>
                               <pattern id={`dots-${empForCard.emp_id}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
                                 <circle cx="10" cy="10" r="2.5" fill="#cbd5e1" opacity="0.6" />
