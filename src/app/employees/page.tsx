@@ -1,5 +1,6 @@
 'use client';
 
+
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import AppLayout from '@/components/layout/AppLayout';
@@ -72,7 +73,7 @@ function EmployeesContent() {
   const [cardBgColor, setCardBgColor] = useState('#ffffff');
   const [cardPrimaryColor, setCardPrimaryColor] = useState('#1E3A8A');
   const [cardSecondaryColor, setCardSecondaryColor] = useState('#F97316');
-  
+
   const [showTopLogo, setShowTopLogo] = useState(true);
   const [topLogo, setTopLogo] = useState('/images/moph_logo.png');
   const [topLogoWidth, setTopLogoWidth] = useState(55);
@@ -80,8 +81,8 @@ function EmployeesContent() {
 
   const [showBottomLogo, setShowBottomLogo] = useState(true);
   const [bottomLogo, setBottomLogo] = useState('/images/chaam_hospital_logo.png');
-  const [bottomLogoWidth, setBottomLogoWidth] = useState(120); 
-  const [bottomLogoHeight, setBottomLogoHeight] = useState(60); 
+  const [bottomLogoWidth, setBottomLogoWidth] = useState(120);
+  const [bottomLogoHeight, setBottomLogoHeight] = useState(60);
 
   const [empImageWidth, setEmpImageWidth] = useState(130);
   const [empImageHeight, setEmpImageHeight] = useState(165);
@@ -124,19 +125,19 @@ function EmployeesContent() {
         if (s.cardBgColor) setCardBgColor(s.cardBgColor);
         if (s.cardPrimaryColor) setCardPrimaryColor(s.cardPrimaryColor);
         if (s.cardSecondaryColor) setCardSecondaryColor(s.cardSecondaryColor);
-        
+
         if (s.showTopLogo !== undefined) setShowTopLogo(s.showTopLogo);
         if (s.topLogo) setTopLogo(s.topLogo);
         if (s.topLogoWidth) setTopLogoWidth(s.topLogoWidth);
         if (s.topLogoHeight) setTopLogoHeight(s.topLogoHeight);
-        
+
         if (s.showLogo !== undefined && s.showBottomLogo === undefined) setShowBottomLogo(s.showLogo); // Migration
         else if (s.showBottomLogo !== undefined) setShowBottomLogo(s.showBottomLogo);
-        
+
         if (s.bottomLogo) setBottomLogo(s.bottomLogo);
         if (s.bottomLogoWidth) setBottomLogoWidth(s.bottomLogoWidth);
         if (s.bottomLogoHeight) setBottomLogoHeight(s.bottomLogoHeight);
-        
+
         if (s.empImageWidth) setEmpImageWidth(s.empImageWidth);
         if (s.empImageHeight) setEmpImageHeight(s.empImageHeight);
         if (s.nameFontSize) setNameFontSize(s.nameFontSize);
@@ -151,7 +152,7 @@ function EmployeesContent() {
         if (s.directorSignature) setDirectorSignature(s.directorSignature);
         if (s.cardBgImage) setCardBgImage(s.cardBgImage);
         if (s.cardOverrides) setCardOverrides(s.cardOverrides);
-      } catch (err) {}
+      } catch (err) { }
     }
   }, []);
 
@@ -161,12 +162,12 @@ function EmployeesContent() {
       Object.entries(cardOverrides).filter(([_, val]) => (val.pos || '').trim() || (val.nameTH || '').trim() || (val.nameEN || '').trim())
     );
 
-    const s = { 
-      cardBgColor, cardPrimaryColor, cardSecondaryColor, 
+    const s = {
+      cardBgColor, cardPrimaryColor, cardSecondaryColor,
       showTopLogo, topLogo, topLogoWidth, topLogoHeight,
-      showBottomLogo, bottomLogo, bottomLogoWidth, bottomLogoHeight, 
-      empImageWidth, empImageHeight, nameFontSize, posFontSize, textColor, showSignature, 
-      empImageBorderRadius, profileYOffset, showWaveDecoration, directorName, directorTitle, 
+      showBottomLogo, bottomLogo, bottomLogoWidth, bottomLogoHeight,
+      empImageWidth, empImageHeight, nameFontSize, posFontSize, textColor, showSignature,
+      empImageBorderRadius, profileYOffset, showWaveDecoration, directorName, directorTitle,
       directorSignature, cardBgImage, cardOverrides: filteredOverrides
     };
     localStorage.setItem('employeeIdCardSettings', JSON.stringify(s));
@@ -271,9 +272,9 @@ function EmployeesContent() {
             const cellAddress = XLSX.utils.encode_cell({ c: C, r: R });
             const cell = firstSheet[cellAddress];
             if (cell && cell.v && (
-              String(cell.v).includes('ชื่อ-สกุล') || 
-              String(cell.v).includes('ชื่อ') || 
-              String(cell.v).includes('ลำดับ') || 
+              String(cell.v).includes('ชื่อ-สกุล') ||
+              String(cell.v).includes('ชื่อ') ||
+              String(cell.v).includes('ลำดับ') ||
               String(cell.v).includes('ตำแหน่ง')
             )) {
               headerRowIndex = R;
@@ -324,7 +325,7 @@ function EmployeesContent() {
         // Fix matching when names have extra spaces
         const division = row['กลุ่มงาน']?.toString().trim() || '';
         const deptName = row['แผนก']?.toString().trim() || '';
-        const dept = departments.find(d => 
+        const dept = departments.find(d =>
           (division && d.division?.trim() === division && d.dept_name.trim() === deptName) ||
           (!division && d.dept_name.trim() === deptName) ||
           d.dept_id === deptName
@@ -367,7 +368,7 @@ function EmployeesContent() {
           // 4. Robust parsing for string dates
           const cleanStr = str.replace(/[\s\-]+/g, ' ').trim();
           const match = cleanStr.match(/^(\d{1,2})\s+([a-zA-Zก-ฮ\.]+)\s*(\d{2,4})$/);
-          
+
           if (match) {
             const day = match[1].padStart(2, '0');
             const month = match[2];
@@ -407,7 +408,7 @@ function EmployeesContent() {
             const day = simpleParts[0].padStart(2, '0');
             const month = simpleParts[1];
             const year = simpleParts[2];
-            
+
             const monthMap: { [key: string]: string } = {
               'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
               'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12',
@@ -424,7 +425,7 @@ function EmployeesContent() {
 
             let yearNum = parseInt(year);
             if (yearNum < 100) yearNum += 2500 - 543;
-            else if (yearNum < 2400) {}
+            else if (yearNum < 2400) { }
             else yearNum -= 543;
 
             return `${yearNum}-${monthNum}-${day}`;
@@ -730,14 +731,14 @@ function EmployeesContent() {
     ];
 
     const types = [
-      'ข้าราชการ', 'ลูกจ้างประจำ', 'พนักงานราชการ', 
-      'พนักงานกระทรวงสาธารณสุข', 'ลูกจ้างรายเดือน', 'ลูกจ้างรายวัน', 
-      'ลูกจ้างเหมาบริการ', 'ลูกจ้างแบ่งเปอร์เซนต์', 
+      'ข้าราชการ', 'ลูกจ้างประจำ', 'พนักงานราชการ',
+      'พนักงานกระทรวงสาธารณสุข', 'ลูกจ้างรายเดือน', 'ลูกจ้างรายวัน',
+      'ลูกจ้างเหมาบริการ', 'ลูกจ้างแบ่งเปอร์เซนต์',
       'ลูกจ้างชั่วคราวที่อายุ 60 ปี', 'นักศึกษาฝึกงาน'
     ];
 
     const statuses = [
-      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา / ศึกษาต่อ', 'หยุดปฏิบัติงาน', 
+      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา / ศึกษาต่อ', 'หยุดปฏิบัติงาน',
       'เกษียณ (อายุ 60)', 'ให้ออก'
     ];
 
@@ -869,14 +870,14 @@ function EmployeesContent() {
     ];
 
     const types = [
-      'ข้าราชการ', 'ลูกจ้างประจำ', 'พนักงานราชการ', 
-      'พนักงานกระทรวงสาธารณสุข', 'ลูกจ้างรายเดือน', 'ลูกจ้างรายวัน', 
-      'ลูกจ้างเหมาบริการ', 'ลูกจ้างแบ่งเปอร์เซนต์', 
+      'ข้าราชการ', 'ลูกจ้างประจำ', 'พนักงานราชการ',
+      'พนักงานกระทรวงสาธารณสุข', 'ลูกจ้างรายเดือน', 'ลูกจ้างรายวัน',
+      'ลูกจ้างเหมาบริการ', 'ลูกจ้างแบ่งเปอร์เซนต์',
       'ลูกจ้างชั่วคราวที่อายุ 60 ปี', 'นักศึกษาฝึกงาน'
     ];
 
     const statuses = [
-      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา / ศึกษาต่อ', 'หยุดปฏิบัติงาน', 
+      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา / ศึกษาต่อ', 'หยุดปฏิบัติงาน',
       'เกษียณ (อายุ 60)', 'ให้ออก'
     ];
 
@@ -1004,10 +1005,10 @@ function EmployeesContent() {
             </div>
             {/* Custom Searchable Typeable Dropdown */}
             <div style={{ position: 'relative', width: 'auto', minWidth: '220px' }}>
-              <input 
-                type="text" 
-                className="form-select" 
-                style={{ width: '100%', padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '14px', outline: 'none', background: 'white' }} 
+              <input
+                type="text"
+                className="form-select"
+                style={{ width: '100%', padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '14px', outline: 'none', background: 'white' }}
                 placeholder="พิมพ์ค้นหาตำแหน่ง..."
                 value={posSearch || (filterPos === 'all' ? '' : (positions.find(p => String(p.pos_id) === String(filterPos))?.pos_name || filterPos))}
                 onFocus={() => setIsPosOpen(true)}
@@ -1015,35 +1016,35 @@ function EmployeesContent() {
                   const val = e.target.value;
                   setPosSearch(val);
                   setIsPosOpen(true);
-                  
+
                   const found = positions.find(p => p.pos_name === val);
                   if (found) {
                     setFilterPos(found.pos_id);
                   } else if (val === '') {
                     setFilterPos('all');
                   }
-                }} 
+                }}
               />
               {isPosOpen && (
                 <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)', zIndex: 100, padding: '6px' }}>
                   <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }} className="custom-scrollbar">
-                    <div 
+                    <div
                       onClick={() => { setFilterPos('all'); setPosSearch(''); setIsPosOpen(false); }}
                       style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === 'all' ? '#eff6ff' : 'transparent', color: filterPos === 'all' ? '#1d4ed8' : '#334155', fontWeight: filterPos === 'all' ? 700 : 500, fontSize: '13px' }}
-                      onMouseEnter={e => { if(filterPos !== 'all') e.currentTarget.style.background = '#f1f5f9'; }}
-                      onMouseLeave={e => { if(filterPos !== 'all') e.currentTarget.style.background = 'transparent'; }}
+                      onMouseEnter={e => { if (filterPos !== 'all') e.currentTarget.style.background = '#f1f5f9'; }}
+                      onMouseLeave={e => { if (filterPos !== 'all') e.currentTarget.style.background = 'transparent'; }}
                     >
                       ทุกตำแหน่ง
                     </div>
                     {positions
                       .filter(p => !posSearch || p.pos_name.toLowerCase().includes(posSearch.toLowerCase()))
                       .map((p: any) => (
-                        <div 
+                        <div
                           key={p.pos_id}
                           onClick={() => { setFilterPos(p.pos_id); setPosSearch(p.pos_name); setIsPosOpen(false); }}
                           style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: String(filterPos) === String(p.pos_id) ? '#eff6ff' : 'transparent', color: String(filterPos) === String(p.pos_id) ? '#1d4ed8' : '#334155', fontWeight: String(filterPos) === String(p.pos_id) ? 700 : 500, fontSize: '13px' }}
-                          onMouseEnter={e => { if(String(filterPos) !== String(p.pos_id)) e.currentTarget.style.background = '#f1f5f9'; }}
-                          onMouseLeave={e => { if(String(filterPos) !== String(p.pos_id)) e.currentTarget.style.background = 'transparent'; }}
+                          onMouseEnter={e => { if (String(filterPos) !== String(p.pos_id)) e.currentTarget.style.background = '#f1f5f9'; }}
+                          onMouseLeave={e => { if (String(filterPos) !== String(p.pos_id)) e.currentTarget.style.background = 'transparent'; }}
                         >
                           {p.pos_name}
                         </div>
@@ -1116,7 +1117,7 @@ function EmployeesContent() {
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
-                            {emp.image ? <Image fill src={`/uploads/${encodeURIComponent(emp.image)}`} alt="" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f1f5f9" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} /> : <svg width="24" height="24" viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>}                          </div>
+                            {emp.image ? <Image fill src={`/uploads/${encodeURIComponent(emp.image)}`} alt="" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f1f5f9" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} /> : <svg width="24" height="24" viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>}                          </div>
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
@@ -1203,11 +1204,11 @@ function EmployeesContent() {
                   หน้าก่อน
                 </button>
                 <div style={{ background: '#afceecff', padding: '6px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max={totalPages} 
-                    value={currentPage} 
+                  <input
+                    type="number"
+                    min="1"
+                    max={totalPages}
+                    value={currentPage}
                     onChange={(e) => {
                       const val = parseInt(e.target.value);
                       if (!isNaN(val) && val >= 1 && val <= totalPages) {
@@ -1260,7 +1261,7 @@ function EmployeesContent() {
               <div style={{ width: '320px', flexShrink: 0, background: '#f8fafc', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px', overflowY: 'auto', border: '1px solid #e2e8f0' }} className="custom-scrollbar">
 
                 <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 700, color: '#1e293b', borderBottom: '2px solid #e2e8f0', paddingBottom: '10px' }}>⚙️ ปรับแต่งบัตร</h4>
-                
+
                 <button type="button" onClick={saveSettings} style={{ background: '#3b82f6', color: 'white', padding: '10px', borderRadius: '10px', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 6px -1px rgba(59,130,246,0.3)' }}>
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
                   บันทึกการตั้งค่า
@@ -1304,10 +1305,10 @@ function EmployeesContent() {
                     <input type="checkbox" checked={showTopLogo} onChange={(e) => setShowTopLogo(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#3b82f6', cursor: 'pointer' }} />
                   </div>
                   <input type="file" accept="image/*" onChange={handleTopLogoUpload} style={{ fontSize: '12px', width: '100%', padding: '6px', border: '1px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', marginBottom: '8px' }} />
-                  
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '2px' }}><span>ความกว้าง</span><span>{topLogoWidth}px</span></div>
                   <input type="range" min="30" max="150" value={topLogoWidth} onChange={(e) => setTopLogoWidth(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6', marginBottom: '6px' }} />
-                  
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '2px' }}><span>ความสูง</span><span>{topLogoHeight}px</span></div>
                   <input type="range" min="30" max="150" value={topLogoHeight} onChange={(e) => setTopLogoHeight(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6' }} />
                 </div>
@@ -1319,10 +1320,10 @@ function EmployeesContent() {
                     <input type="checkbox" checked={showBottomLogo} onChange={(e) => setShowBottomLogo(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#3b82f6', cursor: 'pointer' }} />
                   </div>
                   <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ fontSize: '12px', width: '100%', padding: '6px', border: '1px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', marginBottom: '8px' }} />
-                  
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '2px' }}><span>ความกว้าง</span><span>{bottomLogoWidth}px</span></div>
                   <input type="range" min="40" max="250" value={bottomLogoWidth} onChange={(e) => setBottomLogoWidth(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6', marginBottom: '6px' }} />
-                  
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '2px' }}><span>ความสูง</span><span>{bottomLogoHeight}px</span></div>
                   <input type="range" min="20" max="200" value={bottomLogoHeight} onChange={(e) => setBottomLogoHeight(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6' }} />
                 </div>
@@ -1410,7 +1411,7 @@ function EmployeesContent() {
                 <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <h5 style={{ margin: '0', fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>📝 ข้อมูลพนักงาน (เขียนทับ)</h5>
                   {isBulkPrinting && <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>* คลิกเลือกบัตรในตัวอย่างเพื่อแก้ไขรายคน</p>}
-                  
+
                   <div>
                     <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>ตำแหน่ง:</label>
                     <input type="text" placeholder="เว้นว่างเพื่อใช้ค่าจากระบบ" value={activeOverride.pos || ''} onChange={(e) => setOverrideField('pos', e.target.value)} style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
@@ -1436,7 +1437,7 @@ function EmployeesContent() {
                       <input type="checkbox" checked={showSignature} onChange={(e) => setShowSignature(e.target.checked)} style={{ width: '14px', height: '14px', accentColor: '#3b82f6', cursor: 'pointer' }} />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>ชื่อ-นามสกุล:</label>
                     <input type="text" value={directorName} onChange={(e) => setDirectorName(e.target.value)} style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
@@ -1458,19 +1459,19 @@ function EmployeesContent() {
 
               {/* Right: Card Preview */}
               <div style={{ flex: 1, overflowY: 'auto', display: 'block', background: '#f1f5f9', borderRadius: '16px', padding: '24px' }} className="custom-scrollbar">
-                  {(() => {
-                    const cardsToPrint = isBulkPrinting ? currentData.filter(emp => selectedIds.includes(emp.emp_id)) : [selectedEmpForCard!];
-                    const chunks = isBulkPrinting ? cardsToPrint.reduce((acc, item, i) => {
-                      const chunkIndex = Math.floor(i / 9);
-                      if (!acc[chunkIndex]) acc[chunkIndex] = [];
-                      acc[chunkIndex].push(item);
-                      return acc;
-                    }, [] as Employee[][]) : [cardsToPrint];
+                {(() => {
+                  const cardsToPrint = isBulkPrinting ? currentData.filter(emp => selectedIds.includes(emp.emp_id)) : [selectedEmpForCard!];
+                  const chunks = isBulkPrinting ? cardsToPrint.reduce((acc, item, i) => {
+                    const chunkIndex = Math.floor(i / 9);
+                    if (!acc[chunkIndex]) acc[chunkIndex] = [];
+                    acc[chunkIndex].push(item);
+                    return acc;
+                  }, [] as Employee[][]) : [cardsToPrint];
 
-                    return (
-                      <>
-                        <style type="text/css">
-                          {`
+                  return (
+                    <>
+                      <style type="text/css">
+                        {`
                             @media print {
                               @page { size: A4; margin: 0; }
                               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; }
@@ -1507,166 +1508,166 @@ function EmployeesContent() {
                               [style*="width: 320px"], .btn-primary, .btn-outline, h3, h4 { display: none !important; }
                             }
                           `}
-                        </style>
-                        <div ref={printRef} className="print-area-container" style={{ background: 'transparent' }}>
-                          {chunks.map((chunk, pageIndex) => (
-                            <div 
-                              key={pageIndex}
-                              className={isBulkPrinting ? "print-page" : ""}
-                              style={isBulkPrinting ? {
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(3, 1fr)',
-                                gridTemplateRows: 'repeat(3, 1fr)',
-                                gap: '0',
-                                padding: '0',
-                                background: 'white',
-                                width: '210mm',
-                                height: '297mm',
-                                margin: '0',
-                                justifyItems: 'center',
-                                alignItems: 'center',
-                                boxSizing: 'border-box',
-                                overflow: 'hidden'
-                              } : {
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '40px',
-                                padding: '16px',
-                                background: 'transparent',
-                                width: 'auto',
-                                margin: '0 auto',
-                                alignItems: 'center'
-                              }}
-                            >
-                        {chunk.map((empForCard) => {
-                          const overrides = cardOverrides[empForCard.emp_id] || {};
-                    const isActive = activeEditCardId === empForCard.emp_id || (!activeEditCardId && !isBulkPrinting);
-                    
-                    return (
-                      <div 
-                        key={empForCard.emp_id} 
-                        onClick={() => setActiveEditCardId(empForCard.emp_id)}
-                        style={{ 
-                          display: 'flex', 
-                          gap: '24px', 
-                          flexWrap: 'wrap', 
-                          justifyContent: 'center', 
-                          pageBreakInside: 'avoid', 
-                          margin: isBulkPrinting ? '0' : '0 auto', 
-                          width: isBulkPrinting ? '70mm' : '100%', 
-                          height: isBulkPrinting ? '99mm' : 'auto',
-                          cursor: 'pointer',
-                          position: 'relative'
-                        }}
-                      >
-                        {isActive && isBulkPrinting && (
-                          <div style={{ position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px', border: '3px solid #3b82f6', borderRadius: '20px', pointerEvents: 'none', zIndex: 10 }}></div>
-                        )}
-                        
-                        {/* --- Front Card --- */}
-                        <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: isBulkPrinting ? '70mm' : '300px', height: isBulkPrinting ? '99mm' : '480px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0, transformOrigin: 'top left' }}>
-                        {/* Background SVG Waves & Dots */}
-                        {showWaveDecoration && !cardBgImage && (
-                          <svg width={isBulkPrinting ? "264" : "300"} height={isBulkPrinting ? "374" : "480"} viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
-                            <defs>
-                              <pattern id={`dots-${empForCard.emp_id}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                                <circle cx="10" cy="10" r="2.5" fill="#cbd5e1" opacity="0.6" />
-                              </pattern>
-                              <linearGradient id={`fade-grad-${empForCard.emp_id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="white" stop-opacity="1" />
-                                <stop offset="80%" stop-color="white" stop-opacity="0.1" />
-                              </linearGradient>
-                              <mask id={`dots-mask-${empForCard.emp_id}`}>
-                                <rect width="300" height="480" fill={`url(#fade-grad-${empForCard.emp_id})`} />
-                              </mask>
-                            </defs>
-                            
-                            {/* Full Background Dots with Mask for subtle fade */}
-                            <rect width="300" height="480" fill={`url(#dots-${empForCard.emp_id})`} mask={`url(#dots-mask-${empForCard.emp_id})`} />
-                            
-                            {/* Top Right Waves */}
-                            <path d="M 100 0 Q 220 120 300 240 L 300 0 Z" fill={cardSecondaryColor} />
-                            <path d="M 180 0 Q 250 80 300 150 L 300 0 Z" fill={cardPrimaryColor} />
-                            
-                            {/* Bottom Left Waves */}
-                            <path d="M 0 280 Q 120 380 250 480 L 0 480 Z" fill={cardSecondaryColor} />
-                            <path d="M 0 380 Q 80 430 150 480 L 0 480 Z" fill={cardPrimaryColor} />
-                          </svg>
-                        )}
+                      </style>
+                      <div ref={printRef} className="print-area-container" style={{ background: 'transparent' }}>
+                        {chunks.map((chunk, pageIndex) => (
+                          <div
+                            key={pageIndex}
+                            className={isBulkPrinting ? "print-page" : ""}
+                            style={isBulkPrinting ? {
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(3, 1fr)',
+                              gridTemplateRows: 'repeat(3, 1fr)',
+                              gap: '0',
+                              padding: '0',
+                              background: 'white',
+                              width: '210mm',
+                              height: '297mm',
+                              margin: '0',
+                              justifyItems: 'center',
+                              alignItems: 'center',
+                              boxSizing: 'border-box',
+                              overflow: 'hidden'
+                            } : {
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '40px',
+                              padding: '16px',
+                              background: 'transparent',
+                              width: 'auto',
+                              margin: '0 auto',
+                              alignItems: 'center'
+                            }}
+                          >
+                            {chunk.map((empForCard) => {
+                              const overrides = cardOverrides[empForCard.emp_id] || {};
+                              const isActive = activeEditCardId === empForCard.emp_id || (!activeEditCardId && !isBulkPrinting);
+
+                              return (
+                                <div
+                                  key={empForCard.emp_id}
+                                  onClick={() => setActiveEditCardId(empForCard.emp_id)}
+                                  style={{
+                                    display: 'flex',
+                                    gap: '24px',
+                                    flexWrap: 'wrap',
+                                    justifyContent: 'center',
+                                    pageBreakInside: 'avoid',
+                                    margin: isBulkPrinting ? '0' : '0 auto',
+                                    width: isBulkPrinting ? '70mm' : '100%',
+                                    height: isBulkPrinting ? '99mm' : 'auto',
+                                    cursor: 'pointer',
+                                    position: 'relative'
+                                  }}
+                                >
+                                  {isActive && isBulkPrinting && (
+                                    <div style={{ position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px', border: '3px solid #3b82f6', borderRadius: '20px', pointerEvents: 'none', zIndex: 10 }}></div>
+                                  )}
+
+                                  {/* --- Front Card --- */}
+                                  <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: isBulkPrinting ? '70mm' : '300px', height: isBulkPrinting ? '99mm' : '480px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0, transformOrigin: 'top left' }}>
+                                    {/* Background SVG Waves & Dots */}
+                                    {showWaveDecoration && !cardBgImage && (
+                                      <svg width={isBulkPrinting ? "264" : "300"} height={isBulkPrinting ? "374" : "480"} viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
+                                        <defs>
+                                          <pattern id={`dots-${empForCard.emp_id}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                                            <circle cx="10" cy="10" r="2.5" fill="#cbd5e1" opacity="0.6" />
+                                          </pattern>
+                                          <linearGradient id={`fade-grad-${empForCard.emp_id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="white" stop-opacity="1" />
+                                            <stop offset="80%" stop-color="white" stop-opacity="0.1" />
+                                          </linearGradient>
+                                          <mask id={`dots-mask-${empForCard.emp_id}`}>
+                                            <rect width="300" height="480" fill={`url(#fade-grad-${empForCard.emp_id})`} />
+                                          </mask>
+                                        </defs>
+
+                                        {/* Full Background Dots with Mask for subtle fade */}
+                                        <rect width="300" height="480" fill={`url(#dots-${empForCard.emp_id})`} mask={`url(#dots-mask-${empForCard.emp_id})`} />
+
+                                        {/* Top Right Waves */}
+                                        <path d="M 100 0 Q 220 120 300 240 L 300 0 Z" fill={cardSecondaryColor} />
+                                        <path d="M 180 0 Q 250 80 300 150 L 300 0 Z" fill={cardPrimaryColor} />
+
+                                        {/* Bottom Left Waves */}
+                                        <path d="M 0 280 Q 120 380 250 480 L 0 480 Z" fill={cardSecondaryColor} />
+                                        <path d="M 0 380 Q 80 430 150 480 L 0 480 Z" fill={cardPrimaryColor} />
+                                      </svg>
+                                    )}
 
 
-                        {/* MOPH Logo (Top Left) */}
-                        {showTopLogo && (
-                          <div style={{ position: 'absolute', top: isBulkPrinting ? '10px' : '15px', left: isBulkPrinting ? '10px' : '15px', zIndex: 2 }}>
-                            <Image src={topLogo} width={isBulkPrinting ? Math.round(topLogoWidth * 0.8) : topLogoWidth} height={isBulkPrinting ? Math.round(topLogoHeight * 0.8) : topLogoHeight} style={{ objectFit: 'contain' }} alt="Top Logo" />
+                                    {/* MOPH Logo (Top Left) */}
+                                    {showTopLogo && (
+                                      <div style={{ position: 'absolute', top: isBulkPrinting ? '10px' : '15px', left: isBulkPrinting ? '10px' : '15px', zIndex: 2 }}>
+                                        <Image src={topLogo} width={isBulkPrinting ? Math.round(topLogoWidth * 0.8) : topLogoWidth} height={isBulkPrinting ? Math.round(topLogoHeight * 0.8) : topLogoHeight} style={{ objectFit: 'contain' }} alt="Top Logo" />
+                                      </div>
+                                    )}
+
+                                    {/* Photo */}
+                                    <div style={{ position: 'absolute', top: `${isBulkPrinting ? Math.round(profileYOffset * 0.8) : profileYOffset}px`, left: '50%', transform: 'translateX(-50%)', width: `${isBulkPrinting ? Math.round(empImageWidth * 0.8) : empImageWidth}px`, height: `${isBulkPrinting ? Math.round(empImageHeight * 0.8) : empImageHeight}px`, border: '1px solid #cbd5e1', background: '#f8fafc', zIndex: 2, overflow: 'hidden', borderRadius: `${empImageBorderRadius}px` }}>
+                                      <Image fill src={empForCard.image ? `/uploads/${encodeURIComponent(empForCard.image)}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`} alt="Employee" style={{ objectFit: 'cover', borderRadius: `${empImageBorderRadius}px` }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} />
+                                    </div>
+
+                                    {/* Details */}
+                                    <div style={{ position: 'absolute', top: `${(isBulkPrinting ? Math.round(profileYOffset * 0.8) + Math.round(empImageHeight * 0.8) : profileYOffset + empImageHeight) + 10}px`, left: '0', right: '0', textAlign: 'center', zIndex: 2, padding: isBulkPrinting ? '0 10px' : '0 20px', fontFamily: "'Sarabun', sans-serif" }}>
+                                      {/* Position */}
+                                      <div style={{ fontSize: `${isBulkPrinting ? Math.round(posFontSize * 0.85) : posFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '4px' }}>
+                                        {overrides.pos || getPosName(empForCard.pos_id) || 'พนักงาน'}
+                                      </div>
+                                      {/* Name TH */}
+                                      <div style={{ fontSize: `${isBulkPrinting ? Math.round(nameFontSize * 0.85) : nameFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '2px' }}>
+                                        {overrides.nameTH || `${empForCard.prefix || ''}${empForCard.first_name_th} ${empForCard.last_name_th}`}
+                                      </div>
+                                      {/* Name EN */}
+                                      <div style={{ fontSize: `${isBulkPrinting ? 11 : 14}px`, color: '#475569', fontStyle: 'italic', marginBottom: '12px' }}>
+                                        {overrides.nameEN || (empForCard.first_name_th === 'อิงครัตน์' ? 'Engkarat Chodsatidpokin' : `${empForCard.first_name_th} ${empForCard.last_name_th}`)}
+                                      </div>
+
+                                      {/* Signature Area */}
+                                      {showSignature && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: isBulkPrinting ? '2px' : '5px' }}>
+                                          {directorSignature ? (
+                                            <img src={directorSignature} style={{ width: isBulkPrinting ? '50px' : '60px', height: isBulkPrinting ? '25px' : '30px', objectFit: 'contain' }} alt="Director Signature" />
+                                          ) : (
+                                            <svg width={isBulkPrinting ? "50" : "60"} height={isBulkPrinting ? "25" : "30"} viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <path d="M 20 40 Q 30 10 50 30 T 80 20" stroke={cardPrimaryColor} strokeWidth="2" strokeLinecap="round" fill="none" />
+                                            </svg>
+                                          )}
+                                          <div style={{ fontSize: `${isBulkPrinting ? 10 : 11}px`, fontWeight: 'bold', color: '#1e293b', marginTop: '2px' }}>
+                                            {directorName}
+                                          </div>
+                                          <div style={{ fontSize: `${isBulkPrinting ? 9 : 10}px`, color: '#64748b' }}>
+                                            {directorTitle}
+                                          </div>
+
+                                        </div>
+                                      )}
+                                    </div>
+
+
+                                    {/* Hospital Logo (Bottom Right) */}
+                                    {showBottomLogo && (
+                                      <div style={{ position: 'absolute', bottom: isBulkPrinting ? '10px' : '15px', right: isBulkPrinting ? '10px' : '15px', zIndex: 2 }}>
+                                        <Image src={bottomLogo} width={isBulkPrinting ? Math.round(bottomLogoWidth * 0.8) : bottomLogoWidth} height={isBulkPrinting ? Math.round(bottomLogoHeight * 0.8) : bottomLogoHeight} style={{ objectFit: 'contain' }} alt="Bottom Logo" />
+                                      </div>
+                                    )}
+
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        )}
-
-                        {/* Photo */}
-                        <div style={{ position: 'absolute', top: `${isBulkPrinting ? Math.round(profileYOffset * 0.8) : profileYOffset}px`, left: '50%', transform: 'translateX(-50%)', width: `${isBulkPrinting ? Math.round(empImageWidth * 0.8) : empImageWidth}px`, height: `${isBulkPrinting ? Math.round(empImageHeight * 0.8) : empImageHeight}px`, border: '1px solid #cbd5e1', background: '#f8fafc', zIndex: 2, overflow: 'hidden', borderRadius: `${empImageBorderRadius}px` }}>
-                          <Image fill src={empForCard.image ? `/uploads/${encodeURIComponent(empForCard.image)}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`} alt="Employee" style={{ objectFit: 'cover', borderRadius: `${empImageBorderRadius}px` }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} />
-                        </div>
-
-                        {/* Details */}
-                        <div style={{ position: 'absolute', top: `${(isBulkPrinting ? Math.round(profileYOffset * 0.8) + Math.round(empImageHeight * 0.8) : profileYOffset + empImageHeight) + 10}px`, left: '0', right: '0', textAlign: 'center', zIndex: 2, padding: isBulkPrinting ? '0 10px' : '0 20px', fontFamily: "'Sarabun', sans-serif" }}>
-                          {/* Position */}
-                          <div style={{ fontSize: `${isBulkPrinting ? Math.round(posFontSize * 0.85) : posFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '4px' }}>
-                            {overrides.pos || getPosName(empForCard.pos_id) || 'พนักงาน'}
-                          </div>
-                          {/* Name TH */}
-                          <div style={{ fontSize: `${isBulkPrinting ? Math.round(nameFontSize * 0.85) : nameFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '2px' }}>
-                            {overrides.nameTH || `${empForCard.prefix || ''}${empForCard.first_name_th} ${empForCard.last_name_th}`}
-                          </div>
-                          {/* Name EN */}
-                          <div style={{ fontSize: `${isBulkPrinting ? 11 : 14}px`, color: '#475569', fontStyle: 'italic', marginBottom: '12px' }}>
-                            {overrides.nameEN || (empForCard.first_name_th === 'อิงครัตน์' ? 'Engkarat Chodsatidpokin' : `${empForCard.first_name_th} ${empForCard.last_name_th}`)}
-                          </div>
-
-                          {/* Signature Area */}
-                          {showSignature && (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: isBulkPrinting ? '2px' : '5px' }}>
-                              {directorSignature ? (
-                                <img src={directorSignature} style={{ width: isBulkPrinting ? '50px' : '60px', height: isBulkPrinting ? '25px' : '30px', objectFit: 'contain' }} alt="Director Signature" />
-                              ) : (
-                                <svg width={isBulkPrinting ? "50" : "60"} height={isBulkPrinting ? "25" : "30"} viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M 20 40 Q 30 10 50 30 T 80 20" stroke={cardPrimaryColor} strokeWidth="2" strokeLinecap="round" fill="none" />
-                                </svg>
-                              )}
-                              <div style={{ fontSize: `${isBulkPrinting ? 10 : 11}px`, fontWeight: 'bold', color: '#1e293b', marginTop: '2px' }}>
-                                {directorName}
-                              </div>
-                              <div style={{ fontSize: `${isBulkPrinting ? 9 : 10}px`, color: '#64748b' }}>
-                                {directorTitle}
-                              </div>
-
-                            </div>
-                          )}
-                        </div>
-
-
-                        {/* Hospital Logo (Bottom Right) */}
-                        {showBottomLogo && (
-                          <div style={{ position: 'absolute', bottom: isBulkPrinting ? '10px' : '15px', right: isBulkPrinting ? '10px' : '15px', zIndex: 2 }}>
-                            <Image src={bottomLogo} width={isBulkPrinting ? Math.round(bottomLogoWidth * 0.8) : bottomLogoWidth} height={isBulkPrinting ? Math.round(bottomLogoHeight * 0.8) : bottomLogoHeight} style={{ objectFit: 'contain' }} alt="Bottom Logo" />
-                          </div>
-                        )}
-
-                        </div>
+                        ))}
                       </div>
-                    );
-                          })}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                );
-              })()}
-                </div>
+                    </>
+                  );
+                })()}
               </div>
+            </div>
 
-              <div style={{ display: 'flex', gap: '12px', width: '100%', marginTop: '24px' }}>
-              <button 
-                className="btn-outline" 
+            <div style={{ display: 'flex', gap: '12px', width: '100%', marginTop: '24px' }}>
+              <button
+                className="btn-outline"
                 onClick={async () => {
                   const targetId = activeEditCardId || (isBulkPrinting ? selectedIds[0] : selectedEmpForCard?.emp_id);
                   if (!targetId) return;
@@ -1677,22 +1678,22 @@ function EmployeesContent() {
                     element.style.transform = 'none';
                     const canvas = await html2canvas(element, { useCORS: true, scale: 2 });
                     element.style.transform = originalTransform;
-                    
+
                     const link = document.createElement('a');
                     link.download = `ID_Card_${targetId}.png`;
                     link.href = canvas.toDataURL('image/png');
                     link.click();
                   }
-                }} 
+                }}
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px' }}
               >
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 บันทึกภาพบัตร (PNG)
               </button>
 
-              <button 
-                className="btn-primary" 
-                onClick={() => handlePrint()} 
+              <button
+                className="btn-primary"
+                onClick={() => handlePrint()}
                 style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: '#0f172a', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 600 }}
               >
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
