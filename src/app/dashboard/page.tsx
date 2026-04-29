@@ -231,24 +231,28 @@ export default function DashboardPage() {
                   href="/employees/retirement"
                 />
 
-                <PendingList
-                  transfersCount={dashboardData?.pendingTransfers || 0}
-                />
+                <div style={{ gridColumn: 'span 2', height: '100%' }}>
+                  <PendingList
+                    transfersCount={dashboardData?.pendingTransfers || 0}
+                  />
+                </div>
               </div>
 
               <div className="dashboard-grid">
-                <div className="dashboard-left">
+                <div className="dashboard-left" style={{ gridColumn: ((dashboardData?.expiringLicenses || 0) > 0 || (dashboardData?.expiredLicenses || 0) > 0) ? 'span 8' : 'span 12' }}>
                   <div style={{ flex: 1, minHeight: 340, display: 'flex', flexDirection: 'column' }}>
                     <DonutChart data={dashboardData?.professions || []} />
                   </div>
                 </div>
 
-                <div className="dashboard-right">
-                  <SystemAlert
-                    expiringCount={dashboardData?.expiringLicenses || 0}
-                    expiredCount={dashboardData?.expiredLicenses || 0}
-                  />
-                </div>
+                {((dashboardData?.expiringLicenses || 0) > 0 || (dashboardData?.expiredLicenses || 0) > 0) && (
+                  <div className="dashboard-right">
+                    <SystemAlert
+                      expiringCount={dashboardData?.expiringLicenses || 0}
+                      expiredCount={dashboardData?.expiredLicenses || 0}
+                    />
+                  </div>
+                )}
               </div>
             </>
           ) : (

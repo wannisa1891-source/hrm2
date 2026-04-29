@@ -10,12 +10,15 @@ export default function PendingList({
             style={{
                 background: "white",
                 borderRadius: 20,
-                padding: "16px",
+                padding: "24px 28px",
                 boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-                width: "100%"
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column"
             }}
         >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e293b" }}>รายการรออนุมัติ</h3>
                 { (transfersCount) > 0 && (
                     <span style={{ fontSize: 11, background: "#fee2e2", color: "#ef4444", padding: "2px 8px", borderRadius: 12, fontWeight: 700 }}>
