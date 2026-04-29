@@ -35,7 +35,7 @@ export default function RetirementPage() {
     currentFY += 1;
   }
 
-  const [fiscalYear, setFiscalYear] = useState<number>(currentFY);
+  const [fiscalYear, setFiscalYear] = useState<number | 'all'>(currentFY);
   const [filterDiv, setFilterDiv] = useState<string>('all');
   const [filterGrp, setFilterGrp] = useState<string>('all');
   const [filterPos, setFilterPos] = useState<string>('all');
@@ -169,8 +169,12 @@ export default function RetirementPage() {
                 className="form-select"
                 style={{ width: 'auto', minWidth: '120px' }}
                 value={fiscalYear}
-                onChange={(e) => setFiscalYear(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFiscalYear(val === 'all' ? 'all' : Number(val));
+                }}
               >
+                <option value="all">ทุกปี (ทั้งหมด)</option>
                 {fyOptions.map(fy => (
                   <option key={fy} value={fy}>{fy}</option>
                 ))}
@@ -191,7 +195,7 @@ export default function RetirementPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
           <div
             className="glass-card hover-glow"
-            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }}
+            onClick={() => { setFiscalYear('all'); setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }}
             style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
           >
             <div style={{ padding: '16px', background: '#e0f2fe', color: '#0284c7', borderRadius: '16px' }}>
@@ -199,35 +203,36 @@ export default function RetirementPage() {
             </div>
             <div>
               <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>เกษียณอายุทั้งหมด</div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a' }}>{data?.total_retiring || 0} <span style={{ fontSize: '16px', fontWeight: 600, color: '#64748b' }}>คน</span></div>
+              <div style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a' }}>
+                {data?.yearly_summary?.reduce((acc: number, curr: any) => acc + curr.count, 0) || 0} 
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#64748b', marginLeft: '4px' }}>คน</span>
+              </div>
             </div>
           </div>
 
           <div
             className="glass-card hover-glow"
-            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }}
-            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}
           >
-            <div style={{ padding: '16px', background: '#dcfce7', color: '#16a34a', borderRadius: '16px' }}>
+            <div style={{ padding: '16px', background: '#fefce8', color: '#ca8a04', borderRadius: '16px' }}>
               <Calendar size={32} />
             </div>
             <div>
               <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>ปีงบประมาณที่เลือก</div>
-              <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>พ.ศ. {fiscalYear}</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>{fiscalYear === 'all' ? 'รวมทุกปี' : `พ.ศ. ${fiscalYear}`}</div>
             </div>
           </div>
 
           <div
             className="glass-card hover-glow"
-            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }}
-            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
+            style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}
           >
-            <div style={{ padding: '16px', background: '#fef9c3', color: '#ca8a04', borderRadius: '16px' }}>
+            <div style={{ padding: '16px', background: '#faf5ff', color: '#9333ea', borderRadius: '16px' }}>
               <Briefcase size={32} />
             </div>
             <div>
-              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>หน่วยงานที่มีผู้เกษียณ</div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a' }}>{data?.summary_by_dept?.length || 0} <span style={{ fontSize: '16px', fontWeight: 600, color: '#64748b' }}>แผนก</span></div>
+              <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>หน่วยงานที่มีคนเกษียณ</div>
+              <div style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a' }}>{data?.summary_by_dept?.length || 0} <span style={{ fontSize: '14px', fontWeight: 600, color: '#64748b' }}>แผนก</span></div>
             </div>
           </div>
         </div>
@@ -238,7 +243,7 @@ export default function RetirementPage() {
           <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '4px', height: '16px', background: '#10b981', borderRadius: '4px' }} />
-              สัดส่วนผู้เกษียณ แยกตามกลุ่มงานและแผนก (ปีงบประมาณ {fiscalYear})
+              สัดส่วนผู้เกษียณ แยกตามกลุ่มงานและแผนก ({fiscalYear === 'all' ? 'รวมทุกปี' : `ปีงบประมาณ ${fiscalYear}`})
             </h4>
             {breakdownData.length === 0 ? (
               <div style={{ color: '#94a3b8', fontSize: '14px', textAlign: 'center', padding: '20px' }}>ไม่มีข้อมูล</div>
@@ -267,7 +272,9 @@ export default function RetirementPage() {
           {/* Filters and Table */}
           <div className="glass-card" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>รายชื่อผู้เกษียณอายุ</h3>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
+                รายชื่อผู้เกษียณอายุ {filteredEmployees.length > 0 && <span style={{ color: '#10b981', marginLeft: '8px' }}>(ทั้งหมด {filteredEmployees.length} คน)</span>}
+              </h3>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <div className="search-input-wrap" style={{ flex: '1 1 200px', minWidth: '220px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', alignItems: 'center', padding: '0 12px', background: 'white', height: '42px' }}>
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#64748b" style={{ marginRight: '8px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
