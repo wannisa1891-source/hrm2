@@ -583,8 +583,8 @@ function EmployeesContent() {
       if (isNaN(d.getTime())) return '';
       const day = String(d.getDate()).padStart(2, '0');
       const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear(); // ปี ค.ศ.
-      return `${month}/${day}/${year}`;
+      const year = d.getFullYear() + 543; // ปีพ.ศ.
+      return `${day}/${month}/${year}`;
     };
 
     const headers = [
@@ -1098,7 +1098,7 @@ function EmployeesContent() {
                             return idVal;
                           })()}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>DOB</div>
-                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.birth_date ? new Date(empForCard.birth_date).toLocaleDateString('en-US') : '-'}</div>
+                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.birth_date ? new Date(empForCard.birth_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>Phone</div>
                           <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.phone || '-'}</div>
                           <div style={{ color: '#64748b', fontWeight: 600 }}>Email</div>
@@ -1152,8 +1152,8 @@ function EmployeesContent() {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', fontSize: '12px', fontWeight: 600, color: '#475569' }}>
                           <div>
-                            <div style={{ marginBottom: '6px' }}>วันที่เริ่มงาน &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(empForCard.start_date).toLocaleDateString('en-US') : '-'}</span></div>
-                            <div>วันหมดอายุ &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleDateString('en-US') : '-'}</span></div>
+                            <div style={{ marginBottom: '6px' }}>วันที่เริ่มงาน &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(empForCard.start_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</span></div>
+                            <div>วันหมดอายุ &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</span></div>
                           </div>
                         </div>
 

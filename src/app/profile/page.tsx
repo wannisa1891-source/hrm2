@@ -540,7 +540,7 @@ function ProfileContent() {
                     <tbody>
                       {leaves.map((l: any, idx: number) => (
                         <tr key={idx} onClick={() => router.push(`/leave?id=${l.leave_id}`)} style={{ cursor: 'pointer' }} title="คลิกเพื่อดูรายละเอียด">
-                          <td>{new Date(l.start_date).toLocaleDateString('th-TH')} - {new Date(l.end_date).toLocaleDateString('th-TH')}</td>
+                          <td>{new Date(l.start_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })} - {new Date(l.end_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
                           <td>{l.leave_type || l.leave_type_id}</td>
                           <td>{l.total_days} วัน</td>
                           <td>{l.reason || '—'}</td>
@@ -704,8 +704,8 @@ function ProfileContent() {
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
                             <Calendar size={16} style={{ marginTop: '2px', color: '#3b82f6' }} /> 
                             <span>
-                              <strong>วันที่อบรม:</strong> {tr.start_date ? new Date(tr.start_date).toLocaleDateString('th-TH') : '-'} 
-                              {tr.end_date && tr.end_date !== tr.start_date ? ` ถึง ${new Date(tr.end_date).toLocaleDateString('th-TH')}` : ''}
+                              <strong>วันที่อบรม:</strong> {tr.start_date ? new Date(tr.start_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'} 
+                              {tr.end_date && tr.end_date !== tr.start_date ? ` ถึง ${new Date(tr.end_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })}` : ''}
                             </span>
                           </div>
                         </div>
@@ -795,10 +795,10 @@ function ProfileContent() {
                 <strong>หน่วยงานที่ออกให้:</strong> {selectedLicense.institution || '-'}
               </div>
               <div style={{ fontSize: '15px', color: '#334155' }}>
-                <strong>วันที่ออก:</strong> {selectedLicense.issue_date ? new Date(selectedLicense.issue_date).toLocaleDateString('th-TH') : '-'}
+                <strong>วันที่ออก:</strong> {selectedLicense.issue_date ? new Date(selectedLicense.issue_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
               </div>
               <div style={{ fontSize: '15px', color: '#334155' }}>
-                <strong>วันที่หมดอายุ:</strong> {selectedLicense.expire_date ? new Date(selectedLicense.expire_date).toLocaleDateString('th-TH') : '-'}
+                <strong>วันที่หมดอายุ:</strong> {selectedLicense.expire_date ? new Date(selectedLicense.expire_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
               </div>
               <div style={{ fontSize: '15px', color: '#334155' }}>
                 <strong>สถานะ:</strong> {selectedLicense.status || '-'}
@@ -862,8 +862,8 @@ function ProfileContent() {
                 <strong>สถานที่จัด:</strong> {selectedTraining.location || '-'}
               </div>
               <div style={{ fontSize: '15px', color: '#334155' }}>
-                <strong>วันที่จัดกิจกรรม:</strong> {selectedTraining.start_date ? new Date(selectedTraining.start_date).toLocaleDateString('th-TH') : '-'}
-                {selectedTraining.end_date && selectedTraining.end_date !== selectedTraining.start_date ? ` ถึง ${new Date(selectedTraining.end_date).toLocaleDateString('th-TH')}` : ''}
+                <strong>วันที่จัดกิจกรรม:</strong> {selectedTraining.start_date ? new Date(selectedTraining.start_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
+                {selectedTraining.end_date && selectedTraining.end_date !== selectedTraining.start_date ? ` ถึง ${new Date(selectedTraining.end_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })}` : ''}
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>

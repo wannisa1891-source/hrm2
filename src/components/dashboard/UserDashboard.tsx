@@ -162,7 +162,7 @@ export default function UserDashboard({
                 <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '16px', borderRadius: '16px', background: '#f8fafc', border: '1px solid #f1f5f9' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>{l.reason || 'ลา'}</div>
-                    <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{new Date(l.start_date).toLocaleDateString('th-TH')} - {new Date(l.end_date).toLocaleDateString('th-TH')}</div>
+                    <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{new Date(l.start_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })} - {new Date(l.end_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
                   </div>
                   <div style={{ padding: '4px 10px', borderRadius: '8px', background: statusBg, color: statusColor, fontSize: 12, fontWeight: 800 }}>
                     {l.status === 'Approved' ? 'อนุมัติ' : l.status === 'Rejected' ? 'ปฏิเสธ' : 'รออนุมัติ'}

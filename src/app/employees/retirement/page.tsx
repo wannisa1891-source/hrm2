@@ -133,9 +133,9 @@ export default function RetirementPage() {
       'นามสกุล': emp.last_name_th,
       'ตำแหน่ง': emp.pos_name || '-',
       'หน่วยงาน': emp.dept_name || '-',
-      'วันเกิด': emp.birth_date ? new Date(emp.birth_date).toLocaleDateString('th-TH') : '-',
+      'วันเกิด': emp.birth_date ? new Date(emp.birth_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-',
       'ปีงบประมาณที่เกษียณ': emp.retirement_year_be,
-      'วันเกษียณอายุ': emp.retirement_date ? new Date(emp.retirement_date).toLocaleDateString('th-TH') : '-'
+      'วันเกษียณอายุ': emp.retirement_date ? new Date(emp.retirement_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);

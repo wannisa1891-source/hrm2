@@ -882,7 +882,7 @@ export default function EmployeeFormModal({
                     <tr key={h.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '12px' }}>{historyData.length - i}</td>
                       <td style={{ padding: '12px' }}>{h.license_no}</td>
-                      <td style={{ padding: '12px' }}>{h.expire_date ? new Date(h.expire_date).toLocaleDateString('en-US') : '-'}</td>
+                      <td style={{ padding: '12px' }}>{h.expire_date ? new Date(h.expire_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</td>
                       <td style={{ padding: '12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600,
@@ -892,7 +892,7 @@ export default function EmployeeFormModal({
                           {h.status}
                         </span>
                       </td>
-                      <td style={{ padding: '12px', color: '#64748b' }}>{h.created_at ? new Date(h.created_at).toLocaleString('en-US') : '-'}</td>
+                      <td style={{ padding: '12px', color: '#64748b' }}>{h.created_at ? new Date(h.created_at).toLocaleString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                     </tr>
                   ))}
                   {historyData.length === 0 && (

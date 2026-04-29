@@ -48,8 +48,8 @@ const ThaiDateInput = ({ label, value, onChange, required, style }: ThaiDateInpu
     if (!date || isNaN(date.getTime())) return '';
     const d = String(date.getDate()).padStart(2, '0');
     const m = String(date.getMonth() + 1).padStart(2, '0');
-    const y = date.getFullYear();
-    return `${m}/${d}/${y}`;
+    const y = date.getFullYear() + 543; // แปลงเป็นปีพ.ศ.
+    return `${d}/${m}/${y}`;
   };
 
   const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();

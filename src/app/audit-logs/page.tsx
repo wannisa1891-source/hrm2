@@ -74,7 +74,7 @@ export default function AuditLogsPage() {
       const d = new Date(log.action_date);
       return [
         log.log_id,
-        d.toLocaleDateString('th-TH'),
+        d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }),
         d.toLocaleTimeString('th-TH'),
         `"${formatUserName(log.user_id)}"`, // แก้ไขชื่อใน CSV
         `"${log.action_detail}"`
