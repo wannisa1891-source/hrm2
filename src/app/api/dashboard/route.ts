@@ -214,7 +214,9 @@ export async function GET(req: NextRequest) {
     const [birthDates]: any = await pool.query(`
       SELECT birth_date 
       FROM tbl_employees 
-      WHERE birth_date IS NOT NULL AND birth_date != '1900-01-01' AND status IN ('Active', 'A', 'ทำงานปกติ')
+      WHERE birth_date IS NOT NULL AND birth_date != '1900-01-01' 
+      AND status IN ('Active', 'A', 'ทำงานปกติ')
+      AND (role IS NULL OR role != 'Admin')
     `);
 
     let retirementCount = 0;

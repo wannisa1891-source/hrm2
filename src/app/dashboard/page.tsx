@@ -187,6 +187,7 @@ export default function DashboardPage() {
                   href="/employees"
                 />
 
+                {/* 
                 <StatCard
                   label="ลางาน/พักร้อน"
                   value={dashboardData?.leaveTodayCount || 0}
@@ -197,6 +198,7 @@ export default function DashboardPage() {
                   trend="วันนี้"
                   href="/leave"
                 />
+                */}
 
                 <StatCard
                   label="เบิกงบประชุม/อบรม"

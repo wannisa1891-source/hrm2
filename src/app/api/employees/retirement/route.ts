@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       FROM tbl_employees e
       LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
       LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id
-      WHERE e.status = 'ทำงานปกติ'
+      WHERE e.status = 'ทำงานปกติ' AND (e.role IS NULL OR e.role != 'Admin')
     `);
 
     const allProcessed = employees.map((emp: any) => {
