@@ -1597,45 +1597,45 @@ function EmployeesContent() {
 
                         {/* MOPH Logo (Top Left) */}
                         {showTopLogo && (
-                          <div style={{ position: 'absolute', top: '15px', left: '15px', zIndex: 2 }}>
-                            <Image src={topLogo} width={topLogoWidth} height={topLogoHeight} style={{ objectFit: 'contain' }} alt="Top Logo" />
+                          <div style={{ position: 'absolute', top: isBulkPrinting ? '10px' : '15px', left: isBulkPrinting ? '10px' : '15px', zIndex: 2 }}>
+                            <Image src={topLogo} width={isBulkPrinting ? Math.round(topLogoWidth * 0.8) : topLogoWidth} height={isBulkPrinting ? Math.round(topLogoHeight * 0.8) : topLogoHeight} style={{ objectFit: 'contain' }} alt="Top Logo" />
                           </div>
                         )}
 
                         {/* Photo */}
-                        <div style={{ position: 'absolute', top: `${profileYOffset}px`, left: '50%', transform: 'translateX(-50%)', width: `${empImageWidth}px`, height: `${empImageHeight}px`, border: '1px solid #cbd5e1', background: '#f8fafc', zIndex: 2, overflow: 'hidden', borderRadius: `${empImageBorderRadius}px` }}>
+                        <div style={{ position: 'absolute', top: `${isBulkPrinting ? Math.round(profileYOffset * 0.8) : profileYOffset}px`, left: '50%', transform: 'translateX(-50%)', width: `${isBulkPrinting ? Math.round(empImageWidth * 0.8) : empImageWidth}px`, height: `${isBulkPrinting ? Math.round(empImageHeight * 0.8) : empImageHeight}px`, border: '1px solid #cbd5e1', background: '#f8fafc', zIndex: 2, overflow: 'hidden', borderRadius: `${empImageBorderRadius}px` }}>
                           <Image fill src={empForCard.image ? `/uploads/${encodeURIComponent(empForCard.image)}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`} alt="Employee" style={{ objectFit: 'cover', borderRadius: `${empImageBorderRadius}px` }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} />
                         </div>
 
                         {/* Details */}
-                        <div style={{ position: 'absolute', top: `${profileYOffset + empImageHeight + 10}px`, left: '0', right: '0', textAlign: 'center', zIndex: 2, padding: '0 20px', fontFamily: "'Sarabun', sans-serif" }}>
+                        <div style={{ position: 'absolute', top: `${(isBulkPrinting ? Math.round(profileYOffset * 0.8) + Math.round(empImageHeight * 0.8) : profileYOffset + empImageHeight) + 10}px`, left: '0', right: '0', textAlign: 'center', zIndex: 2, padding: isBulkPrinting ? '0 10px' : '0 20px', fontFamily: "'Sarabun', sans-serif" }}>
                           {/* Position */}
-                          <div style={{ fontSize: `${posFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '4px' }}>
+                          <div style={{ fontSize: `${isBulkPrinting ? Math.round(posFontSize * 0.85) : posFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '4px' }}>
                             {overrides.pos || getPosName(empForCard.pos_id) || 'พนักงาน'}
                           </div>
                           {/* Name TH */}
-                          <div style={{ fontSize: `${nameFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '2px' }}>
+                          <div style={{ fontSize: `${isBulkPrinting ? Math.round(nameFontSize * 0.85) : nameFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '2px' }}>
                             {overrides.nameTH || `${empForCard.prefix || ''}${empForCard.first_name_th} ${empForCard.last_name_th}`}
                           </div>
                           {/* Name EN */}
-                          <div style={{ fontSize: '14px', color: '#475569', fontStyle: 'italic', marginBottom: '12px' }}>
+                          <div style={{ fontSize: `${isBulkPrinting ? 11 : 14}px`, color: '#475569', fontStyle: 'italic', marginBottom: '12px' }}>
                             {overrides.nameEN || (empForCard.first_name_th === 'อิงครัตน์' ? 'Engkarat Chodsatidpokin' : `${empForCard.first_name_th} ${empForCard.last_name_th}`)}
                           </div>
 
                           {/* Signature Area */}
                           {showSignature && (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: isBulkPrinting ? '2px' : '5px' }}>
                               {directorSignature ? (
-                                <img src={directorSignature} style={{ width: '60px', height: '30px', objectFit: 'contain' }} alt="Director Signature" />
+                                <img src={directorSignature} style={{ width: isBulkPrinting ? '50px' : '60px', height: isBulkPrinting ? '25px' : '30px', objectFit: 'contain' }} alt="Director Signature" />
                               ) : (
-                                <svg width="60" height="30" viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width={isBulkPrinting ? "50" : "60"} height={isBulkPrinting ? "25" : "30"} viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                                   <path d="M 20 40 Q 30 10 50 30 T 80 20" stroke={cardPrimaryColor} strokeWidth="2" strokeLinecap="round" fill="none" />
                                 </svg>
                               )}
-                              <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#1e293b', marginTop: '2px' }}>
+                              <div style={{ fontSize: `${isBulkPrinting ? 10 : 11}px`, fontWeight: 'bold', color: '#1e293b', marginTop: '2px' }}>
                                 {directorName}
                               </div>
-                              <div style={{ fontSize: '10px', color: '#64748b' }}>
+                              <div style={{ fontSize: `${isBulkPrinting ? 9 : 10}px`, color: '#64748b' }}>
                                 {directorTitle}
                               </div>
 
@@ -1646,8 +1646,8 @@ function EmployeesContent() {
 
                         {/* Hospital Logo (Bottom Right) */}
                         {showBottomLogo && (
-                          <div style={{ position: 'absolute', bottom: '15px', right: '15px', zIndex: 2 }}>
-                            <Image src={bottomLogo} width={bottomLogoWidth} height={bottomLogoHeight} style={{ objectFit: 'contain' }} alt="Bottom Logo" />
+                          <div style={{ position: 'absolute', bottom: isBulkPrinting ? '10px' : '15px', right: isBulkPrinting ? '10px' : '15px', zIndex: 2 }}>
+                            <Image src={bottomLogo} width={isBulkPrinting ? Math.round(bottomLogoWidth * 0.8) : bottomLogoWidth} height={isBulkPrinting ? Math.round(bottomLogoHeight * 0.8) : bottomLogoHeight} style={{ objectFit: 'contain' }} alt="Bottom Logo" />
                           </div>
                         )}
 
