@@ -39,7 +39,7 @@ export async function GET() {
     const employees = (rows as any[]).map(emp => {
       const empLicenses = (licenses as any[]).filter(l => l.emp_id === emp.emp_id);
       const empTrainings = (trainings as any[]).filter(t => t.emp_id === emp.emp_id);
-      
+
       // Determine primary license for table display
       const activeLicenses = empLicenses.filter(l => l.status !== 'Expired' && l.status !== 'Suspended');
       const primaryLicense = activeLicenses.length > 0 ? activeLicenses[0] : (empLicenses.length > 0 ? empLicenses[0] : null);
@@ -83,12 +83,13 @@ export async function POST(req: NextRequest) {
     // Parse licenses and trainings arrays from stringified JSON
     let licenses: any[] = [];
     if (d.licenses_data) {
-      try { licenses = JSON.parse(d.licenses_data); } catch(e) {}
+      try { licenses = JSON.parse(d.licenses_data); } catch (e) { }
     }
     let trainings: any[] = [];
     if (d.trainings_data) {
-      try { trainings = JSON.parse(d.trainings_data); } catch(e) {}
+      try { trainings = JSON.parse(d.trainings_data); } catch (e) { }
     }
+
 
     const connection = await pool.getConnection();
     try {
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
 
       let empId = d.emp_id || '';
       const citizenId = d.id_card || d.citizen_id || '';
-      
+
       if (!empId || empId === '-') {
         // If emp_id is missing, use citizen_id as internal ID (unless it's just a dash)
         empId = (citizenId && citizenId !== '-') ? citizenId : 'E' + Date.now().toString().slice(-8);
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
 
       // Automatic credentials: Username = Citizen ID, Password = DDMMYYYY (BE) from birth_date
       const username = d.username || (citizenId !== '-' ? citizenId : empId);
-      
+
       let autoPassword = '';
       if (d.birth_date && d.birth_date.includes('-')) {
         const parts = d.birth_date.split('T')[0].split('-'); // [YYYY, MM, DD]
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest) {
           autoPassword = `${parts[2]}${parts[1]}${parts[0]}`; // DDMMYYYY (AD)
         }
       }
-      
+
       const rawPassword = d.password || autoPassword || '12345678';
       const hashedPassword = crypto.createHash('sha256').update(rawPassword).digest('hex');
 
@@ -143,7 +144,7 @@ export async function POST(req: NextRequest) {
         d.gender || 'ชาย', d.address || '',
         finalCitizenId && finalCitizenId.trim() !== '' && finalCitizenId.trim() !== '-' ? finalCitizenId.trim() : null, d.phone || '',
         d.email || null, hashedPassword, d.role || 'User',
-        d.emp_type || 'พนักงานราชการ', d.dept_id || '', d.pos_id || '', 
+        d.emp_type || 'พนักงานราชการ', d.dept_id || '', d.pos_id || '',
         d.start_date || new Date().toISOString().split('T')[0],
         d.admission_date || null, d.retirement_date || null,
         imageName, // Save only to image
@@ -205,7 +206,7 @@ export async function POST(req: NextRequest) {
         for (let i = 0; i < trainings.length; i++) {
           let certFile: string | null = null;
           let imgFile: string | null = null;
-          
+
           const cf = formData.get(`training_cert_${i}`) as File | null;
           if (cf && cf.size > 0) {
             const ext = path.extname(cf.name);
