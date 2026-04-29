@@ -419,6 +419,10 @@ function EmployeesContent() {
 
   const filteredData = useMemo(() => {
     return employees.filter(e => {
+      // ซ่อน Admin account เมื่อมีการ filter กลุ่มงาน/แผนก/ตำแหน่ง
+      const isAdminAccount = e.role === 'Admin' || e.role === 'Super Admin';
+      if (isAdminAccount && (filterDiv !== 'all' || filterGrp !== 'all' || filterPos !== 'all')) return false;
+
       const matchSearch = search.length === 1
         ? (e.first_name_th?.toLowerCase().startsWith(search.toLowerCase()) || 
            e.last_name_th?.toLowerCase().startsWith(search.toLowerCase()) ||
