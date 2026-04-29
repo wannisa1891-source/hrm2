@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense, useMemo } from 'react';
+import html2canvas from 'html2canvas';
 import AppLayout from '@/components/layout/AppLayout';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
@@ -15,6 +16,7 @@ import Swal from 'sweetalert2';
 import { useAuth } from '@/contexts/AuthContext';
 import EmployeeFormModal from '@/components/employees/EmployeeFormModal';
 import Image from 'next/image';
+import { formatDateToBE } from '@/lib/dateUtils';
 
 const EMPTY_FORM: Partial<Employee> = {
   prefix: 'นาย', first_name_th: '', last_name_th: '',
@@ -65,6 +67,158 @@ function EmployeesContent() {
   const [isBulkPrinting, setIsBulkPrinting] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Customization States for ID Card
+  const [cardBgColor, setCardBgColor] = useState('#ffffff');
+  const [cardPrimaryColor, setCardPrimaryColor] = useState('#1E3A8A');
+  const [cardSecondaryColor, setCardSecondaryColor] = useState('#F97316');
+  
+  const [showTopLogo, setShowTopLogo] = useState(true);
+  const [topLogo, setTopLogo] = useState('/images/moph_logo.png');
+  const [topLogoWidth, setTopLogoWidth] = useState(55);
+  const [topLogoHeight, setTopLogoHeight] = useState(55);
+
+  const [showBottomLogo, setShowBottomLogo] = useState(true);
+  const [bottomLogo, setBottomLogo] = useState('/images/chaam_hospital_logo.png');
+  const [bottomLogoWidth, setBottomLogoWidth] = useState(120); 
+  const [bottomLogoHeight, setBottomLogoHeight] = useState(60); 
+
+  const [empImageWidth, setEmpImageWidth] = useState(130);
+  const [empImageHeight, setEmpImageHeight] = useState(165);
+
+  const [nameFontSize, setNameFontSize] = useState(17);
+  const [posFontSize, setPosFontSize] = useState(15);
+  const [textColor, setTextColor] = useState('#0f172a');
+  const [showSignature, setShowSignature] = useState(true);
+  const [empImageBorderRadius, setEmpImageBorderRadius] = useState(12);
+  const [profileYOffset, setProfileYOffset] = useState(80);
+  const [showWaveDecoration, setShowWaveDecoration] = useState(true);
+
+  const [directorName, setDirectorName] = useState('นายแพทย์ประกิต เมฆชื่น');
+  const [directorTitle, setDirectorTitle] = useState('ผู้อำนวยการโรงพยาบาลชะอำ');
+  const [directorSignature, setDirectorSignature] = useState<string | null>(null);
+
+  // Custom Employee Data Overrides
+  const [cardOverrides, setCardOverrides] = useState<Record<string, { pos?: string, nameTH?: string, nameEN?: string }>>({});
+  const [activeEditCardId, setActiveEditCardId] = useState<string | null>(null);
+  const [cardBgImage, setCardBgImage] = useState<string | null>(null);
+
+  const [expandedSection, setExpandedSection] = useState<string>('colors');
+
+  const activeOverride = activeEditCardId ? cardOverrides[activeEditCardId] || {} : {};
+
+  const setOverrideField = (field: 'pos' | 'nameTH' | 'nameEN', val: string) => {
+    if (!activeEditCardId) return;
+    setCardOverrides(prev => ({
+      ...prev,
+      [activeEditCardId]: { ... (prev[activeEditCardId] || {}), [field]: val }
+    }));
+  };
+
+  // Load settings from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('employeeIdCardSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.cardBgColor) setCardBgColor(s.cardBgColor);
+        if (s.cardPrimaryColor) setCardPrimaryColor(s.cardPrimaryColor);
+        if (s.cardSecondaryColor) setCardSecondaryColor(s.cardSecondaryColor);
+        
+        if (s.showTopLogo !== undefined) setShowTopLogo(s.showTopLogo);
+        if (s.topLogo) setTopLogo(s.topLogo);
+        if (s.topLogoWidth) setTopLogoWidth(s.topLogoWidth);
+        if (s.topLogoHeight) setTopLogoHeight(s.topLogoHeight);
+        
+        if (s.showLogo !== undefined && s.showBottomLogo === undefined) setShowBottomLogo(s.showLogo); // Migration
+        else if (s.showBottomLogo !== undefined) setShowBottomLogo(s.showBottomLogo);
+        
+        if (s.bottomLogo) setBottomLogo(s.bottomLogo);
+        if (s.bottomLogoWidth) setBottomLogoWidth(s.bottomLogoWidth);
+        if (s.bottomLogoHeight) setBottomLogoHeight(s.bottomLogoHeight);
+        
+        if (s.empImageWidth) setEmpImageWidth(s.empImageWidth);
+        if (s.empImageHeight) setEmpImageHeight(s.empImageHeight);
+        if (s.nameFontSize) setNameFontSize(s.nameFontSize);
+        if (s.posFontSize) setPosFontSize(s.posFontSize);
+        if (s.textColor) setTextColor(s.textColor);
+        if (s.showSignature !== undefined) setShowSignature(s.showSignature);
+        if (s.empImageBorderRadius) setEmpImageBorderRadius(s.empImageBorderRadius);
+        if (s.profileYOffset) setProfileYOffset(s.profileYOffset);
+        if (s.showWaveDecoration !== undefined) setShowWaveDecoration(s.showWaveDecoration);
+        if (s.directorName) setDirectorName(s.directorName);
+        if (s.directorTitle) setDirectorTitle(s.directorTitle);
+        if (s.directorSignature) setDirectorSignature(s.directorSignature);
+        if (s.cardBgImage) setCardBgImage(s.cardBgImage);
+        if (s.cardOverrides) setCardOverrides(s.cardOverrides);
+      } catch (err) {}
+    }
+  }, []);
+
+  const saveSettings = () => {
+    // Filter cardOverrides to only keep those with at least one field having a value
+    const filteredOverrides = Object.fromEntries(
+      Object.entries(cardOverrides).filter(([_, val]) => (val.pos || '').trim() || (val.nameTH || '').trim() || (val.nameEN || '').trim())
+    );
+
+    const s = { 
+      cardBgColor, cardPrimaryColor, cardSecondaryColor, 
+      showTopLogo, topLogo, topLogoWidth, topLogoHeight,
+      showBottomLogo, bottomLogo, bottomLogoWidth, bottomLogoHeight, 
+      empImageWidth, empImageHeight, nameFontSize, posFontSize, textColor, showSignature, 
+      empImageBorderRadius, profileYOffset, showWaveDecoration, directorName, directorTitle, 
+      directorSignature, cardBgImage, cardOverrides: filteredOverrides
+    };
+    localStorage.setItem('employeeIdCardSettings', JSON.stringify(s));
+    Swal.fire({ title: 'บันทึกสำเร็จ', text: 'บันทึกการตั้งค่าเรียบร้อยแล้ว', icon: 'success', timer: 1500, showConfirmButton: false });
+  };
+
+  const handleTopLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTopLogo(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDirectorSignature(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBottomLogo(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Auto-select first card for editing when modal opens
+  useEffect(() => {
+    if (showIdCard) {
+      if (isBulkPrinting && selectedIds.length > 0) {
+        setActiveEditCardId(selectedIds[0]);
+      } else if (!isBulkPrinting && selectedEmpForCard) {
+        setActiveEditCardId(selectedEmpForCard.emp_id);
+      }
+    } else {
+      setActiveEditCardId(null);
+    }
+  }, [showIdCard, isBulkPrinting, selectedIds, selectedEmpForCard]);
+
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
@@ -318,9 +472,26 @@ function EmployeesContent() {
           admission_date: parseDate(row['วันที่บรรจุ'] || row['admission_date']),
           retirement_date: parseDate(row['วันที่เกษียณ'] || row['retirement_date']),
           emp_type: row['ประเภทการจ้างงาน'] || row['ประเภทพนักงาน'] || row['สถานะ'] || 'พนักงานราชการ',
-          status: row['สถานะพนักงาน'] || row['สถานะการทำงาน'] || 'ทำงานปกติ',
+          status: (() => {
+            // ดึงค่าจากทุกคอลัมน์มารวมกันเพื่อค้นหา Keywords (เพราะบางทีคุณหมอพิมพ์ไว้นอกคอลัมน์ที่กำหนด)
+            const allValues = Object.values(row).map(v => String(v || '').trim()).join(' ').toLowerCase();
+
+            if (allValues.includes('ศึกษา')) return 'ลาศึกษา';
+            if (allValues.includes('เกษียณ') || allValues.includes('60')) return 'เกษียณอายุ 60 ปีขึ้นไป';
+            if (allValues.includes('ลาออก') || allValues.includes('resigned') || allValues.includes('พ้นสภาพ')) return 'ลาออก/พ้นสภาพ';
+            if (allValues.includes('ทดลองงาน')) return 'ทดลองงาน';
+            if (allValues.includes('ให้ออก')) return 'ให้ออก';
+            if (allValues.includes('หยุดปฏิบัติงาน') || allValues.includes('พักงาน')) return 'หยุดปฏิบัติงาน';
+            return 'ทำงานปกติ';
+          })(),
           role: row['สิทธิ์ผู้ใช้งาน'] || 'User',
-          working_at: row['ปฏิบัติงานที่'] || row['working_at'] || '',
+          working_at: (() => {
+            const w = String(row['ปฏิบัติงานที่'] || row['working_at'] || '').trim();
+            const lowerW = w.toLowerCase();
+            // ถ้าเป็นคำสั่งสถานะ ไม่ต้องเอามาใส่ในช่องที่ทำงาน
+            if (lowerW.includes('ศึกษา') || lowerW.includes('เกษียณ') || lowerW.includes('60') || lowerW.includes('ลาออก') || lowerW.includes('พ้นสภาพ') || lowerW.includes('ทดลองงาน') || lowerW.includes('ให้ออก') || lowerW.includes('หยุด') || lowerW.includes('พักงาน')) return '';
+            return w;
+          })(),
           dept_id: dept ? dept.dept_id : (row['แผนก']?.toString().trim() || null),
           pos_id: pos ? pos.pos_id : (row['ตำแหน่ง']?.toString().trim() || row['ตำแหน่ง / ระดับ']?.toString().trim() || null),
           division: row['กลุ่มงาน']?.toString().trim() || defaultDivision,
@@ -417,21 +588,29 @@ function EmployeesContent() {
   };
   const getPosName = (id: string) => positions.find(p => p.pos_id === id)?.pos_name || id;
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterDiv, filterGrp, filterPos, filterStatus, filterLicense]);
+
   const filteredData = useMemo(() => {
     return employees.filter(e => {
       // ซ่อน Admin account เมื่อมีการ filter กลุ่มงาน/แผนก/ตำแหน่ง
       const isAdminAccount = e.role === 'Admin' || e.role === 'Super Admin';
       if (isAdminAccount && (filterDiv !== 'all' || filterGrp !== 'all' || filterPos !== 'all')) return false;
 
+      const firstName = (e.first_name_th || '').toLowerCase();
+      const lastName = (e.last_name_th || '').toLowerCase();
+      const empId = (e.emp_id || '').toLowerCase();
+      const s = search.toLowerCase();
+
       const matchSearch = search.length === 1
-        ? (e.first_name_th?.toLowerCase().startsWith(search.toLowerCase()) || 
-           e.last_name_th?.toLowerCase().startsWith(search.toLowerCase()) ||
-           e.emp_id?.toLowerCase().startsWith(search.toLowerCase()))
-        : `${e.first_name_th} ${e.last_name_th} ${e.emp_id}`.toLowerCase().includes(search.toLowerCase());
-      const dept = departments.find(d => d.dept_id === e.dept_id);
+        ? (firstName.startsWith(s) || lastName.startsWith(s) || empId.startsWith(s))
+        : `${firstName} ${lastName} ${empId}`.includes(s);
+
+      const dept = departments.find(d => String(d.dept_id) === String(e.dept_id));
       const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
         (filterGrp === 'all' || dept?.dept_name === filterGrp);
-      const matchPos = filterPos === 'all' || e.pos_id === filterPos;
+      const matchPos = filterPos === 'all' || String(e.pos_id) === String(filterPos);
       const matchStatus = filterStatus === 'all' || e.status === filterStatus;
 
       const primaryStatus = e.license_status;
@@ -558,8 +737,8 @@ function EmployeesContent() {
     ];
 
     const statuses = [
-      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา', 'หยุดปฏิบัติงาน', 
-      'เกษียณอายุ 60 ปีขึ้นไป', 'ให้ออก'
+      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา / ศึกษาต่อ', 'หยุดปฏิบัติงาน', 
+      'เกษียณ (อายุ 60)', 'ให้ออก'
     ];
 
     for (let i = 0; i < maxRows; i++) {
@@ -697,8 +876,8 @@ function EmployeesContent() {
     ];
 
     const statuses = [
-      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา', 'หยุดปฏิบัติงาน', 
-      'เกษียณอายุ 60 ปีขึ้นไป', 'ให้ออก'
+      'ทำงานปกติ', 'ทดลองงาน', 'ลาศึกษา / ศึกษาต่อ', 'หยุดปฏิบัติงาน', 
+      'เกษียณ (อายุ 60)', 'ให้ออก'
     ];
 
     for (let i = 0; i < maxRows; i++) {
@@ -721,7 +900,7 @@ function EmployeesContent() {
   };
 
   if (user && !isAdmin) {
-    return null; // Return nothing while redirecting
+    return null;
   }
 
   return (
@@ -756,6 +935,12 @@ function EmployeesContent() {
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                   เพิ่มพนักงานใหม่
                 </button>
+                {selectedIds.length > 0 && (
+                  <button className="btn-primary" onClick={handleBulkPrint} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0ea5e9' }}>
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    พิมพ์บัตร {selectedIds.length} รายการ
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -797,6 +982,19 @@ function EmployeesContent() {
                     .map(d => String(d.dept_name || '').trim())
                 ))
                   .filter(Boolean)
+                  .filter(grp => {
+                    const g = grp.replace(/เเ/g, 'แ');
+                    if (g === '-') return false;
+                    if (g === 'กลุ่มการแพทย์' || g === 'กลุ่มงานการแพทย์' || g === 'การแพทย์') return false;
+                    if (g === 'กลุ่มงานเทคนิคการแพทย์' || g === 'เทคนิคการแพทย์') return false;
+                    if (g === 'กลุ่มงานเวชกรรมฟื้นฟู' || g === 'เวชกรรมฟื้นฟู') return false;
+                    if (g === 'กลุ่มงานทันตกรรม' || g === 'ทันตกรรม') return false;
+                    if (g === 'กลุ่มงานแพทย์แผนไทยและการแพทย์ทางเลือก' || g === 'แพทย์แผนไทยและการแพทย์ทางเลือก') return false;
+                    if (g === 'กลุ่มงานเภสัชกรรมและคุ้มครองผู้บริโภค' || g === 'เภสัชกรรมและคุ้มครองผู้บริโภค') return false;
+                    if (g === 'กลุ่มงานโภชนศาสตร์' || g === 'โภชนศาสตร์') return false;
+                    if (g === 'กลุ่มงานรังสีวิทยา' || g === 'รังสีวิทยา') return false;
+                    return true;
+                  })
                   .sort((a, b) => a.localeCompare(b, 'th'))
                   .map(grp => (
                     <option key={grp as string} value={grp as string}>{grp as string}</option>
@@ -811,7 +1009,7 @@ function EmployeesContent() {
                 className="form-select" 
                 style={{ width: '100%', padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '14px', outline: 'none', background: 'white' }} 
                 placeholder="พิมพ์ค้นหาตำแหน่ง..."
-                value={posSearch || (filterPos === 'all' ? '' : (positions.find(p => p.pos_id === filterPos)?.pos_name || filterPos))}
+                value={posSearch || (filterPos === 'all' ? '' : (positions.find(p => String(p.pos_id) === String(filterPos))?.pos_name || filterPos))}
                 onFocus={() => setIsPosOpen(true)}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -843,9 +1041,9 @@ function EmployeesContent() {
                         <div 
                           key={p.pos_id}
                           onClick={() => { setFilterPos(p.pos_id); setPosSearch(p.pos_name); setIsPosOpen(false); }}
-                          style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === p.pos_id ? '#eff6ff' : 'transparent', color: filterPos === p.pos_id ? '#1d4ed8' : '#334155', fontWeight: filterPos === p.pos_id ? 700 : 500, fontSize: '13px' }}
-                          onMouseEnter={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = '#f1f5f9'; }}
-                          onMouseLeave={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = 'transparent'; }}
+                          style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: String(filterPos) === String(p.pos_id) ? '#eff6ff' : 'transparent', color: String(filterPos) === String(p.pos_id) ? '#1d4ed8' : '#334155', fontWeight: String(filterPos) === String(p.pos_id) ? 700 : 500, fontSize: '13px' }}
+                          onMouseEnter={e => { if(String(filterPos) !== String(p.pos_id)) e.currentTarget.style.background = '#f1f5f9'; }}
+                          onMouseLeave={e => { if(String(filterPos) !== String(p.pos_id)) e.currentTarget.style.background = 'transparent'; }}
                         >
                           {p.pos_name}
                         </div>
@@ -860,9 +1058,9 @@ function EmployeesContent() {
               <option value="all">สถานะการทำงาน: ทั้งหมด</option>
               <option value="ทำงานปกติ">ทำงานปกติ (Active)</option>
               <option value="ทดลองงาน">ทดลองงาน</option>
-              <option value="ลาศึกษา">ลาศึกษา</option>
+              <option value="ลาศึกษา">ลาศึกษา / ศึกษาต่อ</option>
               <option value="หยุดปฏิบัติงาน">หยุดปฏิบัติงาน</option>
-              <option value="เกษียณอายุ 60 ปีขึ้นไป">เกษียณอายุ 60 ปีขึ้นไป</option>
+              <option value="เกษียณอายุ 60 ปีขึ้นไป">เกษียณ (อายุ 60)</option>
               <option value="ให้ออก">ให้ออก</option>
             </select>
             <select className="form-select" style={{ width: 'auto', minWidth: '160px' }} value={filterLicense} onChange={e => setFilterLicense(e.target.value)}>
@@ -878,6 +1076,9 @@ function EmployeesContent() {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th style={{ textAlign: 'center', width: '40px' }}>
+                    <input type="checkbox" checked={selectedIds.length === currentData.length && currentData.length > 0} onChange={toggleSelectAll} style={{ width: '16px', height: '16px', accentColor: '#3b82f6', cursor: 'pointer' }} />
+                  </th>
                   <th style={{ textAlign: 'center', width: '60px' }}>ลำดับ</th>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
                   <th style={{ textAlign: 'center' }}>เลขประจำตำแหน่ง</th>
@@ -907,13 +1108,15 @@ function EmployeesContent() {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = emp.license_status === 'Expired' ? '#fff5f5' : 'transparent'}
                       >
+                        <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                          <input type="checkbox" checked={selectedIds.includes(emp.emp_id)} onChange={() => toggleSelectRow(emp.emp_id)} style={{ width: '16px', height: '16px', accentColor: '#3b82f6', cursor: 'pointer' }} />
+                        </td>
                         <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 600 }}>
                           {((currentPage - 1) * itemsPerPage) + idx + 1}
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ width: '48px', height: '48px', position: 'relative', borderRadius: '14px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifySelf: 'center', margin: '0 auto', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
-                            {emp.image ? <Image fill src={`/uploads/${emp.image}`} alt="" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} /> : <span style={{ color: '#94a3b8', fontSize: '20px' }}>👤</span>}
-                          </div>
+                            {emp.image ? <Image fill src={`/uploads/${encodeURIComponent(emp.image)}`} alt="" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f1f5f9" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} /> : <svg width="24" height="24" viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>}                          </div>
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ padding: '4px 8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'inline-block', fontWeight: 600, color: '#334155' }}>
@@ -970,10 +1173,10 @@ function EmployeesContent() {
                                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                                 </button>
                                 <button className="icon-btn hover-glow" onClick={() => openEdit(emp)} title="แก้ไขข้อมูล" style={{ color: '#3b82f6' }}>
-                                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002-2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                 </button>
                                 <button className="icon-btn hover-glow" onClick={() => handleDelete(emp.emp_id)} title="ลบข้อมูล" style={{ color: '#ef4444', background: '#fef2f2' }}>
-                                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2-0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 </button>
                               </>
                             )}
@@ -1041,146 +1244,461 @@ function EmployeesContent() {
         positions={positions}
       />
 
+
       {/* ID Card Modal */}
       {showIdCard && (isBulkPrinting ? selectedIds.length > 0 : selectedEmpForCard) && (
         <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 1100 }}>
-          <div className="modal-box" style={{ background: '#ca8888ff', borderRadius: '24px', padding: '24px', width: isBulkPrinting ? '700px' : '360px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
+          <div className="modal-box" style={{ background: '#ffffff', borderRadius: '24px', padding: '24px', width: '950px', maxWidth: '95vw', maxHeight: '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}>
 
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{isBulkPrinting ? 'บัตรพนักงาน (จำนวนมาก)' : 'บัตรพนักงาน'}</h3>
               <button type="button" onClick={() => setShowIdCard(false)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', color: '#64748b' }}>✕</button>
             </div>
 
-            <div style={{ flex: 1, width: '100%', overflowY: 'auto', display: 'block' }} className="custom-scrollbar">
-              <div
-                ref={printRef}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '40px',
-                  padding: '16px',
-                  background: 'white',
-                  width: isBulkPrinting ? '210mm' : 'auto', // A4 width approximately
-                  margin: '0 auto',
-                  alignItems: 'center'
-                }}
-              >
-                {(isBulkPrinting ? currentData.filter(emp => selectedIds.includes(emp.emp_id)) : [selectedEmpForCard!]).map((empForCard) => (
-                  <div key={empForCard.emp_id} style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center', pageBreakInside: 'avoid', margin: '0 auto', width: '100%' }}>
+            <div style={{ display: 'flex', gap: '24px', width: '100%', flex: 1, overflow: 'hidden' }}>
+              {/* Left: Controls */}
+              <div style={{ width: '320px', flexShrink: 0, background: '#f8fafc', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px', overflowY: 'auto', border: '1px solid #e2e8f0' }} className="custom-scrollbar">
 
-                    {/* --- Front Card --- */}
-                    <div style={{ width: '300px', height: '480px', background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0 }}>
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 700, color: '#1e293b', borderBottom: '2px solid #e2e8f0', paddingBottom: '10px' }}>⚙️ ปรับแต่งบัตร</h4>
+                
+                <button type="button" onClick={saveSettings} style={{ background: '#3b82f6', color: 'white', padding: '10px', borderRadius: '10px', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 6px -1px rgba(59,130,246,0.3)' }}>
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                  บันทึกการตั้งค่า
+                </button>
 
-                      {/* Abstract blobs */}
-                      <div style={{ position: 'absolute', top: '-40px', left: '-20px', width: '280px', height: '260px', background: '#0f172a', borderRadius: '0 0 60% 40% / 0 0 50% 70%', zIndex: 2 }} />
-                      <div style={{ position: 'absolute', top: 0, right: '-60px', width: '200px', height: '280px', background: '#f59e0b', borderRadius: '0 0 40% 60%', zIndex: 1 }} />
-                      <div style={{ position: 'absolute', bottom: '-40px', left: '-40px', width: '120px', height: '120px', background: '#f59e0b', borderRadius: '50%', zIndex: 1 }} />
+                {/* Background & Colors */}
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>🖼️ ภาพพื้นหลังการ์ด</label>
+                  <input type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setCardBgImage(reader.result as string);
+                        setShowWaveDecoration(false);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }} style={{ fontSize: '12px', width: '100%', marginBottom: '6px' }} />
+                  {cardBgImage && <button onClick={() => { setCardBgImage(null); setShowWaveDecoration(true); }} style={{ fontSize: '11px', color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}>ล้างภาพพื้นหลัง</button>}
+                </div>
 
-                      {/* Logo / Tagline */}
-                      <div style={{ position: 'relative', zIndex: 3, padding: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '28px', height: '28px', background: '#f59e0b', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <div style={{ width: '12px', height: '12px', border: '2px solid #0f172a', borderRadius: '50%' }} />
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.5px', lineHeight: 1 }}>HRM SYSTEM</div>
-                          <div style={{ fontSize: '9px', color: '#cbd5e1', marginTop: '2px', letterSpacing: '0.5px' }}>EMPLOYEE ID CARD</div>
-                        </div>
-                      </div>
-
-                      {/* Image */}
-                      <div style={{ position: 'relative', zIndex: 3, marginTop: '4px', display: 'flex', justifyContent: 'center' }}>
-                        <div style={{ width: '130px', height: '130px', position: 'relative', borderRadius: '50%', border: '6px solid #ffffff', boxShadow: '0 8px 16px rgba(0,0,0,0.1)', background: '#f1f5f9', overflow: 'hidden' }}>
-                          <Image fill src={empForCard.image ? `/uploads/${empForCard.image}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>`} alt="Employee" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f1f5f9" width="100" height="100"/><text fill="%2394a3b8" font-size="50" x="50" y="68" text-anchor="middle">👤</text></svg>'; }} />
-                        </div>
-                      </div>
-                      {/* Details Info Grid */}
-                      <div style={{ position: 'relative', zIndex: 3, marginTop: '24px', padding: '0 32px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '50px 1fr', gap: '6px 8px', fontSize: '11px' }}>
-                          <div style={{ color: '#64748b', fontWeight: 600 }}>ID</div>
-                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {(() => {
-                            const idVal = empForCard.position_no;
-                            if (!idVal || idVal.trim() === '' || idVal.replace(/0/g, '') === '') return '-';
-                            return idVal;
-                          })()}</div>
-                          <div style={{ color: '#64748b', fontWeight: 600 }}>DOB</div>
-                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.birth_date ? new Date(empForCard.birth_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</div>
-                          <div style={{ color: '#64748b', fontWeight: 600 }}>Phone</div>
-                          <div style={{ color: '#0f172a', fontWeight: 700 }}>: {empForCard.phone || '-'}</div>
-                          <div style={{ color: '#64748b', fontWeight: 600 }}>Email</div>
-                          <div style={{ color: '#0f172a', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>: {empForCard.email || '-'}</div>
-                        </div>
-                      </div>
-
-                      {/* Barcode/QR wrapper */}
-                      <div style={{ position: 'absolute', bottom: '20px', left: '0', right: '0', display: 'flex', justifyContent: 'center', zIndex: 3 }}>
-                        <QRCodeSVG value={empForCard.emp_id} size={48} level="M" />
-                      </div>
-
-                    </div>
-
-                    {/* --- Back Card --- */}
-                    <div style={{ width: '300px', height: '480px', background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0 }}>
-
-                      {/* Blobs Back */}
-                      <div style={{ position: 'absolute', top: '-60px', left: '-20px', width: '360px', height: '180px', background: '#0f172a', borderRadius: '0 0 50% 50%', zIndex: 2 }} />
-                      <div style={{ position: 'absolute', top: 0, right: '-40px', width: '160px', height: '160px', background: '#f59e0b', borderRadius: '0 0 0 60%', zIndex: 1 }} />
-                      <div style={{ position: 'absolute', bottom: '-40px', left: '-40px', width: '120px', height: '120px', background: '#f59e0b', borderRadius: '50%', zIndex: 1 }} />
-
-                      {/* Logo / Tagline */}
-                      <div style={{ position: 'relative', zIndex: 3, padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <div style={{ width: '24px', height: '24px', background: '#f59e0b', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <div style={{ width: '10px', height: '10px', border: '2px solid #0f172a', borderRadius: '50%' }} />
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.5px', lineHeight: 1 }}>HRM SYSTEM</div>
-                        </div>
-                      </div>
-
-                      {/* Content */}
-                      <div style={{ position: 'relative', zIndex: 3, padding: '20px 28px', marginTop: '40px' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', textAlign: 'center', margin: '0 0 20px 0', letterSpacing: '0.5px' }}>ข้อกำหนดและเงื่อนไข</h3>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: '4px' }} />
-                            <div>บัตรนี้เป็นทรัพย์สินของบริษัทและต้องคืนเมื่อสิ้นสุดการจ้างงาน</div>
-                          </div>
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: '4px' }} />
-                            <div>ท่านต้องสวมบัตรประจำตัวนี้ให้เห็นชัดเจนตลอดเวลาขณะอยู่ในบริเวณบริษัท</div>
-                          </div>
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: '4px' }} />
-                            <div>หากพบเห็นโปรดส่งคืนฝ่ายทรัพยากรบุคคลทันที</div>
-                          </div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', fontSize: '12px', fontWeight: 600, color: '#475569' }}>
-                          <div>
-                            <div style={{ marginBottom: '6px' }}>วันที่เริ่มงาน &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(empForCard.start_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</span></div>
-                            <div>วันหมดอายุ &nbsp;: <span style={{ color: '#0f172a' }}>{empForCard.start_date ? new Date(new Date(empForCard.start_date).setFullYear(new Date(empForCard.start_date).getFullYear() + 5)).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</span></div>
-                          </div>
-                        </div>
-
-                        {/* Signature */}
-                        <div style={{ marginTop: '40px', textAlign: 'center' }}>
-                          <div style={{ fontFamily: "'Brush Script MT', 'Dancing Script', cursive", fontSize: '24px', color: '#0f172a', margin: '0', lineHeight: 1, height: '24px' }}>Wannisa</div>
-                          <div style={{ borderTop: '1px solid #cbd5e1', margin: '8px auto 0', width: '140px', paddingTop: '6px' }} />
-                          <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>ลายมือชื่อผู้มีอำนาจ</div>
-                        </div>
-
-                      </div>
-                    </div>
-
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>🎨 ชุดสี (พื้นหลัง / หลัก / รอง)</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input type="color" title="สีพื้นหลัง" value={cardBgColor} onChange={(e) => setCardBgColor(e.target.value)} style={{ flex: 1, height: '36px', padding: '2px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }} />
+                    <input type="color" title="สีหลัก" value={cardPrimaryColor} onChange={(e) => setCardPrimaryColor(e.target.value)} style={{ flex: 1, height: '36px', padding: '2px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }} />
+                    <input type="color" title="สีรอง" value={cardSecondaryColor} onChange={(e) => setCardSecondaryColor(e.target.value)} style={{ flex: 1, height: '36px', padding: '2px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }} />
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            <button className="btn-primary" onClick={() => handlePrint()} style={{ marginTop: '24px', width: isBulkPrinting ? '300px' : '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px' }}>
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-              บัตรพนักงาน {isBulkPrinting ? `(${selectedIds.length} ใบ)` : ''}
-            </button>
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>🌊 ลายเส้น/คลื่นตกแต่ง</label>
+                  <input type="checkbox" checked={showWaveDecoration} onChange={(e) => setShowWaveDecoration(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#3b82f6', cursor: 'pointer' }} />
+                </div>
+
+                {/* Logo 1 (Top Left) */}
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>🏢 โลโก้ 1 (ซ้ายบน)</label>
+                    <input type="checkbox" checked={showTopLogo} onChange={(e) => setShowTopLogo(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#3b82f6', cursor: 'pointer' }} />
+                  </div>
+                  <input type="file" accept="image/*" onChange={handleTopLogoUpload} style={{ fontSize: '12px', width: '100%', padding: '6px', border: '1px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', marginBottom: '8px' }} />
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '2px' }}><span>ความกว้าง</span><span>{topLogoWidth}px</span></div>
+                  <input type="range" min="30" max="150" value={topLogoWidth} onChange={(e) => setTopLogoWidth(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6', marginBottom: '6px' }} />
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '2px' }}><span>ความสูง</span><span>{topLogoHeight}px</span></div>
+                  <input type="range" min="30" max="150" value={topLogoHeight} onChange={(e) => setTopLogoHeight(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6' }} />
+                </div>
+
+                {/* Logo 2 (Bottom Right) */}
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>🏢 โลโก้ 2 (ขวาล่าง)</label>
+                    <input type="checkbox" checked={showBottomLogo} onChange={(e) => setShowBottomLogo(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#3b82f6', cursor: 'pointer' }} />
+                  </div>
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ fontSize: '12px', width: '100%', padding: '6px', border: '1px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', marginBottom: '8px' }} />
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '2px' }}><span>ความกว้าง</span><span>{bottomLogoWidth}px</span></div>
+                  <input type="range" min="40" max="250" value={bottomLogoWidth} onChange={(e) => setBottomLogoWidth(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6', marginBottom: '6px' }} />
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '2px' }}><span>ความสูง</span><span>{bottomLogoHeight}px</span></div>
+                  <input type="range" min="20" max="200" value={bottomLogoHeight} onChange={(e) => setBottomLogoHeight(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6' }} />
+                </div>
+
+                {/* Profile Adjustments */}
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span>👤 ความกว้างรูปพนักงาน:</span>
+                    <span style={{ fontWeight: 700, color: '#16a34a' }}>{empImageWidth}px</span>
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button onClick={() => setEmpImageWidth(prev => Math.max(80, prev - 5))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>-</button>
+                    <input type="range" min="80" max="250" value={empImageWidth} onChange={(e) => setEmpImageWidth(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#16a34a' }} />
+                    <button onClick={() => setEmpImageWidth(prev => Math.min(250, prev + 5))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                  </div>
+                </div>
+
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span>👤 ความสูงรูปพนักงาน:</span>
+                    <span style={{ fontWeight: 700, color: '#16a34a' }}>{empImageHeight}px</span>
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button onClick={() => setEmpImageHeight(prev => Math.max(100, prev - 5))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>-</button>
+                    <input type="range" min="100" max="300" value={empImageHeight} onChange={(e) => setEmpImageHeight(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#16a34a' }} />
+                    <button onClick={() => setEmpImageHeight(prev => Math.min(300, prev + 5))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                  </div>
+                </div>
+
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span>👤 ความโค้งมนรูป:</span>
+                    <span style={{ fontWeight: 700, color: '#16a34a' }}>{empImageBorderRadius}px</span>
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button onClick={() => setEmpImageBorderRadius(prev => Math.max(0, prev - 2))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>-</button>
+                    <input type="range" min="0" max="100" value={empImageBorderRadius} onChange={(e) => setEmpImageBorderRadius(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#16a34a' }} />
+                    <button onClick={() => setEmpImageBorderRadius(prev => Math.min(100, prev + 2))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                  </div>
+                </div>
+
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span>📍 ตำแหน่งแนวตั้งรูป:</span>
+                    <span style={{ fontWeight: 700, color: '#16a34a' }}>{profileYOffset}px</span>
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button onClick={() => setProfileYOffset(prev => Math.max(20, prev - 5))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>-</button>
+                    <input type="range" min="20" max="150" value={profileYOffset} onChange={(e) => setProfileYOffset(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#16a34a' }} />
+                    <button onClick={() => setProfileYOffset(prev => Math.min(150, prev + 5))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                  </div>
+                </div>
+
+                {/* Text Adjustments */}
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>🔤 สีตัวอักษรหลัก</label>
+                  <input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} style={{ width: '100%', height: '36px', padding: '2px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }} />
+                </div>
+
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span>📏 ขนาดชื่อ:</span>
+                    <span style={{ fontWeight: 700, color: '#7c3aed' }}>{nameFontSize}px</span>
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button onClick={() => setNameFontSize(prev => Math.max(10, prev - 1))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>-</button>
+                    <input type="range" min="10" max="30" value={nameFontSize} onChange={(e) => setNameFontSize(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#7c3aed' }} />
+                    <button onClick={() => setNameFontSize(prev => Math.min(30, prev + 1))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                  </div>
+                </div>
+
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span>📏 ขนาดตำแหน่ง:</span>
+                    <span style={{ fontWeight: 700, color: '#7c3aed' }}>{posFontSize}px</span>
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button onClick={() => setPosFontSize(prev => Math.max(10, prev - 1))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>-</button>
+                    <input type="range" min="10" max="30" value={posFontSize} onChange={(e) => setPosFontSize(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#7c3aed' }} />
+                    <button onClick={() => setPosFontSize(prev => Math.min(30, prev + 1))} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                  </div>
+                </div>
+
+                {/* Overrides */}
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <h5 style={{ margin: '0', fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>📝 ข้อมูลพนักงาน (เขียนทับ)</h5>
+                  {isBulkPrinting && <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>* คลิกเลือกบัตรในตัวอย่างเพื่อแก้ไขรายคน</p>}
+                  
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>ตำแหน่ง:</label>
+                    <input type="text" placeholder="เว้นว่างเพื่อใช้ค่าจากระบบ" value={activeOverride.pos || ''} onChange={(e) => setOverrideField('pos', e.target.value)} style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>ชื่อ-สกุล (ไทย):</label>
+                    <input type="text" placeholder="เว้นว่างเพื่อใช้ค่าจากระบบ" value={activeOverride.nameTH || ''} onChange={(e) => setOverrideField('nameTH', e.target.value)} style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>ชื่อ-สกุล (อังกฤษ):</label>
+                    <input type="text" placeholder="เว้นว่างเพื่อใช้ค่าจากระบบ" value={activeOverride.nameEN || ''} onChange={(e) => setOverrideField('nameEN', e.target.value)} style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
+                  </div>
+                </div>
+
+                {/* Director */}
+                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h5 style={{ margin: '0', fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>👤 ข้อมูลลงนาม</h5>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', color: '#64748b' }}>แสดง</label>
+                      <input type="checkbox" checked={showSignature} onChange={(e) => setShowSignature(e.target.checked)} style={{ width: '14px', height: '14px', accentColor: '#3b82f6', cursor: 'pointer' }} />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>ชื่อ-นามสกุล:</label>
+                    <input type="text" value={directorName} onChange={(e) => setDirectorName(e.target.value)} style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>ตำแหน่ง:</label>
+                    <input type="text" value={directorTitle} onChange={(e) => setDirectorTitle(e.target.value)} style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>อัปโหลดลายเซ็นใหม่:</label>
+                    <input type="file" accept="image/*" onChange={handleSignatureUpload} style={{ fontSize: '11px', width: '100%', padding: '6px', border: '1px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc' }} />
+                  </div>
+                </div>
+              </div>
+
+
+
+              {/* Right: Card Preview */}
+              <div style={{ flex: 1, overflowY: 'auto', display: 'block', background: '#f1f5f9', borderRadius: '16px', padding: '24px' }} className="custom-scrollbar">
+                  {(() => {
+                    const cardsToPrint = isBulkPrinting ? currentData.filter(emp => selectedIds.includes(emp.emp_id)) : [selectedEmpForCard!];
+                    const chunks = isBulkPrinting ? cardsToPrint.reduce((acc, item, i) => {
+                      const chunkIndex = Math.floor(i / 9);
+                      if (!acc[chunkIndex]) acc[chunkIndex] = [];
+                      acc[chunkIndex].push(item);
+                      return acc;
+                    }, [] as Employee[][]) : [cardsToPrint];
+
+                    return (
+                      <>
+                        <style type="text/css">
+                          {`
+                            @media print {
+                              @page { size: A4; margin: 0; }
+                              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; }
+                              body > * { display: none !important; }
+                              .modal-overlay, .modal-overlay * { display: none !important; }
+                              .modal-overlay { display: block !important; position: static !important; background: white !important; padding: 0 !important; width: 210mm !important; }
+                              .modal-box { display: block !important; position: static !important; width: 210mm !important; padding: 0 !important; box-shadow: none !important; }
+                              .modal-box > div { display: none !important; }
+                              .modal-box > div:has(.print-area-container) { display: block !important; }
+                              .print-area-container, .print-area-container * { display: block !important; }
+                              .print-page { 
+                                display: grid !important;
+                                grid-template-columns: repeat(3, 1fr) !important;
+                                grid-template-rows: repeat(3, 1fr) !important;
+                                gap: 0 !important;
+                                padding: 0 !important;
+                                page-break-after: always; 
+                                width: 210mm !important;
+                                height: 295mm !important;
+                                background: white !important;
+                                box-sizing: border-box !important;
+                                overflow: hidden !important;
+                                margin: 0 !important;
+                              }
+                              .card-to-print {
+                                width: 70mm !important;
+                                height: 99mm !important;
+                                transform: none !important;
+                                box-shadow: none !important;
+                                border: 0.1mm solid #eee !important;
+                                margin: 0 !important;
+                              }
+                              /* Hide sidebar and UI */
+                              [style*="width: 320px"], .btn-primary, .btn-outline, h3, h4 { display: none !important; }
+                            }
+                          `}
+                        </style>
+                        <div ref={printRef} className="print-area-container" style={{ background: 'transparent' }}>
+                          {chunks.map((chunk, pageIndex) => (
+                            <div 
+                              key={pageIndex}
+                              className={isBulkPrinting ? "print-page" : ""}
+                              style={isBulkPrinting ? {
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(3, 1fr)',
+                                gridTemplateRows: 'repeat(3, 1fr)',
+                                gap: '0',
+                                padding: '0',
+                                background: 'white',
+                                width: '210mm',
+                                height: '297mm',
+                                margin: '0',
+                                justifyItems: 'center',
+                                alignItems: 'center',
+                                boxSizing: 'border-box',
+                                overflow: 'hidden'
+                              } : {
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '40px',
+                                padding: '16px',
+                                background: 'transparent',
+                                width: 'auto',
+                                margin: '0 auto',
+                                alignItems: 'center'
+                              }}
+                            >
+                        {chunk.map((empForCard) => {
+                          const overrides = cardOverrides[empForCard.emp_id] || {};
+                    const isActive = activeEditCardId === empForCard.emp_id || (!activeEditCardId && !isBulkPrinting);
+                    
+                    return (
+                      <div 
+                        key={empForCard.emp_id} 
+                        onClick={() => setActiveEditCardId(empForCard.emp_id)}
+                        style={{ 
+                          display: 'flex', 
+                          gap: '24px', 
+                          flexWrap: 'wrap', 
+                          justifyContent: 'center', 
+                          pageBreakInside: 'avoid', 
+                          margin: isBulkPrinting ? '0' : '0 auto', 
+                          width: isBulkPrinting ? '195px' : '100%', 
+                          height: isBulkPrinting ? '312px' : 'auto',
+                          cursor: 'pointer',
+                          position: 'relative'
+                        }}
+                      >
+                        {isActive && isBulkPrinting && (
+                          <div style={{ position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px', border: '3px solid #3b82f6', borderRadius: '20px', pointerEvents: 'none', zIndex: 10 }}></div>
+                        )}
+                        
+                        {/* --- Front Card --- */}
+                        <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: '300px', height: '480px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0, transformOrigin: 'top left' }}>
+                        {/* Background SVG Waves & Dots */}
+                        {showWaveDecoration && !cardBgImage && (
+                          <svg width="300" height="480" viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
+                            <defs>
+                              <pattern id={`dots-${empForCard.emp_id}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                                <circle cx="10" cy="10" r="2.5" fill="#cbd5e1" opacity="0.6" />
+                              </pattern>
+                              <linearGradient id={`fade-grad-${empForCard.emp_id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="white" stop-opacity="1" />
+                                <stop offset="80%" stop-color="white" stop-opacity="0.1" />
+                              </linearGradient>
+                              <mask id={`dots-mask-${empForCard.emp_id}`}>
+                                <rect width="300" height="480" fill={`url(#fade-grad-${empForCard.emp_id})`} />
+                              </mask>
+                            </defs>
+                            
+                            {/* Full Background Dots with Mask for subtle fade */}
+                            <rect width="300" height="480" fill={`url(#dots-${empForCard.emp_id})`} mask={`url(#dots-mask-${empForCard.emp_id})`} />
+                            
+                            {/* Top Right Waves */}
+                            <path d="M 100 0 Q 220 120 300 240 L 300 0 Z" fill={cardSecondaryColor} />
+                            <path d="M 180 0 Q 250 80 300 150 L 300 0 Z" fill={cardPrimaryColor} />
+                            
+                            {/* Bottom Left Waves */}
+                            <path d="M 0 280 Q 120 380 250 480 L 0 480 Z" fill={cardSecondaryColor} />
+                            <path d="M 0 380 Q 80 430 150 480 L 0 480 Z" fill={cardPrimaryColor} />
+                          </svg>
+                        )}
+
+
+                        {/* MOPH Logo (Top Left) */}
+                        {showTopLogo && (
+                          <div style={{ position: 'absolute', top: '15px', left: '15px', zIndex: 2 }}>
+                            <Image src={topLogo} width={topLogoWidth} height={topLogoHeight} style={{ objectFit: 'contain' }} alt="Top Logo" />
+                          </div>
+                        )}
+
+                        {/* Photo */}
+                        <div style={{ position: 'absolute', top: `${profileYOffset}px`, left: '50%', transform: 'translateX(-50%)', width: `${empImageWidth}px`, height: `${empImageHeight}px`, border: '1px solid #cbd5e1', background: '#f8fafc', zIndex: 2, overflow: 'hidden', borderRadius: `${empImageBorderRadius}px` }}>
+                          <Image fill src={empForCard.image ? `/uploads/${encodeURIComponent(empForCard.image)}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`} alt="Employee" style={{ objectFit: 'cover', borderRadius: `${empImageBorderRadius}px` }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} />
+                        </div>
+
+                        {/* Details */}
+                        <div style={{ position: 'absolute', top: `${profileYOffset + empImageHeight + 10}px`, left: '0', right: '0', textAlign: 'center', zIndex: 2, padding: '0 20px', fontFamily: "'Sarabun', sans-serif" }}>
+                          {/* Position */}
+                          <div style={{ fontSize: `${posFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '4px' }}>
+                            {overrides.pos || getPosName(empForCard.pos_id) || 'พนักงาน'}
+                          </div>
+                          {/* Name TH */}
+                          <div style={{ fontSize: `${nameFontSize}px`, fontWeight: 'bold', color: textColor, marginBottom: '2px' }}>
+                            {overrides.nameTH || `${empForCard.prefix || ''}${empForCard.first_name_th} ${empForCard.last_name_th}`}
+                          </div>
+                          {/* Name EN */}
+                          <div style={{ fontSize: '14px', color: '#475569', fontStyle: 'italic', marginBottom: '12px' }}>
+                            {overrides.nameEN || (empForCard.first_name_th === 'อิงครัตน์' ? 'Engkarat Chodsatidpokin' : `${empForCard.first_name_th} ${empForCard.last_name_th}`)}
+                          </div>
+
+                          {/* Signature Area */}
+                          {showSignature && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
+                              {directorSignature ? (
+                                <img src={directorSignature} style={{ width: '60px', height: '30px', objectFit: 'contain' }} alt="Director Signature" />
+                              ) : (
+                                <svg width="60" height="30" viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M 20 40 Q 30 10 50 30 T 80 20" stroke={cardPrimaryColor} strokeWidth="2" strokeLinecap="round" fill="none" />
+                                </svg>
+                              )}
+                              <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#1e293b', marginTop: '2px' }}>
+                                {directorName}
+                              </div>
+                              <div style={{ fontSize: '10px', color: '#64748b' }}>
+                                {directorTitle}
+                              </div>
+
+                            </div>
+                          )}
+                        </div>
+
+
+                        {/* Hospital Logo (Bottom Right) */}
+                        {showBottomLogo && (
+                          <div style={{ position: 'absolute', bottom: '15px', right: '15px', zIndex: 2 }}>
+                            <Image src={bottomLogo} width={bottomLogoWidth} height={bottomLogoHeight} style={{ objectFit: 'contain' }} alt="Bottom Logo" />
+                          </div>
+                        )}
+
+                        </div>
+                      </div>
+                    );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', width: '100%', marginTop: '24px' }}>
+              <button 
+                className="btn-outline" 
+                onClick={async () => {
+                  const targetId = activeEditCardId || (isBulkPrinting ? selectedIds[0] : selectedEmpForCard?.emp_id);
+                  if (!targetId) return;
+                  const element = document.getElementById(`card-${targetId}`);
+                  if (element) {
+                    // Temporarily remove transform for high quality capture
+                    const originalTransform = element.style.transform;
+                    element.style.transform = 'none';
+                    const canvas = await html2canvas(element, { useCORS: true, scale: 2 });
+                    element.style.transform = originalTransform;
+                    
+                    const link = document.createElement('a');
+                    link.download = `ID_Card_${targetId}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                  }
+                }} 
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px' }}
+              >
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                บันทึกภาพบัตร (PNG)
+              </button>
+
+              <button 
+                className="btn-primary" 
+                onClick={() => handlePrint()} 
+                style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: '#0f172a', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+              >
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                พิมพ์บัตร {isBulkPrinting ? `A4 (${selectedIds.length} ใบ)` : ''}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1210,9 +1728,9 @@ function StatusPicker({ emp, isAdmin, editEmployee }: any) {
   const statusOptions = [
     { value: 'ทำงานปกติ', label: 'ทำงานปกติ', color: '#16a34a', bg: '#dcfce7' },
     { value: 'ทดลองงาน', label: 'ทดลองงาน', color: '#a16207', bg: '#fef9c3' },
-    { value: 'ลาศึกษา', label: 'ลาศึกษา', color: '#2563eb', bg: '#dbeafe' },
+    { value: 'ลาศึกษา', label: 'ลาศึกษา / ศึกษาต่อ', color: '#2563eb', bg: '#dbeafe' },
     { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน', color: '#64748b', bg: '#f1f5f9' },
-    { value: 'เกษียณอายุ 60 ปีขึ้นไป', label: 'เกษียณอายุ 60 ปีขึ้นไป', color: '#7c3aed', bg: '#ede9fe' },
+    { value: 'เกษียณอายุ 60 ปีขึ้นไป', label: 'เกษียณ (อายุ 60)', color: '#7c3aed', bg: '#ede9fe' },
     { value: 'ให้ออก', label: 'ให้ออก', color: '#7f1d1d', bg: '#fecaca' },
   ];
 
