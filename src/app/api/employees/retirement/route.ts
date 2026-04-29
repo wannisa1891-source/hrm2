@@ -17,11 +17,12 @@ export async function GET(req: NextRequest) {
     const targetFY = fiscalYearStr ? parseInt(fiscalYearStr) : currentFY;
 
     const [employees]: any = await pool.query(`
-      SELECT e.emp_id, e.prefix, e.first_name_th, e.last_name_th, e.birth_date, e.dept_id, d.dept_name, p.pos_name
+      SELECT e.emp_id, e.prefix, e.first_name_th, e.last_name_th, e.birth_date, e.dept_id, e.status, d.dept_name, p.pos_name
       FROM tbl_employees e
       LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
       LEFT JOIN tbl_positions p ON e.pos_id = p.pos_id
-      WHERE e.status = 'ทำงานปกติ' AND (e.role IS NULL OR e.role != 'Admin')
+      WHERE e.status IN ('ทำงานปกติ', 'เกษียณอายุ 60 ปีขึ้นไป', 'ลาศึกษา', 'ทดลองงาน', 'หยุดปฏิบัติงาน') 
+        AND (e.role IS NULL OR e.role != 'Admin')
     `);
 
     const allProcessed = employees.map((emp: any) => {

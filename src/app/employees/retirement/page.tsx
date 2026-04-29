@@ -39,6 +39,7 @@ export default function RetirementPage() {
   const [filterDiv, setFilterDiv] = useState<string>('all');
   const [filterGrp, setFilterGrp] = useState<string>('all');
   const [filterPos, setFilterPos] = useState<string>('all');
+  const [filterRetirementStatus, setFilterRetirementStatus] = useState<string>('all');
   const [search, setSearch] = useState<string>('');
   const [posSearch, setPosSearch] = useState<string>('');
   const [isPosOpen, setIsPosOpen] = useState<boolean>(false);
@@ -84,6 +85,13 @@ export default function RetirementPage() {
         (filterGrp === 'all' || dept?.dept_name === filterGrp);
       const matchPos = filterPos === 'all' || emp.pos_id === filterPos || emp.pos_name === filterPos;
 
+      const isRetired = emp.status === 'เกษียณอายุ 60 ปีขึ้นไป';
+      const matchRetirementStatus = filterRetirementStatus === 'all'
+        ? true
+        : filterRetirementStatus === 'retired'
+          ? isRetired
+          : !isRetired;
+
       const matchSearch = !search
         ? true
         : search.length === 1
@@ -93,9 +101,9 @@ export default function RetirementPage() {
             emp.pos_name?.toLowerCase().startsWith(search.toLowerCase()))
           : `${emp.first_name_th} ${emp.last_name_th} ${emp.pos_name || ''}`.toLowerCase().includes(search.toLowerCase());
 
-      return matchDept && matchPos && matchSearch;
+      return matchDept && matchPos && matchRetirementStatus && matchSearch;
     });
-  }, [data, filterDiv, filterGrp, filterPos, search, departments]);
+  }, [data, filterDiv, filterGrp, filterPos, filterRetirementStatus, search, departments]);
 
   const breakdownData = useMemo(() => {
     if (!data?.employees) return [];
@@ -134,6 +142,15 @@ export default function RetirementPage() {
       'ตำแหน่ง': emp.pos_name || '-',
       'หน่วยงาน': emp.dept_name || '-',
       'วันเกิด': emp.birth_date ? new Date(emp.birth_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-',
+      'อายุ': emp.birth_date ? (() => {
+        const birth = new Date(emp.birth_date);
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+          age--;
+        }
+        return age;
+      })() : '-',
       'ปีงบประมาณที่เกษียณ': emp.retirement_year_be,
       'วันเกษียณอายุ': emp.retirement_date ? new Date(emp.retirement_date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'
     }));
@@ -195,7 +212,7 @@ export default function RetirementPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
           <div
             className="glass-card hover-glow"
-            onClick={() => { setFiscalYear('all'); setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }}
+            onClick={() => { setFiscalYear('all'); setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); setFilterRetirementStatus('all'); }}
             style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
           >
             <div style={{ padding: '16px', background: '#e0f2fe', color: '#0284c7', borderRadius: '16px' }}>
@@ -204,7 +221,7 @@ export default function RetirementPage() {
             <div>
               <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>เกษียณอายุทั้งหมด</div>
               <div style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a' }}>
-                {data?.yearly_summary?.reduce((acc: number, curr: any) => acc + curr.count, 0) || 0} 
+                {data?.total_retiring || 0} 
                 <span style={{ fontSize: '14px', fontWeight: 600, color: '#64748b', marginLeft: '4px' }}>คน</span>
               </div>
             </div>
@@ -286,6 +303,16 @@ export default function RetirementPage() {
                     style={{ border: 'none', outline: 'none', width: '100%', padding: '10px 0', fontSize: '14px', background: 'transparent' }}
                   />
                 </div>
+                <select
+                  className="form-select"
+                  style={{ width: 'auto', minWidth: '140px' }}
+                  value={filterRetirementStatus}
+                  onChange={e => setFilterRetirementStatus(e.target.value)}
+                >
+                  <option value="all">ทุกสถานะ</option>
+                  <option value="not_retired">ยังไม่เกษียณ</option>
+                  <option value="retired">เกษียณแล้ว</option>
+                </select>
                 <select
                   className="form-select"
                   style={{ width: 'auto', minWidth: '140px' }}
@@ -390,6 +417,7 @@ export default function RetirementPage() {
                       <th>ตำแหน่ง</th>
                       <th>หน่วยงาน</th>
                       <th style={{ textAlign: 'center' }}>วันเกิด</th>
+                      <th style={{ textAlign: 'center' }}>อายุ</th>
                       <th style={{ textAlign: 'center' }}>วันเกษียณอายุ</th>
                     </tr>
                   </thead>
@@ -420,6 +448,17 @@ export default function RetirementPage() {
                         <td>{emp.dept_name || '-'}</td>
                         <td style={{ textAlign: 'center', color: '#64748b' }}>
                           {emp.birth_date ? new Date(emp.birth_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}
+                        </td>
+                        <td style={{ textAlign: 'center', color: '#334155', fontWeight: 600 }}>
+                          {emp.birth_date ? (() => {
+                            const birth = new Date(emp.birth_date);
+                            let age = today.getFullYear() - birth.getFullYear();
+                            const m = today.getMonth() - birth.getMonth();
+                            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                              age--;
+                            }
+                            return `${age} ปี`;
+                          })() : '-'}
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ padding: '4px 12px', background: '#fee2e2', color: '#dc2626', borderRadius: '20px', fontWeight: 700, fontSize: '13px', display: 'inline-block' }}>
