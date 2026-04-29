@@ -553,9 +553,9 @@ export default function EmployeeFormModal({
                       options={[
                         { value: 'ทำงานปกติ', label: 'ทำงานปกติ' },
                         { value: 'ทดลองงาน', label: 'ทดลองงาน' },
-                        { value: 'ลาศึกษา', label: 'ลาศึกษา' },
+                        { value: 'ลาศึกษา', label: 'ลาศึกษา / ศึกษาต่อ' },
                         { value: 'หยุดปฏิบัติงาน', label: 'หยุดปฏิบัติงาน' },
-                        { value: 'เกษียณอายุ 60 ปีขึ้นไป', label: 'เกษียณอายุ 60 ปีขึ้นไป' },
+                        { value: 'เกษียณอายุ 60 ปีขึ้นไป', label: 'เกษียณ (อายุ 60)' },
                         { value: 'ให้ออก', label: 'ให้ออก' }
                       ]}
                       minWidth="100%"

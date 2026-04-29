@@ -107,3 +107,24 @@ export const formatThaiDate = (date: string | Date | null | undefined, includeTi
   }
   return result;
 };
+
+/**
+ * Formats a date into BE (Buddhist Era) string in the format dd/mm/yyyy.
+ */
+export const formatDateToBE = (date: string | Date | null | undefined, includeTime: boolean = false) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '-';
+
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear() + 543;
+
+  let result = `${day}/${month}/${year}`;
+  if (includeTime) {
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    result += ` ${hours}:${minutes}`;
+  }
+  return result;
+};

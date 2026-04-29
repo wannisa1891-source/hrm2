@@ -334,6 +334,36 @@ export async function POST(req: NextRequest) {
           // Resolve Citizen ID
           const finalCitizenId = emp.citizen_id && String(emp.citizen_id).trim() !== '' ? String(emp.citizen_id).trim() : null;
 
+          // Resolve Status
+          let rawStatus = String(emp.status || '').trim();
+          let rawWorkingAt = String(emp.working_at || '').trim();
+          let statusClues = [rawStatus, rawWorkingAt].join(' ').toLowerCase();
+
+          let finalStatus = 'ทำงานปกติ';
+          let finalWorkingAt = rawWorkingAt;
+
+          if (statusClues.includes('เกษียณ') || statusClues.includes('อายุ 60') || statusClues.includes('อายุ60')) {
+            finalStatus = 'เกษียณอายุ 60 ปีขึ้นไป';
+            if (rawWorkingAt.includes('เกษียณ') || rawWorkingAt.includes('อายุ')) finalWorkingAt = '';
+          } else if (statusClues.includes('ลาออก') || statusClues.includes('resigned') || statusClues.includes('พ้นสภาพ')) {
+            finalStatus = 'ลาออก/พ้นสภาพ';
+            if (rawWorkingAt.includes('ลาออก') || rawWorkingAt.includes('พ้นสภาพ')) finalWorkingAt = '';
+          } else if (statusClues.includes('ลาศึกษา') || statusClues.includes('ศึกษาต่อ')) {
+            finalStatus = 'ลาศึกษา';
+            if (rawWorkingAt.includes('ลาศึกษา') || rawWorkingAt.includes('ศึกษาต่อ')) finalWorkingAt = '';
+          } else if (statusClues.includes('ทดลองงาน')) {
+            finalStatus = 'ทดลองงาน';
+            if (rawWorkingAt.includes('ทดลองงาน')) finalWorkingAt = '';
+          } else if (statusClues.includes('ให้ออก')) {
+            finalStatus = 'ให้ออก';
+            if (rawWorkingAt.includes('ให้ออก')) finalWorkingAt = '';
+          } else if (statusClues.includes('หยุดปฏิบัติงาน') || statusClues.includes('พักงาน')) {
+            finalStatus = 'หยุดปฏิบัติงาน';
+            if (rawWorkingAt.includes('หยุด') || rawWorkingAt.includes('พักงาน')) finalWorkingAt = '';
+          } else if (rawStatus === '' || rawStatus === '-' || rawStatus.toLowerCase() === 'active' || rawStatus.includes('ปกติ')) {
+            finalStatus = 'ทำงานปกติ';
+          }
+
           // Check if employee with same First/Last name already exists in DB
           if (trimmedFirst && trimmedLast) {
             const [existingEmp]: any = await connection.query(
@@ -363,11 +393,11 @@ export async function POST(req: NextRequest) {
                 finalDeptId,
                 finalPosId,
                 finalStartDate,
-                emp.status || 'ทำงานปกติ',
+                finalStatus,
                 finalPositionNo,
                 emp.admission_date || null,
                 emp.retirement_date || null,
-                emp.working_at || null,
+                finalWorkingAt || null,
                 existingId
               ];
               
@@ -420,12 +450,12 @@ export async function POST(req: NextRequest) {
             finalDeptId,
             finalPosId,
             finalStartDate,
-            emp.status || 'ทำงานปกติ',
+            finalStatus,
             null, // image
             finalPositionNo,
             emp.admission_date || null,
             emp.retirement_date || null,
-            emp.working_at || null
+            finalWorkingAt || null
           ];
 
           await connection.query(sql, values);

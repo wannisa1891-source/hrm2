@@ -67,11 +67,16 @@ export async function GET(req: NextRequest) {
       pool.query("SELECT COUNT(*) as count FROM tbl_employees WHERE status IN ('Active', 'A', 'ทำงานปกติ')"),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE ? >= start_date AND ? <= end_date", [today, today]),
       pool.query(`
-        SELECT d.division as name, COALESCE(d.dept_name, e.working_at) as dept_name, COUNT(e.emp_id) as value
+        SELECT 
+          CASE WHEN e.role = 'Admin' THEN 'แอดมิน' ELSE d.division END as name, 
+          CASE WHEN e.role = 'Admin' THEN 'ผู้ดูแลระบบ' ELSE COALESCE(d.dept_name, e.working_at) END as dept_name, 
+          COUNT(e.emp_id) as value
         FROM tbl_employees e
         LEFT JOIN tbl_departments d ON e.dept_id = d.dept_id
-        GROUP BY d.division, COALESCE(d.dept_name, e.working_at)
-
+        WHERE e.status IN ('Active', 'A', 'ทำงานปกติ')
+        GROUP BY 
+          CASE WHEN e.role = 'Admin' THEN 'แอดมิน' ELSE d.division END, 
+          CASE WHEN e.role = 'Admin' THEN 'ผู้ดูแลระบบ' ELSE COALESCE(d.dept_name, e.working_at) END
       `),
       pool.query("SELECT COUNT(*) as count FROM tbl_transfers").catch(() => [[{ count: 0 }]]),
       pool.query("SELECT COUNT(*) as count FROM tbl_leaves WHERE status = 'Pending'"),
@@ -109,9 +114,7 @@ export async function GET(req: NextRequest) {
     (profResult[0] as any[]).forEach(row => {
       let divName = row.name;
       if (!divName) {
-        divName = 'กลุ่มงานบริหารทั่วไป';
-      } else if (divName === 'กลุ่มงานบริหารทั่วไป') {
-        divName = 'แอดมิน';
+        divName = 'ไม่ระบุกลุ่มงาน';
       }
       const deptName = row.dept_name || 'ไม่ระบุ';
 

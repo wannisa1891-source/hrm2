@@ -235,7 +235,6 @@ export default function DashboardPage() {
 
                 <PendingList
                   transfersCount={dashboardData?.pendingTransfers || 0}
-                  leavesCount={dashboardData?.pendingLeaves || 0}
                 />
               </div>
 

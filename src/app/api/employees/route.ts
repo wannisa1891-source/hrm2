@@ -97,9 +97,9 @@ export async function POST(req: NextRequest) {
       let empId = d.emp_id || '';
       const citizenId = d.id_card || d.citizen_id || '';
       
-      if (!empId) {
-        // If emp_id is missing, use citizen_id as internal ID
-        empId = citizenId || 'E' + Date.now().toString().slice(-8);
+      if (!empId || empId === '-') {
+        // If emp_id is missing, use citizen_id as internal ID (unless it's just a dash)
+        empId = (citizenId && citizenId !== '-') ? citizenId : 'E' + Date.now().toString().slice(-8);
       }
 
       // Check duplicate emp_id
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Automatic credentials: Username = Citizen ID, Password = DDMMYYYY (BE) from birth_date
-      const username = d.username || citizenId;
+      const username = d.username || (citizenId !== '-' ? citizenId : empId);
       
       let autoPassword = '';
       if (d.birth_date && d.birth_date.includes('-')) {
@@ -137,11 +137,11 @@ export async function POST(req: NextRequest) {
       }
 
       const values = [
-        empId, username || empId, d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
+        empId, username, d.prefix || '-', d.first_name_th || '', d.last_name_th || '',
         d.nickname || '',
         (d.birth_date && d.birth_date !== '') ? d.birth_date : (d.date_of_birth && d.date_of_birth !== '') ? d.date_of_birth : '1900-01-01',
         d.gender || 'ชาย', d.address || '',
-        finalCitizenId && finalCitizenId.trim() !== '' ? finalCitizenId.trim() : null, d.phone || '',
+        finalCitizenId && finalCitizenId.trim() !== '' && finalCitizenId.trim() !== '-' ? finalCitizenId.trim() : null, d.phone || '',
         d.email || null, hashedPassword, d.role || 'User',
         d.emp_type || 'พนักงานราชการ', d.dept_id || '', d.pos_id || '', 
         d.start_date || new Date().toISOString().split('T')[0],

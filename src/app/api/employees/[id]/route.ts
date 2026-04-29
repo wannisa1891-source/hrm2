@@ -103,7 +103,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         (() => {
           const cid = d.id_card || d.citizen_id;
           if (cid === undefined || cid === 'undefined') return existing.citizen_id;
-          if (cid === null || cid === 'null' || cid.trim() === '') return null;
+          if (cid === null || cid === 'null' || cid.trim() === '' || cid.trim() === '-') return null;
           return cid.trim();
         })(),
         safeVal(d.phone, existing.phone),
