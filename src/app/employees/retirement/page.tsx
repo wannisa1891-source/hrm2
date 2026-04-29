@@ -81,17 +81,17 @@ export default function RetirementPage() {
     return data.employees.filter((emp: any) => {
       const dept = departments.find(d => d.dept_id === emp.dept_id);
       const matchDept = (filterDiv === 'all' || dept?.division === filterDiv) &&
-                        (filterGrp === 'all' || dept?.dept_name === filterGrp);
+        (filterGrp === 'all' || dept?.dept_name === filterGrp);
       const matchPos = filterPos === 'all' || emp.pos_id === filterPos || emp.pos_name === filterPos;
-      
+
       const matchSearch = !search
         ? true
         : search.length === 1
-        ? (emp.first_name_th?.toLowerCase().startsWith(search.toLowerCase()) || 
-           emp.last_name_th?.toLowerCase().startsWith(search.toLowerCase()) ||
-           emp.emp_id?.toLowerCase().startsWith(search.toLowerCase()) ||
-           emp.pos_name?.toLowerCase().startsWith(search.toLowerCase()))
-        : `${emp.first_name_th} ${emp.last_name_th} ${emp.pos_name || ''}`.toLowerCase().includes(search.toLowerCase());
+          ? (emp.first_name_th?.toLowerCase().startsWith(search.toLowerCase()) ||
+            emp.last_name_th?.toLowerCase().startsWith(search.toLowerCase()) ||
+            emp.emp_id?.toLowerCase().startsWith(search.toLowerCase()) ||
+            emp.pos_name?.toLowerCase().startsWith(search.toLowerCase()))
+          : `${emp.first_name_th} ${emp.last_name_th} ${emp.pos_name || ''}`.toLowerCase().includes(search.toLowerCase());
 
       return matchDept && matchPos && matchSearch;
     });
@@ -153,8 +153,8 @@ export default function RetirementPage() {
       <div style={{ padding: '24px', minHeight: 'calc(100vh - 65px)' }}>
         <div className="page-header" style={{ marginBottom: '32px' }}>
           <div>
-            <button 
-              onClick={() => router.push('/dashboard')} 
+            <button
+              onClick={() => router.push('/dashboard')}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#64748b', fontWeight: 600, cursor: 'pointer', marginBottom: '12px' }}
             >
               <ArrowLeft size={18} /> ย้อนกลับไปหน้าแดชบอร์ด
@@ -165,10 +165,10 @@ export default function RetirementPage() {
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontWeight: 600, color: '#334155' }}>ปีงบประมาณ (พ.ศ.):</span>
-              <select 
-                className="form-select" 
-                style={{ width: 'auto', minWidth: '120px' }} 
-                value={fiscalYear} 
+              <select
+                className="form-select"
+                style={{ width: 'auto', minWidth: '120px' }}
+                value={fiscalYear}
                 onChange={(e) => setFiscalYear(Number(e.target.value))}
               >
                 {fyOptions.map(fy => (
@@ -176,9 +176,9 @@ export default function RetirementPage() {
                 ))}
               </select>
             </div>
-            <button 
-              className="btn-outline hover-glow" 
-              onClick={exportToExcel} 
+            <button
+              className="btn-outline hover-glow"
+              onClick={exportToExcel}
               disabled={filteredEmployees.length === 0}
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
@@ -189,9 +189,9 @@ export default function RetirementPage() {
 
         {/* Summary Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
-          <div 
-            className="glass-card hover-glow" 
-            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }} 
+          <div
+            className="glass-card hover-glow"
+            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }}
             style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
           >
             <div style={{ padding: '16px', background: '#e0f2fe', color: '#0284c7', borderRadius: '16px' }}>
@@ -203,9 +203,9 @@ export default function RetirementPage() {
             </div>
           </div>
 
-          <div 
-            className="glass-card hover-glow" 
-            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }} 
+          <div
+            className="glass-card hover-glow"
+            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }}
             style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
           >
             <div style={{ padding: '16px', background: '#dcfce7', color: '#16a34a', borderRadius: '16px' }}>
@@ -217,9 +217,9 @@ export default function RetirementPage() {
             </div>
           </div>
 
-          <div 
-            className="glass-card hover-glow" 
-            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }} 
+          <div
+            className="glass-card hover-glow"
+            onClick={() => { setFilterDiv('all'); setFilterGrp('all'); setFilterPos('all'); }}
             style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer' }}
           >
             <div style={{ padding: '16px', background: '#fef9c3', color: '#ca8a04', borderRadius: '16px' }}>
@@ -264,168 +264,168 @@ export default function RetirementPage() {
             )}
           </div>
 
-        {/* Filters and Table */}
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>รายชื่อผู้เกษียณอายุ</h3>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <div className="search-input-wrap" style={{ flex: '1 1 200px', minWidth: '220px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', alignItems: 'center', padding: '0 12px', background: 'white', height: '42px' }}>
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#64748b" style={{ marginRight: '8px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                <input 
-                  type="text" 
-                  placeholder="ค้นหาชื่อ หรือตำแหน่ง..." 
-                  value={search} 
-                  onChange={e => setSearch(e.target.value)} 
-                  style={{ border: 'none', outline: 'none', width: '100%', padding: '10px 0', fontSize: '14px', background: 'transparent' }}
-                />
-              </div>
-              <select 
-                className="form-select" 
-                style={{ width: 'auto', minWidth: '140px' }} 
-                value={filterDiv} 
-                onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); }}
-              >
-                <option value="all">ทุกกลุ่มงาน</option>
-                {Array.from(new Set(departments.map(d => String(d.division || '').trim())))
-                  .filter(Boolean)
-                  .sort((a, b) => {
-                    const numA = parseInt(a.match(/^\d+/)?.[0] || '999');
-                    const numB = parseInt(b.match(/^\d+/)?.[0] || '999');
-                    return numA - numB || a.localeCompare(b, 'th');
-                  })
-                  .map(div => (
-                    <option key={div as string} value={div as string}>{div as string}</option>
-                  ))}
-              </select>
+          {/* Filters and Table */}
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>รายชื่อผู้เกษียณอายุ</h3>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div className="search-input-wrap" style={{ flex: '1 1 200px', minWidth: '220px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', alignItems: 'center', padding: '0 12px', background: 'white', height: '42px' }}>
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#64748b" style={{ marginRight: '8px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  <input
+                    type="text"
+                    placeholder="ค้นหาชื่อ หรือตำแหน่ง..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ border: 'none', outline: 'none', width: '100%', padding: '10px 0', fontSize: '14px', background: 'transparent' }}
+                  />
+                </div>
+                <select
+                  className="form-select"
+                  style={{ width: 'auto', minWidth: '140px' }}
+                  value={filterDiv}
+                  onChange={e => { setFilterDiv(e.target.value); setFilterGrp('all'); }}
+                >
+                  <option value="all">ทุกกลุ่มงาน</option>
+                  {Array.from(new Set(departments.map(d => String(d.division || '').trim())))
+                    .filter(Boolean)
+                    .sort((a, b) => {
+                      const numA = parseInt(a.match(/^\d+/)?.[0] || '999');
+                      const numB = parseInt(b.match(/^\d+/)?.[0] || '999');
+                      return numA - numB || a.localeCompare(b, 'th');
+                    })
+                    .map(div => (
+                      <option key={div as string} value={div as string}>{div as string}</option>
+                    ))}
+                </select>
 
-              <select 
-                className="form-select" 
-                style={{ width: 'auto', minWidth: '140px' }} 
-                value={filterGrp} 
-                onChange={e => setFilterGrp(e.target.value)} 
-                disabled={filterDiv === 'all'}
-              >
-                <option value="all">ทุกแผนก</option>
-                {Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim())))
-                  .filter(Boolean)
-                  .sort((a, b) => a.localeCompare(b, 'th'))
-                  .map(grp => (
-                    <option key={grp as string} value={grp as string}>{grp as string}</option>
-                  ))}
-              </select>
+                <select
+                  className="form-select"
+                  style={{ width: 'auto', minWidth: '140px' }}
+                  value={filterGrp}
+                  onChange={e => setFilterGrp(e.target.value)}
+                  disabled={filterDiv === 'all'}
+                >
+                  <option value="all">ทุกแผนก</option>
+                  {Array.from(new Set(departments.filter(d => String(d.division || '').trim() === filterDiv).map(d => String(d.dept_name || '').trim())))
+                    .filter(Boolean)
+                    .sort((a, b) => a.localeCompare(b, 'th'))
+                    .map(grp => (
+                      <option key={grp as string} value={grp as string}>{grp as string}</option>
+                    ))}
+                </select>
 
-              {/* Custom Searchable Typeable Dropdown */}
-              <div style={{ position: 'relative', width: 'auto', minWidth: '220px' }}>
-                <input 
-                  type="text" 
-                  className="form-select" 
-                  style={{ width: '100%', padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '14px', outline: 'none', background: 'white' }} 
-                  placeholder="พิมพ์ค้นหาตำแหน่ง..."
-                  value={posSearch || (filterPos === 'all' ? '' : (positions.find(p => p.pos_id === filterPos)?.pos_name || filterPos))}
-                  onFocus={() => setIsPosOpen(true)}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setPosSearch(val);
-                    setIsPosOpen(true);
-                    
-                    const found = positions.find(p => p.pos_name === val);
-                    if (found) {
-                      setFilterPos(found.pos_id);
-                    } else if (val === '') {
-                      setFilterPos('all');
-                    }
-                  }} 
-                />
-                {isPosOpen && (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)', zIndex: 100, padding: '6px' }}>
-                    <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }} className="custom-scrollbar">
-                      <div 
-                        onClick={() => { setFilterPos('all'); setPosSearch(''); setIsPosOpen(false); }}
-                        style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === 'all' ? '#eff6ff' : 'transparent', color: filterPos === 'all' ? '#1d4ed8' : '#334155', fontWeight: filterPos === 'all' ? 700 : 500, fontSize: '13px' }}
-                        onMouseEnter={e => { if(filterPos !== 'all') e.currentTarget.style.background = '#f1f5f9'; }}
-                        onMouseLeave={e => { if(filterPos !== 'all') e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        ทุกตำแหน่ง
+                {/* Custom Searchable Typeable Dropdown */}
+                <div style={{ position: 'relative', width: 'auto', minWidth: '220px' }}>
+                  <input
+                    type="text"
+                    className="form-select"
+                    style={{ width: '100%', padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '14px', outline: 'none', background: 'white' }}
+                    placeholder="พิมพ์ค้นหาตำแหน่ง..."
+                    value={posSearch || (filterPos === 'all' ? '' : (positions.find(p => p.pos_id === filterPos)?.pos_name || filterPos))}
+                    onFocus={() => setIsPosOpen(true)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPosSearch(val);
+                      setIsPosOpen(true);
+
+                      const found = positions.find(p => p.pos_name === val);
+                      if (found) {
+                        setFilterPos(found.pos_id);
+                      } else if (val === '') {
+                        setFilterPos('all');
+                      }
+                    }}
+                  />
+                  {isPosOpen && (
+                    <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)', zIndex: 100, padding: '6px' }}>
+                      <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }} className="custom-scrollbar">
+                        <div
+                          onClick={() => { setFilterPos('all'); setPosSearch(''); setIsPosOpen(false); }}
+                          style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === 'all' ? '#eff6ff' : 'transparent', color: filterPos === 'all' ? '#1d4ed8' : '#334155', fontWeight: filterPos === 'all' ? 700 : 500, fontSize: '13px' }}
+                          onMouseEnter={e => { if (filterPos !== 'all') e.currentTarget.style.background = '#f1f5f9'; }}
+                          onMouseLeave={e => { if (filterPos !== 'all') e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          ทุกตำแหน่ง
+                        </div>
+                        {positions
+                          .filter((p: any) => !posSearch || p.pos_name.toLowerCase().includes(posSearch.toLowerCase()))
+                          .map((p: any) => (
+                            <div
+                              key={p.pos_id}
+                              onClick={() => { setFilterPos(p.pos_id); setPosSearch(p.pos_name); setIsPosOpen(false); }}
+                              style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === p.pos_id ? '#eff6ff' : 'transparent', color: filterPos === p.pos_id ? '#1d4ed8' : '#334155', fontWeight: filterPos === p.pos_id ? 700 : 500, fontSize: '13px' }}
+                              onMouseEnter={e => { if (filterPos !== p.pos_id) e.currentTarget.style.background = '#f1f5f9'; }}
+                              onMouseLeave={e => { if (filterPos !== p.pos_id) e.currentTarget.style.background = 'transparent'; }}
+                            >
+                              {p.pos_name}
+                            </div>
+                          ))}
                       </div>
-                      {positions
-                        .filter((p: any) => !posSearch || p.pos_name.toLowerCase().includes(posSearch.toLowerCase()))
-                        .map((p: any) => (
-                          <div 
-                            key={p.pos_id}
-                            onClick={() => { setFilterPos(p.pos_id); setPosSearch(p.pos_name); setIsPosOpen(false); }}
-                            style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', background: filterPos === p.pos_id ? '#eff6ff' : 'transparent', color: filterPos === p.pos_id ? '#1d4ed8' : '#334155', fontWeight: filterPos === p.pos_id ? 700 : 500, fontSize: '13px' }}
-                            onMouseEnter={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = '#f1f5f9'; }}
-                            onMouseLeave={e => { if(filterPos !== p.pos_id) e.currentTarget.style.background = 'transparent'; }}
-                          >
-                            {p.pos_name}
-                          </div>
-                        ))}
                     </div>
-                  </div>
-                )}
-                {/* Clicking outside closes popup */}
-                {isPosOpen && <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 90 }} onClick={() => setIsPosOpen(false)} />}
+                  )}
+                  {/* Clicking outside closes popup */}
+                  {isPosOpen && <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 90 }} onClick={() => setIsPosOpen(false)} />}
+                </div>
               </div>
             </div>
-          </div>
 
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>กำลังโหลดข้อมูล...</div>
-          ) : filteredEmployees.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลผู้เกษียณอายุในปีงบประมาณนี้</div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
-                    <th>ชื่อ-สกุล</th>
-                    <th>ตำแหน่ง</th>
-                    <th>หน่วยงาน</th>
-                    <th style={{ textAlign: 'center' }}>วันเกิด</th>
-                    <th style={{ textAlign: 'center' }}>วันเกษียณอายุ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEmployees.map((emp: any) => (
-                    <tr 
-                      key={emp.emp_id} 
-                      onClick={() => router.push(`/profile?emp_id=${emp.emp_id}`)}
-                      style={{ transition: 'all 0.2s', cursor: 'pointer' }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ width: '40px', height: '40px', position: 'relative', borderRadius: '10px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                          {emp.image ? (
-                            <Image fill src={`/uploads/${emp.image}`} alt="" style={{ objectFit: 'cover' }} unoptimized />
-                          ) : (
-                            <span style={{ color: '#94a3b8', fontSize: '16px' }}>👤</span>
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 700, color: '#0f172a' }}>
-                          {emp.prefix}{emp.first_name_th} {emp.last_name_th}
-                        </div>
-                      </td>
-                      <td style={{ color: '#334155', fontWeight: 500 }}>{emp.pos_name || '-'}</td>
-                      <td>{emp.dept_name || '-'}</td>
-                      <td style={{ textAlign: 'center', color: '#64748b' }}>
-                        {emp.birth_date ? new Date(emp.birth_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ padding: '4px 12px', background: '#fee2e2', color: '#dc2626', borderRadius: '20px', fontWeight: 700, fontSize: '13px', display: 'inline-block' }}>
-                          1 ตุลาคม {emp.retirement_year_be}
-                        </div>
-                      </td>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>กำลังโหลดข้อมูล...</div>
+            ) : filteredEmployees.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีข้อมูลผู้เกษียณอายุในปีงบประมาณนี้</div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
+                      <th>ชื่อ-สกุล</th>
+                      <th>ตำแหน่ง</th>
+                      <th>หน่วยงาน</th>
+                      <th style={{ textAlign: 'center' }}>วันเกิด</th>
+                      <th style={{ textAlign: 'center' }}>วันเกษียณอายุ</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {filteredEmployees.map((emp: any) => (
+                      <tr
+                        key={emp.emp_id}
+                        onClick={() => router.push(`/profile?emp_id=${emp.emp_id}`)}
+                        style={{ transition: 'all 0.2s', cursor: 'pointer' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <td style={{ textAlign: 'center' }}>
+                          <div style={{ width: '40px', height: '40px', position: 'relative', borderRadius: '10px', background: '#f1f5f9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                            {emp.image ? (
+                              <Image fill src={`/uploads/${emp.image}`} alt="" style={{ objectFit: 'cover' }} unoptimized />
+                            ) : (
+                              <span style={{ color: '#94a3b8', fontSize: '16px' }}>👤</span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                            {emp.prefix}{emp.first_name_th} {emp.last_name_th}
+                          </div>
+                        </td>
+                        <td style={{ color: '#334155', fontWeight: 500 }}>{emp.pos_name || '-'}</td>
+                        <td>{emp.dept_name || '-'}</td>
+                        <td style={{ textAlign: 'center', color: '#64748b' }}>
+                          {emp.birth_date ? new Date(emp.birth_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div style={{ padding: '4px 12px', background: '#fee2e2', color: '#dc2626', borderRadius: '20px', fontWeight: 700, fontSize: '13px', display: 'inline-block' }}>
+                            1 ตุลาคม {emp.retirement_year_be}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </AppLayout>
