@@ -676,6 +676,8 @@ function EmployeesContent() {
       setShowForm(false);
       Swal.fire({ title: 'สำเร็จ!', text: res.message || (editing ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มพนักงานสำเร็จ'), icon: 'success', timer: 1500, showConfirmButton: false });
       loadEmployees();
+      loadPositions();
+      loadDepartments();
     } else {
       Swal.fire('ข้อผิดพลาด', res.message || 'บันทึกไม่สำเร็จ', 'error');
     }

@@ -596,7 +596,12 @@ export default function EmployeeFormModal({
                           options={[
                             { value: '', label: 'เลือกแผนก' },
                             ...(() => {
-                              const filtered = departments.filter(d => d.division?.trim() === selectedDivision?.trim());
+                              const filtered = departments.filter(d => {
+                                if (d.division?.trim() !== selectedDivision?.trim()) return false;
+                                const name = d.dept_name?.trim();
+                                if (!name || name === '-' || name === selectedDivision?.trim()) return false;
+                                return true;
+                              });
                               // Filter by unique name to avoid duplicates in the UI
                               const uniqueDepts = filtered.filter((d, idx, self) => 
                                 idx === self.findIndex((t) => t.dept_name?.trim() === d.dept_name?.trim())

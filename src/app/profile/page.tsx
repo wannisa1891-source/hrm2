@@ -188,7 +188,7 @@ function ProfileContent() {
     const res = await editEmployee(profile.emp_id, fd);
     if (res.success) {
       if (user) login({ ...user, image: res.image || user.image });
-      setShowEditModal(false); await fetchProfile(); await loadEmployees();
+      setShowEditModal(false); await fetchProfile(); await loadEmployees(); await loadPositions(); await loadDepartments();
       Swal.fire({ title: 'สำเร็จ!', text: 'อัปเดตข้อมูลส่วนตัวเสร็จสมบูรณ์', icon: 'success', timer: 1500, showConfirmButton: false });
     } else Swal.fire('ข้อผิดพลาด', res.message || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
     return res;
