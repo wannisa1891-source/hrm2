@@ -38,9 +38,11 @@ export default function NotificationBell() {
       if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data)) {
-        // If count increases, maybe vibrate or play a subtle sound if possible, 
-        // but for now just update state
-        setNotifications(data);
+        const filtered = data.filter((n: any) => 
+          !n.title?.includes('ลา') && 
+          !n.message?.includes('ลา')
+        );
+        setNotifications(filtered);
       }
     } catch (e) {
       console.error('Notification Loading Error:', e);

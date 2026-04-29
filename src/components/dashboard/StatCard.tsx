@@ -18,7 +18,7 @@ export default function StatCard({
     label,
     value,
     unit,
-    trend = "-",
+    trend = "",
     trendUp,
     href = "#",
     iconColor = "#333",
@@ -57,21 +57,23 @@ export default function StatCard({
                         )}
                     </div>
 
-                    <span 
-                        className={isClay ? "clay-pill" : ""}
-                        style={{ 
-                            fontSize: 12, 
-                            fontWeight: isClay ? 800 : 600,
-                            color: isClay ? '#64748b' : (trendUp ? "#059669" : "#64748b"),
-                            background: isClay ? undefined : (trendUp ? "#d1fae5" : "#f1f5f9"),
-                            padding: isClay ? undefined : '4px 8px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4
-                        }}
-                    >
-                        {trend}
-                    </span>
+                    {trend && (
+                        <span 
+                            className={isClay ? "clay-pill" : ""}
+                            style={{ 
+                                fontSize: 12, 
+                                fontWeight: isClay ? 800 : 600,
+                                color: isClay ? '#64748b' : (trendUp ? "#059669" : "#64748b"),
+                                background: isClay ? undefined : (trendUp ? "#d1fae5" : "#f1f5f9"),
+                                padding: isClay ? undefined : '4px 8px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4
+                            }}
+                        >
+                            {trend}
+                        </span>
+                    )}
 
                 </div>
                 
