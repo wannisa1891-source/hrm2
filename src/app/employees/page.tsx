@@ -71,8 +71,8 @@ function EmployeesContent() {
 
   // Customization States for ID Card
   const [cardBgColor, setCardBgColor] = useState('#ffffff');
-  const [cardPrimaryColor, setCardPrimaryColor] = useState('#1E3A8A');
-  const [cardSecondaryColor, setCardSecondaryColor] = useState('#F97316');
+  const [cardPrimaryColor, setCardPrimaryColor] = useState('#1a237e');
+  const [cardSecondaryColor, setCardSecondaryColor] = useState('#ff9800');
 
   const [showTopLogo, setShowTopLogo] = useState(true);
   const [topLogo, setTopLogo] = useState('/images/moph_logo.png');
@@ -1286,14 +1286,6 @@ function EmployeesContent() {
                   {cardBgImage && <button onClick={() => { setCardBgImage(null); setShowWaveDecoration(true); }} style={{ fontSize: '11px', color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}>ล้างภาพพื้นหลัง</button>}
                 </div>
 
-                <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>🎨 ชุดสี (พื้นหลัง / หลัก / รอง)</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input type="color" title="สีพื้นหลัง" value={cardBgColor} onChange={(e) => setCardBgColor(e.target.value)} style={{ flex: 1, height: '36px', padding: '2px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }} />
-                    <input type="color" title="สีหลัก" value={cardPrimaryColor} onChange={(e) => setCardPrimaryColor(e.target.value)} style={{ flex: 1, height: '36px', padding: '2px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }} />
-                    <input type="color" title="สีรอง" value={cardSecondaryColor} onChange={(e) => setCardSecondaryColor(e.target.value)} style={{ flex: 1, height: '36px', padding: '2px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }} />
-                  </div>
-                </div>
 
                 <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>🌊 ลายเส้น/คลื่นตกแต่ง</label>
@@ -1452,7 +1444,7 @@ function EmployeesContent() {
 
                   <div>
                     <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>อัปโหลดลายเซ็นใหม่:</label>
-                    <input type="file" accept="image/*" onChange={handleSignatureUpload} style={{ fontSize: '11px', width: '100%', padding: '6px', border: '1px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc' }} />
+                    <input type="file" accept="image/*" onChange={handleSignatureUpload} style={{ width: '100%', padding: '6px', border: '1px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc' }} />
                   </div>
                 </div>
               </div>
@@ -1570,43 +1562,21 @@ function EmployeesContent() {
                                   <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: isBulkPrinting ? '70mm' : '300px', height: isBulkPrinting ? '99mm' : '480px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0, transformOrigin: 'top left' }}>
                                     {/* Background SVG Waves & Dots */}
                                     {showWaveDecoration && !cardBgImage && (
-                                      <svg width={isBulkPrinting ? "264" : "300"} height={isBulkPrinting ? "374" : "480"} viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
-                                        <defs>
-                                          <pattern id={`dots-${empForCard.emp_id}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                                            <circle cx="10" cy="10" r="2.5" fill="#cbd5e1" opacity="0.6" />
-                                          </pattern>
-                                          <linearGradient id={`fade-grad-${empForCard.emp_id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stop-color="white" stop-opacity="1" />
-                                            <stop offset="80%" stop-color="white" stop-opacity="0.1" />
-                                          </linearGradient>
-                                          <mask id={`dots-mask-${empForCard.emp_id}`}>
-                                            <rect width="300" height="480" fill={`url(#fade-grad-${empForCard.emp_id})`} />
-                                          </mask>
-                                        </defs>
-
-                                        {/* Full Background Dots with Mask for subtle fade */}
-                                        <rect width="300" height="480" fill={`url(#dots-${empForCard.emp_id})`} mask={`url(#dots-mask-${empForCard.emp_id})`} />
-
-                                        {/* Top Right Waves */}
-                                        <path d="M 100 0 Q 220 120 300 240 L 300 0 Z" fill={cardSecondaryColor} />
-                                        <path d="M 180 0 Q 250 80 300 150 L 300 0 Z" fill={cardPrimaryColor} />
-
-                                        {/* Bottom Left Waves */}
-                                        <path d="M 0 280 Q 120 380 250 480 L 0 480 Z" fill={cardSecondaryColor} />
-                                        <path d="M 0 380 Q 80 430 150 480 L 0 480 Z" fill={cardPrimaryColor} />
-                                      </svg>
+                                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
+                                        <Image src="/1.png" fill style={{ objectFit: 'cover' }} alt="Card Background" unoptimized />
+                                      </div>
                                     )}
 
 
                                     {/* MOPH Logo (Top Left) */}
                                     {showTopLogo && (
-                                      <div style={{ position: 'absolute', top: isBulkPrinting ? '10px' : '15px', left: isBulkPrinting ? '10px' : '15px', zIndex: 2 }}>
+                                      <div style={{ position: 'absolute', top: isBulkPrinting ? '10px' : '15px', left: isBulkPrinting ? '10px' : '15px', zIndex: 2, background: 'white', borderRadius: '50%', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <Image src={topLogo} width={isBulkPrinting ? Math.round(topLogoWidth * 0.8) : topLogoWidth} height={isBulkPrinting ? Math.round(topLogoHeight * 0.8) : topLogoHeight} style={{ objectFit: 'contain' }} alt="Top Logo" />
                                       </div>
                                     )}
 
                                     {/* Photo */}
-                                    <div style={{ position: 'absolute', top: `${isBulkPrinting ? Math.round(profileYOffset * 0.8) : profileYOffset}px`, left: '50%', transform: 'translateX(-50%)', width: `${isBulkPrinting ? Math.round(empImageWidth * 0.8) : empImageWidth}px`, height: `${isBulkPrinting ? Math.round(empImageHeight * 0.8) : empImageHeight}px`, border: '1px solid #cbd5e1', background: '#f8fafc', zIndex: 2, overflow: 'hidden', borderRadius: `${empImageBorderRadius}px` }}>
+                                    <div style={{ position: 'absolute', top: `${isBulkPrinting ? Math.round(profileYOffset * 0.8) : profileYOffset}px`, left: '50%', transform: 'translateX(-50%)', width: `${isBulkPrinting ? Math.round(empImageWidth * 0.8) : empImageWidth}px`, height: `${isBulkPrinting ? Math.round(empImageHeight * 0.8) : empImageHeight}px`, border: '4px solid white', background: 'white', boxShadow: '0 6px 16px rgba(0,0,0,0.15)', zIndex: 2, overflow: 'hidden', borderRadius: `${empImageBorderRadius}px` }}>
                                       <Image fill src={empForCard.image ? `/uploads/${encodeURIComponent(empForCard.image)}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`} alt="Employee" style={{ objectFit: 'cover', borderRadius: `${empImageBorderRadius}px` }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} />
                                     </div>
 
