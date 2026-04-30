@@ -649,9 +649,13 @@ function EmployeesContent() {
 
   const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedIds(currentData.map(emp => emp.emp_id));
+      // Add all currently visible IDs to the existing selection
+      const currentIds = currentData.map(emp => emp.emp_id);
+      setSelectedIds(prev => Array.from(new Set([...prev, ...currentIds])));
     } else {
-      setSelectedIds([]);
+      // Remove only the currently visible IDs from the selection
+      const currentIds = currentData.map(emp => emp.emp_id);
+      setSelectedIds(prev => prev.filter(id => !currentIds.includes(id)));
     }
   };
 
@@ -949,10 +953,15 @@ function EmployeesContent() {
                   เพิ่มพนักงานใหม่
                 </button>
                 {selectedIds.length > 0 && (
-                  <button className="btn-primary" onClick={handleBulkPrint} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0ea5e9' }}>
-                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                    พิมพ์บัตร {selectedIds.length} รายการ
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-outline" onClick={() => setSelectedIds([])} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white' }}>
+                      ล้างการเลือก ({selectedIds.length})
+                    </button>
+                    <button className="btn-primary" onClick={handleBulkPrint} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0ea5e9' }}>
+                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                      พิมพ์บัตร {selectedIds.length} รายการ
+                    </button>
+                  </div>
                 )}
               </>
             )}
@@ -1090,7 +1099,7 @@ function EmployeesContent() {
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', width: '40px' }}>
-                    <input type="checkbox" checked={selectedIds.length === currentData.length && currentData.length > 0} onChange={toggleSelectAll} style={{ width: '16px', height: '16px', accentColor: '#3b82f6', cursor: 'pointer' }} />
+                    <input type="checkbox" checked={currentData.length > 0 && currentData.every(emp => selectedIds.includes(emp.emp_id))} onChange={toggleSelectAll} style={{ width: '16px', height: '16px', accentColor: '#3b82f6', cursor: 'pointer' }} />
                   </th>
                   <th style={{ textAlign: 'center', width: '60px' }}>ลำดับ</th>
                   <th style={{ textAlign: 'center', width: '80px' }}>รูปภาพ</th>
@@ -1465,7 +1474,7 @@ function EmployeesContent() {
               {/* Right: Card Preview */}
               <div style={{ flex: 1, overflowY: 'auto', display: 'block', background: '#f1f5f9', borderRadius: '16px', padding: '24px' }} className="custom-scrollbar">
                 {(() => {
-                  const cardsToPrint = isBulkPrinting ? currentData.filter(emp => selectedIds.includes(emp.emp_id)) : [selectedEmpForCard!];
+                  const cardsToPrint = isBulkPrinting ? employees.filter(emp => selectedIds.includes(emp.emp_id)) : [selectedEmpForCard!];
                   const chunks = isBulkPrinting ? cardsToPrint.reduce((acc, item, i) => {
                     const chunkIndex = Math.floor(i / 9);
                     if (!acc[chunkIndex]) acc[chunkIndex] = [];
