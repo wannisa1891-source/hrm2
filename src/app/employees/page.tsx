@@ -76,23 +76,23 @@ function EmployeesContent() {
 
   const [showTopLogo, setShowTopLogo] = useState(true);
   const [topLogo, setTopLogo] = useState('/images/moph_logo.png');
-  const [topLogoWidth, setTopLogoWidth] = useState(55);
-  const [topLogoHeight, setTopLogoHeight] = useState(55);
+  const [topLogoWidth, setTopLogoWidth] = useState(40);
+  const [topLogoHeight, setTopLogoHeight] = useState(40);
 
   const [showBottomLogo, setShowBottomLogo] = useState(true);
   const [bottomLogo, setBottomLogo] = useState('/images/chaam_hospital_logo.png');
-  const [bottomLogoWidth, setBottomLogoWidth] = useState(120);
-  const [bottomLogoHeight, setBottomLogoHeight] = useState(60);
+  const [bottomLogoWidth, setBottomLogoWidth] = useState(90);
+  const [bottomLogoHeight, setBottomLogoHeight] = useState(45);
 
-  const [empImageWidth, setEmpImageWidth] = useState(130);
-  const [empImageHeight, setEmpImageHeight] = useState(165);
+  const [empImageWidth, setEmpImageWidth] = useState(100);
+  const [empImageHeight, setEmpImageHeight] = useState(130);
 
-  const [nameFontSize, setNameFontSize] = useState(17);
-  const [posFontSize, setPosFontSize] = useState(15);
-  const [textColor, setTextColor] = useState('#0f172a');
+  const [nameFontSize, setNameFontSize] = useState(14);
+  const [posFontSize, setPosFontSize] = useState(12);
+  const [textColor, setTextColor] = useState('#000000');
   const [showSignature, setShowSignature] = useState(true);
-  const [empImageBorderRadius, setEmpImageBorderRadius] = useState(12);
-  const [profileYOffset, setProfileYOffset] = useState(80);
+  const [empImageBorderRadius, setEmpImageBorderRadius] = useState(10);
+  const [profileYOffset, setProfileYOffset] = useState(60);
   const [showWaveDecoration, setShowWaveDecoration] = useState(true);
 
   const [directorName, setDirectorName] = useState('นายแพทย์ประกิต เมฆชื่น');
@@ -152,6 +152,20 @@ function EmployeesContent() {
         if (s.directorSignature) setDirectorSignature(s.directorSignature);
         if (s.cardBgImage) setCardBgImage(s.cardBgImage);
         if (s.cardOverrides) setCardOverrides(s.cardOverrides);
+
+        // Auto-fix for legacy distortion (reset to 5.5x8.5 standard if old default detected)
+        if (s.empImageWidth === 130 || s.profileYOffset === 80) {
+          setEmpImageWidth(100);
+          setEmpImageHeight(130);
+          setProfileYOffset(60);
+          setTopLogoWidth(40);
+          setTopLogoHeight(40);
+          setBottomLogoWidth(90);
+          setBottomLogoHeight(45);
+          setNameFontSize(14);
+          setPosFontSize(12);
+          setEmpImageBorderRadius(10);
+        }
       } catch (err) { }
     }
   }, []);
@@ -1447,6 +1461,7 @@ function EmployeesContent() {
 
 
 
+
               {/* Right: Card Preview */}
               <div style={{ flex: 1, overflowY: 'auto', display: 'block', background: '#f1f5f9', borderRadius: '16px', padding: '24px' }} className="custom-scrollbar">
                 {(() => {
@@ -1474,21 +1489,23 @@ function EmployeesContent() {
                               .print-area-container, .print-area-container * { display: block !important; }
                               .print-page { 
                                 display: grid !important;
-                                grid-template-columns: repeat(3, 1fr) !important;
-                                grid-template-rows: repeat(3, 1fr) !important;
+                                grid-template-columns: repeat(3, 55mm) !important;
+                                grid-template-rows: repeat(3, 85mm) !important;
                                 gap: 0 !important;
-                                padding: 0 !important;
+                                padding: 10mm !important;
                                 page-break-after: always; 
                                 width: 210mm !important;
-                                height: 295mm !important;
+                                height: 297mm !important;
                                 background: white !important;
                                 box-sizing: border-box !important;
                                 overflow: hidden !important;
                                 margin: 0 !important;
+                                justify-content: start !important;
+                                align-content: start !important;
                               }
                               .card-to-print {
-                                width: 70mm !important;
-                                height: 99mm !important;
+                                width: 55mm !important;
+                                height: 85mm !important;
                                 transform: none !important;
                                 box-shadow: none !important;
                                 border: 0.1mm solid #eee !important;
@@ -1555,7 +1572,7 @@ function EmployeesContent() {
                                   )}
 
                                   {/* --- Front Card --- */}
-                                  <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: isBulkPrinting ? '70mm' : '300px', height: isBulkPrinting ? '99mm' : '480px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#1e293b', flexShrink: 0, transformOrigin: 'top left' }}>
+                                  <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: isBulkPrinting ? '55mm' : '220px', height: isBulkPrinting ? '85mm' : '340px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#000000', flexShrink: 0, transformOrigin: 'top left' }}>
                                     {/* Background SVG Waves & Dots */}
                                     {showWaveDecoration && !cardBgImage && (
                                       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
@@ -1587,7 +1604,7 @@ function EmployeesContent() {
                                         {overrides.nameTH || `${empForCard.prefix || ''}${empForCard.first_name_th} ${empForCard.last_name_th}`}
                                       </div>
                                       {/* Name EN */}
-                                      <div style={{ fontSize: `${isBulkPrinting ? 11 : 14}px`, color: '#475569', fontStyle: 'italic', marginBottom: '12px' }}>
+                                      <div style={{ fontSize: `${isBulkPrinting ? 10 : 12}px`, color: '#000000', fontStyle: 'italic', marginBottom: '8px' }}>
                                         {overrides.nameEN || (empForCard.first_name_th === 'อิงครัตน์' ? 'Engkarat Chodsatidpokin' : `${empForCard.first_name_th} ${empForCard.last_name_th}`)}
                                       </div>
 
@@ -1595,16 +1612,16 @@ function EmployeesContent() {
                                       {showSignature && (
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: isBulkPrinting ? '2px' : '5px' }}>
                                           {directorSignature ? (
-                                            <img src={directorSignature} style={{ width: isBulkPrinting ? '50px' : '60px', height: isBulkPrinting ? '25px' : '30px', objectFit: 'contain', display: 'block', margin: '0 auto' }} alt="Director Signature" />
+                                            <img src={directorSignature} style={{ width: isBulkPrinting ? '40px' : '50px', height: isBulkPrinting ? '20px' : '25px', objectFit: 'contain', display: 'block', margin: '0 auto' }} alt="Director Signature" />
                                           ) : (
                                             <svg width={isBulkPrinting ? "50" : "60"} height={isBulkPrinting ? "25" : "30"} viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', margin: '0 auto' }}>
                                               <path d="M 20 40 Q 30 10 50 30 T 80 20" stroke={cardPrimaryColor} strokeWidth="2" strokeLinecap="round" fill="none" />
                                             </svg>
                                           )}
-                                          <div style={{ fontSize: `${isBulkPrinting ? 10 : 11}px`, fontWeight: 'bold', color: '#1e293b', marginTop: '2px' }}>
+                                          <div style={{ fontSize: `${isBulkPrinting ? 8 : 9}px`, fontWeight: 'bold', color: '#000000', marginTop: '2px' }}>
                                             {directorName}
                                           </div>
-                                          <div style={{ fontSize: `${isBulkPrinting ? 9 : 10}px`, color: '#64748b' }}>
+                                          <div style={{ fontSize: `${isBulkPrinting ? 7 : 8}px`, color: '#000000' }}>
                                             {directorTitle}
                                           </div>
 
@@ -1615,7 +1632,7 @@ function EmployeesContent() {
 
                                     {/* Hospital Logo (Bottom Right) */}
                                     {showBottomLogo && (
-                                      <div style={{ position: 'absolute', bottom: isBulkPrinting ? '10px' : '15px', right: isBulkPrinting ? '10px' : '15px', zIndex: 2 }}>
+                                      <div style={{ position: 'absolute', bottom: isBulkPrinting ? '6px' : '10px', right: isBulkPrinting ? '6px' : '10px', zIndex: 2 }}>
                                         <Image src={bottomLogo} width={isBulkPrinting ? Math.round(bottomLogoWidth * 0.8) : bottomLogoWidth} height={isBulkPrinting ? Math.round(bottomLogoHeight * 0.8) : bottomLogoHeight} style={{ objectFit: 'contain' }} alt="Bottom Logo" />
                                       </div>
                                     )}
