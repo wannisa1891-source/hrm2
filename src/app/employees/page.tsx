@@ -1492,7 +1492,7 @@ function EmployeesContent() {
                                 grid-template-columns: repeat(3, 55mm) !important;
                                 grid-template-rows: repeat(3, 85mm) !important;
                                 gap: 0 !important;
-                                padding: 10mm !important;
+                                padding: 0 !important;
                                 page-break-after: always; 
                                 width: 210mm !important;
                                 height: 297mm !important;
@@ -1500,8 +1500,8 @@ function EmployeesContent() {
                                 box-sizing: border-box !important;
                                 overflow: hidden !important;
                                 margin: 0 !important;
-                                justify-content: start !important;
-                                align-content: start !important;
+                                justify-content: center !important;
+                                align-content: center !important;
                               }
                               .card-to-print {
                                 width: 55mm !important;
@@ -1572,7 +1572,7 @@ function EmployeesContent() {
                                   )}
 
                                   {/* --- Front Card --- */}
-                                  <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: isBulkPrinting ? '55mm' : '220px', height: isBulkPrinting ? '85mm' : '340px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#000000', flexShrink: 0, transformOrigin: 'top left' }}>
+                                  <div id={`card-${empForCard.emp_id}`} className="card-to-print" style={{ width: isBulkPrinting ? '55mm' : '220px', height: isBulkPrinting ? '85mm' : '340px', background: cardBgColor, backgroundImage: cardBgImage ? `url(${cardBgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '0', border: '1px solid #e2e8f0', boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden', color: '#000000', flexShrink: 0, transformOrigin: 'top left' }}>
                                     {/* Background SVG Waves & Dots */}
                                     {showWaveDecoration && !cardBgImage && (
                                       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
@@ -1589,8 +1589,8 @@ function EmployeesContent() {
                                     )}
 
                                     {/* Photo */}
-                                    <div style={{ position: 'absolute', top: `${isBulkPrinting ? Math.round(profileYOffset * 0.8) : profileYOffset}px`, left: '50%', marginLeft: `-${(isBulkPrinting ? Math.round(empImageWidth * 0.8) : empImageWidth) / 2}px`, width: `${isBulkPrinting ? Math.round(empImageWidth * 0.8) : empImageWidth}px`, height: `${isBulkPrinting ? Math.round(empImageHeight * 0.8) : empImageHeight}px`, border: '4px solid white', background: 'white', boxShadow: '0 6px 16px rgba(0,0,0,0.15)', zIndex: 2, overflow: 'hidden', borderRadius: `${empImageBorderRadius}px` }}>
-                                      <Image fill src={empForCard.image ? `/uploads/${encodeURIComponent(empForCard.image)}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`} alt="Employee" style={{ objectFit: 'cover', borderRadius: `${empImageBorderRadius}px` }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} />
+                                    <div style={{ position: 'absolute', top: `${isBulkPrinting ? Math.round(profileYOffset * 0.8) : profileYOffset}px`, left: '50%', marginLeft: `-${(isBulkPrinting ? Math.round(empImageWidth * 0.8) : empImageWidth) / 2}px`, width: `${isBulkPrinting ? Math.round(empImageWidth * 0.8) : empImageWidth}px`, height: `${isBulkPrinting ? Math.round(empImageHeight * 0.8) : empImageHeight}px`, zIndex: 2, overflow: 'hidden' }}>
+                                      <Image fill src={empForCard.image ? `/uploads/${encodeURIComponent(empForCard.image)}` : `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`} alt="Employee" style={{ objectFit: 'cover' }} unoptimized onError={(e: any) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32"><rect fill="%23f8fafc" x="-4" y="-4" width="32" height="32"/><path fill="%2394a3b8" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; }} />
                                     </div>
 
                                     {/* Details */}
